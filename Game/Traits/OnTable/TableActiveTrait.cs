@@ -49,7 +49,7 @@ namespace Game.Traits
         {
             if (Owner == null)
                 return UniTask.CompletedTask;
-            else return Owner.Traits.Actives.Adjust(_data.id, delta, source);
+            else return Owner.Traits.Actives.AdjustStacks(_data.id, delta, source);
         }
 
         public bool TryUse(TableField target)

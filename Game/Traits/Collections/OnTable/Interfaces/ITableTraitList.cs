@@ -16,10 +16,10 @@ namespace Game.Traits
         public ITableTraitListElement this[string id] => GetElement(id);
         public new ITableTraitListElement this[int index] => GetElement(index);
 
-        public UniTask Adjust(string id, int stacks, ITableEntrySource source, string entryId);
-        public UniTask Revert(string id, string entryId);
+        public UniTask AdjustStacks(string id, int stacks, ITableEntrySource source, string entryId);
+        public UniTask RevertStacks(string id, string entryId);
 
-        public void AdjustByOwnerList(TraitList dataList);
+        public void AdjustStacksByOwnerList(TraitList dataList);
         public void Clear(ITableEntrySource source);
 
         ITableTraitListElement IReadOnlyList<ITableTraitListElement>.this[int index] => this[index];

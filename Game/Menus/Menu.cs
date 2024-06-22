@@ -29,6 +29,7 @@ namespace Game.Menus
         public int SortingOrder => _sortingOrder;
         public int OpenDepth => _openDepth; 
         public int FullDepth => _fullDepth;
+        public Func<Menu> MenuWhenClosed = () => GetCurrent().GetPrevious(); // invokes on CloseAnimated (if not overriden)
 
         static readonly Transform _parent = Global.Root.Find("MENUS").transform;
         static readonly List<Menu> _openList = new();
@@ -147,6 +148,7 @@ namespace Game.Menus
             else return null;
         }
 
+        // use (and implement) if this menu is not related to / used in TransitMenu
         public async UniTask DestroyAnimated()
         {
             await CloseAnimated();
@@ -164,14 +166,13 @@ namespace Game.Menus
 
         public virtual UniTask OpenAnimated()
         {
-            OpenInstantly();
-            return UniTask.CompletedTask;
+            return MenuTransit.Between(GetCurrent(), this);
         }
         public virtual UniTask CloseAnimated()
         {
-            CloseInstantly();
-            return UniTask.CompletedTask;
+            return MenuTransit.Between(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
         }
+        // ---
 
         public virtual void OpenInstantly()
         {

@@ -500,7 +500,7 @@ namespace Game.Menus
             }
         }
 
-        public BattlePlaceMenu() : base("Место сражения", UIFlags.WithNothing, _prefab)
+        public BattlePlaceMenu() : base("battle", UIFlags.WithNothing, _prefab)
         {
             _turnButton = new Drawer(null, Transform.Find<SpriteRenderer>("Turn button"));
             _fleeButton = new Drawer(null, Transform.Find<SpriteRenderer>("Flee button"));
@@ -521,7 +521,11 @@ namespace Game.Menus
 
             SetBellState(false);
             SetFleeState(false);
+        }
 
+        public override void OpenInstantly()
+        {
+            base.OpenInstantly();
             #if DEMO
             demo_ReopenPlace();
             #else

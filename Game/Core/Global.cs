@@ -70,20 +70,20 @@ namespace Game
         }
 
         // TODO: remove
-        static void OpenCardChoose()
+        static Menu CreateCardChoose()
         {
             CardChooseMenu menu = new();
             menu.cardStatPoints = EnvironmentBrowser.Locations["college"].stage;
             menu.choicesLeft = 2;
             menu.cardsCount = 2;
-            menu.OpenAnimated();
-            menu.OnClosed += OpenCardUpgrade;
+            menu.MenuWhenClosed = () => CreateCardUpgrade();
+            return menu;
         }
-        static void OpenCardUpgrade()
+        static Menu CreateCardUpgrade()
         {
-            CardUpgradeMenu menu = new(Player.Deck, 150, false);
-            menu.OpenAnimated();
-            menu.OnClosed += () => Traveler.TryStartDEMO(EnvironmentBrowser.Locations["college"]);
+            CardUpgradeMenu menu = new(Player.Deck, 150);
+            menu.MenuWhenClosed = () => Traveler.CreateDemoMenu(EnvironmentBrowser.Locations["college"]);
+            return menu;
         }
 
         void Start()
@@ -110,8 +110,7 @@ namespace Game
             //WorldMenu.instance.OpenAnimated();
 
             TableConsole.Initialize();
-            OpenCardChoose();
-            //DOVirtual.DelayedCall(2, OpenCardChoose); // OpenCardChoose
+            MenuTransit.Between(null, CreateCardChoose());
         }
         void Update()
         {

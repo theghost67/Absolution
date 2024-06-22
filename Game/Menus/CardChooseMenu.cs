@@ -175,32 +175,25 @@ namespace Game.Menus
         }
         class Arrows
         {
-            const float POS_X1 = -3.6f;
-            const float POS_X2 = 3.68f;
-
             readonly Transform _transform;
-            readonly bool _movesRight;
-            readonly float _duration;
-            Tween _tween;
+            readonly Tween _tween;
 
-            public Arrows(Transform transform, float animDuration, bool movesRight)
+            public Arrows(Transform transform, float duration, float startPos, float endPos)
             {
                 _transform = transform;
-                _duration = animDuration;
-                _movesRight = movesRight;
-                _tween = Utils.emptyTween;
+                _tween = DOVirtual.Float(startPos, endPos, duration, Update).SetTarget(_transform).SetLoops(-1);
+                _tween.Pause();
             }
 
-            public void AnimStart()
+            public void Play()
             {
-                float startPos = _movesRight ? POS_X1 : POS_X2;
-                float endPos = _movesRight ? POS_X2 : POS_X1;
-                _tween = DOVirtual.Float(startPos, endPos, _duration, Update).SetTarget(_transform).SetLoops(-1);
+                _tween.Play();
             }
-            public void AnimKill()
+            public void Kill()
             {
                 _tween.Kill();
             }
+
             void Update(float x)
             {
                 _transform.localPosition = _transform.localPosition.SetX(x);
@@ -216,8 +209,8 @@ namespace Game.Menus
             _descTextMesh = Transform.Find<TextMeshPro>("Desc text");
             _arrows = new Arrows[]
             {
-                new(Transform.Find("Arrows 1"), 80, true),
-                new(Transform.Find("Arrows 2"), 60, false),
+                new(Transform.Find("Arrows 1"), 50, -3.6f, 3.68f),
+                new(Transform.Find("Arrows 2"), 30, 3.6f, -3.68f),
             };
         }
 
@@ -225,20 +218,16 @@ namespace Game.Menus
         {
             base.OpenInstantly();
             foreach (Arrows arrows in _arrows)
-                arrows.AnimStart();
+                arrows.Play();
+            DOVirtual.DelayedCall(1, () => ShowCards());
         }
         public override void CloseInstantly()
         {
             base.CloseInstantly();
             foreach (Arrows arrows in _arrows)
-                arrows.AnimKill();
+                arrows.Kill();
         }
 
-        public override async UniTask OpenAnimated()
-        {
-            await base.OpenAnimated();
-            await ShowCards();
-        }
         public override void WriteDesc(string text)
         {
             base.WriteDesc(text);

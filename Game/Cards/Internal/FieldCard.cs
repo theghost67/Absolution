@@ -122,10 +122,10 @@ namespace Game.Cards
         public int PointsDeltaForTrait(Trait trait, int stacks)
         {
             int before = Points();
-            traits.Adjust(trait, stacks);
+            traits.AdjustStacks(trait, stacks);
 
             int after = Points();
-            traits.Adjust(trait, -stacks);
+            traits.AdjustStacks(trait, -stacks);
 
             return after - before;
         }
@@ -149,9 +149,9 @@ namespace Game.Cards
                 int iStacks = Convert.ToInt32(sStacks);
 
                 if (sType == "p")
-                    traits.Passives.Adjust(sId, iStacks);
+                    traits.Passives.AdjustStacks(sId, iStacks);
                 else if (sType == "a")
-                    traits.Actives.Adjust(sId, iStacks);
+                    traits.Actives.AdjustStacks(sId, iStacks);
                 else throw new ArgumentException($"Unknown trait type.\n{FORMAT_STR}");
             }
         }

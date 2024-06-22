@@ -52,7 +52,7 @@ namespace Game.Cards
             _traits = TraitListSetCreator();
 
             if (fillTraits)
-                _traits.AdjustRange(data.traits, this);
+                _traits.AdjustStacksInRange(data.traits, this);
 
             if (withDrawer)
                 CreateDrawer(parent);

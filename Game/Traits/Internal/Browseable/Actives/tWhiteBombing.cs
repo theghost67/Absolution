@@ -68,7 +68,7 @@ namespace Game.Traits
             {
                 IEnumerable<BattleField> fields = trait.Side.Opposite.Fields().WithCard();
                 foreach (BattleField field in fields)
-                    await field.Card.Traits.Passives.Adjust(SPAWN_TRAIT_ID, SPAWN_TRAIT_STACKS * trait.GetStacks(), trait);
+                    await field.Card.Traits.Passives.AdjustStacks(SPAWN_TRAIT_ID, SPAWN_TRAIT_STACKS * trait.GetStacks(), trait);
             }
 
             await trait.SetStacks(0, trait.Side);

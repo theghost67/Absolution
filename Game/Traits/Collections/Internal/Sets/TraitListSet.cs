@@ -26,7 +26,7 @@ namespace Game.Traits
             _passives = new PassiveTraitList(this);
             _actives = new ActiveTraitList(this);
         }
-        public TraitListSet(FieldCard owner, TraitListElement[] traits) : this(owner) { AdjustRange(traits); }
+        public TraitListSet(FieldCard owner, TraitListElement[] traits) : this(owner) { AdjustStacksInRange(traits); }
         public TraitListSet(SerializationDict dict)
         {
             // TODO: implement
@@ -54,31 +54,37 @@ namespace Game.Traits
         {
             throw new NotImplementedException();
         }
-
         public void Clear()
         {
             _passives.Clear();
             _actives.Clear();
         }
-        public bool Adjust(Trait trait, int stacks)
+
+        public bool SetStacks(Trait trait, int stacks)
         {
             if (trait.isPassive)
-                 return _passives.Adjust(trait.id, stacks);
-            else return _actives.Adjust(trait.id, stacks);
+                return _passives.AdjustStacks(trait.id, stacks - _passives[trait.id]?.Stacks ?? 0);
+            else return _actives.AdjustStacks(trait.id, stacks - _actives[trait.id]?.Stacks ?? 0);
         }
-        public void AdjustRange(IEnumerable<Trait> traits, int stacks)
+        public bool AdjustStacks(Trait trait, int stacks)
+        {
+            if (trait.isPassive)
+                 return _passives.AdjustStacks(trait.id, stacks);
+            else return _actives.AdjustStacks(trait.id, stacks);
+        }
+        public void AdjustStacksInRange(IEnumerable<Trait> traits, int stacks)
         {
             foreach (Trait trait in traits)
-                Adjust(trait, stacks);
+                AdjustStacks(trait, stacks);
         }
-        public void AdjustRange(IEnumerable<TraitListElement> elements)
+        public void AdjustStacksInRange(IEnumerable<TraitListElement> elements)
         {
             foreach (TraitListElement element in elements)
             {
                 Trait data = element.Trait;
                 if (data.isPassive)
-                    _passives.Adjust(data.id, element.Stacks);
-                else _actives.Adjust(data.id, element.Stacks);
+                    _passives.AdjustStacks(data.id, element.Stacks);
+                else _actives.AdjustStacks(data.id, element.Stacks);
             }
         }
 

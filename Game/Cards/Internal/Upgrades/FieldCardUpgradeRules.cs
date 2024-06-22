@@ -120,8 +120,8 @@ namespace Game.Cards
                 {
                     traitPointsShareCurrent += traitAddPointsDelta;
                     if (traitSrc.isPassive)
-                         card.traits.Passives.Adjust(traitId, 1);
-                    else card.traits.Actives.Adjust(traitId, 1);
+                         card.traits.Passives.AdjustStacks(traitId, 1);
+                    else card.traits.Actives.AdjustStacks(traitId, 1);
                 }
                 else
                 {
@@ -153,8 +153,8 @@ namespace Game.Cards
                 {
                     traitPointsShareCurrent += stackAddPointsDelta;
                     if (traitSrc.isPassive)
-                        card.traits.Passives.Adjust(traitId, 1);
-                    else card.traits.Actives.Adjust(traitId, 1);
+                        card.traits.Passives.AdjustStacks(traitId, 1);
+                    else card.traits.Actives.AdjustStacks(traitId, 1);
                 }
                 else
                 {

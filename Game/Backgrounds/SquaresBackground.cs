@@ -9,13 +9,14 @@ using UnityEngine;
 
 namespace Game.Backgrounds
 {
+    // works only with aspect ratio equal to 16:9
     // works only with non-movable camera (adjust squares BG object so it would be always on camera center)
+
     /// <summary>
     /// Класс для заднего фона "перемещение квадратов по сетке".
     /// </summary>
     public class SquaresBackground : MonoBehaviour
     {
-        const float SPEED = 1f;
         const int TWEENS_MAX = 16;
 
         const float START_POS_X = -3.185f;
@@ -57,13 +58,12 @@ namespace Game.Backgrounds
 
         int2 _visibleSquareRangeX; // equal to half of the grid width
         int2 _visibleSquareRangeY; // equal to half of the grid height
-        bool _active;
         float _squareLightUpDelay;
 
         void Start()
         {
             _startPosScaled = new Vector3(START_POS_X, START_POS_Y) * Global.PIXEL_SCALE;
-            _speed = SPEED * new Vector2(15.75f, -9); // why not 16 ???
+            _speed = new Vector2(15.75f, -9f); // grid size is imperfect, so it's not 16
 
             _tweens = new Tween[TWEENS_MAX];
             _tweensFreeIndecies = new Stack<int>(TWEENS_MAX);
@@ -84,12 +84,11 @@ namespace Game.Backgrounds
         }
         void Update()
         {
-            if (!_active) return;
             float delta = Time.deltaTime;
 
             _transform.position += _speed * delta;
-            if (_transform.position.x > END_POS_X * Global.PIXEL_SCALE &&
-                _transform.position.y < END_POS_Y * Global.PIXEL_SCALE)
+            if (_transform.position.x >= END_POS_X * Global.PIXEL_SCALE &&
+                _transform.position.y <= END_POS_Y * Global.PIXEL_SCALE)
             {
                 _transform.position = _startPosScaled;
                 SwitchVisibleSquares();
@@ -102,14 +101,6 @@ namespace Game.Backgrounds
             _squareLightUpDelay = SQUARE_LIGHT_UP_DELAY;
         }
 
-        void OnEnable()
-        {
-            _active = true;
-        }
-        void OnDisable()
-        {
-            _active = false;
-        }
         void OnColorPaletteChanged()
         {
             _lightColor = ColorPalette.GetColor(1).WithAlpha(0.75f);

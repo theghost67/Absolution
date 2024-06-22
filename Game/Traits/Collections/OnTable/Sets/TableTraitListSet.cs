@@ -61,31 +61,37 @@ namespace Game.Traits
                  return new TableTraitListSet(this, cArgs);
             else return null;
         }
-
         public void Clear(ITableEntrySource source)
         {
             _passives.Clear(source);
             _actives.Clear(source);
         }
-        public UniTask Adjust(Trait trait, int stacks, ITableEntrySource source)
+
+        public UniTask SetStacks(Trait trait, int stacks, ITableEntrySource source, string entryId = null)
         {
             if (trait.isPassive)
-                 return _passives.Adjust(trait.id, stacks, source);
-            else return _actives.Adjust(trait.id, stacks, source);
+                 return _passives.AdjustStacks(trait.id, stacks - _passives[trait.id]?.Stacks ?? 0, source, entryId);
+            else return _actives.AdjustStacks(trait.id, stacks - _actives[trait.id]?.Stacks ?? 0, source, entryId);
         }
-        public void AdjustRange(IEnumerable<Trait> traits, int stacks, ITableEntrySource source)
+        public UniTask AdjustStacks(Trait trait, int stacks, ITableEntrySource source, string entryId = null)
+        {
+            if (trait.isPassive)
+                 return _passives.AdjustStacks(trait.id, stacks, source, entryId);
+            else return _actives.AdjustStacks(trait.id, stacks, source, entryId);
+        }
+        public void AdjustStacksInRange(IEnumerable<Trait> traits, int stacks, ITableEntrySource source, string entryId = null)
         {
             foreach (Trait trait in traits)
-                Adjust(trait, stacks, source);
+                AdjustStacks(trait, stacks, source, entryId);
         }
-        public void AdjustRange(IEnumerable<TraitListElement> elements, ITableEntrySource source)
+        public void AdjustStacksInRange(IEnumerable<TraitListElement> elements, ITableEntrySource source, string entryId = null)
         {
             foreach (TraitListElement element in elements)
             {
                 Trait data = element.Trait;
                 if (data.isPassive)
-                     _passives.Adjust(data.id, element.Stacks, source);
-                else _actives.Adjust(data.id, element.Stacks, source);
+                     _passives.AdjustStacks(data.id, element.Stacks, source, entryId);
+                else _actives.AdjustStacks(data.id, element.Stacks, source, entryId);
             }
         }
 

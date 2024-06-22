@@ -6,11 +6,16 @@ using Game.Territories;
 using Game.Traits;
 using GreenOne;
 using MyBox;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
 namespace Game.Menus
 {
+    // TODO: create separate class for buttons (and derived?)
+    // TODO: display upgraded desc from the right side
+
     /// <summary>
     /// Класс, представляющий меню с возможностью улучшать карты поля колоды игрока.
     /// </summary>
@@ -47,7 +52,6 @@ namespace Game.Menus
         readonly TextMeshPro _infoRightTextMesh;
         readonly Arrows[] _arrows;
 
-        readonly bool _canDowngrade; // TODO: create "_canReshape" (allows to downgrade even earlier card changes, not just in this menu)
         readonly SleeveToUpgrade _sleeve;
         readonly int _pointsLimit;
         int _pointsCurrent;
@@ -77,6 +81,7 @@ namespace Game.Menus
             static CardToUpgrade _selected;
             readonly CardUpgradeMenu _menu;
             readonly TableSleeve _sleeve;
+            readonly Dictionary<string, int> _upgradedStats; 
 
             Color _lastOutlineColor;
             Tween _scaleTween;
@@ -98,34 +103,50 @@ namespace Game.Menus
                 _menu = menu;
                 _sleeve = sleeve;
 
+                _upgradedStats = new Dictionary<string, int>()
+                {
+                    { nameof(price), 0 },
+                    { nameof(moxie), 0 },
+                    { nameof(health), 0 },
+                    { nameof(strength), 0 },
+                };
+                foreach (Trait trait in data.traits.Select(e => e.Trait))
+                    _upgradedStats.Add(trait.id, 0);
+
                 _scaleTween = Utils.emptyTween;
                 _posTween = Utils.emptyTween;
 
                 Drawer.ChangePointer = true;
                 Drawer.OnMouseClickLeft += OnCardMouseClickLeft;
 
-                Drawer.upperLeftIcon.OnMouseEnter += (s, e) => OnStatMouseEnter(UpgradeStat.Price, s, e);
-                Drawer.upperLeftIcon.OnMouseLeave += (s, e) => OnStatMouseLeave(UpgradeStat.Price, s, e);
-                Drawer.upperLeftIcon.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(UpgradeStat.Price, s, e);
+                Drawer.upperLeftIcon.OnMouseEnter += (s, e) => OnStatMouseEnter(nameof(price), s, e);
+                Drawer.upperLeftIcon.OnMouseLeave += (s, e) => OnStatMouseLeave(nameof(price), s, e);
+                Drawer.upperLeftIcon.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(nameof(price), s, e);
+                Drawer.upperLeftIcon.OnMouseClickRight += (s, e) => OnStatMouseClickRight(nameof(price), s, e);
 
-                Drawer.upperRightIcon.OnMouseEnter += (s, e) => OnStatMouseEnter(UpgradeStat.Moxie, s, e);
-                Drawer.upperRightIcon.OnMouseLeave += (s, e) => OnStatMouseLeave(UpgradeStat.Moxie, s, e);
-                Drawer.upperRightIcon.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(UpgradeStat.Moxie, s, e);
+                Drawer.upperRightIcon.OnMouseEnter += (s, e) => OnStatMouseEnter(nameof(moxie), s, e);
+                Drawer.upperRightIcon.OnMouseLeave += (s, e) => OnStatMouseLeave(nameof(moxie), s, e);
+                Drawer.upperRightIcon.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(nameof(moxie), s, e);
+                Drawer.upperRightIcon.OnMouseClickRight += (s, e) => OnStatMouseClickRight(nameof(moxie), s, e);
 
-                Drawer.lowerLeftIcon.OnMouseEnter += (s, e) => OnStatMouseEnter(UpgradeStat.Health, s, e);
-                Drawer.lowerLeftIcon.OnMouseLeave += (s, e) => OnStatMouseLeave(UpgradeStat.Health, s, e);
-                Drawer.lowerLeftIcon.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(UpgradeStat.Health, s, e);
+                Drawer.lowerLeftIcon.OnMouseEnter += (s, e) => OnStatMouseEnter(nameof(health), s, e);
+                Drawer.lowerLeftIcon.OnMouseLeave += (s, e) => OnStatMouseLeave(nameof(health), s, e);
+                Drawer.lowerLeftIcon.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(nameof(health), s, e);
+                Drawer.lowerLeftIcon.OnMouseClickRight += (s, e) => OnStatMouseClickRight(nameof(health), s, e);
 
-                Drawer.lowerRightIcon.OnMouseEnter += (s, e) => OnStatMouseEnter(UpgradeStat.Strength, s, e);
-                Drawer.lowerRightIcon.OnMouseLeave += (s, e) => OnStatMouseLeave(UpgradeStat.Strength, s, e);
-                Drawer.lowerRightIcon.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(UpgradeStat.Strength, s, e);
+                Drawer.lowerRightIcon.OnMouseEnter += (s, e) => OnStatMouseEnter(nameof(strength), s, e);
+                Drawer.lowerRightIcon.OnMouseLeave += (s, e) => OnStatMouseLeave(nameof(strength), s, e);
+                Drawer.lowerRightIcon.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(nameof(strength), s, e);
+                Drawer.lowerRightIcon.OnMouseClickRight += (s, e) => OnStatMouseClickRight(nameof(strength), s, e);
 
                 foreach (TableTraitListElementDrawer drawer in Drawer.Traits)
                 {
+                    string id = drawer.attached.Trait.Data.id;
                     drawer.enqueueAnims = false;
-                    drawer.OnMouseEnter += (s, e) => OnStatMouseEnter(UpgradeStat.Trait, s, e);
-                    drawer.OnMouseLeave += (s, e) => OnStatMouseLeave(UpgradeStat.Trait, s, e);
-                    drawer.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(UpgradeStat.Trait, s, e);
+                    drawer.OnMouseEnter += (s, e) => OnStatMouseEnter(id, s, e);
+                    drawer.OnMouseLeave += (s, e) => OnStatMouseLeave(id, s, e);
+                    drawer.OnMouseClickLeft += (s, e) => OnStatMouseClickLeft(id, s, e);
+                    drawer.OnMouseClickRight += (s, e) => OnStatMouseClickRight(id, s, e);
                 }
             }
             public static void OnUpdate()
@@ -151,6 +172,26 @@ namespace Game.Menus
                 _defaultPos = pos;
                 _defaultPoints = points;
                 _currentPoints = points;
+            }
+            public async UniTask Reset()
+            {
+                await ResetPrice();
+                await ResetMoxie();
+                await ResetHealth();
+                await ResetStrength();
+
+                IEnumerable<string> allIds = _upgradedStats.Keys;
+                string[] statsIds = new string[]
+                {
+                    nameof(price),
+                    nameof(moxie),
+                    nameof(health),
+                    nameof(strength),
+                };
+                IEnumerable<string> traitIds = allIds.Except(statsIds);
+
+                foreach (string id in traitIds)
+                    await ResetTrait(id);
             }
 
             public Tween AnimCardSelect()
@@ -262,21 +303,19 @@ namespace Game.Menus
 
                 card.Select(true);
             }
-            async void OnStatMouseClickLeft(UpgradeStat stat, object sender, DrawerMouseEventArgs e) 
+            async void OnStatMouseClickLeft(string statId, object sender, DrawerMouseEventArgs e) 
             {
-                e.handled = _awaitsUpgrade;
-                if (e.handled) return;
+                if (_awaitsUpgrade) return;
                 if (_selected != this) return;
-                if (_menu._pointsAvailable < -9999) return;
+                if (_upgradePointsDelta + _menu._pointsAvailable < -9999) return;
 
-                UniTask task = stat switch
+                UniTask task = statId switch
                 {
-                    UpgradeStat.Price => UpgradePrice(sender),
-                    UpgradeStat.Moxie => UpgradeMoxie(sender),
-                    UpgradeStat.Health => UpgradeHealth(sender),
-                    UpgradeStat.Strength => UpgradeStrength(sender),
-                    UpgradeStat.Trait => UpgradeTrait(sender),
-                    _ => throw new System.NotSupportedException()
+                    nameof(price) => UpgradePrice(),
+                    nameof(moxie) => UpgradeMoxie(),
+                    nameof(health) => UpgradeHealth(),
+                    nameof(strength) => UpgradeStrength(),
+                    _ => UpgradeTrait(statId),
                 };
 
                 if (_lastOutlineColor.a != 0 && Drawer.Outline.GetColorTween().IsPlaying())
@@ -284,7 +323,7 @@ namespace Game.Menus
                 _lastOutlineColor = Drawer.Outline.GetColor();
                 Drawer.HighlightOutline(_lastOutlineColor, 0.5f);
 
-                OnStatMouseEnter(stat, sender, e);
+                OnStatMouseEnter(statId, sender, e);
                 _currentPoints += _upgradePointsDelta;
                 _menu.OnDeckPointsChanged(_upgradePointsDelta);
 
@@ -292,99 +331,171 @@ namespace Game.Menus
                 await task;
                 _awaitsUpgrade = false;
             }
-            async void OnStatMouseClickRight(UpgradeStat stat, object sender, DrawerMouseEventArgs e)
+            async void OnStatMouseClickRight(string statId, object sender, DrawerMouseEventArgs e)
             {
+                if (_awaitsUpgrade) return;
                 if (_selected != this) return;
-                if (_menu._canDowngrade)
-                     throw new System.NotSupportedException();
-                else return;
+                if (_upgradedStats[statId] <= 0) return;
+                if (_downgradePointsDelta + _menu._pointsAvailable < -9999) return;
 
-                //switch (stat)
-                //{
-                //    case UpgradeStat.Price:
-                //        if (Data.price.value <= 0) break;
-                //            Data.price.value--; // also redraw on table
-                //        break;
+                UniTask task = statId switch
+                {
+                    nameof(price) => DowngradePrice(),
+                    nameof(moxie) => DowngradeMoxie(),
+                    nameof(health) => DowngradeHealth(),
+                    nameof(strength) => DowngradeStrength(),
+                    _ => DowngradeTrait(statId),
+                };
 
-                //    case UpgradeStat.Moxie:
-                //        Data.moxie--; 
-                //        break;
+                Drawer.HighlightOutline(Color.red, 0.5f);
+                OnStatMouseEnter(statId, sender, e);
+                _currentPoints += _downgradePointsDelta;
+                _menu.OnDeckPointsChanged(_downgradePointsDelta);
 
-                //    case UpgradeStat.Health:
-                //        Data.health--;
-                //        break;
-
-                //    case UpgradeStat.Strength:
-                //        Data.strength--;
-                //        break;
-
-                //    case UpgradeStat.Trait:
-                //        Data.traits.Adjust(((TableTraitListElement)((Drawer)sender).attached).Trait.Data, 1); break;
-
-                //    default: throw new System.NotSupportedException();
-                //}
-
-                //Drawer.HighlightOutline(Color.red);
-                //_menu.OnDeckPointsChanged(_downgradePointsDelta);
+                _awaitsUpgrade = true;
+                await task;
+                _awaitsUpgrade = false;
             }
 
-            void OnStatMouseEnter(UpgradeStat stat, object sender, DrawerMouseEventArgs e)
+            void OnStatMouseEnter(string statId, object sender, DrawerMouseEventArgs e)
             {
                 if (_selected != this) return;
-                _upgradePointsDelta = stat switch
+                _upgradePointsDelta = statId switch
                 {
-                    UpgradeStat.Price => Data.PointsDeltaForPrice(1),
-                    UpgradeStat.Moxie => Data.PointsDeltaForMoxie(1),
-                    UpgradeStat.Health => Data.PointsDeltaForHealth(1),
-                    UpgradeStat.Strength => Data.PointsDeltaForStrength(1),
-                    UpgradeStat.Trait => Data.PointsDeltaForTrait(((TableTraitListElement)((Drawer)sender).attached).Trait.Data, 1),
-                    _ => throw new System.NotImplementedException(),
+                    nameof(price) => Data.PointsDeltaForPrice(1),
+                    nameof(moxie) => Data.PointsDeltaForMoxie(1),
+                    nameof(health) => Data.PointsDeltaForHealth(1),
+                    nameof(strength) => Data.PointsDeltaForStrength(1),
+                    _ => Data.PointsDeltaForTrait(((TableTraitListElement)((Drawer)sender).attached).Trait.Data, 1),
                 };
-                _downgradePointsDelta = !_menu._canDowngrade ? 0 : stat switch 
+                _downgradePointsDelta = _upgradedStats[statId] <= 0 ? 0 : statId switch 
                 {
-                    UpgradeStat.Price => Data.PointsDeltaForPrice(-1),
-                    UpgradeStat.Moxie => Data.PointsDeltaForMoxie(-1),
-                    UpgradeStat.Health => Data.PointsDeltaForHealth(-1),
-                    UpgradeStat.Strength => Data.PointsDeltaForStrength(-1),
-                    UpgradeStat.Trait => Data.PointsDeltaForTrait(((TableTraitListElement)((Drawer)sender).attached).Trait.Data, -1),
-                    _ => throw new System.NotImplementedException(),
+                    nameof(price) => Data.PointsDeltaForPrice(-1),
+                    nameof(moxie) => Data.PointsDeltaForMoxie(-1),
+                    nameof(health) => Data.PointsDeltaForHealth(-1),
+                    nameof(strength) => Data.PointsDeltaForStrength(-1),
+                    _ => Data.PointsDeltaForTrait(((TableTraitListElement)((Drawer)sender).attached).Trait.Data, -1),
                 };
 
                 _menu.UpgradeInfoShow(_upgradePointsDelta, _downgradePointsDelta);
             }
-            void OnStatMouseLeave(UpgradeStat stat, object sender, DrawerMouseEventArgs e)
+            void OnStatMouseLeave(string statId, object sender, DrawerMouseEventArgs e)
             {
                 if (_selected != this) return;
                 _menu.UpgradeInfoHide();
             }
 
-            // sender is Drawer
-            UniTask UpgradePrice(object sender)
+            UniTask UpgradePrice()
             {
-                return price.SetValueAbs(++Data.price.value);
+                Data.price.value++;
+                _upgradedStats[nameof(price)]++;
+                return price.SetValueAbs(Data.price.value);
             }
-            UniTask UpgradeMoxie(object sender)
+            UniTask DowngradePrice()
             {
-                return moxie.SetValueAbs(++Data.moxie);
+                Data.price.value--;
+                _upgradedStats[nameof(price)]--;
+                return price.SetValueAbs(Data.price.value);
             }
-            UniTask UpgradeHealth(object sender)
+            UniTask ResetPrice()
             {
-                return health.SetValueAbs(++Data.health);
+                Data.price.value -= _upgradedStats[nameof(price)];
+                _upgradedStats[nameof(price)] = 0;
+                return price.SetValueAbs(Data.price.value);
             }
-            UniTask UpgradeStrength(object sender)
-            {
-                return strength.SetValueAbs(++Data.strength);
-            }
-            UniTask UpgradeTrait(object sender)
-            {
-                TableTraitListElement element = (TableTraitListElement)((Drawer)sender).attached;
-                Trait trait = element.Trait.Data;
-                int stacks = element.Stacks + 1;
 
-                Data.traits.Adjust(trait, 1);
-                element.Drawer.AnimAdjust(stacks);
+            UniTask UpgradeMoxie()
+            {
+                Data.moxie++;
+                _upgradedStats[nameof(moxie)]++;
+                return moxie.SetValueAbs(Data.moxie);
+            }
+            UniTask DowngradeMoxie()
+            {
+                Data.moxie--;
+                _upgradedStats[nameof(moxie)]--;
+                return moxie.SetValueAbs(Data.moxie);
+            }
+            UniTask ResetMoxie()
+            {
+                Data.moxie -= _upgradedStats[nameof(moxie)];
+                _upgradedStats[nameof(moxie)] = 0;
+                return moxie.SetValueAbs(Data.moxie);
+            }
+
+            UniTask UpgradeHealth()
+            {
+                Data.health++;
+                _upgradedStats[nameof(health)]++;
+                return health.SetValueAbs(Data.health);
+            }
+            UniTask DowngradeHealth()
+            {
+                Data.health--;
+                _upgradedStats[nameof(health)]--;
+                return health.SetValueAbs(Data.health);
+            }
+            UniTask ResetHealth()
+            {
+                Data.health -= _upgradedStats[nameof(health)];
+                _upgradedStats[nameof(health)] = 0;
+                return health.SetValueAbs(Data.health);
+            }
+
+            UniTask UpgradeStrength()
+            {
+                Data.strength++;
+                _upgradedStats[nameof(strength)]++;
+                return strength.SetValueAbs(Data.strength);
+            }
+            UniTask DowngradeStrength()
+            {
+                Data.strength--;
+                _upgradedStats[nameof(strength)]--;
+                return strength.SetValueAbs(Data.strength);
+            }
+            UniTask ResetStrength()
+            {
+                Data.strength -= _upgradedStats[nameof(strength)];
+                _upgradedStats[nameof(strength)] = 0;
+                return strength.SetValueAbs(Data.strength);
+            }
+
+            UniTask UpgradeTrait(string id)
+            {
+                TableTraitListElement element = Drawer.Traits.elements[id].attached;
+                Trait trait = element.Trait.Data;
+                int stacks = Data.traits[id].Stacks + 1;
+
+                Data.traits.SetStacks(trait, stacks);
+                _upgradedStats[id]++;
+
                 _menu.WriteDesc(element.Trait.DescRich());
-                return element.List.Adjust(trait.id, 1, null, null);
+                return element.List.AdjustStacks(trait.id, 1, null, null);
+            }
+            UniTask DowngradeTrait(string id)
+            {
+                TableTraitListElement element = Drawer.Traits.elements[id].attached;
+                Trait trait = element.Trait.Data;
+                int stacks = Data.traits[id].Stacks - 1;
+
+                Data.traits.SetStacks(trait, stacks);
+                _upgradedStats[id]--;
+
+                _menu.WriteDesc(element.Trait.DescRich());
+                return element.List.AdjustStacks(trait.id, -1, null, null);
+            }
+            UniTask ResetTrait(string id)
+            {
+                TableTraitListElement element = Drawer.Traits.elements[id].attached;
+                Trait trait = element.Trait.Data;
+                int stacks = Data.traits[id].Stacks - _upgradedStats[id];
+
+                Data.traits.SetStacks(trait, stacks);
+                _upgradedStats[id] = 0;
+
+                _menu.WriteDesc(element.Trait.DescRich());
+                return element.List.AdjustStacks(trait.id, 1, null, null);
             }
         }
         class SleeveToUpgrade : TableSleeve
@@ -398,54 +509,37 @@ namespace Game.Menus
                 else return null;
             }
         }
-
         class Arrows
         {
-            const float POS_Y1 = -1.95f;
-            const float POS_Y2 = 2.13f;
-
             readonly Transform _transform;
-            readonly bool _movesUp;
-            readonly float _duration;
-            Tween _tween;
+            readonly Tween _tween;
 
-            public Arrows(Transform transform, float animDuration, bool movesUp)
+            public Arrows(Transform transform, float duration, float startPos, float endPos)
             {
                 _transform = transform;
-                _duration = animDuration;
-                _movesUp = movesUp;
-                _tween = Utils.emptyTween;
+                _tween = DOVirtual.Float(startPos, endPos, duration, Update).SetTarget(_transform).SetLoops(-1);
+                _tween.Pause();
             }
 
-            public void AnimStart()
+            public void Play()
             {
-                float startPos = _movesUp ? POS_Y1 : POS_Y2;
-                float endPos = _movesUp ? POS_Y2 : POS_Y1;
-                _tween = DOVirtual.Float(startPos, endPos, _duration, Update).SetTarget(_transform).SetLoops(-1);
+                _tween.Play();
             }
-            public void AnimKill()
+            public void Kill()
             {
                 _tween.Kill();
             }
+
             void Update(float y)
             {
                 _transform.localPosition = _transform.localPosition.SetY(y);
             }
         }
-        enum UpgradeStat
-        {
-            Price,
-            Moxie,
-            Health,
-            Strength,
-            Trait
-        }
 
-        public CardUpgradeMenu(CardDeck deck, int pointsLimit, bool canDowngrade) : base(ID, _prefab)
+        public CardUpgradeMenu(CardDeck deck, int pointsLimit) : base(ID, _prefab)
         {
             _pointsLimit = pointsLimit;
             _pointsCurrent = deck.Points;
-            _canDowngrade = canDowngrade;
 
             _leftButton = Transform.Find("Left button").gameObject;
             _centerButton = Transform.Find("Center button").gameObject;
@@ -461,14 +555,13 @@ namespace Game.Menus
 
             _infoLeftTextMesh = Transform.Find<TextMeshPro>("Info left");
             _infoRightTextMesh = Transform.Find<TextMeshPro>("Info right");
-            _infoRightTextMesh.color = _canDowngrade ? Color.white : Color.gray;
 
             _arrows = new Arrows[]
             {
-                new(Transform.Find("Arrows 1"), 40, true),
-                new(Transform.Find("Arrows 2"), 60, false),
-                new(Transform.Find("Arrows 3"), 80, true),
-                new(Transform.Find("Arrows 4"), 30, false),
+                new(Transform.Find("Arrows 1"), 40, -2.28f, 2.12f),
+                new(Transform.Find("Arrows 2"), 60, 2.29f, -2.03f),
+                new(Transform.Find("Arrows 3"), 80, -2.19f, 2.13f),
+                new(Transform.Find("Arrows 4"), 30, 2.13f, -2.29f),
             };
 
             _leftButton.SetActive(false);
@@ -506,14 +599,14 @@ namespace Game.Menus
             base.OpenInstantly();
             Global.OnUpdate += CardToUpgrade.OnUpdate;
             foreach (Arrows arrows in _arrows)
-                arrows.AnimStart();
+                arrows.Play();
         }
         public override void CloseInstantly()
         {
             base.CloseInstantly();
             Global.OnUpdate -= CardToUpgrade.OnUpdate;
             foreach (Arrows arrows in _arrows)
-                arrows.AnimKill();
+                arrows.Kill();
         }
 
         // TODO: replace by creating own TableTrait MouseEnter/Left implementation (create virtual bool ShowTooltip in TableTraitDrawer/TableCardDrawer)
@@ -565,6 +658,7 @@ namespace Game.Menus
 
             _infoLeftTextMesh.text = $"УЛУЧШИТЬ:\n{upgradedPointsDelta} ОП";
             _infoRightTextMesh.text = $"УХУДШИТЬ:\n{downgradedPointsDelta} ОП";
+            _infoRightTextMesh.color = downgradedPointsDelta == 0 ? Color.gray : Color.white;
         }
         void UpgradeInfoHide() 
         {
@@ -613,7 +707,7 @@ namespace Game.Menus
         {
             e.handled |= _pointsCurrent > _pointsLimit;
             if (e.handled) return;
-            CloseInstantly();
+            CloseAnimated();
         }
     }
 }

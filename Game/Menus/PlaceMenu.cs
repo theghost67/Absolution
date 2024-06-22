@@ -58,8 +58,8 @@ namespace Game.Menus
             _prefab = Resources.Load<GameObject>("Prefabs/Menus/Place");
         }
 
-        protected PlaceMenu(string name, UIFlags flags) : this(name, flags, _prefab) { }
-        protected PlaceMenu(string name, UIFlags flags, GameObject prefab) : base(name, prefab)
+        protected PlaceMenu(string id, UIFlags flags) : this(id, flags, _prefab) { }
+        protected PlaceMenu(string id, UIFlags flags, GameObject prefab) : base(id, prefab)
         {
             // TODO: remove?
             //Transform.Find<SpriteRenderer>("BG").sprite = Resources.Load<Sprite>($"Sprites/Backgrounds/{PlaceId}");

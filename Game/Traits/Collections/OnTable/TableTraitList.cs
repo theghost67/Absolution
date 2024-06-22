@@ -64,12 +64,19 @@ namespace Game.Traits
 
         // use entryId and Revert method to revert applied effect instead of calling this method with negative value
         // (as value can be modified by OnStacksTryToChange event)
-        public async UniTask Adjust(string id, int stacks, ITableEntrySource source, string entryId = null)
+
+        public UniTask SetStacks(string id, int stacks, ITableEntrySource source, string entryId = null)
+        {
+            ITableTraitListElement element = this[id];
+            return AdjustStacks(id, stacks - element?.Stacks ?? 0, source, entryId);
+        }
+        public async UniTask AdjustStacks(string id, int stacks, ITableEntrySource source, string entryId = null)
         {
             if (stacks == 0) return;
             TableTraitStacksTryArgs listArgs = new(id, stacks, source);
             if (!await _onStacksTryToChange.InvokeAND(this, listArgs)) return;
 
+            stacks = listArgs.stacks;
             ITableTraitListElement element = AdjustInternal(listArgs);
             if (element == null) return;
 
@@ -83,13 +90,17 @@ namespace Game.Traits
             ((TableTraitListElement)element).AddEntryInternal(entryId, entry);
             TableTraitStacksSetArgs stacksArgs = new(element, stacks, source);
 
-            if (element.Drawer?.enqueueAnims ?? false)
-                _set.Drawer?.elements.Enqueue(element, stacks);
+            if (element.Drawer != null)
+            {
+                if (element.Drawer.enqueueAnims)
+                    _set.Drawer?.elements.Enqueue(element, stacks);
+                else element.Drawer.AnimAdjust(stacks);
+            }
 
             await trait.Data.OnStacksChanged(stacksArgs);
             await _onStacksChanged.Invoke(this, stacksArgs);
         }
-        public async UniTask Revert(string id, string entryId)
+        public async UniTask RevertStacks(string id, string entryId)
         {
             ITableEntryDict entries = this[id].StacksEntries;
             if (!entries.TryGetValue(entryId, out TableEntry entry))
@@ -102,17 +113,21 @@ namespace Game.Traits
             ITableTrait trait = element.Trait;
             TableTraitStacksSetArgs stacksArgs = new(element, listArgs.stacks, listArgs.source);
 
-            if (element.Drawer?.enqueueAnims ?? false)
-                _set.Drawer?.elements.Enqueue(element, listArgs.stacks);
+            if (element.Drawer != null)
+            {
+                if (element.Drawer.enqueueAnims)
+                    _set.Drawer?.elements.Enqueue(element, listArgs.stacks);
+                else element.Drawer.AnimAdjust(listArgs.stacks);
+            }
 
             await trait.Data.OnStacksChanged(stacksArgs);
             await _onStacksChanged.Invoke(this, stacksArgs);
         }
 
-        public void AdjustByOwnerList(TraitList dataList)
+        public void AdjustStacksByOwnerList(TraitList dataList)
         {
             foreach (TraitListElement element in dataList)
-                Adjust(element.Trait.id, element.Stacks, _set.Owner);
+                AdjustStacks(element.Trait.id, element.Stacks, _set.Owner);
         }
         public void Clear(ITableEntrySource source)
         {
@@ -120,7 +135,7 @@ namespace Game.Traits
             for (int i = values.Length - 1; i >= 0; i--)
             {
                 ITableTraitListElement element = values[i];
-                Adjust(element.Trait.Data.id, -element.Stacks, source);
+                AdjustStacks(element.Trait.Data.id, -element.Stacks, source);
             }
         }
 

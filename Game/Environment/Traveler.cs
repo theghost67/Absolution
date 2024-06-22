@@ -120,9 +120,9 @@ namespace Game.Environment
             await bg.DOFade(0, 1).AsyncWaitForCompletion();
             new LocationMenu(_location).OpenInstantly();
         }
-        public async static UniTask TryStartDEMO(Location location) // remove
+        public static Menu CreateDemoMenu(Location location) // remove
         {
-            if (_isTraveling) return;
+            if (_isTraveling) return null;
             location.stage = 50;
             LocationMission mission = new(location);
 
@@ -137,7 +137,7 @@ namespace Game.Environment
             _placesNodeMap = GenerateNodeMap(yLength: _requiredProgress);
             OnTravelStart?.Invoke();
 
-            new BattlePlaceMenu().OpenAnimated();
+            return new BattlePlaceMenu();
         }
 
         public static void TryStopTravel(bool complete)

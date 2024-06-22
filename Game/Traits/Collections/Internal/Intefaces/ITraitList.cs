@@ -14,8 +14,8 @@ namespace Game.Traits
 
         TraitListElement IReadOnlyList<TraitListElement>.this[int index] => this[index];
 
-        public bool Adjust(string id, int stacks);
-        public void AdjustByOwnerList(TraitList dataList);
+        public bool AdjustStacks(string id, int stacks);
+        public void AdjustStacksByOwnerList(TraitList dataList);
         public void Clear();
 
         public abstract IEnumerable<TraitListElement> GetElements();

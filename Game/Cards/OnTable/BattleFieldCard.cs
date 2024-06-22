@@ -152,7 +152,7 @@ namespace Game.Cards
             health.OnPostSet.Add(OnHealthPostSet);
 
             if (fillTraits)
-                _traits.AdjustRange(data.traits, this);
+                _traits.AdjustStacksInRange(data.traits, this);
 
             if (withDrawer)
                 CreateDrawer(side.Territory.transform);

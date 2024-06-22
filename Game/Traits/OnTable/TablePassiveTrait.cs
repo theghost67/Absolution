@@ -49,7 +49,7 @@ namespace Game.Traits
         {
             if (Owner == null)
                  return UniTask.CompletedTask;
-            else return Owner.Traits.Passives.Adjust(_data.id, delta, source);
+            else return Owner.Traits.Passives.AdjustStacks(_data.id, delta, source);
         }
 
         protected override void DrawerSetter(TableTraitDrawer value)

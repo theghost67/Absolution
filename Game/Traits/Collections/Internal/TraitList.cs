@@ -34,7 +34,12 @@ namespace Game.Traits
 
         public abstract object Clone(CloneArgs args);
 
-        public bool Adjust(string id, int stacks)
+        public bool SetStacks(string id, int stacks)
+        {
+            TraitListElement element = this[id];
+            return AdjustStacks(id, stacks - element?.Stacks ?? 0);
+        }
+        public bool AdjustStacks(string id, int stacks)
         {
             if (stacks == 0) return false;
             TraitListElement element;
@@ -55,10 +60,10 @@ namespace Game.Traits
             }
             return true;
         }
-        public void AdjustByOwnerList(TraitList dataList)
+        public void AdjustStacksByOwnerList(TraitList dataList)
         {
             foreach (TraitListElement element in dataList)
-                Adjust(element.Trait.id, element.Stacks);
+                AdjustStacks(element.Trait.id, element.Stacks);
         }
         public void Clear()
         {
@@ -66,7 +71,7 @@ namespace Game.Traits
             for (int i = values.Length - 1; i >= 0; i--)
             {
                 TraitListElement element = values[i];
-                Adjust(element.Trait.id, -element.Stacks);
+                AdjustStacks(element.Trait.id, -element.Stacks);
             }
         }
 
