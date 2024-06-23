@@ -22,7 +22,7 @@ namespace Game.Cards
         {
             return new TableFloatCard(this, parent);
         }
-        public override int Points() => 0;
+        public override float Points() => default;
 
         // see how weight threshold is used in BattleAI.CalculateWeightDeltas()
         public virtual BattleWeight GetWeightDeltaUseThreshold(BattleFloatCard card) => new(0, 0.16f);

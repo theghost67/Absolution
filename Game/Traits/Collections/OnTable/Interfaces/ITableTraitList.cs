@@ -16,6 +16,7 @@ namespace Game.Traits
         public ITableTraitListElement this[string id] => GetElement(id);
         public new ITableTraitListElement this[int index] => GetElement(index);
 
+        public UniTask SetStacks(string id, int stacks, ITableEntrySource source, string entryId);
         public UniTask AdjustStacks(string id, int stacks, ITableEntrySource source, string entryId);
         public UniTask RevertStacks(string id, string entryId);
 

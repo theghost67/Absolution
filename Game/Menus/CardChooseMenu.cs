@@ -29,7 +29,7 @@ namespace Game.Menus
         readonly Transform _cardsParent;
         readonly TextMeshPro _headerTextMesh;
         readonly TextMeshPro _descTextMesh;
-        readonly Arrows[] _arrows;
+        readonly ArrowsAnim[] _arrows;
 
         readonly Dictionary<string, CardToChoose> _cards;
         bool _cardsAreShown;
@@ -173,12 +173,12 @@ namespace Game.Menus
                 else await menu.CloseAnimated();
             }
         }
-        class Arrows
+        class ArrowsAnim
         {
             readonly Transform _transform;
             readonly Tween _tween;
 
-            public Arrows(Transform transform, float duration, float startPos, float endPos)
+            public ArrowsAnim(Transform transform, float duration, float startPos, float endPos)
             {
                 _transform = transform;
                 _tween = DOVirtual.Float(startPos, endPos, duration, Update).SetTarget(_transform).SetLoops(-1);
@@ -207,7 +207,7 @@ namespace Game.Menus
             _cardsParent = Transform.Find("Cards");
             _headerTextMesh = Transform.Find<TextMeshPro>("Header text");
             _descTextMesh = Transform.Find<TextMeshPro>("Desc text");
-            _arrows = new Arrows[]
+            _arrows = new ArrowsAnim[]
             {
                 new(Transform.Find("Arrows 1"), 50, -3.6f, 3.68f),
                 new(Transform.Find("Arrows 2"), 30, 3.6f, -3.68f),
@@ -217,14 +217,14 @@ namespace Game.Menus
         public override void OpenInstantly()
         {
             base.OpenInstantly();
-            foreach (Arrows arrows in _arrows)
+            foreach (ArrowsAnim arrows in _arrows)
                 arrows.Play();
             DOVirtual.DelayedCall(1, () => ShowCards());
         }
         public override void CloseInstantly()
         {
             base.CloseInstantly();
-            foreach (Arrows arrows in _arrows)
+            foreach (ArrowsAnim arrows in _arrows)
                 arrows.Kill();
         }
 

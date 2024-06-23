@@ -1,5 +1,4 @@
-﻿using GreenOne;
-using System;
+﻿using System;
 
 namespace Game.Traits
 {
@@ -8,7 +7,6 @@ namespace Game.Traits
     /// </summary>
     public interface ITableTraitListElement : ITableDrawable, IEquatable<ITableTraitListElement>, IEquatable<ITableTrait>, ICloneableWithArgs, IDisposable
     {
-        public IIdEventVoid<int> OnStacksChanged { get; }
         public ITableTraitList List { get; }
         public ITableTrait Trait { get; }
         public ITableEntryDict StacksEntries { get; }

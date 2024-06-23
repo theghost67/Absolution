@@ -22,7 +22,7 @@ namespace Game.Traits
         public tUnscheduledTest() : base(ID)
         {
             name = "Внеплановая контрольная";
-            desc = "Кажется, с каждой секундой ей становится только хуже.";
+            desc = "Начинаем контрольную работу!";
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;

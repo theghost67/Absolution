@@ -75,56 +75,56 @@ namespace Game.Cards
         {
             return new TableFieldCard(this, parent);
         }
-        public override int Points()
+        public override float Points()
         {
             float points = health.ClampedMin(0) + strength.ClampedMin(0) * 2;
             foreach (TraitListElement element in traits)
                 points += element.Trait.Points(this, element.Stacks);
-            return Convert.ToInt32(points * MoxiePointsScale(moxie) * PricePointsScale(price));
+            return points * MoxiePointsScale(moxie) * PricePointsScale(price);
         }
 
         public virtual bool RangePotentialIsGuaranteed() => false;
         public virtual bool RangeSplashIsGuaranteed() => false;
 
-        public int PointsDeltaForMoxie(int moxieAdjust)
+        public float PointsDeltaForMoxie(int moxieAdjust)
         {
             int oldMoxie = moxie;
-            int before = Points();
+            float before = Points();
 
             moxie = oldMoxie + moxieAdjust;
-            int after = Points();
+            float after = Points();
 
             moxie = oldMoxie;
             return after - before;
         }
-        public int PointsDeltaForHealth(int healthAdjust)
+        public float PointsDeltaForHealth(int healthAdjust)
         {
             int oldHealth = health;
-            int before = Points();
+            float before = Points();
 
             health = oldHealth + healthAdjust;
-            int after = Points();
+            float after = Points();
 
             health = oldHealth;
             return after - before;
         }
-        public int PointsDeltaForStrength(int strengthAdjust)
+        public float PointsDeltaForStrength(int strengthAdjust)
         {
             int oldStrength = strength;
-            int before = Points();
+            float before = Points();
 
             strength = oldStrength + strengthAdjust;
-            int after = Points();
+            float after = Points();
 
             strength = oldStrength;
             return after - before;
         }
-        public int PointsDeltaForTrait(Trait trait, int stacks)
+        public float PointsDeltaForTrait(Trait trait, int stacks)
         {
-            int before = Points();
+            float before = Points();
             traits.AdjustStacks(trait, stacks);
 
-            int after = Points();
+            float after = Points();
             traits.AdjustStacks(trait, -stacks);
 
             return after - before;

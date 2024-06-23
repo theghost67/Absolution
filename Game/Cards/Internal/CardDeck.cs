@@ -17,7 +17,7 @@ namespace Game.Cards
         public int Count => _allCards.Count;
 
         public int Traits => fieldCards.Sum(c => c.traits.Count);
-        public int Points => fieldCards.Sum(c => c.Points());
+        public float Points => fieldCards.Sum(c => c.Points());
 
         public readonly Collection<FieldCard> fieldCards;
         public readonly Collection<FloatCard> floatCards;

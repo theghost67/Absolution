@@ -22,7 +22,11 @@ namespace Game
         public static bool b_UpdateMouseEvents { get => Behaviour.update; set => Behaviour.update = value; }
         public static bool b_InAnySelected => Behaviour.IsAnySelected;
 
-        public bool IsSelected => _behaviour.IsSelected;
+        public bool IsSelected 
+        {
+            get => _behaviour.IsSelected;
+            set => _behaviour.Deselect();
+        }
         public bool BlocksSelection 
         {
             get => _blocksSelection;
@@ -90,10 +94,10 @@ namespace Game
             public static bool IsAnySelected => _selectedBehaviours.Count != 0;
             public bool IsSelected => _selected;
 
-            static readonly List<Behaviour> _aliveBehaviours;
-            static readonly List<Behaviour> _overlappedBehaviours;
-            static readonly List<Behaviour> _overlappingBehaviours;
-            static readonly List<Behaviour> _selectedBehaviours;
+            static readonly HashSet<Behaviour> _aliveBehaviours;
+            static readonly HashSet<Behaviour> _overlappedBehaviours;
+            static readonly HashSet<Behaviour> _overlappingBehaviours;
+            static readonly List<Behaviour> _selectedBehaviours; // sorted by sortingOrder
 
             static Vector2 _ptrLastPos;
             static bool _isQuitting;
@@ -121,9 +125,9 @@ namespace Game
             static Behaviour()
             {
                 update = true;
-                _aliveBehaviours = new List<Behaviour>(32);
-                _overlappedBehaviours = new List<Behaviour>(16);
-                _overlappingBehaviours = new List<Behaviour>(16);
+                _aliveBehaviours = new HashSet<Behaviour>(32);
+                _overlappedBehaviours = new HashSet<Behaviour>(16);
+                _overlappingBehaviours = new HashSet<Behaviour>(16);
                 _selectedBehaviours = new List<Behaviour>(8);
             }
             public static void Init()
@@ -139,7 +143,13 @@ namespace Game
             public void Init(Drawer drawer)
             {
                 _drawer = drawer;
-                _aliveBehaviours.InsertionSort(this);
+                _aliveBehaviours.Add(this);
+            }
+            public void Deselect()
+            {
+                _selected = false;
+                _selectedBehaviours.Remove(this);
+                _overlappingBehaviours.Remove(this);
             }
 
             static void OnUpdate()
@@ -168,8 +178,10 @@ namespace Game
                 DrawerMouseEventArgs e = new(pos, pos - _ptrLastPos);
 
                 _overlappedBehaviours.Clear();
-                _overlappedBehaviours.AddRange(_overlappingBehaviours);
+                foreach (Behaviour b in _overlappingBehaviours)
+                    _overlappedBehaviours.Add(b);
                 _overlappingBehaviours.Clear();
+
                 foreach (Behaviour b in _aliveBehaviours)
                 {
                     Drawer drawer = b._drawer;
@@ -203,9 +215,8 @@ namespace Game
                         blockingSorting = sorting;
                 }
 
-                for (int i = 0; i < _overlappingBehaviours.Count; i++)
+                foreach (Behaviour b in _overlappingBehaviours)
                 {
-                    Behaviour b = _overlappingBehaviours[i];
                     Drawer drawer = b._drawer;
                     bool blocked = drawer._sortingOrder < blockingSorting;
 
@@ -230,8 +241,12 @@ namespace Game
                 }
 
                 _selectedBehaviours.Sort(BehaviourComparer);
-                foreach (Behaviour b in _selectedBehaviours)
+                for (int i = 0; i < _selectedBehaviours.Count; i++)
+                {
+                    Behaviour b = _selectedBehaviours[i];
                     b.HandleMouseEvents(e);
+                    if (!b._selected) i--;
+                }
                 _ptrLastPos = pos;
             }
             static int BehaviourComparer(Behaviour x, Behaviour y) => x.CompareTo(y);
@@ -272,6 +287,10 @@ namespace Game
                     _blockProcessed = true;
             }
 
+            void Start()
+            {
+                OnEnable();
+            }
             void OnEnable()
             {
                 if (_isQuitting) return;
@@ -313,7 +332,7 @@ namespace Game
 
             _collider = transform.GetComponent<BoxCollider2D>();
             _colliderExists = _collider != null;
-            _colliderEnabled = true;
+            _colliderEnabled = _colliderExists && _collider.enabled;
 
             _changePointer = false;
             _blocksSelection = true;

@@ -115,7 +115,7 @@ namespace Game.Cards
                 float traitFrequency = weightedPair.Value;
                 TraitMood traitMood = traitSrc.mood;
 
-                int traitAddPointsDelta = card.PointsDeltaForTrait(traitSrc, 1);
+                float traitAddPointsDelta = card.PointsDeltaForTrait(traitSrc, 1);
                 if (traitAddPointsDelta + traitPointsShareCurrent < traitPointsShare)
                 {
                     traitPointsShareCurrent += traitAddPointsDelta;
@@ -148,7 +148,7 @@ namespace Game.Cards
                 Trait traitSrc = TraitBrowser.GetTrait(traitId);
                 TraitMood traitMood = traitSrc.mood;
 
-                int stackAddPointsDelta = card.PointsDeltaForTrait(traitSrc, 1);
+                float stackAddPointsDelta = card.PointsDeltaForTrait(traitSrc, 1);
                 if (stackAddPointsDelta + traitPointsShareCurrent < traitPointsShare)
                 {
                     traitPointsShareCurrent += stackAddPointsDelta;
@@ -190,7 +190,7 @@ namespace Game.Cards
                      healthUp = true;
                 else healthUp = Random.Range(0, strengthFreq + healthFreq) < healthFreq;
 
-                int statAddPointsDelta;
+                float statAddPointsDelta;
                 if (healthUp)
                      statAddPointsDelta = card.PointsDeltaForHealth(statUpStep);
                 else statAddPointsDelta = card.PointsDeltaForStrength(statUpStep);

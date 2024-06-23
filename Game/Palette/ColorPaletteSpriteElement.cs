@@ -12,6 +12,7 @@ namespace Game.Palette
     {
         [SerializeField] int _syncedColorIndex = 0;
         [SerializeField] float _opacity = -1;
+        [SerializeField] float _multiplier = 1;
         SpriteRenderer _spriteRenderer;
 
         void Start()
@@ -33,7 +34,7 @@ namespace Game.Palette
         Color GetPaletteColor()
         {
             float a = _opacity == -1 ? _spriteRenderer.color.a : _opacity;
-            return ColorPalette.GetColor(_syncedColorIndex).WithAlpha(a);
+            return (ColorPalette.GetColor(_syncedColorIndex) * _multiplier).WithAlpha(a);
         }
     }
 }

@@ -69,17 +69,17 @@ namespace Game.Cards
 
         public abstract object Clone();
         public abstract TableCard CreateOnTable(Transform parent);
-        public abstract int Points(); // 1 point = 1 hp
+        public abstract float Points(); // 1 point = 1 hp
 
-        public int PointsDeltaForPrice(int priceAdjust, CardCurrency currency = null)
+        public float PointsDeltaForPrice(int priceAdjust, CardCurrency currency = null)
         {
             int oldPrice = price.value;
             CardCurrency oldCurrency = currency;
-            int before = Points();
+            float before = Points();
 
             price.value = oldPrice + priceAdjust;
             if (currency != null) price.currency = currency;
-            int after = Points();
+            float after = Points();
 
             price.value = oldPrice;
             if (currency != null) price.currency = oldCurrency;

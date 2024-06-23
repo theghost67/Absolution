@@ -12,7 +12,6 @@ namespace Game.Traits
         public event EventHandler OnDrawerCreated;
         public event EventHandler OnDrawerDestroyed;
 
-        public IIdEventVoid<int> OnStacksChanged => _onStacksChanged;
         public int Stacks { get => _stacks; }
         public TableTraitListElementDrawer Drawer => _drawer;
 
@@ -20,7 +19,6 @@ namespace Game.Traits
         public ITableTrait Trait => _trait;
         public ITableEntryDict StacksEntries => _stacksEntries;
 
-        readonly IdEventVoid<int> _onStacksChanged;
         readonly ITableTraitList _list;
         readonly ITableTrait _trait;
         readonly TableEntryDict _stacksEntries;
@@ -30,7 +28,6 @@ namespace Game.Traits
 
         public TableTraitListElement(ITableTraitList list, ITableTrait trait, bool withDrawer = true)
         {
-            _onStacksChanged = new IdEventVoid<int>();
             _list = list;
             _trait = trait;
             _stacksEntries = new TableEntryDict();
@@ -43,7 +40,6 @@ namespace Game.Traits
             OnDrawerCreated = (EventHandler)src.OnDrawerCreated?.Clone();
             OnDrawerDestroyed = (EventHandler)src.OnDrawerDestroyed?.Clone();
 
-            _onStacksChanged = (IdEventVoid<int>)src._onStacksChanged.Clone();
             _list = args.srcListClone;
             _trait = TraitCloner(src._trait, args);
 
@@ -90,7 +86,8 @@ namespace Game.Traits
         }
         protected abstract TableTraitListElementDrawer DrawerCreator(Transform parent);
 
-        // use only inside of the TableTraitList instance
+        // NOTE 1: used only inside of the TableTraitList instance
+        // NOTE 2: can be used for delta calculations (first call with positive value, second call with negative)
         public void AddEntryInternal(string id, TableEntry entry)
         {
             _stacksEntries.Add(id, entry);
@@ -102,7 +99,6 @@ namespace Game.Traits
         public void AdjustStacksInternal(int delta)
         {
             _stacks += delta;
-            _onStacksChanged.Invoke(this, delta);
         }
     }
 }

@@ -28,7 +28,8 @@
             return List.Set.Owner.Equals(other.List.Set.Owner) && Trait.Equals(other.Trait);
         }
 
-        // NOTE: use only inside of the TraitList instance
+        // NOTE 1: used only inside of the TraitList instance
+        // NOTE 2: can be used for delta calculations (first call with positive value, second call with negative)
         public void AdjustStacksInternal(int delta)
         {
             _stacks += delta;

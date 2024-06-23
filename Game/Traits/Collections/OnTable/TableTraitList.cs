@@ -94,7 +94,7 @@ namespace Game.Traits
             {
                 if (element.Drawer.enqueueAnims)
                     _set.Drawer?.elements.Enqueue(element, stacks);
-                else element.Drawer.AnimAdjust(stacks);
+                else element.Drawer.AnimAdjust(element.Stacks);
             }
 
             await trait.Data.OnStacksChanged(stacksArgs);

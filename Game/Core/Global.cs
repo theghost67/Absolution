@@ -74,15 +74,18 @@ namespace Game
         {
             CardChooseMenu menu = new();
             menu.cardStatPoints = EnvironmentBrowser.Locations["college"].stage;
-            menu.choicesLeft = 2;
-            menu.cardsCount = 2;
+            menu.choicesLeft = 4;
+            menu.cardsCount = 3;
             menu.MenuWhenClosed = () => CreateCardUpgrade();
+            menu.OnClosed += menu.DestroyInstantly;
             return menu;
         }
         static Menu CreateCardUpgrade()
         {
-            CardUpgradeMenu menu = new(Player.Deck, 150);
+            float stage = EnvironmentBrowser.Locations["college"].stage;
+            CardUpgradeMenu menu = new(Player.Deck, Player.Deck.fieldCards.Count * stage * 1.5f);
             menu.MenuWhenClosed = () => Traveler.CreateDemoMenu(EnvironmentBrowser.Locations["college"]);
+            menu.OnClosed += menu.DestroyInstantly;
             return menu;
         }
 

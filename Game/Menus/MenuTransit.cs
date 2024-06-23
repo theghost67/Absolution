@@ -11,7 +11,7 @@ namespace Game.Menus
     /// </summary>
     public class MenuTransit : Menu
     {
-        const string ID = "int_transit";
+        const string ID = "transit";
 
         const float DURATION = 0.75f;
         const float Y_TO_OPENED = 0f;
@@ -35,10 +35,8 @@ namespace Game.Menus
             await UniTask.Delay((int)(DURATION * 1000));
             from?.CloseInstantly();
             to?.OpenInstantly();
-            to?.SetColliders(false);
             action?.Invoke();
             await CloseAnimated();
-            to?.SetColliders(true);
         }
 
         public override UniTask OpenAnimated()

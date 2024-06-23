@@ -61,6 +61,7 @@ namespace Game.Sleeves
             transform.localPosition = Vector3.up * _normalPosY;
 
             Global.OnUpdate += Update;
+            SetCollider(true);
             AddCreatingCardDrawer_ForAll();
         }
 

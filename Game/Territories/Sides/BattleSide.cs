@@ -2,6 +2,7 @@
 using Game.Cards;
 using Game.Environment;
 using Game.Sleeves;
+using GreenOne;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace Game.Territories
         public CardDeck Deck => _deck;
         public float Weight => CalculateWeight();
 
-        public virtual int HealthAtStart => _deck.Points / 4;
+        public virtual int HealthAtStart => (_deck.Points / 4).Ceiling();
         public virtual int GoldAtStart => 0;
         public virtual int EtherAtStart => 0;
 
