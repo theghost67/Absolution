@@ -71,7 +71,7 @@ namespace Game.Traits
         }
         public virtual float Points(FieldCard owner, int stacks) // used to increase trait points required to add another stack of this trait to a card
         {
-            return stacks + owner.traits.Count;
+            return owner.traits.Count * 2;
         }
 
         public virtual async UniTask OnStacksChanged(TableTraitStacksSetArgs e) // invokes either on table or in battle (check 'isInBattle' field)
@@ -126,9 +126,10 @@ namespace Game.Traits
                 else sb.Append($"<color={headColorHex}>{descChunk.header}</color>\n{descChunk.contents}");
             }
 
+            string colorHex = ColorPalette.GetColorInfo(2).Hex;
             if (descChunks.Length != 0)
-                 sb.Append("\n\n<color=grey>");
-            else sb.Append("<color=grey>");
+                 sb.Append($"\n\n<color={colorHex}>");
+            else sb.Append($"<color={colorHex}>");
             bool hasTurnText = false;
 
             int turnsPassed = trait.Storage.turnsPassed;

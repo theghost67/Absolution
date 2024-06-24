@@ -23,8 +23,6 @@ namespace Game.Territories
     /// </summary>
     public sealed class BattleInitiationQueue : IDisposable
     {
-        const int ID_IN_QUEUE = 0x00BA771E;
-
         public event EventHandler OnStarted;
         public event EventHandler OnEnded;
         public event EventHandler OnceComplete;
@@ -493,20 +491,21 @@ namespace Game.Territories
         {
             ((TableEventVoid<BattleInitiationSendArgs>)@event).Invoke(sender, sArgs);
             if (sArgs.Sender.Drawer != null)
-                 return AwaitAllTweens();
+                 return AwaitTweensAndEvents();
             else return UniTask.CompletedTask;
         }
         UniTask InvokeRecvArgsEvent(IIdEventVoidAsync<BattleInitiationRecvArgs> @event, object sender, BattleInitiationRecvArgs rArgs)
         {
             ((TableEventVoid<BattleInitiationRecvArgs>)@event).Invoke(sender, rArgs);
             if (rArgs.Receiver.Drawer != null)
-                return AwaitAllTweens();
+                return AwaitTweensAndEvents();
             else return UniTask.CompletedTask;
         }
 
-        async UniTask AwaitAllTweens()
+        async UniTask AwaitTweensAndEvents()
         {
-            while ((_iShowTween.active && !_iShowTween.IsComplete()) ||
+            while (TableEventManager.IsAnyRunning ||
+                   (_iShowTween.active && !_iShowTween.IsComplete()) ||
                    (_iUpdateTween.active && !_iUpdateTween.IsComplete()) || 
                    (_iRedirectTween.active && !_iRedirectTween.IsComplete()) || 
                    (_iHideTween.active && !_iHideTween.IsComplete()))

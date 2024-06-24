@@ -42,7 +42,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks, 2);
+            return base.Points(owner, stacks) + 10 * Mathf.Pow(stacks - 1, 2);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

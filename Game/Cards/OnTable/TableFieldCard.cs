@@ -92,7 +92,7 @@ namespace Game.Cards
         {
             return UniTask.FromResult(true);
         }
-        public virtual async UniTask AttachToAnotherField(TableField field)
+        public async UniTask AttachToAnotherField(TableField field)
         {
             TableEventManager.Add();
             await FieldPropSetter(field);

@@ -37,7 +37,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks, 2);
+            return base.Points(owner, stacks) + 4 * Mathf.Pow(stacks - 1, 2);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

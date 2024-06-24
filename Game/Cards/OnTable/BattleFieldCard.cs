@@ -1,17 +1,13 @@
 ﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using Game.Effects;
 using Game.Sleeves;
 using Game.Territories;
 using Game.Traits;
 using GreenOne;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using System.Threading.Tasks;
-using static UnityEngine.Rendering.DebugUI;
-using Unity.VisualScripting;
 
 namespace Game.Cards
 {
@@ -205,6 +201,7 @@ namespace Game.Cards
 
             Territory.OnStartPhase.Remove(OnStartPhase);
             Territory.OnNextPhase.Remove(OnNextPhase);
+            Field?.DetatchCard();
         }
         public override object Clone(CloneArgs args)
         {
@@ -242,7 +239,6 @@ namespace Game.Cards
             if (source is BattleFieldCard bfCard && !bfCard.IsKilled)
                 await bfCard._onKill.Invoke(bfCard, this);
 
-            await AttachToAnotherField(null);
             DestroyDrawer(false);
             Dispose();
 
@@ -287,6 +283,7 @@ namespace Game.Cards
 
             if (value == null)
             {
+                if (_field == null) return;
                 await _field.DetatchCard();
                 await SetObserveTargets(false);
                 FieldBaseSetter(null);
@@ -295,6 +292,8 @@ namespace Game.Cards
 
             await _onFieldPreAttached.Invoke(this, EventArgs.Empty);
             await SetObserveTargets(false);
+            if (_field != null)
+                await _field.DetatchCard();
 
             FieldBaseSetter(value);
             _side = _field.Side;

@@ -179,26 +179,28 @@ namespace Game.Cards
         public static FloatCard NewFloat(string id) => (FloatCard)GetFloat(id).Clone();
         public static Card NewCard(string id) => (Card)GetCard(id).Clone();
 
-        public static FieldCard Upgrade(this FieldCard card, in FieldCardUpgradeRules rules)
+        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float statPoints, in int traitsCount)
         {
+            FieldCardUpgradeRules rules = new(statPoints - card.Points(), traitsCount);
             rules.Upgrade(card);
             return card;
         }
-        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in int statPoints)
+        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float statPoints)
         {
-            FieldCardUpgradeRules rules = new(statPoints, true);
+            FieldCardUpgradeRules rules = new(statPoints - card.Points(), true);
             rules.Upgrade(card);
             return card;
         }
-        public static FieldCard UpgradeWithoutTraitAdd(this FieldCard card, in int statPoints)
+        public static FieldCard UpgradeWithoutTraitAdd(this FieldCard card, in float statPoints)
         {
-            FieldCardUpgradeRules rules = new(statPoints, false);
+            FieldCardUpgradeRules rules = new(statPoints - card.Points(), false);
             rules.Upgrade(card);
             return card;
         }
 
-        public static FieldCard UpgradeAsNew(this FieldCard card, in FieldCardUpgradeRules rules)
+        public static FieldCard UpgradeAsNewWithTraitAdd(this FieldCard card, in float statPoints, in int traitsCount)
         {
+            FieldCardUpgradeRules rules = new(statPoints, traitsCount);
             rules.Reset(card);
             rules.Upgrade(card);
             return card;

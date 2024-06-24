@@ -1,5 +1,4 @@
-﻿using Game.Territories;
-using Game.Traits;
+﻿using Game.Traits;
 using GreenOne;
 using System;
 using UnityEngine;
@@ -39,27 +38,6 @@ namespace Game.Cards
             strength = other.strength;
             moxie = other.moxie;
         }
-
-        public static float MoxiePointsScale(in int moxie) => moxie switch
-        {
-            0 => 0.70f,
-            1 => 0.85f,
-            2 => 1.00f,
-            3 => 1.15f,
-            4 => 1.30f,
-            5 => 1.45f,
-            _ => 1.45f,
-        };
-        public static float PricePointsScale(in CardPrice price) => price.value switch
-        {
-            0 => 4.00f,
-            1 => 2.00f,
-            2 => 1.00f,
-            3 => 0.80f,
-            4 => 0.65f,
-            5 => 0.50f,
-            _ => 0.50f,
-        };
 
         public override SerializationDict Serialize()
         {
@@ -130,6 +108,24 @@ namespace Game.Cards
             return after - before;
         }
 
+        static float MoxiePointsScale(in int moxie) => moxie switch
+        {
+            <= 0 => 0.70f,
+               1 => 0.85f,
+               2 => 1.00f,
+               3 => 1.15f,
+               4 => 1.30f,
+            >= 5 => 1.45f,
+        };
+        static float PricePointsScale(in CardPrice price) => price.value switch
+        {
+            <= 0 => 4.00f,
+               1 => 2.00f,
+               2 => 1.00f,
+               3 => 0.85f,
+               4 => 0.70f,
+            >= 5 => 0.55f,
+        };
         void FillTraitListSet(string[] traitsStrArray)
         {
             const string FORMAT_STR = "Format: \"[1] [2] [3]\" where [1] is a trait type (p/a), [2] is a trait id and [3] is trait stacks.";

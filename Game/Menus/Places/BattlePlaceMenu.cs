@@ -37,7 +37,7 @@ namespace Game.Menus
 
         static int _demoLocStageForPlayer;
         static int _demoLocStageForEnemy;
-        static int _demoDifficulty = 0; // default: 0
+        static int _demoDifficulty = 0;
         static readonly Color[][] _demoPalettes = new Color[][]
         {
             new Color[]
@@ -53,11 +53,11 @@ namespace Game.Menus
             },
             new Color[]
             {
-                Utils.HexToColor("#e8eddf"),
-                Utils.HexToColor("#f5cb5c"),
-                Utils.HexToColor("#333533"),
-                Utils.HexToColor("#242423"),
-                Utils.HexToColor("#080808"),
+                Utils.HexToColor("#ebf4f6"),
+                Utils.HexToColor("#37b7c3"),
+                Utils.HexToColor("#088395"),
+                Utils.HexToColor("#071952"),
+                Utils.HexToColor("#08081f"),
 
                 Utils.HexToColor("#00ffff"),
                 Utils.HexToColor("#ffff00"),
@@ -527,7 +527,7 @@ namespace Game.Menus
         {
             base.OpenInstantly();
             #if DEMO
-            demo_ReopenPlace();
+            demo_OnBattleStart(_demoDifficulty == 0);
             #else
             _instance = this;
             _territory = new pTerritory(playerMovesFirst: true /*UnityEngine.Random.value > 0.5f*/, sizeX: 5); // TODO: replace
@@ -549,7 +549,7 @@ namespace Game.Menus
         }
         public async override UniTask CloseAnimated()
         {
-            base.CloseAnimated();
+            Application.Quit();
 
             //MusicPack.Get("Battle").StopFading();
             //BattleArea.StopTargetAiming();
@@ -565,6 +565,8 @@ namespace Game.Menus
         public override void SetColliders(bool value)
         {
             base.SetColliders(value);
+            SetBellState(value);
+            SetFleeState(value);
             _territory.SetColliders(value);
         }
         public override void WriteLog(string text)
@@ -580,20 +582,21 @@ namespace Game.Menus
 
         async void TryFlee()
         {
-            SetPlayerControls(false);
-            SetFleeState(false);
+            OnPlayerWon(null, null); // TODO: remove
+            //SetPlayerControls(false);
+            //SetFleeState(false);
 
-            await VFX.CreateScreenBG(Color.clear, Transform).DOFade(1, 0.5f).AsyncWaitForCompletion();
-            VFX.CreateText("СБЕЖАЛ...", Color.gray, Transform).transform.DOAShake();
-            await UniTask.Delay(2000);
-            Application.Quit();
+            //await VFX.CreateScreenBG(Color.clear, Transform).DOFade(1, 0.5f).AsyncWaitForCompletion();
+            //VFX.CreateText("СБЕЖАЛ...", Color.gray, Transform).transform.DOAShake();
+            //await UniTask.Delay(2000);
+            //Application.Quit();
         }
         async void OnPlayerWon(object sender, EventArgs e)
         {
             SetColliders(false);
             await UniTask.Delay(1000);
             #if DEMO
-            demo_ReopenPlace();
+            demo_OnBattleEnd();
             #else
             await CloseAnimated();
             #endif
@@ -636,7 +639,22 @@ namespace Game.Menus
         }
 
         #if DEMO
-        async void demo_ReopenPlace()
+        Menu demo_CreateCardChooseAndUpgrade(int cPointsPerCard, int cFieldChoices, int cFloatChoices, int cCardsPerChoice, int uPointsLimit)
+        {
+            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice);
+            menu.MenuWhenClosed = () => demo_CreateCardUpgrade(uPointsLimit);
+            menu.OnClosed += menu.DestroyInstantly;
+            return menu;
+        }
+        Menu demo_CreateCardUpgrade(int uPointsLimit)
+        {
+            CardUpgradeMenu menu = new(Player.Deck, uPointsLimit);
+            menu.MenuWhenClosed = () => this;
+            menu.OnClosed += menu.DestroyInstantly;
+            return menu;
+        }
+
+        async void demo_OnBattleEnd()
         {
             if (_demoDifficulty == DEMO_DIFFICULTY_MAX)
             {
@@ -647,20 +665,24 @@ namespace Game.Menus
                 return;
             }
 
-            SpriteRenderer bg;
-            if (_demoDifficulty == 0)
-                bg = VFX.CreateScreenBG(Color.black);
-            else
-            {
-                bg = VFX.CreateScreenBG(Color.clear);
-                await bg.DOFade(1, 0.5f).AsyncWaitForCompletion();
-            }
+            int pointsPerCard = demo_DifficultyToLocStage(_demoDifficulty + 1);
+            Traveler.DeckCardsCount(pointsPerCard, out int fieldCards, out int floatCards);
+            int pointsLimit = fieldCards * pointsPerCard;
 
+            int fieldsChoices = (fieldCards - Player.Deck.fieldCards.Count).ClampedMin(1);
+            int floatsChoices = (floatCards - Player.Deck.floatCards.Count).ClampedMin(0);
+            int cardsPerChoice = (_demoDifficulty + 2).ClampedMax(5);
+
+            Menu menu = demo_CreateCardChooseAndUpgrade(pointsPerCard, fieldsChoices, floatsChoices, cardsPerChoice, pointsLimit);
+            MenuTransit.Between(this, menu);
+        }
+        async void demo_OnBattleStart(bool firstOpening)
+        {
             ColorPalette.SetPalette(_demoPalettes[_demoDifficulty]);
             _demoDifficulty++;
 
-            int locStage = demo_DifficultyToLocStage();
-            float locStageDifficultyScale = demo_DifficultyToLocStageScale();
+            int locStage = demo_DifficultyToLocStage(_demoDifficulty);
+            float locStageDifficultyScale = demo_DifficultyToLocStageScale(_demoDifficulty);
 
             _demoLocStageForPlayer = locStage;
             _demoLocStageForEnemy = (locStage * locStageDifficultyScale).Ceiling();
@@ -672,10 +694,11 @@ namespace Game.Menus
             _enemy = _territory.enemy;
             _enemy.ai.Style = (BattleAI.PlayStyle)UnityEngine.Random.Range(0, 3);
 
+            SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
             await UniTask.Delay(500);
             string text1 = $"ЭТАП {_demoDifficulty}/{DEMO_DIFFICULTY_MAX}";
-            string text2 = $"\n<size=50%><color=grey>угроза: {_demoLocStageForPlayer}    сложность: {(locStageDifficultyScale) * 100}%";
-
+            string text2 = $"\n<size=50%><color=grey>угроза: {_demoLocStageForPlayer}    сложность: {locStageDifficultyScale * 100}%";
+ 
             TextMeshPro bgText = VFX.CreateText(text1, Color.white, bg.transform);
             bgText.transform.position = Vector2.up * 136;
             bgText.transform.DOAShake();
@@ -694,7 +717,8 @@ namespace Game.Menus
             bg.gameObject.Destroy();
             _territory.NextPhase();
         }
-        float demo_DifficultyToLocStageScale() => _demoDifficulty switch
+
+        static float demo_DifficultyToLocStageScale(int difficulty) => difficulty switch
         {
             1 => 0.88f,
             2 => 1.00f,
@@ -703,7 +727,7 @@ namespace Game.Menus
             5 => 1.36f,
             _ => throw new NotSupportedException(),
         };
-        int demo_DifficultyToLocStage() => _demoDifficulty switch
+        static int demo_DifficultyToLocStage(int difficulty) => difficulty switch
         {
             1 => 8,
             2 => 16,

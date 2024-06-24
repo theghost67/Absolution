@@ -1,3 +1,4 @@
+using Game.Palette;
 using GreenOne;
 using System;
 using System.Text;
@@ -109,7 +110,9 @@ namespace Game.Cards
                 sb.Append(contents);
                 sb.Append("\n\n");
             }
-            sb.Append("<color=grey>");
+
+            string colorHex = ColorPalette.GetColorInfo(2).Hex;
+            sb.Append($"<color={colorHex}>");
 
             if (card is BattleFieldCard bCard && bCard.Field != null)
             {

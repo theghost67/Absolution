@@ -48,6 +48,7 @@ namespace Game.Menus
 
         readonly SleeveToUpgrade _sleeve;
         readonly float _pointsLimit;
+        readonly float _pointsAvailableAtStart;
         float _pointsCurrent;
         float _pointsAvailable;
 
@@ -336,7 +337,7 @@ namespace Game.Menus
             async void OnMouseClickLeft(object sender, DrawerMouseEventArgs e)
             {
                 if (CardToUpgrade.Selected != card) return;
-                if (upgradePointsDelta + menu._pointsAvailable < -9999) return;
+                if (menu._pointsAvailable - upgradePointsDelta < -9999) return;
 
                 card.AnimHighlightAsUpgrade();
                 statDrawer.IsSelected = false; // force mouse enter invoke
@@ -350,7 +351,7 @@ namespace Game.Menus
             async void OnMouseClickRight(object sender, DrawerMouseEventArgs e)
             {
                 if (CardToUpgrade.Selected != card) return;
-                if (downgradePointsDelta + menu._pointsAvailable < -9999) return;
+                if (menu._pointsAvailable - downgradePointsDelta < -9999) return;
                 if (upgradedTimes <= 0) return;
 
                 card.AnimHighlightAsDowngrade();
@@ -664,7 +665,7 @@ namespace Game.Menus
             {
                 gameObject.SetActive(false);
                 CardToUpgrade.OnSelectedChanged += UpdateTexts;
-                CardToUpgrade.OnAnyStatGraded += delta => UpdateTexts();
+                menu.OnDeckPointsChanged += delta => UpdateTexts();
             }
 
             protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
@@ -709,7 +710,7 @@ namespace Game.Menus
 
             protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
             {
-                if (!menu.HasFreePoints())
+                if (!menu.CanLeave())
                      textMesh.text = HOVER_ERR_TEXT;
                 else textMesh.text = HOVER_OK_TEXT;
             }
@@ -719,7 +720,7 @@ namespace Game.Menus
             }
             protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
             {
-                if (menu.HasFreePoints())
+                if (menu.CanLeave())
                     menu.CloseAnimated();
             }
         }
@@ -760,6 +761,7 @@ namespace Game.Menus
             CardToUpgrade.OnAnyStatGraded += delta => OnDeckPointsChanged(delta);
 
             OnDeckPointsChangedBase(0);
+            _pointsAvailableAtStart = _pointsAvailable;
             UpgradeInfoHide();
         }
 
@@ -777,6 +779,7 @@ namespace Game.Menus
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Kill();
         }
+
         public override void WriteDesc(string text)
         {
             base.WriteDesc(text);
@@ -820,9 +823,9 @@ namespace Game.Menus
             _pointsAvailable = _pointsLimit - _pointsCurrent;
             RedrawHeader();
         }
-        bool HasFreePoints()
+        bool CanLeave()
         {
-            return _pointsAvailable >= 0;
+            return _pointsAvailable >= 0 || _pointsAvailable == _pointsAvailableAtStart;
         }
         void RedrawHeader()
         {

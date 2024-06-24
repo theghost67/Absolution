@@ -10,10 +10,6 @@ using UnityEngine;
 
 namespace Game
 {
-    // DEBUG NOTE 1: use TableFinder.storeNames to check the names of failed to find objects
-    // DEBUG NOTE 1: TableTerritory.WriteLog() will provide more info if TableTerritory.fullLogs == true
-    // by default, set to true in cloned territories
-
     /// <summary>
     /// Класс, содержащий неотъемлимые данные игрового процесса и инициализирующий основные игровые системы.
     /// </summary>
@@ -24,7 +20,7 @@ namespace Game
         public const float NORMAL_TO_PIXEL = PIXEL_SCALE / NORMAL_SCALE;
         public const float ASPECT_RATIO = 16f / 9f;
 
-        public static event Action OnUpdate;      // HZ/s
+        public static event Action OnUpdate;      // hz/s
         public static event Action OnFixedUpdate; // 50/s
         public static event Action OnSlowUpdate;  // 10/s
 
@@ -70,21 +66,10 @@ namespace Game
         }
 
         // TODO: remove
-        static Menu CreateCardChoose()
+        Menu CreateCardChoose(Location location)
         {
-            CardChooseMenu menu = new();
-            menu.cardStatPoints = EnvironmentBrowser.Locations["college"].stage;
-            menu.choicesLeft = 4;
-            menu.cardsCount = 3;
-            menu.MenuWhenClosed = () => CreateCardUpgrade();
-            menu.OnClosed += menu.DestroyInstantly;
-            return menu;
-        }
-        static Menu CreateCardUpgrade()
-        {
-            float stage = EnvironmentBrowser.Locations["college"].stage;
-            CardUpgradeMenu menu = new(Player.Deck, Player.Deck.fieldCards.Count * stage * 1.5f);
-            menu.MenuWhenClosed = () => Traveler.CreateDemoMenu(EnvironmentBrowser.Locations["college"]);
+            CardChooseMenu menu = new(location.stage, 4);
+            menu.MenuWhenClosed = () => Traveler.CreateDemoMenu(location);
             menu.OnClosed += menu.DestroyInstantly;
             return menu;
         }
@@ -113,7 +98,7 @@ namespace Game
             //WorldMenu.instance.OpenAnimated();
 
             TableConsole.Initialize();
-            MenuTransit.Between(null, CreateCardChoose());
+            MenuTransit.Between(null, CreateCardChoose(EnvironmentBrowser.Locations["college"]));
         }
         void Update()
         {

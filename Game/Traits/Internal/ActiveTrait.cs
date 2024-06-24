@@ -23,7 +23,10 @@ namespace Game.Traits
 
         public virtual bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return e.trait.Storage.turnsDelay <= 0;
+            if (!e.isInBattle)
+                return e.trait.Storage.turnsDelay <= 0;
+            IBattleTrait trait = (IBattleTrait)e.trait;
+            return trait.Territory.PhaseSide == trait.Side;
         }
         public virtual UniTask OnUse(TableActiveTraitUseArgs e)
         {

@@ -167,8 +167,7 @@ namespace Game.Environment
         public static CardDeck NewDeck(EntityType type = default)
         {
             int pointsPerCard = _location.stage;
-            int fieldCardsCount = pointsPerCard < 6  ? 3 : Convert.ToInt32(3 + 2 * Mathf.Log(pointsPerCard - 5));
-            int floatCardsCount = pointsPerCard < 28 ? 0 : Convert.ToInt32(Mathf.Log((pointsPerCard - 12) / 16f));
+            DeckCardsCount(pointsPerCard, out int fieldCardsCount, out int floatCardsCount);
 
             CardDeck deck = new();
             int pointsSum = pointsPerCard * fieldCardsCount;
@@ -210,6 +209,12 @@ namespace Game.Environment
             OnDeckPostCreated?.Invoke(new TravelerDeckPostEventArgs(deck, preArgs));
             return deck;
         }
+        public static void DeckCardsCount(int pointsPerCard, out int fieldCardsCount, out int floatCardsCount)
+        {
+            fieldCardsCount = pointsPerCard < 6 ? 3 : Convert.ToInt32(3 + 2 * Mathf.Log(pointsPerCard - 5));
+            floatCardsCount = pointsPerCard < 28 ? 0 : Convert.ToInt32(Mathf.Log((pointsPerCard - 12) / 16f));
+        }
+
         public static FieldCard NewField(EntityType type = default)
         {
             return NewField(type, _location.stage);
@@ -231,7 +236,8 @@ namespace Game.Environment
                 possibleActivesFreqs = activesFrequencies
             };
 
-            FieldCard card = CardBrowser.NewField(randomId).UpgradeAsNew(rules);
+            FieldCard card = CardBrowser.NewField(randomId);
+            rules.Upgrade(card);
             OnCardPostCreated?.Invoke(new TravelerCardPostEventArgs(card, preArgs));
             return card;
         }

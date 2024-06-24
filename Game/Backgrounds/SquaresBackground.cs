@@ -51,10 +51,10 @@ namespace Game.Backgrounds
         Color _defaultColor;
 
         SpriteRenderer[,] _squares;
-        int2[] _squaresLastLightedUpIndecies;
+        int2[] _squaresLastLightedUpIndexes;
 
         Tween[] _tweens;
-        Stack<int> _tweensFreeIndecies;
+        Stack<int> _tweensFreeIndexes;
 
         int2 _visibleSquareRangeX; // equal to half of the grid width
         int2 _visibleSquareRangeY; // equal to half of the grid height
@@ -66,9 +66,9 @@ namespace Game.Backgrounds
             _speed = new Vector2(15.75f, -9f); // grid size is imperfect, so it's not 16
 
             _tweens = new Tween[TWEENS_MAX];
-            _tweensFreeIndecies = new Stack<int>(TWEENS_MAX);
+            _tweensFreeIndexes = new Stack<int>(TWEENS_MAX);
             for (int i = 0; i < TWEENS_MAX; i++)
-                _tweensFreeIndecies.Push(i);
+                _tweensFreeIndexes.Push(i);
 
             _squareLightUpDelay = SQUARE_LIGHT_UP_DELAY;
             _squarePrefab = Resources.Load<GameObject>("Prefabs/Backgrounds/Squares/Square");
@@ -231,27 +231,27 @@ namespace Game.Backgrounds
         }
         void LightUpSquare()
         {
-            _squaresLastLightedUpIndecies = new int2[SQUARE_LIGHT_UP_COUNT].FillBy(i => new int2(-1, -1));
+            _squaresLastLightedUpIndexes = new int2[SQUARE_LIGHT_UP_COUNT].FillBy(i => new int2(-1, -1));
             for (int i = 0; i < SQUARE_LIGHT_UP_COUNT; i++)
             {
-                if (_tweensFreeIndecies.Count == 0)
+                if (_tweensFreeIndexes.Count == 0)
                 {
-                    Debug.LogWarning($"{nameof(SquaresBackground)}: There are no indecies available for a new tween.");
+                    Debug.LogWarning($"{nameof(SquaresBackground)}: There are no indexes available for a new tween.");
                     return;
                 }
 
                 TryAgain:
                 int2 squarePos = GetRandomVisibleSquarePos();
-                if (_squaresLastLightedUpIndecies.Contains(squarePos))
+                if (_squaresLastLightedUpIndexes.Contains(squarePos))
                     goto TryAgain;
 
                 SpriteRenderer square = _squares[squarePos.x, squarePos.y];
-                _squaresLastLightedUpIndecies[i] = squarePos;
+                _squaresLastLightedUpIndexes[i] = squarePos;
                 square.DOKill();
 
-                int index = _tweensFreeIndecies.Pop();
+                int index = _tweensFreeIndexes.Pop();
                 Tween tween = CreateSquareTween(square);
-                tween.OnComplete(() => _tweensFreeIndecies.Push(index));
+                tween.OnComplete(() => _tweensFreeIndexes.Push(index));
                 _tweens[index] = tween;
             }
         }

@@ -398,12 +398,14 @@ namespace Game
         }
         public virtual void SetAlpha(float value)
         { 
+            // keeps components' colors
             _color = _color.WithAlpha(value);
             if (SetActiveStateOnAlphaSet())
                 gameObject.SetActive(value != 0);
         }
         public virtual void SetColor(Color value)
         { 
+            // ignores components' alpha levels
             _color = value;
             if (SetActiveStateOnAlphaSet())
                 gameObject.SetActive(value.a != 0);

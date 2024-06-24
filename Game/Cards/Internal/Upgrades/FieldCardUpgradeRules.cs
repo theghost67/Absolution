@@ -12,26 +12,27 @@ namespace Game.Cards
     /// </summary>
     public struct FieldCardUpgradeRules
     {
-        public int statPoints;
+        public float statPoints;
         public int traitsCount;
         public IReadOnlyDictionary<string, float> possiblePassivesFreqs;
         public IReadOnlyDictionary<string, float> possibleActivesFreqs;
+        static readonly IReadOnlyDictionary<string, float> _empty = new Dictionary<string, float>(capacity: 0);
 
-        public FieldCardUpgradeRules(int statPoints, bool addTraits) : this(statPoints, addTraits ? TraitsCount(statPoints) : 0) { }
-        public FieldCardUpgradeRules(int statPoints, int traitsCount) 
+        public FieldCardUpgradeRules(float statPoints, bool addTraits) : this(statPoints, addTraits ? TraitsCount(statPoints) : 0) { }
+        public FieldCardUpgradeRules(float statPoints, int traitsCount) 
         {
             this.statPoints = statPoints;
             this.traitsCount = traitsCount;
 
-            possiblePassivesFreqs = null;
-            possibleActivesFreqs = null;
+            possiblePassivesFreqs = _empty;
+            possibleActivesFreqs = _empty;
         }
 
-        public static int TraitsCount(int cardStatPoints)
+        public static int TraitsCount(float cardStatPoints)
         {
             return System.Convert.ToInt32(TraitsCountRaw(cardStatPoints));
         }
-        public static float TraitsCountRaw(int cardStatPoints)
+        public static float TraitsCountRaw(float cardStatPoints)
         {
             if (cardStatPoints < 16)
                 return 0;
@@ -43,6 +44,7 @@ namespace Game.Cards
             card.health = 1;
             card.strength = 0;
             card.moxie = Random.Range(1, 6);
+            card.traits.Clear();
         }
         public readonly void Upgrade(FieldCard card)
         {

@@ -30,10 +30,10 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             return DescRichBase(trait, new TraitDescChunk[]
-        {
+            {
                 new($"При использовании (Т)",
                     $"тратит все заряды и тестирует карты все карты напротив владельца на прочность - если её инициатива меньше или равна {MOXIE_THRESHOLD}, ей будет нанесено {DAMAGE} ед. урона."),
-        });
+            });
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

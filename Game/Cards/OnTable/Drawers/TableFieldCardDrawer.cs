@@ -15,32 +15,12 @@ namespace Game.Cards
     {
         const float BG_ALPHA_MAX = 0.8f;
 
-        static Color _outlineBrightPassiveColor;
-        static Color _outlineBrightActiveColor;
-
-        static Color _outlineDimPassiveColor;
-        static Color _outlineDimActiveColor;
-
         public TableTraitListSetDrawer Traits => attached.Traits.Drawer;
         public readonly new TableFieldCard attached;
 
         readonly SpriteRenderer _bgRenderer;
         Tween _bgTween;
 
-        enum OutlineType
-        {
-            None,
-            Passive,
-            Active,
-            Both
-        }
-
-        static TableFieldCardDrawer()
-        {
-            OnPaletteColorChanged_Static(ColorPalette.PASSIVE_INDEX);
-            OnPaletteColorChanged_Static(ColorPalette.ACTIVE_INDEX);
-            ColorPalette.OnColorChanged += OnPaletteColorChanged_Static;
-        }
         public TableFieldCardDrawer(TableFieldCard card, Transform parent) : base(card, parent)
         {
             attached = card;
@@ -51,12 +31,10 @@ namespace Game.Cards
             attached.Traits.Passives.OnStacksChanged.Add(OnTraitsStacksChanged);
             attached.Traits.Actives.OnStacksChanged.Add(OnTraitsStacksChanged);
 
-            ColorPalette.OnColorChanged += OnPaletteColorChanged;
             OnMouseScrollUp += OnMouseScrollUpBase;
             OnMouseScrollDown += OnMouseScrollDownBase;
 
             _bgRenderer = transform.Find<SpriteRenderer>("BG");
-            CreateOutline();
             RedrawFieldData();
             RedrawOutlineInstantly();
         }
@@ -151,72 +129,10 @@ namespace Game.Cards
             _bgRenderer.color = Color.white.WithAlpha(0f);
         }
 
-        public void HighlightOutline(Color color, float duration = 1)
-        {
-            Color prevColor = Outline.GetColor();
-            float brightF = Mathf.Pow(2, 6);
-
-            color.r *= brightF;
-            color.g *= brightF;
-            color.b *= brightF;
-
-            if (duration == -1)
-                duration = 1;
-
-            Outline.SetColor(color);
-            Outline.TweenColor(prevColor, duration).SetEase(Ease.InOutQuad).OnComplete(RedrawOutline);
-        }
-        public void HighlightOutline(bool asPassive, float duration = 1)
-        {
-            if (asPassive)
-            {
-                Outline.SetColor(_outlineBrightPassiveColor);
-                Outline.TweenColor(_outlineDimPassiveColor, duration).SetEase(Ease.OutQuad).OnComplete(RedrawOutline);
-            }
-            else
-            {
-                Outline.SetColor(_outlineBrightActiveColor);
-                Outline.TweenColor(_outlineDimActiveColor, duration).SetEase(Ease.OutQuad).OnComplete(RedrawOutline);
-            }
-        }
-
-        protected void RedrawOutline()
-        {
-            const float DURATION = 1.5f;
-            switch (GetOutlineType())
-            {
-                case OutlineType.Passive: Outline.TweenColor(_outlineDimPassiveColor, DURATION); break;
-                case OutlineType.Active: Outline.TweenColor(_outlineDimActiveColor, DURATION); break;
-                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, DURATION, DURATION); break;
-
-                default:
-                    if (Outline.GetColor().a != 0)
-                        Outline.TweenColor(Color.clear, DURATION);
-                    break;
-            }
-        }
-        protected void RedrawOutlineInstantly()
-        {
-            const float DURATION = 1.5f;
-            switch (GetOutlineType())
-            {
-                case OutlineType.Passive: Outline.SetColor(_outlineDimPassiveColor); break;
-                case OutlineType.Active: Outline.SetColor(_outlineDimActiveColor); break;
-                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, 0, DURATION); break;
-
-                default:
-                    if (Outline.GetColor().a != 0)
-                        Outline.SetColor(Color.clear);
-                    break;
-            }
-        }
-
         protected virtual bool RedrawRangeFlipY() => true;
         protected override void DestroyInstantly()
         {
             base.DestroyInstantly();
-
-            ColorPalette.OnColorChanged -= OnPaletteColorChanged;
 
             attached.price.OnPostSet.Remove(OnPriceStatPostSet);
             attached.moxie.OnPostSet.Remove(OnMoxieStatPostSet);
@@ -300,35 +216,21 @@ namespace Game.Cards
             base.OnMouseClickLeftBase(sender, e);
             if (e.handled) return;
         }
-
-        static void OnPaletteColorChanged_Static(int index)
+        protected override OutlineType GetOutlineType()
         {
-            const int PASSIVE = ColorPalette.PASSIVE_INDEX;
-            const int ACTIVE = ColorPalette.ACTIVE_INDEX;
-            float brightF = Mathf.Pow(2, 6); // intensity = 6
+            TableTraitListSet traits = attached.Traits;
+            bool hasPassives = traits.Passives.Count != 0;
+            bool hasActives = traits.Actives.Count != 0;
 
-            if (index == PASSIVE)
+            if (hasPassives == hasActives)
             {
-                Color color = ColorPalette.GetColor(PASSIVE);
-                float grayscale = color.grayscale;
-                color = ((1 - grayscale) * Color.white + color * grayscale).WithAlpha(1);
-
-                _outlineBrightPassiveColor = (color * brightF).WithAlpha(1);
-                _outlineDimPassiveColor    = color;
+                if (hasPassives)
+                     return OutlineType.Both;
+                else return OutlineType.None;
             }
-            else if (index == ACTIVE)
-            {
-                Color color = ColorPalette.GetColor(ACTIVE);
-                float grayscale = color.grayscale;
-                color = ((1 - grayscale) * Color.white + color * grayscale).WithAlpha(1);
-
-                _outlineBrightActiveColor = (color * brightF).WithAlpha(1);
-                _outlineDimActiveColor = color;
-            }
-        }
-        void OnPaletteColorChanged(int index)
-        {
-            RedrawOutlineInstantly();
+            if (hasPassives)
+                 return OutlineType.Passive;
+            else return OutlineType.Active;
         }
 
         UniTask OnTraitsStacksChanged(object sender, TableTraitStacksSetArgs e)
@@ -371,22 +273,6 @@ namespace Game.Cards
             return UniTask.CompletedTask;
         }
 
-        OutlineType GetOutlineType()
-        {
-            TableTraitListSet traits = attached.Traits;
-            bool hasPassives = traits.Passives.Count != 0;
-            bool hasActives = traits.Actives.Count != 0;
-
-            if (hasPassives == hasActives)
-            {
-                if (hasPassives)
-                     return OutlineType.Both;
-                else return OutlineType.None;
-            }
-            if (hasPassives)
-                 return OutlineType.Passive;
-            else return OutlineType.Active;
-        }
         void RedrawFieldData()
         {
             FieldCard cardData = attached.Data;

@@ -2,6 +2,8 @@
 using DG.Tweening;
 using Game.Effects;
 using Game.Menus;
+using Game.Palette;
+using Game.Traits;
 using GreenOne;
 using MyBox;
 using TMPro;
@@ -27,7 +29,7 @@ namespace Game.Cards
         protected static readonly Sprite lHealthIconSprite;   // l == designed for lower icons
         protected static readonly Sprite lStrengthIconSprite;
 
-        public readonly TableCard attached;
+        public readonly new TableCard attached;
         public readonly TableCardIconDrawer upperLeftIcon;
         public readonly TableCardIconDrawer upperRightIcon;
         public readonly TableCardIconDrawer lowerLeftIcon;
@@ -38,6 +40,11 @@ namespace Game.Cards
         static readonly Sprite _cardRarity2Sprite;
         static readonly Sprite _cardRarity3Sprite;
 
+        static Color _outlineBrightPassiveColor;
+        static Color _outlineBrightActiveColor;
+        static Color _outlineDimPassiveColor;
+        static Color _outlineDimActiveColor;
+
         readonly SpriteRenderer _portraitRenderer;
         readonly SpriteRenderer _spriteRenderer;
         readonly TextMeshPro _headerTextMesh;
@@ -45,6 +52,14 @@ namespace Game.Cards
 
         SpriteRendererOutline _outline;
         Tween _headerTween;
+
+        protected enum OutlineType
+        {
+            None,
+            Passive,
+            Active,
+            Both
+        }
 
         static TableCardDrawer()
         {
@@ -58,6 +73,10 @@ namespace Game.Cards
             _cardRarity1Sprite = Resources.Load<Sprite>("Sprites/Cards/card rarity 1");
             _cardRarity2Sprite = Resources.Load<Sprite>("Sprites/Cards/card rarity 2");
             _cardRarity3Sprite = Resources.Load<Sprite>("Sprites/Cards/card rarity 3");
+
+            OnPaletteColorChanged_Static(ColorPalette.PASSIVE_INDEX);
+            OnPaletteColorChanged_Static(ColorPalette.ACTIVE_INDEX);
+            ColorPalette.OnColorChanged += OnPaletteColorChanged_Static;
         }
         public TableCardDrawer(TableCard card, Transform parent) : base(card, _prefab, parent)
         {
@@ -68,6 +87,7 @@ namespace Game.Cards
             _headerTextMesh = transform.Find<TextMeshPro>("Header");
             _subheaderTextMesh = transform.Find<TextMeshPro>("Subheader");
             _portraitRenderer = gameObject.Find<SpriteRenderer>("Portrait");
+            _outline = new SpriteRendererOutline(_spriteRenderer, paletteSupport: true);
 
             upperLeftIcon = new TableCardIconDrawer(this, transform.Find("Upper left icon"), TableCardIconType.Chunks);
             upperLeftIcon.OnMouseEnter += OnUpperLeftIconMouseEnter;
@@ -85,6 +105,7 @@ namespace Game.Cards
             lowerRightIcon.OnMouseEnter += OnLowerRightIconMouseEnter;
             lowerRightIcon.OnMouseLeave += OnLowerRightIconMouseLeave;
 
+            ColorPalette.OnColorChanged += OnPaletteColorChanged;
             RedrawBaseData();
         }
 
@@ -196,6 +217,37 @@ namespace Game.Cards
             upperLeftIcon.RedrawSprite(currency == CardBrowser.GetCurrency("gold") ? uGoldIconSprite : uEtherIconSprite);
         }
 
+        protected void RedrawOutline()
+        {
+            const float DURATION = 1.5f;
+            switch (GetOutlineType())
+            {
+                case OutlineType.Passive: Outline.TweenColor(_outlineDimPassiveColor, DURATION); break;
+                case OutlineType.Active: Outline.TweenColor(_outlineDimActiveColor, DURATION); break;
+                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, DURATION, DURATION); break;
+
+                default:
+                    if (Outline.GetColor().a != 0)
+                        Outline.TweenColor(Color.clear, DURATION);
+                    break;
+            }
+        }
+        protected void RedrawOutlineInstantly()
+        {
+            const float DURATION = 1.5f;
+            switch (GetOutlineType())
+            {
+                case OutlineType.Passive: Outline.SetColor(_outlineDimPassiveColor); break;
+                case OutlineType.Active: Outline.SetColor(_outlineDimActiveColor); break;
+                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, 0, DURATION); break;
+
+                default:
+                    if (Outline.GetColor().a != 0)
+                        Outline.SetColor(Color.clear);
+                    break;
+            }
+        }
+
         public async UniTask RedrawHeaderTypingWithReset(params string[] texts)
         {
             await RedrawHeaderTypingBase(resetOnFinish: true, texts);
@@ -205,30 +257,53 @@ namespace Game.Cards
             await RedrawHeaderTypingBase(resetOnFinish: false, texts);
         }
 
-        public void CreateOutline()
+        public void HighlightOutline(Color color, float duration = 1)
         {
-            _outline ??= new SpriteRendererOutline(_spriteRenderer, paletteSupport: true);
+            Color prevColor = Outline.GetColor();
+            float brightF = Mathf.Pow(2, 6);
+
+            color.r *= brightF;
+            color.g *= brightF;
+            color.b *= brightF;
+
+            if (duration == -1)
+                duration = 1;
+
+            Outline.SetColor(color);
+            Outline.TweenColor(prevColor, duration).SetEase(Ease.InOutQuad).OnComplete(RedrawOutline);
         }
-        public void DestroyOutline()
+        public void HighlightOutline(bool asPassive, float duration = 1)
         {
-            _outline?.Dispose();
-            _outline = null;
+            if (asPassive)
+            {
+                Outline.SetColor(_outlineBrightPassiveColor);
+                Outline.TweenColor(_outlineDimPassiveColor, duration).SetEase(Ease.OutQuad).OnComplete(RedrawOutline);
+            }
+            else
+            {
+                Outline.SetColor(_outlineBrightActiveColor);
+                Outline.TweenColor(_outlineDimActiveColor, duration).SetEase(Ease.OutQuad).OnComplete(RedrawOutline);
+            }
         }
 
         public Tween AnimExplosion()
         {
             return _spriteRenderer.DOAExplosion();
         }
+        protected virtual OutlineType GetOutlineType()
+        {
+            return OutlineType.None;
+        }
 
-        protected abstract void OnUpperLeftIconMouseEnter(object sender, DrawerMouseEventArgs e);
-        protected abstract void OnUpperRightIconMouseEnter(object sender, DrawerMouseEventArgs e);
-        protected abstract void OnLowerLeftIconMouseEnter(object sender, DrawerMouseEventArgs e);
-        protected abstract void OnLowerRightIconMouseEnter(object sender, DrawerMouseEventArgs e);
+        protected virtual void OnUpperLeftIconMouseEnter(object sender, DrawerMouseEventArgs e) { }
+        protected virtual void OnUpperRightIconMouseEnter(object sender, DrawerMouseEventArgs e) { }
+        protected virtual void OnLowerLeftIconMouseEnter(object sender, DrawerMouseEventArgs e) { }
+        protected virtual void OnLowerRightIconMouseEnter(object sender, DrawerMouseEventArgs e) { }
 
-        protected abstract void OnUpperLeftIconMouseLeave(object sender, DrawerMouseEventArgs e);
-        protected abstract void OnUpperRightIconMouseLeave(object sender, DrawerMouseEventArgs e);
-        protected abstract void OnLowerLeftIconMouseLeave(object sender, DrawerMouseEventArgs e);
-        protected abstract void OnLowerRightIconMouseLeave(object sender, DrawerMouseEventArgs e);
+        protected virtual void OnUpperLeftIconMouseLeave(object sender, DrawerMouseEventArgs e) { }
+        protected virtual void OnUpperRightIconMouseLeave(object sender, DrawerMouseEventArgs e) { }
+        protected virtual void OnLowerLeftIconMouseLeave(object sender, DrawerMouseEventArgs e) { }
+        protected virtual void OnLowerRightIconMouseLeave(object sender, DrawerMouseEventArgs e) { }
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
@@ -256,8 +331,9 @@ namespace Game.Cards
         {
             base.DestroyInstantly();
 
-            DestroyOutline();
+            _outline.Dispose();
             _headerTween.Kill();
+            ColorPalette.OnColorChanged -= OnPaletteColorChanged;
 
             upperLeftIcon.TryDestroyInstantly();
             upperRightIcon.TryDestroyInstantly();
@@ -274,6 +350,36 @@ namespace Game.Cards
             lowerRightIcon.TryDestroyAnimated();
 
             return UniTask.CompletedTask;
+        }
+
+        static void OnPaletteColorChanged_Static(int index)
+        {
+            const int PASSIVE = ColorPalette.PASSIVE_INDEX;
+            const int ACTIVE = ColorPalette.ACTIVE_INDEX;
+            float brightF = Mathf.Pow(2, 6); // intensity = 6
+
+            if (index == PASSIVE)
+            {
+                Color color = ColorPalette.GetColor(PASSIVE);
+                float grayscale = color.grayscale;
+                color = ((1 - grayscale) * Color.white + color * grayscale).WithAlpha(1);
+
+                _outlineBrightPassiveColor = (color * brightF).WithAlpha(1);
+                _outlineDimPassiveColor = color;
+            }
+            else if (index == ACTIVE)
+            {
+                Color color = ColorPalette.GetColor(ACTIVE);
+                float grayscale = color.grayscale;
+                color = ((1 - grayscale) * Color.white + color * grayscale).WithAlpha(1);
+
+                _outlineBrightActiveColor = (color * brightF).WithAlpha(1);
+                _outlineDimActiveColor = color;
+            }
+        }
+        void OnPaletteColorChanged(int index)
+        {
+            RedrawOutlineInstantly();
         }
 
         void RedrawBaseData()

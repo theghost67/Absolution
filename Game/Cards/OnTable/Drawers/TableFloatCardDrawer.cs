@@ -28,17 +28,17 @@ namespace Game.Cards
         protected override void OnUpperRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return; 
-            Tooltip.Show($"Отсутствует у карт способностей<color=grey><i>Инициатива: определяет быстроту действий.");
+            Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Инициатива: определяет быстроту действий.");
         }
         protected override void OnLowerLeftIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Tooltip.Show($"Отсутствует у карт способностей<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
+            Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
         }
         protected override void OnLowerRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return; 
-            Tooltip.Show($"Отсутствует у карт способностей<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
+            Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
         }
 
         protected override void OnUpperLeftIconMouseLeave(object sender, DrawerMouseEventArgs e)

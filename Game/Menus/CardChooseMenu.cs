@@ -1,10 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
+using Game.Palette;
 using GreenOne;
 using MyBox;
 using System;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -21,21 +21,27 @@ namespace Game.Menus
         static readonly GameObject _prefab = Resources.Load<GameObject>($"Prefabs/Menus/{ID}");
         public bool CardsAreShown => _cardsAreShown;
 
-        public int cardStatPoints; // increase to show more powerful cards
-        public int cardsCount;
-        public int rerollsLeft; // TODO: imeplement
-        public int choicesLeft; // TODO: implement (graphics)
+        public int CardPoints => _cardPoints;
+        public int CardsCount => _cardsCount;
+        public int RerollsLeft => _rerollsLeft;
+        public int FieldsChoicesLeft => _fieldsChoicesLeft;
+        public int FloatsChoicesLeft => _floatsChoicesLeft;
 
         readonly Transform _cardsParent;
         readonly TextMeshPro _headerTextMesh;
         readonly TextMeshPro _descTextMesh;
         readonly ArrowsAnim[] _arrows;
 
-        readonly Dictionary<string, CardToChoose> _cards;
+        int _cardPoints; // increase to show more powerful cards
+        int _cardsCount;
+        int _rerollsLeft; // TODO: imeplement
+        int _fieldsChoicesLeft; // TODO: implement graphics?
+        int _floatsChoicesLeft;
+        CardToChoose[] _cards;
         bool _cardsAreShown;
 
         // one of the field cards in this menu
-        class CardToChoose : TableFieldCard
+        class CardToChoose
         {
             const float ANIM_DURATION = 0.50f;
             const float CARD_DISTANCE_X = 1f;
@@ -49,31 +55,41 @@ namespace Game.Menus
             public readonly CardChooseMenu menu;
             public readonly int index;
 
+            readonly bool _isField;
+            readonly TableCard _onTable;
+
+            TableCardDrawer Drawer => _onTable.Drawer;
+            Card Data => _onTable.Data;
+
             bool _chosen;
             Tween _scaleTween;
             Tween _posTween;
             Tween _alphaTween;
 
-            public CardToChoose(CardChooseMenu menu, FieldCard data, int index) : base(data, menu._cardsParent)
+            public CardToChoose(CardChooseMenu menu, TableCard onTable, int index)
             {
                 this.menu = menu;
                 this.index = index;
 
+                _isField = onTable.Data.isField;
+                _onTable = onTable;
                 _scaleTween = Utils.emptyTween;
                 _posTween = Utils.emptyTween;
                 _alphaTween = Utils.emptyTween;
 
-                float xHalfOffset = -menu.cardsCount / 2f + 0.5f;
-                Drawer.transform.localPosition = new Vector3(index * CARD_DISTANCE_X + xHalfOffset, CARD_MIN_Y);
-                Drawer.ChangePointer = true;
+                float xHalfOffset = -menu._cardsCount / 2f + 0.5f;
+                TableCardDrawer drawer = _onTable.Drawer;
 
-                Drawer.OnMouseEnter += OnCardMouseEnter;
-                Drawer.OnMouseLeave += OnCardMouseLeave;
-                Drawer.OnMouseClickLeft += OnCardMouseClickLeft;
+                drawer.transform.localPosition = new Vector3(index * CARD_DISTANCE_X + xHalfOffset, CARD_MIN_Y);
+                drawer.ChangePointer = true;
 
-                Drawer.SetCollider(false);
-                Drawer.SetSortingOrder(0);
-                Drawer.SetAlpha(0);
+                drawer.OnMouseEnter += OnCardMouseEnter;
+                drawer.OnMouseLeave += OnCardMouseLeave;
+                drawer.OnMouseClickLeft += OnCardMouseClickLeft;
+
+                drawer.SetCollider(false);
+                drawer.SetSortingOrder(0);
+                drawer.SetAlpha(0);
             }
 
             public Tween AnimShow()
@@ -158,19 +174,38 @@ namespace Game.Menus
 
             async void ConfirmChoice()
             {
-                foreach (CardToChoose card in menu._cards.Values)
+                foreach (CardToChoose card in menu._cards)
                     card.Drawer.SetCollider(false);
 
                 _chosen = true;
-                Player.Deck.fieldCards.Add(Data);
-                Drawer.HighlightOutline(Drawer.Outline.GetColor());
+                Drawer.HighlightOutline(GetHighlightColor());
+
+                if (_isField)
+                {
+                    Player.Deck.fieldCards.Add((FieldCard)Data);
+                    menu._fieldsChoicesLeft--;
+                }
+                else
+                {
+                    Player.Deck.floatCards.Add((FloatCard)Data);
+                    menu._floatsChoicesLeft--;
+                }
 
                 await UniTask.Delay(1500);
                 await menu.HideCards();
 
-                if (--menu.choicesLeft > 0)
+                if (menu._fieldsChoicesLeft > 0 || menu._floatsChoicesLeft > 0)
                      await menu.ShowCards();
                 else await menu.CloseAnimated();
+            }
+            Color GetHighlightColor()
+            {
+                if (_isField)
+                {
+                    Color color = Drawer.Outline.GetColor();
+                    if (color.a != 0) return color;
+                }
+                return ColorPalette.GetColor(1);
             }
         }
         class ArrowsAnim
@@ -200,10 +235,15 @@ namespace Game.Menus
             }
         }
 
-        public CardChooseMenu() : base(ID, _prefab)
+        public CardChooseMenu(int cardPoints, int fieldsChoices, int floatsChoices = 0, int cardsCount = 3, int rerolls = 0) : base(ID, _prefab)
         {
-            _cards = new Dictionary<string, CardToChoose>();
+            _cardPoints = cardPoints;
+            _cardsCount = cardsCount;
+            _rerollsLeft = rerolls;
+            _fieldsChoicesLeft = fieldsChoices;
+            _floatsChoicesLeft = floatsChoices;
 
+            _cards = Array.Empty<CardToChoose>();
             _cardsParent = Transform.Find("Cards");
             _headerTextMesh = Transform.Find<TextMeshPro>("Header text");
             _descTextMesh = Transform.Find<TextMeshPro>("Desc text");
@@ -234,38 +274,57 @@ namespace Game.Menus
             _descTextMesh.text = text;
         }
 
-        FieldCard[] GenerateCardsToChoose()
+        Card[] GenerateCardsToChoose()
         {
-            if (cardsCount > MAX_CARDS)
-                throw new Exception($"Max cards to choose from equals to {MAX_CARDS}.");
-            if (cardsCount <= 0)
-                throw new Exception("Cards count (amount of cards to choose from) was not set.");
+            if (_cardsCount > MAX_CARDS)
+                throw new Exception($"Cards count must not be greater than {MAX_CARDS}.");
+            if (_cardsCount <= 0)
+                throw new Exception("Cards count (amount of cards to choose from) was less or equal to 0.");
 
-            FieldCard[] genCards = new FieldCard[cardsCount];
-            for (int i = 0; i < cardsCount; i++)
+            if (_fieldsChoicesLeft > 0)
             {
-                FieldCard srcCard = CardBrowser.Fields.GetWeightedRandom(c => c.frequency);
-                FieldCard genCard = CardBrowser.NewField(srcCard.id).UpgradeAsNewWithTraitAdd(cardStatPoints);
-                genCards[i] = genCard;
+                FieldCard[] genCards = new FieldCard[_cardsCount];
+                for (int i = 0; i < _cardsCount; i++)
+                {
+                    FieldCard srcCard = CardBrowser.Fields.GetWeightedRandom(c => c.frequency);
+                    FieldCard genCard = CardBrowser.NewField(srcCard.id).UpgradeWithTraitAdd(_cardPoints);
+                    genCards[i] = genCard;
+                }
+                return genCards;
             }
-            return genCards;
+            else if (_floatsChoicesLeft > 0)
+            {
+                FloatCard[] genCards = new FloatCard[_cardsCount];
+                for (int i = 0; i < _cardsCount; i++)
+                {
+                    FloatCard srcCard = CardBrowser.Floats.GetWeightedRandom(c => c.frequency);
+                    FloatCard genCard = CardBrowser.NewFloat(srcCard.id);
+                    genCards[i] = genCard;
+                }
+                return genCards;
+            }
+            else throw new Exception("There are no card choices left to generate cards for.");
         }
 
         public async UniTask ShowCards()
         {
-            if (_cards.Count != 0)
+            if (_cards.Length != 0)
                 await HideCards();
 
             if (_cardsAreShown) return;
             _cardsAreShown = true;
 
             Tween lastTween = Utils.emptyTween;
-            FieldCard[] generatedCards = GenerateCardsToChoose();
+            Card[] generatedCards = GenerateCardsToChoose();
+            _cards = new CardToChoose[generatedCards.Length];
+
             for (int i = 0; i < generatedCards.Length; i++)
             {
-                FieldCard generatedCard = generatedCards[i];
-                CardToChoose cardToChoose = new(this, generatedCard, i);
-                _cards.Add(cardToChoose.GuidStr, cardToChoose);
+                Card genCard = generatedCards[i];
+                TableCard onTable = genCard.isField ? new TableFieldCard((FieldCard)genCard, _cardsParent) 
+                                                    : new TableFloatCard((FloatCard)genCard, _cardsParent);
+                CardToChoose cardToChoose = new(this, onTable, i);
+                _cards[i] = cardToChoose;
                 lastTween = cardToChoose.AnimShow();
             }
 
@@ -280,10 +339,10 @@ namespace Game.Menus
             _cardsAreShown = false;
 
             Tween lastTween = Utils.emptyTween;
-            foreach (CardToChoose card in _cards.Values)
+            foreach (CardToChoose card in _cards)
                 lastTween = card.AnimHide();
 
-            _cards.Clear();
+            _cards = Array.Empty<CardToChoose>();
             await lastTween.AsyncWaitForCompletion();
         }
     }
