@@ -43,7 +43,7 @@ namespace GreenOne.Console
 
         public static bool TryParse(string str, out Command? cmd)
         {
-            foreach (var command in CommandList.Set.Values)
+            foreach (Command command in Commands.List)
             {
                 if (command.IsPseudonim(str))
                 {
@@ -166,18 +166,19 @@ namespace GreenOne.Console
         }
         public string ToFullString()
         {
-            string str = ToString();
+            StringBuilder sb = new(ToString());
             string smallSpace = new(' ', id.Length + (arguments.Length == 0 ? 2 : 1)); // empty space (+ colon)
 
-            StringBuilder sb = new($"{str}\n{smallSpace}Псевдонимы: ");
-            sb.Append(pseudonims[0]);
-
             int pseudoLength = pseudonims.Length;
-            for (int i = 1; i < pseudoLength; i++)
-                sb.Append($", {pseudonims[i]}");
-
-            if (arguments.Length != 0)
-                sb.AppendLine();
+            if (pseudoLength != 0)
+            {
+                sb.Append($"\n{smallSpace}Псевдонимы: ");
+                for (int i = 1; i < pseudoLength; i++)
+                {
+                    if (i != 0) sb.Append(", ");
+                    sb.Append(pseudonims[i]);
+                }
+            }
 
             foreach (CommandArg arg in arguments)
                 sb.Append($"\n{arg.ToFullString()}");
@@ -202,6 +203,7 @@ namespace GreenOne.Console
 
         /// <exception cref="NamedArgException"></exception>
         /// <exception cref="ArgCountException"></exception>
+        /// <exception cref="ArgValueException"></exception>
         static KeyValuePair<string, CommandArgInput>[] GetArgsByInput(Command cmd, string[] argsInput)
         {
             var array = new KeyValuePair<string, CommandArgInput>[argsInput.Length];
@@ -253,8 +255,18 @@ namespace GreenOne.Console
                     throw new ArgCountException(false, "Too many arguments were passed.");
 
                 CommandArg arg = cmd.arguments[i];
-                CommandArgInput orderInput = new(arg, argInput);
-                array[i] = new KeyValuePair<string, CommandArgInput>(arg.id, orderInput);
+                if (!arg.isFlag)
+                {
+                    CommandArgInput orderInput = new(arg, argInput);
+                    array[i] = new KeyValuePair<string, CommandArgInput>(arg.id, orderInput);
+                }
+                else if (argInput == arg.id)
+                {
+                    CommandArgInput orderInput = new(arg, "");
+                    array[i] = new KeyValuePair<string, CommandArgInput>(arg.id, orderInput);
+                }
+                else throw new ArgValueException(arg.id, "Argument marked as a flag must not have a value.");
+
                 Continue: continue;
             }
             return array;

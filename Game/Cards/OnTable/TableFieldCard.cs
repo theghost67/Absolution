@@ -172,9 +172,6 @@ namespace Game.Cards
 
         protected virtual UniTask OnHealthPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
         {
-            TableStat stat = (TableStat)sender;
-            TableFieldCard card = (TableFieldCard)stat.Owner;
-            card.Drawer.CreateDamageTextSplash(e.totalDeltaValue);
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnStrengthPostSetBase_TOP(object sender, TableStat.PostSetArgs e)

@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿//#define SHUFFLE_PRICE
+
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Game.Cards
 {
@@ -179,47 +182,6 @@ namespace Game.Cards
         public static FloatCard NewFloat(string id) => (FloatCard)GetFloat(id).Clone();
         public static Card NewCard(string id) => (Card)GetCard(id).Clone();
 
-        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float statPoints, in int traitsCount)
-        {
-            FieldCardUpgradeRules rules = new(statPoints - card.Points(), traitsCount);
-            rules.Upgrade(card);
-            return card;
-        }
-        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float statPoints)
-        {
-            FieldCardUpgradeRules rules = new(statPoints - card.Points(), true);
-            rules.Upgrade(card);
-            return card;
-        }
-        public static FieldCard UpgradeWithoutTraitAdd(this FieldCard card, in float statPoints)
-        {
-            FieldCardUpgradeRules rules = new(statPoints - card.Points(), false);
-            rules.Upgrade(card);
-            return card;
-        }
-
-        public static FieldCard UpgradeAsNewWithTraitAdd(this FieldCard card, in float statPoints, in int traitsCount)
-        {
-            FieldCardUpgradeRules rules = new(statPoints, traitsCount);
-            rules.Reset(card);
-            rules.Upgrade(card);
-            return card;
-        }
-        public static FieldCard UpgradeAsNewWithTraitAdd(this FieldCard card, in int statPoints)
-        {
-            FieldCardUpgradeRules rules = new(statPoints, true);
-            rules.Reset(card);
-            rules.Upgrade(card);
-            return card;
-        }
-        public static FieldCard UpgradeAsNewWithoutTraitAdd(this FieldCard card, in int statPoints)
-        {
-            FieldCardUpgradeRules rules = new(statPoints, false);
-            rules.Reset(card);
-            rules.Upgrade(card);
-            return card;
-        }
-
         public static CardCurrency GetCurrency(string id)
         {
             if (_currencies.TryGetValue(id, out CardCurrency currency))
@@ -243,6 +205,63 @@ namespace Game.Cards
             if (_all.TryGetValue(id, out Card card))
                 return card;
             else throw new System.NullReferenceException($"Card with specified id was not found: {id}.");
+        }
+
+        public static FieldCard ShuffleMainStats(this FieldCard card)
+        {
+            #if SHUFFLE_PRICE
+            card.price.value = Random.Range(0, 6);
+            #endif
+            card.moxie = Random.Range(0, 6);
+            return card;
+        }
+        public static FieldCard ShuffleAllStats(this FieldCard card)
+        {
+            int sum = card.strength + card.health;
+            int rand = Random.Range(0, sum);
+            card.health = rand;
+            card.strength = sum - rand;
+            #if SHUFFLE_PRICE
+            card.price.value = Random.Range(0, 6);
+            #endif
+            card.moxie = Random.Range(0, 6);
+            return card;
+        }
+
+        public static FieldCard ResetMainStats(this FieldCard card)
+        {
+            card.moxie = 0;
+            card.price.value = 0;
+            return card;
+        }
+        public static FieldCard ResetAllStats(this FieldCard card, bool resetTraits = false)
+        {
+            card.health = 1;
+            card.strength = 0;
+            card.moxie = 0;
+            card.price.value = 0;
+            if (resetTraits)
+                card.traits.Clear();
+            return card;
+        }
+
+        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float statPoints, in int traitsCount)
+        {
+            FieldCardUpgradeRules rules = new(statPoints - card.Points(), traitsCount);
+            rules.Upgrade(card);
+            return card;
+        }
+        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float statPoints)
+        {
+            FieldCardUpgradeRules rules = new(statPoints - card.Points(), true);
+            rules.Upgrade(card);
+            return card;
+        }
+        public static FieldCard UpgradeWithoutTraitAdd(this FieldCard card, in float statPoints)
+        {
+            FieldCardUpgradeRules rules = new(statPoints - card.Points(), false);
+            rules.Upgrade(card);
+            return card;
         }
 
         static void AddCurrency(CardCurrency currency)

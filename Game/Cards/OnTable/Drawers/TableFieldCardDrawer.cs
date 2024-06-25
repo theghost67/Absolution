@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Game.Effects;
 using Game.Palette;
 using Game.Traits;
 using GreenOne;
@@ -35,7 +36,11 @@ namespace Game.Cards
             OnMouseScrollDown += OnMouseScrollDownBase;
 
             _bgRenderer = transform.Find<SpriteRenderer>("BG");
-            RedrawFieldData();
+            _bgTween = Utils.emptyTween;
+
+            RedrawHealth(card.Data.health, true);
+            RedrawStrength(card.Data.strength, true);
+            RedrawMoxie(card.Data.moxie, true);
             RedrawOutlineInstantly();
         }
 
@@ -91,17 +96,21 @@ namespace Game.Cards
             RedrawMoxie(attached.moxie);
         }
 
-        public void RedrawHealth(int health)
+        public void RedrawHealth(int health, bool instantly = false)
         {
             lowerLeftIcon.RedrawSprite(lHealthIconSprite);
-            lowerLeftIcon.RedrawText(health);
+            if (instantly)
+                 lowerLeftIcon.RedrawText(health);
+            else lowerLeftIcon.AnimTextNumberDelta(health);
         }
-        public void RedrawStrength(int strength)
+        public void RedrawStrength(int strength, bool instantly = false)
         {
             lowerRightIcon.RedrawSprite(lStrengthIconSprite);
-            lowerRightIcon.RedrawText(strength);
+            if (instantly)
+                lowerRightIcon.RedrawText(strength);
+            else lowerRightIcon.AnimTextNumberDelta(strength);
         }
-        public void RedrawMoxie(int moxie)
+        public void RedrawMoxie(int moxie, bool instantly = false)
         {
             upperRightIcon.RedrawSprite(uMoxieIconSprite);
             upperRightIcon.RedrawChunks(moxie);
@@ -109,23 +118,23 @@ namespace Game.Cards
 
         public void ShowBg()
         {
-            _bgTween?.Kill();
-            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(BG_ALPHA_MAX), 0.25f).SetEase(Ease.Linear);
+            _bgTween.Kill();
+            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(BG_ALPHA_MAX), 0.25f);
         }
         public void HideBg()
         {
-            _bgTween?.Kill();
-            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(0f), 0.25f).SetEase(Ease.Linear);
+            _bgTween.Kill();
+            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(0f), 0.25f);
         }
 
         public void ShowBgInstantly()
         {
-            _bgTween?.Kill();
+            _bgTween.Kill();
             _bgRenderer.color = Color.white.WithAlpha(BG_ALPHA_MAX);
         }
         public void HideBgInstantly()
         {
-            _bgTween?.Kill();
+            _bgTween.Kill();
             _bgRenderer.color = Color.white.WithAlpha(0f);
         }
 
@@ -205,9 +214,6 @@ namespace Game.Cards
         {
             base.OnMouseLeaveBase(sender, e);
             if (e.handled) return;
-
-            RedrawHealthAsCurrent();
-            RedrawStrengthAsCurrent();
             Traits?.HideStoredElementsInstantly();
         }
         protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
@@ -271,14 +277,6 @@ namespace Game.Cards
             TableFieldCardDrawer drawer = card.Drawer;
             drawer?.RedrawStrengthAsCurrent();
             return UniTask.CompletedTask;
-        }
-
-        void RedrawFieldData()
-        {
-            FieldCard cardData = attached.Data;
-            RedrawHealth(cardData.health);
-            RedrawStrength(cardData.strength);
-            RedrawMoxie(cardData.moxie);
         }
     }
 }

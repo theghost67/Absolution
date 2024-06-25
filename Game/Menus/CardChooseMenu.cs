@@ -94,7 +94,7 @@ namespace Game.Menus
 
             public Tween AnimShow()
             {
-                Sequence seq = DOTween.Sequence(Drawer);
+                Sequence seq = DOTween.Sequence();
                 seq.AppendCallback(() =>
                 {
                     AnimPosUp();
@@ -107,7 +107,7 @@ namespace Game.Menus
             }
             public Tween AnimHide()
             {
-                Sequence seq = DOTween.Sequence(Drawer);
+                Sequence seq = DOTween.Sequence();
                 seq.AppendCallback(() =>
                 {
                     AnimPosDown();
@@ -287,7 +287,7 @@ namespace Game.Menus
                 for (int i = 0; i < _cardsCount; i++)
                 {
                     FieldCard srcCard = CardBrowser.Fields.GetWeightedRandom(c => c.frequency);
-                    FieldCard genCard = CardBrowser.NewField(srcCard.id).UpgradeWithTraitAdd(_cardPoints);
+                    FieldCard genCard = CardBrowser.NewField(srcCard.id).ShuffleMainStats().UpgradeWithTraitAdd(_cardPoints);
                     genCards[i] = genCard;
                 }
                 return genCards;

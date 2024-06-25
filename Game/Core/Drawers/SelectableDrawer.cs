@@ -73,11 +73,12 @@ namespace Game
             _isOutlined = true;
             _outlineRenderer = GameObject.Instantiate(_outlinePrefab, Global.Root).GetComponent<SpriteRenderer>();
             _outlineRenderer.transform.position = transform.position;
-            return _outlineTween = DOVirtual.Float(0, 1, 1, v => { }).OnComplete(() =>
+            _outlineTween = DOVirtual.Float(0, 1, 1, null).OnComplete(() =>
             {
                 _outlineRenderer.gameObject.SetActive(!_outlineRenderer.gameObject.activeSelf);
                 _outlineTween.Restart();
             });
+            return _outlineTween;
         }
         [Obsolete("Implement or remove")] public Tween AnimShowCovering()
         {

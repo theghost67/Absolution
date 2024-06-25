@@ -106,7 +106,11 @@ namespace Game.Cards
             lowerRightIcon.OnMouseLeave += OnLowerRightIconMouseLeave;
 
             ColorPalette.OnColorChanged += OnPaletteColorChanged;
-            RedrawBaseData();
+            RedrawSpriteAsDefault();
+            RedrawPortraitAsDefault();
+            RedrawHeaderAsDefault();
+            RedrawHeaderColor(Color.black);
+            RedrawPriceAsDefault();
         }
 
         public override void SetSortingOrder(int value, bool asDefault = false)
@@ -380,15 +384,6 @@ namespace Game.Cards
         void OnPaletteColorChanged(int index)
         {
             RedrawOutlineInstantly();
-        }
-
-        void RedrawBaseData()
-        {
-            RedrawSpriteAsDefault();
-            RedrawPortraitAsDefault();
-            RedrawHeaderAsDefault();
-            RedrawHeaderColor(Color.black);
-            RedrawPriceAsDefault();
         }
         async UniTask RedrawHeaderTypingBase(bool resetOnFinish, params string[] texts)
         {

@@ -39,13 +39,6 @@ namespace Game.Cards
             else return Mathf.Log((cardStatPoints - 10) / 6);
         }
 
-        public readonly void Reset(FieldCard card)
-        {
-            card.health = 1;
-            card.strength = 0;
-            card.moxie = Random.Range(1, 6);
-            card.traits.Clear();
-        }
         public readonly void Upgrade(FieldCard card)
         {
             if (statPoints <= 0)

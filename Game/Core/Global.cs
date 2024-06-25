@@ -42,17 +42,22 @@ namespace Game
         static void LogReceived(string condition, string stackTrace, LogType type)
         {
             if (_quitting) return;
-            if (type == LogType.Exception || type == LogType.Error)
-            {
-                _errorsCount++;
-                _errorTween.Restart();
-                ShowErrors();
-            }
+            if (type != LogType.Exception && type != LogType.Error) return;
+
+            _errorsCount++;
+            _errorTween.Restart();
+            ShowErrors();
+            TableConsole.WriteLine(condition, type);
+            TableConsole.WriteLine(stackTrace, type);
         }
         static bool OnWantToQuit()
         {
             _quitting = true;
             return true;
+        }
+        static bool OnTweenLog(LogType type, object log)
+        {
+            return type == LogType.Error || type == LogType.Exception;
         }
 
         static void ShowErrors()
@@ -66,7 +71,7 @@ namespace Game
         }
 
         // TODO: remove
-        Menu CreateCardChoose(Location location)
+        Menu demo_CreateCardChoose(Location location)
         {
             CardChooseMenu menu = new(location.stage, 4);
             menu.MenuWhenClosed = () => Traveler.CreateDemoMenu(location);
@@ -86,6 +91,7 @@ namespace Game
             Application.logMessageReceived += LogReceived;
             Application.targetFrameRate = (int)Screen.currentResolution.refreshRateRatio.value; // TODO: add in settings
             Application.wantsToQuit += OnWantToQuit;
+            DOTween.onWillLog = OnTweenLog;
             //Time.fixedDeltaTime = 1 / 20f;
 
             TraitBrowser.Initialize();
@@ -98,7 +104,7 @@ namespace Game
             //WorldMenu.instance.OpenAnimated();
 
             TableConsole.Initialize();
-            MenuTransit.Between(null, CreateCardChoose(EnvironmentBrowser.Locations["college"]));
+            MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"]));
         }
         void Update()
         {

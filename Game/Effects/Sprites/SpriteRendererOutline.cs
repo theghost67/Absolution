@@ -57,7 +57,9 @@ namespace Game.Effects
         public void SetColor(Color value)
         {
             _color = value;
-            _material.color = value;
+            if (_material != null)
+                 _material.color = value;
+            else _colorTween.Kill();
         }
         public Tween TweenColor(Color value, float duration)
         {

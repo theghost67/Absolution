@@ -87,7 +87,7 @@ namespace Game
         void FixedUpdate()
         {
             bool changePointer = false;
-            foreach (Drawer drawer in Drawer.b_SelectedDrawers)
+            foreach (Drawer drawer in Drawer.SelectedDrawers)
             {
                 if (!drawer.ChangePointer) continue;
                 changePointer = true;

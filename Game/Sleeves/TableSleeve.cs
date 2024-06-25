@@ -92,6 +92,10 @@ namespace Game.Sleeves
             OnDrawerDestroyed?.Invoke(this, EventArgs.Empty);
         }
 
+        public void Add(Card card)
+        {
+            Add(HoldingCardCreator(card));
+        }
         public void Add(ITableSleeveCard card)
         {
             _cards.Add(card);
@@ -101,6 +105,15 @@ namespace Game.Sleeves
         {
             _cards.Remove(card);
             _drawer?.RemoveCardDrawer(card);
+        }
+        public bool Contains(ITableSleeveCard card)
+        {
+            foreach (ITableSleeveCard sCard in _cards)
+            {
+                if (sCard.Equals(card))
+                    return true;
+            }
+            return false;
         }
 
         public virtual void Dispose()

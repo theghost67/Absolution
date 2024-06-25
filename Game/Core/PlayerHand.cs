@@ -38,7 +38,7 @@ namespace Game
         static void TryDropCard()
         {
             TableField field = null;
-            foreach (Drawer drawer in Drawer.b_SelectedDrawers)
+            foreach (Drawer drawer in Drawer.SelectedDrawers)
             {
                 if (drawer is TableFieldDrawer fieldDrawer)
                 {

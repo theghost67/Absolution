@@ -167,9 +167,6 @@ namespace Game.Territories
 
         UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
         {
-            TableStat stat = (TableStat)sender;
-            TableField field = (TableField)stat.Owner;
-            field.Drawer.CreateDamageTextSplash(e.totalDeltaValue);
             return UniTask.CompletedTask;
         }
     }

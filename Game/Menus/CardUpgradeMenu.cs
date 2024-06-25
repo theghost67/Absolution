@@ -386,20 +386,20 @@ namespace Game.Menus
                 if (times == 0) return UniTask.CompletedTask;
                 card.Data.price.value -= times;
                 upgradedTimes = 0;
-                return card.price.SetValueAbs(card.Data.price.value);
+                return card.price.SetValueAbs(card.Data.price.value, null);
             }
 
             protected override UniTask Upgrade()
             {
                 card.Data.price.value++;
                 upgradedTimes++;
-                return card.price.SetValueAbs(card.Data.price.value);
+                return card.price.SetValueAbs(card.Data.price.value, null);
             }
             protected override UniTask Downgrade()
             {
                 card.Data.price.value--;
                 upgradedTimes--;
-                return card.price.SetValueAbs(card.Data.price.value);
+                return card.price.SetValueAbs(card.Data.price.value, null);
             }
 
             protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
@@ -426,20 +426,20 @@ namespace Game.Menus
                 if (times == 0) return UniTask.CompletedTask;
                 card.Data.moxie -= times;
                 upgradedTimes = 0;
-                return card.moxie.SetValueAbs(card.Data.moxie);
+                return card.moxie.SetValueAbs(card.Data.moxie, null);
             }
 
             protected override UniTask Upgrade()
             {
                 card.Data.moxie++;
                 upgradedTimes++;
-                return card.moxie.SetValueAbs(card.Data.moxie);
+                return card.moxie.SetValueAbs(card.Data.moxie, null);
             }
             protected override UniTask Downgrade()
             {
                 card.Data.moxie--;
                 upgradedTimes--;
-                return card.moxie.SetValueAbs(card.Data.moxie);
+                return card.moxie.SetValueAbs(card.Data.moxie, null);
             }
 
             protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
@@ -466,20 +466,20 @@ namespace Game.Menus
                 if (times == 0) return UniTask.CompletedTask;
                 card.Data.health -= times;
                 upgradedTimes = 0;
-                return card.health.SetValueAbs(card.Data.health);
+                return card.health.SetValueAbs(card.Data.health, null);
             }
 
             protected override UniTask Upgrade()
             {
                 card.Data.health++;
                 upgradedTimes++;
-                return card.health.SetValueAbs(card.Data.health);
+                return card.health.SetValueAbs(card.Data.health, null);
             }
             protected override UniTask Downgrade()
             {
                 card.Data.health--;
                 upgradedTimes--;
-                return card.health.SetValueAbs(card.Data.health);
+                return card.health.SetValueAbs(card.Data.health, null);
             }
 
             protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
@@ -506,20 +506,20 @@ namespace Game.Menus
                 if (times == 0) return UniTask.CompletedTask;
                 card.Data.strength -= times;
                 upgradedTimes = 0;
-                return card.strength.SetValueAbs(card.Data.strength);
+                return card.strength.SetValueAbs(card.Data.strength, null);
             }
 
             protected override UniTask Upgrade()
             {
                 card.Data.strength++;
                 upgradedTimes++;
-                return card.strength.SetValueAbs(card.Data.strength);
+                return card.strength.SetValueAbs(card.Data.strength, null);
             }
             protected override UniTask Downgrade()
             {
                 card.Data.strength--;
                 upgradedTimes--;
-                return card.strength.SetValueAbs(card.Data.strength);
+                return card.strength.SetValueAbs(card.Data.strength, null);
             }
 
             protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)

@@ -71,7 +71,7 @@ namespace Game.Traits
         }
         public virtual float Points(FieldCard owner, int stacks) // used to increase trait points required to add another stack of this trait to a card
         {
-            return owner.traits.Count * 2;
+            return 0;
         }
 
         public virtual async UniTask OnStacksChanged(TableTraitStacksSetArgs e) // invokes either on table or in battle (check 'isInBattle' field)

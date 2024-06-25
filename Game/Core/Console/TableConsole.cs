@@ -24,18 +24,25 @@ namespace Game
         {
             Global.OnUpdate += OnUpdate;
 
-            CommandList.Add(new cmdLogTerritory());
-            CommandList.Add(new cmdSideCardPlace());
+            Commands.Add(new cmdCardStatAdd());
+            Commands.Add(new cmdCardTraitAdd());
+            Commands.Add(new cmdHelp());
+            Commands.Add(new cmdLogTerritory());
+            Commands.Add(new cmdSideCardAdd());
+            Commands.Add(new cmdSideCardPlace());
+            Commands.Add(new cmdSideStatAdd());
 
             _consoleObject = Global.Root.Find("CORE/Console").gameObject;
-            _inputTextMesh = _consoleObject.Find<TMP_InputField>("Input");
-            _outputTextMesh = _consoleObject.Find<TextMeshPro>("Output");
+            _inputTextMesh = _consoleObject.Find<TMP_InputField>("Input text");
+            _outputTextMesh = _consoleObject.Find<TextMeshPro>("Output text");
         }
         public static void WriteLine(string text, LogType type)
         {
-            // TODO: implement (also implement scrollbars)
-            // use _outputTextMesh`
-            Debug.Log(text);
+            string str;
+            if (type == LogType.Error || type == LogType.Exception)
+                 str = $"<color=red>{text}</color>\n";
+            else str = $"{text}\n";
+            _outputTextMesh.text += str;
         }
 
         static void ExecuteLine(string line)

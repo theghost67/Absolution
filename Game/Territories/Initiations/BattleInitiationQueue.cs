@@ -480,11 +480,17 @@ namespace Game.Territories
 
         void OnInitiationReceivedByField(BattleField field, BattleInitiationRecvArgs rArgs)
         {
-            field.health.AdjustValueAbs(-rArgs.strength, rArgs.Sender);
+            string guidStr = Unique.NewGuidStr;
+            field.health.AdjustValueAbs(-rArgs.strength, rArgs.Sender, guidStr);
+            int delta = field.health.EntryValueAbs(guidStr).Ceiling();
+            field.Drawer.CreateDamageTextSplash(delta);
         }
         void OnInitiationReceivedByCard(BattleFieldCard card, BattleInitiationRecvArgs rArgs)
         {
-            card.health.AdjustValueAbs(-rArgs.strength, rArgs.Sender);
+            string guidStr = Unique.NewGuidStr;
+            card.health.AdjustValueAbs(-rArgs.strength, rArgs.Sender, guidStr);
+            int delta = card.health.EntryValueAbs(guidStr).Ceiling();
+            card.Drawer.CreateDamageTextSplash(delta);
         }
 
         UniTask InvokeSendArgsEvent(IIdEventVoidAsync<BattleInitiationSendArgs> @event, object sender, BattleInitiationSendArgs sArgs)

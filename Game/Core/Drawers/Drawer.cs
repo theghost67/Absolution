@@ -18,9 +18,9 @@ namespace Game
     /// </summary>
     public class Drawer : IEquatable<Drawer>, IDisposable
     {
-        public static IEnumerable<Drawer> b_SelectedDrawers => Behaviour.SelectedDrawers;
-        public static bool b_UpdateMouseEvents { get => Behaviour.update; set => Behaviour.update = value; }
-        public static bool b_InAnySelected => Behaviour.IsAnySelected;
+        public static IEnumerable<Drawer> SelectedDrawers => Behaviour.SelectedDrawers;
+        public static bool UpdateMouseEvents { get => Behaviour.update; set => Behaviour.update = value; }
+        public static bool InAnySelected => Behaviour.IsAnySelected;
 
         public bool IsSelected 
         {
@@ -426,7 +426,6 @@ namespace Game
         // TODO[QoL]: add custom DestroyAnimated methods for cards, traits, fields etc.
         protected virtual void DestroyInstantly()
         {
-            DOTween.Kill(gameObject);
             gameObject.Destroy();
             OnDestroy?.Invoke(this, EventArgs.Empty);
 

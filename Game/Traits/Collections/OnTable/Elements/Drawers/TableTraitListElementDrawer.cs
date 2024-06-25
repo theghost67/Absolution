@@ -74,6 +74,7 @@ namespace Game.Traits
             _activationTween = Utils.emptyTween;
             _scrollTween = Utils.emptyTween;
 
+            enqueueAnims = true;
             BlocksSelection = false;
             ChangePointer = ChangePointerBase();
             OnMouseEnter += OnMouseEnterBase;
@@ -187,7 +188,7 @@ namespace Game.Traits
         public Tween AnimAdjust(int toStacks)
         {
             OnTweenUpdateStacksScale(Vector3.one * 1.3f);
-            Sequence seq = DOTween.Sequence(gameObject);
+            Sequence seq = DOTween.Sequence();
             seq.Append(AnimStacks(toStacks));
             seq.Append(AnimStacksScale(Vector3.one));
 

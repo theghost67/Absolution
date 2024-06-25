@@ -119,20 +119,20 @@ namespace Game
         // use entryId and Revert methods to revert applied effect instead of calling these methods with negative value
         // (as value can be modified by OnPreSet event)
 
-        public UniTask SetValueAbs(float value, ITableEntrySource source = null, string entryId = null)
+        public UniTask SetValueAbs(float value, ITableEntrySource source, string entryId = null)
         {
             return AdjustValue(value - _value, isAbsolute: true, source, entryId);
         }
-        public UniTask SetValueRel(float value, ITableEntrySource source = null, string entryId = null)
+        public UniTask SetValueRel(float value, ITableEntrySource source, string entryId = null)
         {
             return AdjustValue(value - _value, isAbsolute: false, source, entryId);
         }
 
-        public UniTask AdjustValueAbs(float value, ITableEntrySource source = null, string entryId = null) 
+        public UniTask AdjustValueAbs(float value, ITableEntrySource source, string entryId = null) 
         {
             return AdjustValue(value, isAbsolute: true, source, entryId);
         }
-        public UniTask AdjustValueRel(float value, ITableEntrySource source = null, string entryId = null) 
+        public UniTask AdjustValueRel(float value, ITableEntrySource source, string entryId = null) 
         {
             return AdjustValue(value, isAbsolute: false, source, entryId);
         }

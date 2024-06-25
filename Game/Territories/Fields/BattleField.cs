@@ -73,7 +73,7 @@ namespace Game.Territories
         {
             TableStat stat = (TableStat)sender;
             BattleField field = (BattleField)stat.Owner;
-            return field._side.health.AdjustValueAbs(e.totalDeltaValue);
+            return field._side.health.AdjustValueAbs(e.totalDeltaValue, null);
         }
 
         // TODO: add GetObservingEntities?

@@ -137,6 +137,8 @@ namespace Game.Menus
             protected override TableCardDrawer DrawerCreator(Transform parent)
             {
                 TableCardDrawer drawer = base.DrawerCreator(parent);
+                drawer.OnMouseEnter += OnDrawerMouseEnter;
+                drawer.OnMouseLeave += OnDrawerMouseLeave;
                 drawer.OnMouseClickLeft += OnDrawerMouseClickLeft;
                 return drawer;
             }
@@ -164,14 +166,10 @@ namespace Game.Menus
 
             bool ITableSleeveCard.CanPullOut()
             {
-                bool result = Side.CanAfford(this);
-                if (!result)
-                    Drawer.upperLeftIcon.RedrawChunksColor(Color.red);
-                return result;
+                return Side.CanAfford(this);
             }
             bool ITableSleeveCard.CanPullIn()
             {
-                Drawer.upperLeftIcon.RedrawChunksColor();
                 return true;
             }
 
@@ -209,6 +207,26 @@ namespace Game.Menus
                 foreach (BattleField field in Side.Fields().WithoutCard())
                     field.Drawer.SetHighlight(value);
             }
+            UniTask OnPostKilledBase(object sender, ITableEntrySource source)
+            {
+                pFieldCard card = (pFieldCard)sender;
+                return card.Side.ether.AdjustValueAbs(1, _instance);
+            }
+
+            void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)
+            {
+                if (e.handled) return;
+                BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
+
+                if (Sleeve.Contains(this) && !Side.CanAfford(this))
+                    drawer.upperLeftIcon.RedrawChunksColor(Color.red);
+            }
+            void OnDrawerMouseLeave(object sender, DrawerMouseEventArgs e)
+            {
+                if (e.handled) return;
+                BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
+                drawer.upperLeftIcon.RedrawChunksColor();
+            }
             void OnDrawerMouseClickLeft(object sender, DrawerMouseEventArgs e)
             {
                 if (e.handled) return;
@@ -216,11 +234,6 @@ namespace Game.Menus
 
                 if (drawer.attached.Field != null)
                     drawer.transform.DOAShake();
-            }
-            UniTask OnPostKilledBase(object sender, ITableEntrySource source)
-            {
-                pFieldCard card = (pFieldCard)sender;
-                return card.Side.ether.AdjustValueAbs(1, null);
             }
         }
         class pFloatCard : BattleFloatCard, IBattleSleeveCard
@@ -249,6 +262,8 @@ namespace Game.Menus
             protected override TableCardDrawer DrawerCreator(Transform parent)
             {
                 TableCardDrawer drawer = base.DrawerCreator(parent);
+                drawer.OnMouseEnter += OnDrawerMouseEnter;
+                drawer.OnMouseLeave += OnDrawerMouseLeave;
                 return drawer;
             }
             protected override async UniTask OnUsed(TableFloatCardUseArgs e)
@@ -279,14 +294,10 @@ namespace Game.Menus
 
             bool ITableSleeveCard.CanPullOut()
             {
-                bool result = Side.CanAfford(this);
-                if (!result)
-                    Drawer.upperLeftIcon.RedrawChunksColor(Color.red);
-                return result;
+                return Side.CanAfford(this);
             }
             bool ITableSleeveCard.CanPullIn()
             {
-                Drawer.upperLeftIcon.RedrawChunksColor();
                 return true;
             }
 
@@ -305,6 +316,21 @@ namespace Game.Menus
                 AsInSleeve.DropOnBase();
                 Side.Purchase(this);
                 Territory.PlaceFloatCard(this, Side);
+            }
+
+            void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)
+            {
+                if (e.handled) return;
+                BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
+
+                if (Sleeve.Contains(this) && !Side.CanAfford(this))
+                    drawer.upperLeftIcon.RedrawChunksColor(Color.red);
+            }
+            void OnDrawerMouseLeave(object sender, DrawerMouseEventArgs e)
+            {
+                if (e.handled) return;
+                BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
+                drawer.upperLeftIcon.RedrawChunksColor();
             }
         }
         class pSleeve : BattleSleeve
@@ -492,7 +518,7 @@ namespace Game.Menus
                 if (!sender.HasFieldDrawers)
                     return;
 
-                side.gold.AdjustValueAbs(1);
+                side.gold.AdjustValueAbs(1, _instance);
                 await side.Sleeve.TakeMissingCards();
 
                 _instance.SetPlayerControls(side.isMe);
@@ -697,7 +723,8 @@ namespace Game.Menus
             SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
             await UniTask.Delay(500);
             string text1 = $"ЭТАП {_demoDifficulty}/{DEMO_DIFFICULTY_MAX}";
-            string text2 = $"\n<size=50%><color=grey>угроза: {_demoLocStageForPlayer}    сложность: {locStageDifficultyScale * 100}%";
+            string text2Hex = ColorPalette.GetColorInfo(1).Hex;
+            string text2 = $"\n<size=50%><color={text2Hex}>угроза: {_demoLocStageForPlayer}    сложность: {locStageDifficultyScale * 100}%";
  
             TextMeshPro bgText = VFX.CreateText(text1, Color.white, bg.transform);
             bgText.transform.position = Vector2.up * 136;
