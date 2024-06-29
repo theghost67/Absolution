@@ -210,7 +210,7 @@ namespace Game.Menus
             UniTask OnPostKilledBase(object sender, ITableEntrySource source)
             {
                 pFieldCard card = (pFieldCard)sender;
-                return card.Side.ether.AdjustValueAbs(1, _instance);
+                return card.Side.ether.AdjustValue(1, _instance);
             }
 
             void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)
@@ -321,7 +321,7 @@ namespace Game.Menus
             void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)
             {
                 if (e.handled) return;
-                BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
+                BattleFloatCardDrawer drawer = (BattleFloatCardDrawer)sender;
 
                 if (Sleeve.Contains(this) && !Side.CanAfford(this))
                     drawer.upperLeftIcon.RedrawChunksColor(Color.red);
@@ -329,7 +329,7 @@ namespace Game.Menus
             void OnDrawerMouseLeave(object sender, DrawerMouseEventArgs e)
             {
                 if (e.handled) return;
-                BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
+                BattleFloatCardDrawer drawer = (BattleFloatCardDrawer)sender;
                 drawer.upperLeftIcon.RedrawChunksColor();
             }
         }
@@ -410,32 +410,27 @@ namespace Game.Menus
         }
         class pTerritory : BattleTerritory
         {
+            bool _battleStartedLogWritten;
+
             public pTerritory(bool playerMovesFirst, int sizeX) : base(playerMovesFirst, sizeX, _instance.Transform) { }
             protected pTerritory(pTerritory src, BattleTerritoryCloneArgs args) : base(src, args)
             {
                 args.TryOnClonedAction(src.GetType(), typeof(pTerritory));
             }
-
             public override object Clone(CloneArgs args)
             {
                 if (args is BattleTerritoryCloneArgs cArgs)
                      return new pTerritory(this, cArgs);
                 else return null;
             }
-            public override void WriteLog(string text, bool isForDebug = false)
-            {
-                base.WriteLog(text);
-                if (!isForDebug && HasFieldDrawers)
-                    _instance.WriteLog(text);
-            }
 
             protected override BattleFieldCard FieldCardCreator(FieldCard data, BattleSide side)
             {
-                return new pFieldCard(data, side, HasFieldDrawers);
+                return new pFieldCard(data, side, !DrawersAreNull);
             }
             protected override BattleFloatCard FloatCardCreator(FloatCard data, BattleSide side)
             {
-                return new pFloatCard(data, side, HasFieldDrawers);
+                return new pFloatCard(data, side, !DrawersAreNull);
             }
 
             protected override BattleSide PlayerSideCreator()
@@ -447,48 +442,58 @@ namespace Game.Menus
                 return new pSide(territory: this, isMe: false);
             }
 
-            // NOTE: 'terr.HasFieldDrawers' check is required to determine either this territory is a clone (without drawers) or not (not the best solution)
-            protected override UniTask OnStartPhaseBase(object sender, EventArgs e)
+            // NOTE: 'terr.DrawersAreNull' check is required to determine either this territory is a clone for AI (without drawers) or not (not the best solution)
+            protected override async UniTask OnStartPhaseBase(object sender, EventArgs e)
             {
-                base.OnStartPhaseBase(sender, e);
+                await base.OnStartPhaseBase(sender, e);
                 pTerritory terr = (pTerritory)sender;
 
-                if (terr.HasFieldDrawers)
-                    VFX.CreateText($"ХОД {terr.Turn}", Color.white, Vector3.zero).DOATextPopUp(0.5f, onComplete: terr.NextPhase);
-                else terr.NextPhase();
-                return UniTask.CompletedTask;
+                if (terr.DrawersAreNull)
+                    terr.NextPhase();
+                else VFX.CreateText($"ХОД {terr.Turn}", Color.white, Vector3.zero).DOATextPopUp(0.5f, onComplete: () => terr.NextPhase());
             }
-            protected override UniTask OnEnemyPhaseBase(object sender, EventArgs e)
+            protected override async UniTask OnEnemyPhaseBase(object sender, EventArgs e)
             {
-                base.OnEnemyPhaseBase(sender, e);
+                await base.OnEnemyPhaseBase(sender, e);
                 pTerritory terr = (pTerritory)sender;
                 SidePlacePhase(terr, terr.enemy);
-                return UniTask.CompletedTask;
             }
-            protected override UniTask OnPlayerPhaseBase(object sender, EventArgs e)
+            protected override async UniTask OnPlayerPhaseBase(object sender, EventArgs e)
             {
-                base.OnPlayerPhaseBase(sender, e);
+                await base.OnPlayerPhaseBase(sender, e);
                 pTerritory terr = (pTerritory)sender;
                 SidePlacePhase(terr, terr.player);
-                return UniTask.CompletedTask;
             }
-            protected override UniTask OnEndPhaseBase(object sender, EventArgs e)
+            protected override async UniTask OnEndPhaseBase(object sender, EventArgs e)
             {
-                base.OnEndPhaseBase(sender, e);
-                _instance.SetPlayerControls(false);
-                return UniTask.CompletedTask;
+                await base.OnEndPhaseBase(sender, e);
             }
-            protected override UniTask OnPlayerWonBase(object sender, EventArgs e)
+            protected override async UniTask OnNextPhaseBase(object sender, EventArgs e)
             {
-                base.OnPlayerWonBase(sender, e);
+                await base.OnNextPhaseBase(sender, e);
+                if (_battleStartedLogWritten) return;
+                Menu.WriteLogToCurrent("-- НАЧАЛО БОЯ -- ");
+                _battleStartedLogWritten = true;
+            }
+            protected override async UniTask OnPlayerWonBase(object sender, EventArgs e)
+            {
+                await base.OnPlayerWonBase(sender, e);
+                pTerritory terr = (pTerritory)sender;
+                if (terr.DrawersAreNull) return;
+
                 _instance.OnPlayerWon(sender, e);
-                return UniTask.CompletedTask;
+                Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ -- ");
+                Menu.WriteLogToCurrent("-- ИГРОК ПОБЕДИЛ -- ");
             }
-            protected override UniTask OnPlayerLostBase(object sender, EventArgs e)
+            protected override async UniTask OnPlayerLostBase(object sender, EventArgs e)
             {
-                base.OnPlayerLostBase(sender, e);
+                await base.OnPlayerLostBase(sender, e);
+                pTerritory terr = (pTerritory)sender;
+                if (terr.DrawersAreNull) return;
+
                 _instance.OnPlayerLost(sender, e);
-                return UniTask.CompletedTask;
+                Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ -- ");
+                Menu.WriteLogToCurrent("-- ИГРОК ПРОИГРАЛ -- ");
             }
 
             protected override void OnInitiationsProcessingStartBase(object sender, EventArgs e)
@@ -496,8 +501,7 @@ namespace Game.Menus
                 base.OnInitiationsProcessingStartBase(sender, e);
                 BattleInitiationQueue queue = (BattleInitiationQueue)sender;
                 BattleTerritory terr = queue.Territory;
-
-                if (terr.HasFieldDrawers)
+                if (!terr.DrawersAreNull)
                     _instance.SetPlayerControls(false);
             }
             protected override void OnInitiationsProcessingEndBase(object sender, EventArgs e)
@@ -505,8 +509,7 @@ namespace Game.Menus
                 base.OnInitiationsProcessingEndBase(sender, e);
                 BattleInitiationQueue queue = (BattleInitiationQueue)sender;
                 BattleTerritory terr = queue.Territory;
-
-                if (terr.HasFieldDrawers)
+                if (!terr.DrawersAreNull)
                     _instance.SetPlayerControls(PhaseAwaitsPlayer);
             }
 
@@ -515,14 +518,14 @@ namespace Game.Menus
                 // 1. avoids recursion (from side.ai.TryMakeTurn(), it calls PhaseBase events)
                 // 2. does not adjust gold and take cards as this method can be called recursively (and virtually) only from other side
                 //    (if this side moves first) to save some memory and CPU calculations
-                if (!sender.HasFieldDrawers)
-                    return;
+                if (sender.DrawersAreNull) return;
 
-                side.gold.AdjustValueAbs(1, _instance);
+                side.gold.AdjustValue(1, _instance);
                 await side.Sleeve.TakeMissingCards();
 
-                _instance.SetPlayerControls(side.isMe);
-                if (!side.isMe) side.ai.MakeTurn();
+                if (!side.isMe)
+                     side.ai.MakeTurn();
+                else _instance.SetPlayerControls(true);
             }
         }
 
@@ -534,13 +537,11 @@ namespace Game.Menus
             _logTextMesh = Transform.Find<TextMeshPro>("Log window/Text");
             _descTextMesh = Transform.Find<TextMeshPro>("Desc window/Text");
 
-            _turnButton.OnMouseClickLeft += (s, e) => _territory.NextPhase();
-            _turnButton.OnMouseEnter += (s, e) => Tooltip.Show($"Завершить ход {_territory.Turn}.");
-            _turnButton.OnMouseLeave += (s, e) => Tooltip.Hide();
+            _turnButton.OnMouseClickLeft += (s, e) => TryEndTurn();
+            _turnButton.Tooltip = () => $"Завершить ход {_territory.Turn}.";
 
             _fleeButton.OnMouseClickLeft += (s, e) => TryFlee();
-            _fleeButton.OnMouseEnter += (s, e) => Tooltip.Show("Шанс побега: 100%.");
-            _fleeButton.OnMouseLeave += (s, e) => Tooltip.Hide();
+            _fleeButton.Tooltip = () => "Шанс побега: 100%.";
 
             _logTextMesh.text = Log;
             _descTextMesh.text = "";
@@ -548,7 +549,6 @@ namespace Game.Menus
             SetBellState(false);
             SetFleeState(false);
         }
-
         public override void OpenInstantly()
         {
             base.OpenInstantly();
@@ -564,18 +564,13 @@ namespace Game.Menus
         }
 
         // TODO: implement normally
-        public async override UniTask OpenAnimated()
+        public override UniTask OpenAnimated()
         {
-            base.OpenAnimated();
-
-            //MusicPack.Get("Location").PauseFading();
-            //MusicPack.Get("Battle").PlayFading();
-
-            //_territory.NextPhase();
+            return OpenAnimatedBase(withColliders: false);
         }
-        public async override UniTask CloseAnimated()
+        public override UniTask CloseAnimated()
         {
-            Application.Quit();
+            return CloseAnimatedBase(withColliders: false);
 
             //MusicPack.Get("Battle").StopFading();
             //BattleArea.StopTargetAiming();
@@ -591,8 +586,7 @@ namespace Game.Menus
         public override void SetColliders(bool value)
         {
             base.SetColliders(value);
-            SetBellState(value);
-            SetFleeState(value);
+            SetPlayerControls(value);
             _territory.SetColliders(value);
         }
         public override void WriteLog(string text)
@@ -617,6 +611,12 @@ namespace Game.Menus
             //await UniTask.Delay(2000);
             //Application.Quit();
         }
+        async void TryEndTurn()
+        {
+            SetPlayerControls(false);
+            _territory.NextPhase();
+        }
+
         async void OnPlayerWon(object sender, EventArgs e)
         {
             SetColliders(false);
@@ -640,17 +640,15 @@ namespace Game.Menus
         void SetPlayerControls(bool value, bool andCardsColliders = false)
         {
             if (andCardsColliders)
-                SetCardsColliders(value);
+            {
+                foreach (BattleField field in _territory.Fields().WithCard())
+                    field.Drawer.SetCollider(value);
+            }
 
             SetBellState(value);
             SetFleeState(value);
             _player.Sleeve.Drawer.CanPullOut = value;
             _enemy.Sleeve.Drawer.CanPullOut = value;
-        }
-        void SetCardsColliders(bool value)
-        {
-            foreach (BattleField field in _territory.Fields().WithCard())
-                field.Drawer.SetCollider(value);
         }
 
         void SetBellState(bool value)
@@ -667,7 +665,7 @@ namespace Game.Menus
         #if DEMO
         Menu demo_CreateCardChooseAndUpgrade(int cPointsPerCard, int cFieldChoices, int cFloatChoices, int cCardsPerChoice, int uPointsLimit)
         {
-            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice);
+            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, cFieldChoices / 2);
             menu.MenuWhenClosed = () => demo_CreateCardUpgrade(uPointsLimit);
             menu.OnClosed += menu.DestroyInstantly;
             return menu;

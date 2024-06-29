@@ -31,8 +31,6 @@ namespace Game.Traits
         {
             attached = set;
             elements = new TableTraitListSetDrawerElementsCollection(this);
-            _animAlphaTween = Utils.emptyTween;
-            _animScrollTween = Utils.emptyTween;
 
             attached.OnDrawerCreated += OnSetDrawerCreated;
             SetSortingOrder(set.Owner.Drawer.GetSortingOrder() + 8);

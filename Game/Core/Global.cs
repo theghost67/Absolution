@@ -4,6 +4,7 @@ using Game.Environment;
 using Game.Menus;
 using Game.Traits;
 using GreenOne;
+using PimDeWitte.UnityMainThreadDispatcher;
 using System;
 using TMPro;
 using UnityEngine;
@@ -46,9 +47,12 @@ namespace Game
 
             _errorsCount++;
             _errorTween.Restart();
-            ShowErrors();
-            TableConsole.WriteLine(condition, type);
-            TableConsole.WriteLine(stackTrace, type);
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                ShowErrors();
+                TableConsole.LogToFile($"////// {condition} //////");
+                TableConsole.Log($"{condition}. См. лог отладки для подробностей.", type);
+            });
         }
         static bool OnWantToQuit()
         {
@@ -73,7 +77,7 @@ namespace Game
         // TODO: remove
         Menu demo_CreateCardChoose(Location location)
         {
-            CardChooseMenu menu = new(location.stage, 4);
+            CardChooseMenu menu = new(location.stage, 4, 0, 3, 4);
             menu.MenuWhenClosed = () => Traveler.CreateDemoMenu(location);
             menu.OnClosed += menu.DestroyInstantly;
             return menu;
@@ -88,8 +92,9 @@ namespace Game
             _errorGameObject = _root.Find("CORE/Errors").gameObject;
             _errorTextMesh = _errorGameObject.Find<TextMeshPro>("Text");
 
+            Application.targetFrameRate = Config.frameRate;
+            Application.logMessageReceivedThreaded += LogReceived;
             Application.logMessageReceived += LogReceived;
-            Application.targetFrameRate = (int)Screen.currentResolution.refreshRateRatio.value; // TODO: add in settings
             Application.wantsToQuit += OnWantToQuit;
             DOTween.onWillLog = OnTweenLog;
             //Time.fixedDeltaTime = 1 / 20f;
@@ -104,7 +109,16 @@ namespace Game
             //WorldMenu.instance.OpenAnimated();
 
             TableConsole.Initialize();
-            MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"]));
+            MenuTransit.BetweenWithColliders(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"]));
+            //MenuTransit.Between(null, Traveler.CreateDemoMenu(EnvironmentBrowser.Locations["college"]));
+
+            // TODO: remove
+            //for (int i = 0; i < 10; i++)
+            //    Player.Deck.fieldCards.Add(CardBrowser.NewField("vavulov"));
+
+            //Menu menu = new CardUpgradeMenu(Player.Deck, 100);
+            //menu.MenuWhenClosed = () => Traveler.CreateDemoMenu(EnvironmentBrowser.Locations["college"]);
+            //MenuTransit.Between(null, menu);
         }
         void Update()
         {

@@ -1,9 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
-using Game.Effects;
 using Game.Territories;
 using Game.Traits;
-using GreenOne;
 using System;
 using UnityEngine;
 
@@ -17,7 +14,9 @@ namespace Game.Cards
         public new FieldCard Data => _data;
         public new TableFieldCardDrawer Drawer => _drawer;
         public override TableFinder Finder => _finder;
-        public override string TableName => $"{base.TableName}[{_field.PosToStringRich()}]";
+
+        public override string TableName => $"{Data.name}[{_field?.TableName ?? "-"}]";
+        public override string TableNameDebug => $"{Data.id}[{_field?.TableNameDebug ?? "-"}]+{GuidStr}";
 
         public readonly TableStat moxie;
         public readonly TableStat health;
@@ -37,17 +36,17 @@ namespace Game.Cards
             _data = data;
             _finder = new TableFieldCardFinder(this);
 
-            health = new TableStat(this, data.health);
-            strength = new TableStat(this, data.strength);
-            moxie = new TableStat(this, data.moxie);
+            health = new TableStat(nameof(health), this, data.health);
+            health.OnPreSet.Add(OnStatPreSetBase_TOP, 256);
+            health.OnPostSet.Add(OnStatPostSetBase_TOP, 256);
 
-            health.OnPreSet.Add(OnHealthPreSetBase_TOP, 256);
-            strength.OnPreSet.Add(OnStrengthPreSetBase_TOP, 256);
-            moxie.OnPreSet.Add(OnMoxiePreSetBase_TOP, 256);
+            strength = new TableStat(nameof(strength), this, data.strength);
+            strength.OnPreSet.Add(OnStatPreSetBase_TOP, 256);
+            strength.OnPostSet.Add(OnStatPostSetBase_TOP, 256);
 
-            health.OnPostSet.Add(OnHealthPostSetBase_TOP, 256);
-            strength.OnPostSet.Add(OnStrengthPostSetBase_TOP, 256);
-            moxie.OnPostSet.Add(OnMoxiePostSetBase_TOP, 256);
+            moxie = new TableStat(nameof(moxie), this, data.moxie);
+            moxie.OnPreSet.Add(OnStatPreSetBase_TOP, 256);
+            moxie.OnPostSet.Add(OnStatPostSetBase_TOP, 256);
 
             _traits = TraitListSetCreator();
 
@@ -88,14 +87,17 @@ namespace Game.Cards
             else return null;
         }
 
-        public virtual UniTask<bool> CanBeAttachedToField(TableField field)
+        public virtual UniTask<bool> CanBeAttachedToField(TableFieldAttachArgs e)
         {
-            return UniTask.FromResult(true);
+            bool result = e.field != null && e.field.Card == null;
+            return UniTask.FromResult(result);
         }
-        public async UniTask AttachToAnotherField(TableField field)
+        public async UniTask AttachToAnotherField(TableField field, ITableEntrySource source)
         {
             TableEventManager.Add();
-            await FieldPropSetter(field);
+            TableFieldAttachArgs args = new(field, source);
+            if (await CanBeAttachedToField(args))
+                await FieldPropSetter(args);
             TableEventManager.Remove();
         }
 
@@ -113,19 +115,17 @@ namespace Game.Cards
             _traits = value;
         }
 
-        protected virtual async UniTask FieldPropSetter(TableField value)
+        protected virtual async UniTask FieldPropSetter(TableFieldAttachArgs e)
         {
-            if (value != null && value.Card != null) return;
-            if (!await CanBeAttachedToField(value)) return;
-            if (value == null)
+            if (e.field == null)
             {
                 FieldBaseSetter(null);
-                await _field.DetatchCard();
+                await _field.DetatchCard(e.source);
             }
             else
             {
-                FieldBaseSetter(value);
-                await _field.AttachCard(this);
+                FieldBaseSetter(e.field);
+                await _field.AttachCard(this, e.source);
             }
         }
         protected virtual void FieldBaseSetter(TableField value)
@@ -156,29 +156,12 @@ namespace Game.Cards
             owner.Traits.DestroyDrawer(true);
         }
 
-        // used in BattleFieldCard for logging
-        protected virtual UniTask OnHealthPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
+        // used in BattleFieldCard for debug-logging
+        protected virtual UniTask OnStatPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
         {
             return UniTask.CompletedTask;
         }
-        protected virtual UniTask OnStrengthPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
-        {
-            return UniTask.CompletedTask;
-        }
-        protected virtual UniTask OnMoxiePreSetBase_TOP(object sender, TableStat.PreSetArgs e)
-        {
-            return UniTask.CompletedTask;
-        }
-
-        protected virtual UniTask OnHealthPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
-        {
-            return UniTask.CompletedTask;
-        }
-        protected virtual UniTask OnStrengthPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
-        {
-            return UniTask.CompletedTask;
-        }
-        protected virtual UniTask OnMoxiePostSetBase_TOP(object sender, TableStat.PostSetArgs e)
+        protected virtual UniTask OnStatPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
         {
             return UniTask.CompletedTask;
         }

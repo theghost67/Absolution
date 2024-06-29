@@ -10,6 +10,13 @@ namespace Game.Palette
     [RequireComponent(typeof(SpriteRenderer))]
     public class ColorPaletteSpriteElement : MonoBehaviour
     {
+        public Color SyncedColor => GetPaletteColor();
+        public int SyncedColorIndex => _syncedColorIndex;
+        public float Opacity => _opacity;
+        public float Multiplier => _multiplier;
+
+        public bool setColorOnStart = true;
+
         [SerializeField] int _syncedColorIndex = 0;
         [SerializeField] float _opacity = -1;
         [SerializeField] float _multiplier = 1;
@@ -18,7 +25,8 @@ namespace Game.Palette
         void Start()
         {
             _spriteRenderer = GetComponent<SpriteRenderer>();
-            _spriteRenderer.color = GetPaletteColor();
+            if (setColorOnStart)
+                _spriteRenderer.color = GetPaletteColor();
             ColorPalette.OnColorChanged += OnPaletteColorChanged;
         }
         void OnDestroy()
@@ -34,7 +42,9 @@ namespace Game.Palette
         Color GetPaletteColor()
         {
             float a = _opacity == -1 ? _spriteRenderer.color.a : _opacity;
-            return (ColorPalette.GetColor(_syncedColorIndex) * _multiplier).WithAlpha(a);
+            Color color = ColorPalette.GetColor(_syncedColorIndex) * _multiplier;
+            color.a = a;
+            return color;
         }
     }
 }

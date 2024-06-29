@@ -5,9 +5,9 @@ using System;
 namespace Game.Cards
 {
     /// <summary>
-    /// Структура, содержащая информацию о стоимости игровой карты.
+    /// Класс, представляющий информацию о стоимости игровой карты.
     /// </summary>
-    public struct CardPrice : IEquatable<CardPrice>, ISerializable
+    public class CardPrice : IEquatable<CardPrice>, ISerializable
     {
         public CardCurrency currency;
         public int value;
@@ -32,7 +32,7 @@ namespace Game.Cards
             return !left.Equals(right);
         }
 
-        public readonly SerializationDict Serialize()
+        public SerializationDict Serialize()
         {
             return new SerializationDict()
             {
@@ -40,16 +40,16 @@ namespace Game.Cards
                 { "value", value },
             };
         }
-        public readonly override int GetHashCode()
+        public override int GetHashCode()
         {
             return value.GetHashCode() + currency.GetHashCode();
         }
 
-        public readonly override bool Equals(object obj)
+        public override bool Equals(object obj)
         {
             return obj is TerritoryRange range && Equals(range);
         }
-        public readonly bool Equals(CardPrice other)
+        public bool Equals(CardPrice other)
         {
             return value == other.value && currency == other.currency;
         }

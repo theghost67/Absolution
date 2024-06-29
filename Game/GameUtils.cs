@@ -109,10 +109,9 @@ namespace Game
             if (trait.Owner == null)
                 return UniTask.CompletedTask;
 
-            string log = $"{trait.TableName}: навык активируется!";
-            if (trait is IBattleTrait bTrait)
-                bTrait.Territory.WriteLog(log);
-            else Menu.WriteLogToCurrent(log);
+            TableConsole.LogToFile($"{trait.TableNameDebug}: activation.");
+            if (trait.Drawer != null)
+                Menu.WriteLogToCurrent($"{trait.TableName}: навык активируется!");
 
             ITableTraitListElement element;
             if (trait.Data.isPassive)
@@ -125,22 +124,25 @@ namespace Game
         }
         public static UniTask AnimDeactivation(this ITableTrait trait)
         {
-            string log = $"{trait.TableName}: навык деактивируется.";
-            if (trait is IBattleTrait bTrait)
-                 bTrait.Territory.WriteLog(log);
-            else Menu.WriteLogToCurrent(log);
+            if (trait.Owner == null)
+                return UniTask.CompletedTask;
+
+            TableConsole.LogToFile($"{trait.TableNameDebug}: deactivation.");
+            if (trait.Drawer != null)
+                Menu.WriteLogToCurrent($"{trait.TableName}: навык деактивируется.");
+
             return UniTask.CompletedTask;
         }
 
         // show WHO detected the card (arrow + icon), and eye (clear/crossed) depending on seen/unseen status
         public static UniTask AnimCardSeen(this IBattleEntity observer, IBattleCard card)
         {
-            observer.Territory.WriteLogForDebug($"{observer.TableName}: карта {card.TableName} обнаружена.");
+            TableConsole.LogToFile($"{observer.TableNameDebug}: area: {card.TableNameDebug} found.");
             return UniTask.CompletedTask;
         }
         public static UniTask AnimCardUnseen(this IBattleEntity observer, IBattleCard card)
         {
-            observer.Territory.WriteLogForDebug($"{observer.TableName}: карта {card.TableName} потеряна.");
+            TableConsole.LogToFile($"{observer.TableNameDebug}: area: {card.TableNameDebug} lost.");
             return UniTask.CompletedTask;
         }
         #endregion
@@ -171,20 +173,9 @@ namespace Game
                 statColor = Color.red;
             else statColor = Color.white;
 
-            return $"{stat.AbsValue.Rounded(2)} * {(stat.RelValue * 100).Rounded(2)}% = {stat.ToString().Colored(statColor)}";
+            return $"{stat.ToString().Colored(statColor)} ({stat.PosValue.Rounded(2)} * {(stat.PosScale * 100).Rounded(2)}% - {stat.NegValue.Rounded(2)})";
         }
-        public static string PosToStringRich(this TableField field)
-        {
-            if (field == null)
-                return "-";
-            if (field is not BattleField)
-                return field.pos.x.ToString();
-
-            Color color = field.pos.y == BattleTerritory.PLAYER_FIELDS_Y ? Color.green : Color.red;
-            string fieldColorHex = color.ToHex();
-            return $"<color={fieldColorHex}>{field.pos.x + 1}</color>";
-        }
-        public static Color PosColor(this BattleSide side)
+        public static Color GetSideColor(this BattleSide side)
         {
             return side.isMe ? Color.green : Color.red;
         }
@@ -201,14 +192,6 @@ namespace Game
             if (killer == null || killer.IsKilled)
                 return null;
             else return killer;
-        }
-        public static void CreateDamageTextSplash(this Drawer drawer, int healthDelta)
-        {
-            if (drawer == null) return;
-            Anim.DOAShake(drawer.transform);
-            if (healthDelta > 0)
-                 drawer.CreateTextAsDamage(healthDelta, true);
-            else drawer.CreateTextAsDamage(-healthDelta, false);
         }
     }
 }

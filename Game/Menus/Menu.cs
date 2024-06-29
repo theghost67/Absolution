@@ -3,6 +3,7 @@ using GreenOne;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 
@@ -19,9 +20,11 @@ namespace Game.Menus
         public event Action OnOpened;
         public event Action OnClosed;
 
+        public string Id => _id;
         public GameObject GameObject => _gameObject;
         public Transform Transform => _transform;
-        public string Id => _id;
+        public TableFinder Finder => _finder;
+        public Func<Menu> MenuWhenClosed { get; set; } // invokes on CloseAnimated (if not overriden)
 
         public bool IsDestroyed => _isDestroyed;
         public bool IsOpened => _isOpened;
@@ -29,7 +32,6 @@ namespace Game.Menus
         public int SortingOrder => _sortingOrder;
         public int OpenDepth => _openDepth; 
         public int FullDepth => _fullDepth;
-        public Func<Menu> MenuWhenClosed = () => GetCurrent().GetPrevious(); // invokes on CloseAnimated (if not overriden)
 
         static readonly Transform _parent = Global.Root.Find("MENUS").transform;
         static readonly List<Menu> _openList = new();
@@ -41,6 +43,7 @@ namespace Game.Menus
         readonly string _id;
         readonly GameObject _gameObject;
         readonly Transform _transform;
+        readonly MenuFinder _finder;
 
         bool _isDestroyed;
         bool _isOpened;
@@ -56,10 +59,13 @@ namespace Game.Menus
             _gameObject.name = $"Menu ({id})";
             _gameObject.SetActive(false);
             _transform = _gameObject.transform;
+            _finder = new(this);
 
             _openDepth = -1;
             _fullDepth = _fullList.Count;
             _fullList.Add(this);
+
+            MenuWhenClosed = () => GetCurrent().GetPrevious();
         }
 
         public static Menu GetCurrent()
@@ -77,7 +83,7 @@ namespace Game.Menus
 
         public static Menu GetOpened(int depth)
         {
-            if (depth < 0 || depth > _openList.Count)
+            if (depth < 0 || depth >= _openList.Count)
                 return null;
 
             Menu menu = _openList[depth];
@@ -86,29 +92,33 @@ namespace Game.Menus
                 return menu;
             else return null;
         }
-        public static Menu GetOpened(string name)
+        public static Menu GetOpened(string id)
         {
             for (int i = 0; i < _openList.Count; i++)
             {
                 Menu menu = _openList[i];
-                if (menu._isOpened && menu._gameObject.name == name)
+                if (menu._isOpened && menu._id == id)
                     return menu;
             }
             return null;
         }
 
-        public static Menu Get(int depth)
+        public static Menu GetAny(int depth)
         {
-            if (depth < 0 || depth > _openList.Count)
+            if (depth < 0 || depth >= _fullList.Count)
                 return null;
-            else return _openList[depth];
+
+            Menu menu = _fullList[depth];
+            if (menu == null) return null;
+            return menu;
         }
-        public static Menu Get(string name)
+        public static Menu GetAny(string id)
         {
-            for (int i = 0; i < _openList.Count; i++)
+            for (int i = 0; i < _fullList.Count; i++)
             {
-                if (_openList[i]._gameObject.name == name)
-                    return _openList[i];
+                Menu menu = _fullList[i];
+                if (menu._id == id)
+                    return menu;
             }
             return null;
         }
@@ -124,12 +134,14 @@ namespace Game.Menus
 
         public Menu GetPrevious()
         {
+            if (this == null) return null;
             if (_fullDepth > 0)
                 return _fullList[_fullDepth - 1];
             else return null;
         }
         public Menu GetPreviousOpened()
         {
+            if (this == null) return null;
             if (_openDepth > 0)
                 return _openList[_openDepth - 1];
             else return null;
@@ -137,12 +149,14 @@ namespace Game.Menus
 
         public Menu GetNext()
         {
+            if (this == null) return null;
             if (_fullDepth + 1 < _fullList.Count)
                 return _fullList[_fullDepth + 1];
             else return null;
         }
         public Menu GetNextOpened()
         {
+            if (this == null) return null;
             if (_openDepth + 1 < _openList.Count)
                 return _openList[_openDepth + 1];
             else return null;
@@ -164,13 +178,20 @@ namespace Game.Menus
                 await prev.OpenAnimated();
         }
 
-        public virtual UniTask OpenAnimated()
+        public virtual UniTask OpenAnimated() => OpenAnimatedBase();
+        public virtual UniTask CloseAnimated() => CloseAnimatedBase();
+
+        protected UniTask OpenAnimatedBase(bool withColliders = true)
         {
-            return MenuTransit.Between(GetCurrent(), this);
+            if (withColliders)
+                 return MenuTransit.BetweenWithColliders(GetCurrent(), this);
+            else return MenuTransit.Between(GetCurrent(), this);
         }
-        public virtual UniTask CloseAnimated()
+        protected UniTask CloseAnimatedBase(bool withColliders = true)
         {
-            return MenuTransit.Between(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
+            if (withColliders)
+                 return MenuTransit.BetweenWithColliders(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
+            else return MenuTransit.Between(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
         }
         // ---
 

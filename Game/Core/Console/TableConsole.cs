@@ -1,8 +1,12 @@
-﻿using UnityEngine;
+﻿using GreenOne;
 using GreenOne.Console;
-using TMPro;
-using GreenOne;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using TMPro;
+using UnityEngine;
 
 namespace Game
 {
@@ -11,32 +15,59 @@ namespace Game
     /// </summary>
     public static class TableConsole
     {
-        const KeyCode SWITCH_KEY = KeyCode.BackQuote;
+        public const KeyCode SWITCH_KEY = KeyCode.BackQuote;
+        public static string FilePath => _filePath;
+        public static event Func<string, bool> OnLogToFile; // bool = handled
+
+        static readonly List<string> _latestCommands = new();
+        static readonly Queue<string> _fileQueuedLogs = new();
+        static string _filePath;
+        static StreamWriter _fileStream;
 
         static GameObject _consoleObject;
         static TMP_InputField _inputTextMesh;
         static TextMeshPro _outputTextMesh;
-        static List<string> _latestCommands = new();
         static int _commandIndex;
         static bool _isVisible;
 
         public static void Initialize()
         {
-            Global.OnUpdate += OnUpdate;
-
             Commands.Add(new cmdCardStatAdd());
             Commands.Add(new cmdCardTraitAdd());
+            Commands.Add(new cmdData());
             Commands.Add(new cmdHelp());
-            Commands.Add(new cmdLogTerritory());
             Commands.Add(new cmdSideCardAdd());
             Commands.Add(new cmdSideCardPlace());
             Commands.Add(new cmdSideStatAdd());
 
+            _filePath = Application.persistentDataPath + "/console.log";
+            _fileStream = new(_filePath);
+            _fileStream.WriteLine($"PATH SHORTCUT: {_filePath}\n");
+            _fileStream.Flush();
+
             _consoleObject = Global.Root.Find("CORE/Console").gameObject;
             _inputTextMesh = _consoleObject.Find<TMP_InputField>("Input text");
             _outputTextMesh = _consoleObject.Find<TextMeshPro>("Output text");
+
+            Global.OnUpdate += OnUpdate;
+            Application.quitting += _fileStream.Close;
+            Task.Run(LogToFileQueue);
         }
-        public static void WriteLine(string text, LogType type)
+
+        public static void LogToFile(string text)
+        {
+            if (OnLogToFile?.Invoke(text) ?? !Config.writeConsoleLogs) return;
+            _fileQueuedLogs.Enqueue(text);
+        }
+        public static void LogToFile(IEnumerable<string> texts)
+        {
+            foreach (string text in texts) 
+            {
+                if (OnLogToFile?.Invoke(text) ?? !Config.writeConsoleLogs) continue;
+                _fileQueuedLogs.Enqueue(text);
+            }
+        }
+        public static void Log(string text, LogType type)
         {
             string str;
             if (type == LogType.Error || type == LogType.Exception)
@@ -48,11 +79,11 @@ namespace Game
         static void ExecuteLine(string line)
         {
             try { Command.ExecuteLine(line); }
-            catch (ArgDuplicateException e) { WriteLine($"Указан дубликат аргумента {e.argId}.", LogType.Error); }
-            catch (ArgValueException e) { WriteLine($"Указано неверное значение аргумента {e.argId}.", LogType.Error); }
-            catch (ArgCountException) { WriteLine($"Указано неверное количество аргументов.", LogType.Error); }
-            catch (ComplexArgException) { WriteLine($"Ошибка обработки аргумента как комплексного (с указанием \"\").", LogType.Error); }
-            catch (NamedArgException) { WriteLine($"Ошибка обработки аргумента как именнованного (с указанием =).", LogType.Error); }
+            catch (ArgDuplicateException e) { Log($"Указан дубликат аргумента {e.argId}.", LogType.Error); }
+            catch (ArgValueException e) { Log($"Указано неверное значение аргумента {e.argId}.", LogType.Error); }
+            catch (ArgCountException) { Log($"Указано неверное количество аргументов.", LogType.Error); }
+            catch (ComplexArgException) { Log($"Ошибка обработки аргумента как комплексного (с указанием \"\").", LogType.Error); }
+            catch (NamedArgException) { Log($"Ошибка обработки аргумента как именнованного (с указанием =).", LogType.Error); }
 
             _latestCommands.Add(line);
             _commandIndex = _latestCommands.Count;
@@ -61,7 +92,6 @@ namespace Game
             _inputTextMesh.text = null;
             _inputTextMesh.ActivateInputField();
         }
-
         static void OnUpdate() 
         {
             if (_isVisible)
@@ -101,6 +131,21 @@ namespace Game
                 _inputTextMesh.text = _commandIndex == _latestCommands.Count ? "" : _latestCommands[_commandIndex];
             }
             _inputTextMesh.MoveToEndOfLine(false, false);
+        }
+
+        static void LogToFileQueue()
+        {
+            Start:
+            if (_fileQueuedLogs.Count == 0)
+                goto End;
+
+            while (_fileQueuedLogs.Count != 0)
+                _fileStream.WriteLine(_fileQueuedLogs.Dequeue());
+            _fileStream.Flush();
+
+            End:
+            Thread.Sleep(1000);
+            goto Start;
         }
     }
 }

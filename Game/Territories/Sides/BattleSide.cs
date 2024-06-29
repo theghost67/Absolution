@@ -22,7 +22,9 @@ namespace Game.Territories
         public BattleSide Opposite => _territory.GetOppositeOf(this);
         public BattleSideDrawer Drawer => _drawer;
         public TableFinder Finder => _finder;
+
         public string TableName => isMe ? Player.Name : "Противник";
+        public string TableNameDebug => isMe ? "player" : "enemy";
 
         public BattleSleeve Sleeve => _sleeve;
         public CardDeck Deck => _deck;
@@ -61,17 +63,17 @@ namespace Game.Territories
             _deck = DeckCreator();
             _sleeve = SleeveCreator(null);
 
-            health = new TableStat(this, HealthAtStart);
-            gold = new TableStat(this, GoldAtStart);
-            ether = new TableStat(this, EtherAtStart);
+            health = new TableStat(nameof(health), this, HealthAtStart);
+            health.OnPreSet.Add(OnStatPreSetBase_TOP);
+            health.OnPostSet.Add(OnStatPostSetBase_TOP);
 
-            health.OnPreSet.Add(OnHealthPreSetBase_TOP);
-            gold.OnPreSet.Add(OnGoldPreSetBase_TOP);
-            ether.OnPreSet.Add(OnEtherPreSetBase_TOP);
+            gold = new TableStat(nameof(gold), this, GoldAtStart);
+            gold.OnPreSet.Add(OnStatPreSetBase_TOP);
+            gold.OnPostSet.Add(OnStatPostSetBase_TOP);
 
-            health.OnPostSet.Add(OnHealthPostSetBase_TOP);
-            gold.OnPostSet.Add(OnGoldPostSetBase_TOP);
-            ether.OnPostSet.Add(OnEtherPostSetBase_TOP);
+            ether = new TableStat(nameof(ether), this, EtherAtStart);
+            ether.OnPreSet.Add(OnStatPreSetBase_TOP);
+            ether.OnPostSet.Add(OnStatPostSetBase_TOP);
 
             if (withDrawer)
                 CreateDrawer(_territory.transform);
@@ -186,8 +188,8 @@ namespace Game.Territories
         {
             if (card == null) return;
             if (card.price.currency == CardBrowser.GetCurrency("gold"))
-                 gold.AdjustValueAbs(-card.price.value, this);
-            else ether.AdjustValueAbs(-card.price.value, this);
+                 gold.AdjustValue(-card.price.value, this);
+            else ether.AdjustValue(-card.price.value, this);
         }
 
         protected virtual void DrawerSetter(BattleSideDrawer value)
@@ -214,66 +216,29 @@ namespace Game.Territories
             return (BattleSleeve)src.Clone(sleeveCArgs);
         }
 
-        // used for logging
-        protected virtual UniTask OnHealthPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
+        // used for debug-logging
+        protected virtual UniTask OnStatPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
         {
             TableStat stat = (TableStat)sender;
             BattleSide side = (BattleSide)stat.Owner;
 
-            if (e.source != null)
-                 side.Territory.WriteLogForDebug($"{side.TableName}: здоровье: попытка изменения на {e.deltaValue} ед. от {e.source.TableName}.");
-            else side.Territory.WriteLogForDebug($"{side.TableName}: здоровье: попытка изменения на {e.deltaValue} ед.");
+            string sideName = side.TableNameDebug;
+            string statName = stat.TableNameDebug;
+            string sourceName = e.source?.TableNameDebug;
+
+            TableConsole.LogToFile($"{sideName}: {statName}: OnPreSet: delta: {e.deltaValue} (by: {sourceName}).");
             return UniTask.CompletedTask;
         }
-        protected virtual UniTask OnGoldPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
+        protected virtual UniTask OnStatPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
         {
             TableStat stat = (TableStat)sender;
             BattleSide side = (BattleSide)stat.Owner;
 
-            if (e.source != null)
-                 side.Territory.WriteLogForDebug($"{side.TableName}: золото: попытка изменения на {e.deltaValue} ед. от {e.source.TableName}.");
-            else side.Territory.WriteLogForDebug($"{side.TableName}: золото: попытка изменения на {e.deltaValue} ед.");
-            return UniTask.CompletedTask;
-        }
-        protected virtual UniTask OnEtherPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
-        {
-            TableStat stat = (TableStat)sender;
-            BattleSide side = (BattleSide)stat.Owner;
+            string sideName = side.TableNameDebug;
+            string statName = stat.TableNameDebug;
+            string sourceName = e.source?.TableNameDebug;
 
-            if (e.source != null)
-                 side.Territory.WriteLogForDebug($"{side.TableName}: эфир: попытка изменения на {e.deltaValue} ед. от {e.source.TableName}.");
-            else side.Territory.WriteLogForDebug($"{side.TableName}: эфир: попытка изменения на {e.deltaValue} ед.");
-            return UniTask.CompletedTask;
-        }
-
-        protected virtual UniTask OnHealthPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
-        {
-            TableStat stat = (TableStat)sender;
-            BattleSide side = (BattleSide)stat.Owner;
-
-            if (e.source != null)
-                 side.Territory.WriteLogForDebug($"{side.TableName}: здоровье: изменение на {e.totalDeltaValue} ед. от {e.source.TableName}.");
-            else side.Territory.WriteLogForDebug($"{side.TableName}: здоровье: изменение на {e.totalDeltaValue} ед.");
-            return UniTask.CompletedTask;
-        }
-        protected virtual UniTask OnGoldPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
-        {
-            TableStat stat = (TableStat)sender;
-            BattleSide side = (BattleSide)stat.Owner;
-
-            if (e.source != null)
-                 side.Territory.WriteLogForDebug($"{side.TableName}: золото: изменение на {e.totalDeltaValue} ед. от {e.source.TableName}.");
-            else side.Territory.WriteLogForDebug($"{side.TableName}: золото: изменение на {e.totalDeltaValue} ед.");
-            return UniTask.CompletedTask;
-        }
-        protected virtual UniTask OnEtherPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
-        {
-            TableStat stat = (TableStat)sender;
-            BattleSide side = (BattleSide)stat.Owner;
-
-            if (e.source != null)
-                 side.Territory.WriteLogForDebug($"{side.TableName}: эфир: изменение на {e.totalDeltaValue} ед. от {e.source.TableName}.");
-            else side.Territory.WriteLogForDebug($"{side.TableName}: эфир: изменение на {e.totalDeltaValue} ед.");
+            TableConsole.LogToFile($"{sideName}: {statName}: OnPostSet: delta: {e.totalDeltaValue} (by: {sourceName}).");
             return UniTask.CompletedTask;
         }
         // ----
@@ -300,7 +265,8 @@ namespace Game.Territories
 
         float CalculateWeight()
         {
-            if (health <= 0) return 0;
+            if (health <= 0)
+                return -int.MaxValue;
             IEnumerable<BattleWeight> weights = Fields().WithCard().Select(f => f.Card.Weight);
             return BattleWeight.Float(health, weights);
         }

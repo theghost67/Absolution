@@ -59,13 +59,13 @@ namespace Game.Traits
             {
                 e.target.OnPostKilled.Add(OnTargetCardKilled, PRIORITY);
                 await trait.AnimActivation();
-                await trait.Owner.strength.AdjustValueRel(STRENGTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
+                await trait.Owner.strength.AdjustValueScale(STRENGTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
             }
             else
             {
                 e.target.OnPostKilled.Remove(OnTargetCardKilled);
                 await trait.AnimDeactivation();
-                await trait.Owner.strength.RevertValueRel(entryId);
+                await trait.Owner.strength.RevertValueScale(entryId);
             }
         }
 
@@ -74,7 +74,7 @@ namespace Game.Traits
             BattleFieldCard observingCard = (BattleFieldCard)sender;
             BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(observingCard.Territory);
             if (trait == null) return;
-            await trait.Owner.Kill(source);
+            await trait.Owner.Kill(BattleKillMode.Default, source);
         }
     }
 }

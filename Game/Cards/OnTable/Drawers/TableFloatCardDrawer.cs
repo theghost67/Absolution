@@ -23,43 +23,43 @@ namespace Game.Cards
 
             int priceDefault = attached.Data.price.value;
             int priceCurrent = attached.price;
-            Tooltip.Show($"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault} ед.\nТекущее: {priceCurrent} ед.\n<color=grey><i>Стоимость: цена установки на территорию.");
+            Game.Tooltip.Show($"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault} ед.\nТекущее: {priceCurrent} ед.\n<color=grey><i>Стоимость: цена установки на территорию.");
         }
         protected override void OnUpperRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Инициатива: определяет быстроту действий.");
+            if (e.handled) return;
+            Game.Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Инициатива: определяет быстроту действий.");
         }
         protected override void OnLowerLeftIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
+            Game.Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
         }
         protected override void OnLowerRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
+            if (e.handled) return;
+            Game.Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
         }
 
         protected override void OnUpperLeftIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Hide();
+            if (e.handled) return;
+            Game.Tooltip.Hide();
         }
         protected override void OnUpperRightIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Hide();
+            if (e.handled) return;
+            Game.Tooltip.Hide();
         }
         protected override void OnLowerLeftIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Hide();
+            if (e.handled) return;
+            Game.Tooltip.Hide();
         }
         protected override void OnLowerRightIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Hide();
+            if (e.handled) return;
+            Game.Tooltip.Hide();
         }
     }
 }

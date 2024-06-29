@@ -1,5 +1,4 @@
 using DG.Tweening;
-using Game;
 using Game.Palette;
 using MyBox;
 using System.Collections.Generic;

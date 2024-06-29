@@ -1,11 +1,9 @@
-using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
@@ -18,7 +16,6 @@ namespace GreenOne
     {
         #region Variables
         public static readonly Color clearWhite = new(1, 1, 1, 0);
-        public static readonly Tween emptyTween = DOVirtual.Float(0, 0, 0, null).Pause();
         #endregion
 
         #region Functions

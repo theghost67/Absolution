@@ -38,7 +38,7 @@ namespace Game.Cards
             foreach (BattleField field in fields)
             {
                 BattleFieldCard fieldCard = field.Card;
-                await fieldCard.Kill(source: null, BattleKillMode.IgnoreHealthRestore);
+                await fieldCard.Kill(BattleKillMode.IgnoreHealthRestore, source: null);
                 if (fieldCard.IsKilled)
                     await territory.PlaceFieldCard(CardBrowser.NewField("vavulov"), field, card);
             }

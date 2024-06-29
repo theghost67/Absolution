@@ -63,8 +63,8 @@ namespace Game.Traits
             float relDecrease = -HP_STR_DECREASE_SCALE * trait.GetStacks();
 
             await trait.AnimActivation();
-            await killer.strength.AdjustValueRel(relDecrease, trait);
-            await killer.health.AdjustValueRel(relDecrease, trait);
+            await killer.strength.AdjustValueScale(relDecrease, trait);
+            await killer.health.AdjustValueScale(relDecrease, trait);
         }
     }
 }

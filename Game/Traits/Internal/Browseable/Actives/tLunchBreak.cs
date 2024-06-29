@@ -53,8 +53,8 @@ namespace Game.Traits
 
             trait.Storage.turnsDelay++;
             if (target.Card != null)
-                 await target.Card.health.AdjustValueAbs(HEALTH_INCREASE * trait.GetStacks(), trait);
-            else await target.health.AdjustValueAbs(HEALTH_INCREASE * trait.GetStacks(), trait);
+                 await target.Card.health.AdjustValue(HEALTH_INCREASE * trait.GetStacks(), trait);
+            else await target.health.AdjustValue(HEALTH_INCREASE * trait.GetStacks(), trait);
         }
     }
 }

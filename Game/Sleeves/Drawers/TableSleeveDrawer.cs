@@ -54,7 +54,6 @@ namespace Game.Sleeves
             attached = sleeve;
 
             _canPullOut = true;
-            _posYTween = Utils.emptyTween;
             _normalPosY  = sleeve.isForMe ? -2.16f : 2.16f;
             _moveOutPosY = sleeve.isForMe ? -2.40f : 2.40f;
             _pullOutPosY = sleeve.isForMe ? -1.10f : 1.10f;

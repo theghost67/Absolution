@@ -37,7 +37,6 @@ namespace Game.Effects
                 _material.name = $"Outline for {renderer.name}";
             }
 
-            _colorTween = Utils.emptyTween;
             _material.color = Color.clear;
             _renderer = renderer;
             _renderer.GetComponent<Renderer>().material = _material;

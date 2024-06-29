@@ -1,7 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
+using Game.Core;
 using GreenOne;
+using MyBox;
 using System;
 using Unity.Mathematics;
 using UnityEngine;
@@ -11,7 +13,7 @@ namespace Game.Territories
     /// <summary>
     /// Класс, представляющий игровое поле на столе с возможностью хранения карты типа <see cref="TableFieldCard"/>.
     /// </summary>
-    public class TableField : Unique, ITableDrawable, ITableFindable, ICloneableWithArgs, IDisposable
+    public class TableField : Unique, ITableDrawable, ITableFindable, ITableLoggable, ICloneableWithArgs, IDisposable
     {
         public event EventHandler OnDrawerCreated;
         public event EventHandler OnDrawerDestroyed;
@@ -24,6 +26,9 @@ namespace Game.Territories
         public TableFieldDrawer Drawer => _drawer;
         public TableFinder Finder => _finder;
         Drawer ITableDrawable.Drawer => _drawer;
+
+        public string TableName => GetTableName();
+        public string TableNameDebug => GetTableNameDebug();
 
         public readonly int2 pos;
         public readonly TableStat health;
@@ -42,13 +47,13 @@ namespace Game.Territories
             OnDrawerCreated += OnDrawerCreatedBase;
             OnDrawerDestroyed += OnDrawerDestroyedBase;
 
+            this.pos = pos;
             _territory = territory;
             _finder = new TableFieldFinder(this);
             _onCardAttached = new TableEventVoid();
             _onCardDetatched = new TableEventVoid();
 
-            this.pos = pos;
-            health = new TableStat(this);
+            health = new TableStat(nameof(health), this, 0);
             health.OnPostSet.Add(OnHealthPostSet);
 
             if (withDrawer)
@@ -60,6 +65,7 @@ namespace Game.Territories
             OnDrawerDestroyed = (EventHandler)src.OnDrawerDestroyed?.Clone();
 
             pos = src.pos;
+            _territory = args.srcTerrClone;
             _finder = new TableFieldFinder(this);
             _onCardAttached = (TableEventVoid)src._onCardAttached.Clone();
             _onCardDetatched = (TableEventVoid)src._onCardDetatched.Clone();
@@ -88,7 +94,7 @@ namespace Game.Territories
             else return null;
         }
 
-        public async UniTask AttachCard(TableFieldCard card)
+        public async UniTask AttachCard(TableFieldCard card, ITableEntrySource source)
         {
             if (_card != null) return;
             if (card == null)
@@ -98,9 +104,9 @@ namespace Game.Territories
             if (_drawer != null)
                 await _drawer.AnimAttachCard(card.Drawer).AsyncWaitForCompletion();
             await _onCardAttached.Invoke(this, EventArgs.Empty);
-            await card.AttachToAnotherField(this);
+            await card.AttachToAnotherField(this, source);
         }
-        public async UniTask DetatchCard()
+        public async UniTask DetatchCard(ITableEntrySource source)
         {
             if (_card == null) return;
             TableFieldCard card = _card;
@@ -109,7 +115,7 @@ namespace Game.Territories
             await _onCardDetatched.Invoke(this, EventArgs.Empty);
             if (_drawer != null)
                 await _drawer.AnimDetatchCard(card.Drawer).AsyncWaitForCompletion();
-            await card.AttachToAnotherField(null);
+            await card.AttachToAnotherField(null, source);
         }
 
         public void CreateDrawer(Transform parent)
@@ -136,13 +142,6 @@ namespace Game.Territories
             return new TableFieldDrawer(this, parent);
         }
 
-        protected virtual void CardPropSetter(TableFieldCard value)
-        {
-            if (value == _card) return;
-            if (value != null)
-                 AttachCard(value);
-            else DetatchCard();
-        }
         protected virtual void CardBaseSetter(TableFieldCard value)
         {
             _card = value;
@@ -168,6 +167,28 @@ namespace Game.Territories
         UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
         {
             return UniTask.CompletedTask;
+        }
+        string GetTableName()
+        {
+            if (this == null)
+                return "-";
+            if (this is not BattleField)
+                return pos.x.ToString();
+
+            Color color = pos.y == BattleTerritory.PLAYER_FIELDS_Y ? Color.green : Color.red;
+            string fieldColorHex = color.ToHex();
+            return $"<color={fieldColorHex}>{pos.x + 1}</color>";
+        }
+        string GetTableNameDebug()
+        {
+            if (this == null)
+                return "-";
+            if (this is not BattleField)
+                return pos.x.ToString();
+
+            string xChar = (pos.x + 1).ToString();
+            string sideChar = pos.y == BattleTerritory.PLAYER_FIELDS_Y ? "p" : "e";
+            return $"{xChar}{sideChar}";
         }
     }
 }

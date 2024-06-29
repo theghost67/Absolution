@@ -36,8 +36,6 @@ namespace Game.Territories
             attached = field;
 
             _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-            _lightTween = Utils.emptyTween;
-            _attachTween = Utils.emptyTween;
             _light = transform.Find<Light2D>("Light");
             _light.color = ColorPalette.GetColor(0);
 

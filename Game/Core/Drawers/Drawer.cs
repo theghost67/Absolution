@@ -33,6 +33,10 @@ namespace Game
             set => _blocksSelection = value;
         }
 
+        public Func<string> Tooltip 
+        {
+            set => _tooltipFunc = value;
+        }
         public bool ChangePointer
         {
             get => _changePointer;
@@ -71,6 +75,7 @@ namespace Game
         readonly Behaviour _behaviour;
         readonly bool _colliderExists;
 
+        Func<string> _tooltipFunc;
         Color _color;
         int _sortingOrder;
         int _sortingDefault;
@@ -440,16 +445,26 @@ namespace Game
         protected virtual UniTask DestroyAnimated()
         {
             SetCollider(false);
-            Tweener lastTween = this.DOColor(Color.black, 0.5f).OnComplete(DestroyInstantly);
+            Tweener lastTween = this.DOColor(Color.clear, 0.5f).OnComplete(DestroyInstantly);
             return lastTween.AsyncWaitForCompletion();
         }
         protected virtual bool SetActiveStateOnAlphaSet() => true;
 
         protected virtual void OnMouseScrollUpBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseScrollDownBase(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnMouseEnterBase(object sender, DrawerMouseEventArgs e) { }
+        protected virtual void OnMouseEnterBase(object sender, DrawerMouseEventArgs e) 
+        {
+            if (e.handled) return;
+            if (_tooltipFunc != null)
+                Game.Tooltip.Show(_tooltipFunc());
+        }
         protected virtual void OnMouseHoverBase(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e) { }
+        protected virtual void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e) 
+        {
+            if (e.handled) return;
+            if (_tooltipFunc != null)
+                Game.Tooltip.Hide();
+        }
         protected virtual void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseClickRightBase(object sender, DrawerMouseEventArgs e) { }
 

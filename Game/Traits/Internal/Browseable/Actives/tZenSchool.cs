@@ -43,8 +43,8 @@ namespace Game.Traits
             BattleFieldCard card = (BattleFieldCard)e.target.Card;
             int strength = card.strength;
 
-            await card.strength.AdjustValueAbs(-strength, e.trait);
-            await card.health.AdjustValueAbs(strength, e.trait);
+            await card.strength.AdjustValue(-strength, e.trait);
+            await card.health.AdjustValue(strength, e.trait);
         }
     }
 }

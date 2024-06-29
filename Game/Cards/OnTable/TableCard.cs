@@ -15,7 +15,9 @@ namespace Game.Cards
         public Card Data => _data;
         public TableCardDrawer Drawer => _drawer;
         public virtual TableFinder Finder => null;
+
         public virtual string TableName => Data.name;
+        public virtual string TableNameDebug => $"{Data.id}+{GuidStr}";
 
         public readonly TableStat price;
         readonly Card _data;
@@ -27,7 +29,7 @@ namespace Game.Cards
             OnDrawerDestroyed += OnDrawerDestroyedBase;
 
             _data = data;
-            price = new TableStat(this, data.price.value);
+            price = new TableStat(nameof(price), this, data.price.value);
             price.OnPreSet.Add(OnPricePreSetBase_TOP, 256);
             price.OnPostSet.Add(OnPricePostSetBase_TOP, 256);
 

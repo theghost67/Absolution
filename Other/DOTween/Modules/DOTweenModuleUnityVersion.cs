@@ -227,7 +227,9 @@ namespace DG.Tweening
         /// </summary>
         public async static UniTask AsyncWaitForCompletion(this Tween t)
         {
-            if (!t.active) {
+            if (t == null) return;
+            if (!t.active) 
+            {
                 if (Debugger.logPriority > 0) Debugger.LogInvalidTween(t);
                 return;
             }

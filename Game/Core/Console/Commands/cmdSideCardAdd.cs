@@ -63,7 +63,7 @@ namespace Game
         {
             if (Menu.GetCurrent() is not IMenuWithTerritory menu || menu.Territory is not BattleTerritory territory)
             {
-                TableConsole.WriteLine("Текущее меню не содержит территорию сражения.", LogType.Error);
+                TableConsole.Log("Текущее меню не содержит территорию сражения.", LogType.Error);
                 return;
             }
 
@@ -79,7 +79,7 @@ namespace Game
                  territory.player.Sleeve.Add(card);
             else territory.enemy.Sleeve.Add(card);
 
-            TableConsole.WriteLine($"Карта {id} создана и выдана в рукав.", LogType.Log);
+            TableConsole.Log($"Карта {id} создана и выдана в рукав.", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

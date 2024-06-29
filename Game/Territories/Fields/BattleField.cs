@@ -13,9 +13,7 @@ namespace Game.Territories
         public new BattleFieldCard Card => _card;
         public new BattleFieldDrawer Drawer => _drawer;
         public new BattleTerritory Territory => _side.Territory;
-
         public BattleSide Side => _side;
-        public string TableName => $"Поле {this.PosToStringRich()}";
 
         readonly BattleSide _side;
         BattleFieldCard _card;
@@ -51,11 +49,6 @@ namespace Game.Territories
         {
             return new BattleFieldDrawer(this, parent);
         }
-
-        protected override void CardPropSetter(TableFieldCard card)
-        {
-            base.CardPropSetter(card);
-        }
         protected override void CardBaseSetter(TableFieldCard value)
         {
             base.CardBaseSetter(value);
@@ -73,7 +66,7 @@ namespace Game.Territories
         {
             TableStat stat = (TableStat)sender;
             BattleField field = (BattleField)stat.Owner;
-            return field._side.health.AdjustValueAbs(e.totalDeltaValue, null);
+            return field._side.health.AdjustValue(e.totalDeltaValue, e.source);
         }
 
         // TODO: add GetObservingEntities?

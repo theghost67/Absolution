@@ -18,7 +18,9 @@ namespace Game.Traits
         public TableTraitStorage Storage => _storage;
         public TableTraitDrawer Drawer => _drawer;
         public virtual TableFinder Finder => null;
-        public string TableName => $"{Data.name}[{Owner.Field.PosToStringRich()}]";
+
+        public string TableName => $"{Data.name}[{Owner.Field.TableName}]";
+        public string TableNameDebug => $"{Data.id}[{Owner.Field.TableNameDebug}]+{GuidStr}";
 
         readonly Trait _data;
         readonly TableFieldCard _owner;

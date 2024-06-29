@@ -18,6 +18,7 @@ namespace Game.Traits
         const string ID = "unscheduled_test";
         const int MOXIE_THRESHOLD = 2;
         const float OWNER_STRENGTH_SCALE = 0.5f;
+        const string IGNORED_TRAIT_ID = "scholar";
 
         public tUnscheduledTest() : base(ID)
         {
@@ -33,11 +34,12 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
+            string traitName = TraitBrowser.GetTrait(IGNORED_TRAIT_ID).name;
             float effect = OWNER_STRENGTH_SCALE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При активации (Т)",
-                    $"тратит все заряды испытывает каждую карту на территории напротив - если её инициатива < {MOXIE_THRESHOLD}. она получит урон, равный <u>{effect}%</u> от силы этой карты. Карты с трейтом <i>Ученик</i> не получают урона."),
+                    $"тратит все заряды и испытывает каждую карту на территории напротив - если её инициатива < {MOXIE_THRESHOLD}. она получит урон, равный <u>{effect}%</u> от силы этой карты. Карты с навыком <i>{traitName}</i> не получают урона."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
@@ -68,7 +70,7 @@ namespace Game.Traits
                 }
 
                 card.Drawer.CreateTextAsSpeech("Кол", Color.red);
-                await card.health.AdjustValueAbs(-strength, trait);
+                await card.health.AdjustValue(-strength, trait);
             }
             await trait.SetStacks(0, trait.Side);
         }

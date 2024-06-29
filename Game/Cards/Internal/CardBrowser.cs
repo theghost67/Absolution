@@ -1,6 +1,4 @@
-﻿//#define SHUFFLE_PRICE
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game.Cards
@@ -209,9 +207,8 @@ namespace Game.Cards
 
         public static FieldCard ShuffleMainStats(this FieldCard card)
         {
-            #if SHUFFLE_PRICE
-            card.price.value = Random.Range(0, 6);
-            #endif
+            if (Config.shufflePrice)
+                card.price.value = Random.Range(0, 6);
             card.moxie = Random.Range(0, 6);
             return card;
         }

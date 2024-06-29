@@ -50,7 +50,7 @@ namespace Game
         public Tween AnimShowSelection()
         {
             if (_isSelected) 
-                return Utils.emptyTween;
+                return null;
 
             SpriteRenderer renderer = SelectableRenderer;
             if (renderer.drawMode == SpriteDrawMode.Sliced)
@@ -68,7 +68,7 @@ namespace Game
         [Obsolete("Make as outline pulse")] public Tween AnimShowOutline()
         {
             if (_isOutlined) 
-                return Utils.emptyTween;
+                return null;
 
             _isOutlined = true;
             _outlineRenderer = GameObject.Instantiate(_outlinePrefab, Global.Root).GetComponent<SpriteRenderer>();
@@ -82,7 +82,7 @@ namespace Game
         }
         [Obsolete("Implement or remove")] public Tween AnimShowCovering()
         {
-            return Utils.emptyTween;
+            return null;
             //if (_isCovered) return;
 
             //_isCovered = true;
@@ -105,32 +105,32 @@ namespace Game
         public Tween AnimHideSelection()
         {
             if (!_isSelected) 
-                return Utils.emptyTween;
+                return null;
 
             _isSelected = false;
             _selectionTween.Kill();
             _selectionRenderer.gameObject.Destroy();
-            return Utils.emptyTween;
+            return null;
         }
         public Tween AnimHideOutline()
         {
             if (!_isOutlined) 
-                return Utils.emptyTween;
+                return null;
 
             _isOutlined = false;
             _outlineTween.Kill();
             _outlineRenderer.gameObject.Destroy();
-            return Utils.emptyTween;
+            return null;
         }
         public Tween AnimHideCovering()
         {
             if (!_isCovered) 
-                return Utils.emptyTween;
+                return null;
 
             _isCovered = false;
             _totalCoverings--;
             _coveringElement.parent.gameObject.Destroy();
-            return Utils.emptyTween;
+            return null;
             _coveringTween.Kill();
         }
 

@@ -11,7 +11,7 @@ namespace Game.Cards
     public class BattleFloatCard : TableFloatCard, IBattleCard
     {
         public new BattleFloatCardDrawer Drawer => _drawer;
-        public override string TableName => base.TableName.Colored(Side.PosColor());
+        public override string TableName => base.TableName.Colored(Side.GetSideColor());
 
         public BattleTerritory Territory => _side.Territory;
         public BattleSide Side

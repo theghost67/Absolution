@@ -39,10 +39,12 @@ namespace Game.Cards
             else return Mathf.Log((cardStatPoints - 10) / 6);
         }
 
-        public readonly void Upgrade(FieldCard card)
+        public void Upgrade(FieldCard card)
         {
             if (statPoints <= 0)
                 return;
+            if (statPoints > Card.POINTS_MAX)
+                statPoints = Card.POINTS_MAX;
 
             #region stats/ratios initializing
             int cardTraitsCount = card.traits.Count;

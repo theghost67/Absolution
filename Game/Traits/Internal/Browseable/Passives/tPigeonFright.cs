@@ -69,7 +69,7 @@ namespace Game.Traits
             e.Receiver = prevField;
 
             await trait.AnimActivation();
-            await owner.AttachToAnotherField(fields.First());
+            await owner.AttachToAnotherField(fields.First(), trait);
 
             await owner.Territory.PlaceFieldCard(spawnCardData, prevField, trait.Side);
             await trait.AdjustStacks(-1, e.Sender);

@@ -236,7 +236,7 @@ namespace Game.Environment
                 possibleActivesFreqs = activesFrequencies
             };
 
-            FieldCard card = CardBrowser.NewField(randomId);
+            FieldCard card = CardBrowser.NewField(randomId).ShuffleMainStats();
             rules.Upgrade(card);
             OnCardPostCreated?.Invoke(new TravelerCardPostEventArgs(card, preArgs));
             return card;

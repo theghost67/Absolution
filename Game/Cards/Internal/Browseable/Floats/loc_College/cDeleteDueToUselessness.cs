@@ -43,14 +43,14 @@ namespace Game.Cards
                 if (fieldCard.price > 0 && fieldCard.strength > 0)
                     continue;
 
-                await fieldCard.Kill(card);
+                await fieldCard.Kill(BattleKillMode.Default, card);
                 if (!fieldCard.IsKilled) continue;
 
                 killedCardsCount++;
                 BattleFieldCardDrawer drawer = fieldCard.Drawer;
                 drawer.CreateTextAsSpeech("НЕ НУЖЕН", Color.red);
             }
-            await card.Side.gold.AdjustValueAbs(killedCardsCount, card);
+            await card.Side.gold.AdjustValue(killedCardsCount, card);
         }
     }
 }

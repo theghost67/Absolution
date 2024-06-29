@@ -72,7 +72,7 @@ namespace Game.Traits
             }
         }
 
-        async UniTask OnOwnerFieldPostAttached(object sender, EventArgs e)
+        async UniTask OnOwnerFieldPostAttached(object sender, TableFieldAttachArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
             BattlePassiveTrait trait = owner.Traits.Passive(ID);
@@ -86,8 +86,8 @@ namespace Game.Traits
             if (!hasStrengthEffect && !hasHealthEffect) return;
 
             await trait.AnimActivation();
-            await owner.strength.AdjustValueRel((float)strengthRel, trait);
-            await owner.health.AdjustValueRel((float)healthRel, trait);
+            await owner.strength.AdjustValueScale((float)strengthRel, trait);
+            await owner.health.AdjustValueScale((float)healthRel, trait);
         }
         async UniTask OnPlayerWon(object sender, EventArgs e)
         {

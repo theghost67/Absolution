@@ -29,7 +29,7 @@ namespace Game.Traits
             if (e.isInBattle)
             {
                 IBattleTrait trait = (IBattleTrait)e.trait;
-                return trait.Territory.PhaseSide == trait.Side;
+                return trait.Side.isMe && trait.Territory.PhaseSide == trait.Side;
             }
             return true;
         }

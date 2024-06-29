@@ -47,10 +47,9 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)e.trait;
             string entryId = $"{trait.Guid}/{e.target.Guid}";
 
-            if (e.target.Data.id != "granny") return;
             if (e.canSeeTarget)
-                 await trait.Owner.moxie.AdjustValueAbs(-MOXIE_DECREASE * trait.GetStacks(), trait, entryId);
-            else await trait.Owner.strength.RevertValueRel(entryId);
+                 await trait.Owner.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait, entryId);
+            else await trait.Owner.moxie.RevertValue(entryId);
         }
     }
 }

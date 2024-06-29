@@ -88,9 +88,6 @@ namespace Game.Territories
         {
             attached = side;
 
-            _goldTween = Utils.emptyTween;
-            _etherTween = Utils.emptyTween;
-
             _healthPanel = transform.Find<SpriteRenderer>("Hp");
             _goldPanel = transform.Find<SpriteRenderer>("Gold");
             _etherPanel = transform.Find<SpriteRenderer>("Ether");

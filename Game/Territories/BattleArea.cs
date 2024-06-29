@@ -285,17 +285,19 @@ namespace Game.Territories
                 }
             }
 
-            foreach (BattleField field in observingPoint.Territory.Fields().WithCard())
-                await CheckObserveStateFor(field.Card);
-
-            observingPoint.Territory.OnCardAttachedToField.Add(OnAnyCardAttachedToField, Range.priority);
+            foreach (BattleField field in observingPoint.Territory.Fields())
+            {
+                if (field.Card != null)
+                    await CheckObserveStateFor(field.Card);
+                field.OnCardAttached.Add(OnCardAttachedToAnyField, Range.priority);
+            }
         }
         async UniTask DisableContiniousObserving()
         {
             foreach (BattleFieldCard target in _observingCards)
                 await _onCardUnseen.Invoke(this, target);
-
-            observingPoint.Territory.OnCardDetatchedFromField.Remove(OnAnyCardAttachedToField);
+            foreach (BattleField field in observingPoint.Territory.Fields())
+                field.OnCardAttached.Remove(OnCardAttachedToAnyField);
 
             _observingCards = new List<BattleFieldCard>(TableTerritory.MAX_SIZE);
             _aimedTargetSplash = Array.Empty<BattleField>();
@@ -396,7 +398,7 @@ namespace Game.Territories
             return observingPoint.Territory.Fields(center.pos, Range.potential).ToArray();
         }
 
-        UniTask OnObservingPointAttachedToField(object sender, EventArgs e)
+        UniTask OnObservingPointAttachedToField(object sender, TableFieldAttachArgs e)
         {
             BattleFieldCard card = (BattleFieldCard)sender;
             IBattleWeighty observer = (IBattleWeighty)this.observer.Finder.FindInBattle(card.Territory);
@@ -407,15 +409,16 @@ namespace Game.Territories
                  return area.EnableContiniousObserving();
             else return UniTask.CompletedTask;
         }
-        UniTask OnAnyCardAttachedToField(object sender, TableField field)
+        UniTask OnCardAttachedToAnyField(object sender, EventArgs e)
         {
-            BattleTerritory terr = (BattleTerritory)sender;
+            BattleField field = (BattleField)sender;
+            BattleTerritory terr = field.Territory;
             IBattleWeighty observer = (IBattleWeighty)this.observer.Finder.FindInBattle(terr);
             if (observer == null) return UniTask.CompletedTask;
 
             BattleArea area = observer.Area;
             if (area.CanObserve())
-                 return area.CheckObserveStateFor((BattleFieldCard)field.Card);
+                 return area.CheckObserveStateFor(field.Card);
             else return UniTask.CompletedTask;
         }
 
@@ -424,9 +427,9 @@ namespace Game.Territories
         {
             if (observingPoint.Field == null) return;
             //if (src.observer is Cards.IBattleCard card)
-            //     Debug.Log($"Finding targets of BattleArea that belongs to: {card.Data.name}");
+            //     TableConsole.LogToFile($"Finding targets of BattleArea that belongs to: {card.Data.name}");
             //else if (src.observer is Traits.IBattleTrait trait)
-            //    Debug.Log($"Finding targets of BattleArea that belongs to: {trait.Owner.Data.name}->{trait.Data.name}");
+            //    TableConsole.LogToFile($"Finding targets of BattleArea that belongs to: {trait.Owner.Data.name}->{trait.Data.name}");
 
             List<BattleFieldCard> srcObservingCards = src._observingCards;
             BattleField[] srcPotentialTargets = src._potentialTargets;
@@ -434,8 +437,7 @@ namespace Game.Territories
 
             if (srcPotentialTargets == null)
             {
-                Debug.LogError($"src (BattleArea) potential targets were null.\nObserver name: {src.observer.TableName}, Observing point name: {src.observingPoint.TableName}.");
-                Debug.LogError(BattleAI.LastTerritoryLog);
+                Debug.LogError($"src (BattleArea) potential targets were null.\nObserver name: {src.observer.TableNameDebug}, Observing point name: {src.observingPoint.TableNameDebug}.");
                 return;
             }
 

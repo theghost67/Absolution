@@ -59,7 +59,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await rArgs.Sender.moxie.AdjustValueAbs(-MOXIE_DECREASE * trait.GetStacks(), trait);
+            await rArgs.Sender.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait);
         }
     }
 }

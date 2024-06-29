@@ -117,13 +117,13 @@ namespace Game.Effects
 
         public static Tween CreateTextAsDamage(this Drawer drawer, int damage, bool isHealing, float scale = 1.5f)
         {
-            if (drawer == null) return Utils.emptyTween;
+            if (drawer == null) return null;
             TextMeshPro textmesh = CreateText(damage.ToString(), isHealing ? Color.green : Color.red, drawer.transform.position, scale);
             return textmesh.DOATextPopUp(delay: 0f, rotZRange: new float2(10, 25));
         }
         public static Tween CreateTextAsSpeech(this Drawer drawer, string text, Color color, float scale = 0.5f)
         {
-            if (drawer == null) return Utils.emptyTween;
+            if (drawer == null) return null;
             TextMeshPro textmesh = CreateText(text, color, drawer.transform.position + Vector3.up * 100, scale);
             return textmesh.DOATextPopUp(text.Length * 0.1f, rotZRange: new float2(5, 10));
         }

@@ -55,7 +55,7 @@ namespace Game.Traits
             if (e.canSeeTarget)
             {
                 await trait.AnimActivation();
-                await trait.Owner.health.AdjustValueRel(HEALTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
+                await trait.Owner.health.AdjustValueScale(HEALTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
             }
         }
     }

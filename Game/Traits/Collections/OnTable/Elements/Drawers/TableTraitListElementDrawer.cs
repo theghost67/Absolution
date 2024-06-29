@@ -17,9 +17,10 @@ namespace Game.Traits
     /// </summary>
     public abstract class TableTraitListElementDrawer : Drawer
     {
-        const float ACTIVATION_DUR_ALL = 1.00f;
-        const float ACTIVATION_DUR_APPEAR = 0.66f;
-        const float TWEEN_DURATION = 0.33f;
+        const float TWEEN_DURATION = 0.50f;
+        const float ACTIVATION_DUR_APPEAR = 0.50f;
+        const float ACTIVATION_DUR_DISPLAY = 1.00f;
+        const float ACTIVATION_DUR_DISAPPEAR = 0.50f;
 
         static readonly GameObject _prefab;
         static readonly GameObject _activationPrefab;
@@ -50,7 +51,7 @@ namespace Game.Traits
         static TableTraitListElementDrawer()
         {
             _prefab = Resources.Load<GameObject>("Prefabs/Traits/Trait list element");
-            _activationPrefab = Resources.Load<GameObject>("Prefabs/Traits/Activation");
+            _activationPrefab = Resources.Load<GameObject>("Prefabs/Traits/Trait activation");
             _minSizeDelta = new Vector2(0.64f, 0.12f);
 
             _traitRarityIcon1Sprite = Resources.Load<Sprite>("Sprites/Traits/Parts/trait rarity icon 1");
@@ -68,12 +69,6 @@ namespace Game.Traits
             _stacksText = transform.Find<TextMeshPro>("Stacks");
             _rectTransform = _nameText.GetComponent<RectTransform>();
 
-            _appearTween = Utils.emptyTween;
-            _adjustTween = Utils.emptyTween;
-            _disappearTween = Utils.emptyTween;
-            _activationTween = Utils.emptyTween;
-            _scrollTween = Utils.emptyTween;
-
             enqueueAnims = true;
             BlocksSelection = false;
             ChangePointer = ChangePointerBase();
@@ -85,7 +80,7 @@ namespace Game.Traits
             RedrawTraitIconAsDefault();
             RedrawNameAsDefault();
             RedrawStacksAsDefault();
-            SetColorByCooldown();
+            SetColor(GetCooldownColor());
         }
 
         public override void SetSortingOrder(int value, bool asDefault = false)
@@ -111,12 +106,6 @@ namespace Game.Traits
             _traitIconRenderer.color = value;
             _nameText.color = value;
             _stacksText.color = value;
-        }
-        public void SetColorByCooldown()
-        {
-            bool hasCooldown = attached.Trait.Storage.turnsDelay > 0;
-            Color color = ColorPalette.GetColor(hasCooldown ? 1 : 0);
-            SetColor(color);
         }
 
         public void RedrawRarityIconAsDefault()
@@ -173,6 +162,11 @@ namespace Game.Traits
             Vector2 sizeDelta = _rectTransform.sizeDelta;
             return new Vector2(sizeDelta.x.SelectMax(_minSizeDelta.x), sizeDelta.y.SelectMax(_minSizeDelta.y));
         }
+        public Color GetCooldownColor()
+        {
+            bool hasCooldown = attached.Trait.Storage.turnsDelay > 0;
+            return ColorPalette.GetColor(hasCooldown ? 1 : 0);
+        }
 
         public Tween AnimAppear()
         {
@@ -214,13 +208,12 @@ namespace Game.Traits
             TableFieldCardDrawer cardDrawer = set.Owner.Drawer;
 
             if (setDrawer == null)
-                return Utils.emptyTween;
+                return null;
 
             _isActivated = true;
+            bool hadVisibleBg = cardDrawer.BgIsVisible;
             setDrawer.HideStoredElementsInstantly();
             cardDrawer.ShowBgInstantly();
-
-            const float STEP = ACTIVATION_DUR_APPEAR / 2;
 
             Trait data = attached.Trait.Data;
             GameObject prefab = GameObject.Instantiate(_activationPrefab, cardDrawer.transform);
@@ -244,12 +237,12 @@ namespace Game.Traits
             prefabTextMesh.color = color1;
             attached.Trait.Owner.Drawer.HighlightOutline(data.isPassive);
 
-            Tween textTween1 = prefabTextMesh.DOColor(color2, STEP).Pause().SetTarget(prefab).SetEase(Ease.Linear);
-            Tween textTween2 = prefabTextMesh.DOColor(color3, STEP).Pause().SetTarget(prefab).SetEase(Ease.Linear);
-            Tween spriteTween1 = prefabRenderer.DOColor(color2, STEP).Pause().SetTarget(prefab).SetEase(Ease.Linear);
-            Tween spriteTween2 = prefabRenderer.DOColor(color3, STEP).Pause().SetTarget(prefab).SetEase(Ease.Linear);
-            Tween scaleTween1 = prefabTransform.DOScale(scale2, STEP).Pause().SetTarget(prefab).SetEase(Ease.OutCubic);
-            Tween scaleTween2 = prefabTransform.DOScale(scale3, STEP).Pause().SetTarget(prefab).SetEase(Ease.OutCubic);
+            Tween textTween1 = prefabTextMesh.DOColor(color2, ACTIVATION_DUR_APPEAR).Pause().SetTarget(prefab).SetEase(Ease.Linear);
+            Tween textTween2 = prefabTextMesh.DOColor(color3, ACTIVATION_DUR_DISAPPEAR).Pause().SetTarget(prefab).SetEase(Ease.Linear);
+            Tween spriteTween1 = prefabRenderer.DOColor(color2, ACTIVATION_DUR_APPEAR).Pause().SetTarget(prefab).SetEase(Ease.Linear);
+            Tween spriteTween2 = prefabRenderer.DOColor(color3, ACTIVATION_DUR_DISAPPEAR).Pause().SetTarget(prefab).SetEase(Ease.Linear);
+            Tween scaleTween1 = prefabTransform.DOScale(scale2, ACTIVATION_DUR_APPEAR).Pause().SetTarget(prefab).SetEase(Ease.OutCubic);
+            Tween scaleTween2 = prefabTransform.DOScale(scale3, ACTIVATION_DUR_DISAPPEAR).Pause().SetTarget(prefab).SetEase(Ease.OutCubic);
 
             Sequence seq = DOTween.Sequence(prefab);
             seq.AppendCallback(() =>
@@ -258,20 +251,20 @@ namespace Game.Traits
                 textTween1.Play();
                 spriteTween1.Play();
             });
-            seq.AppendInterval(ACTIVATION_DUR_APPEAR);
+            seq.AppendInterval(ACTIVATION_DUR_DISPLAY);
             seq.AppendCallback(() =>
             {
                 scaleTween2.Play();
                 textTween2.Play();
                 spriteTween2.Play();
             });
-            seq.AppendInterval(ACTIVATION_DUR_ALL - ACTIVATION_DUR_APPEAR);
+            seq.AppendInterval(ACTIVATION_DUR_DISAPPEAR);
             seq.OnComplete(() =>
             {
                 prefab.Destroy();
                 if (cardDrawer.IsSelected || setDrawer.IsSelected)
                     setDrawer.ShowStoredElements();
-                else cardDrawer.HideBg();
+                else if (!hadVisibleBg) cardDrawer.HideBg();
                 _isActivated = false;
             });
 
@@ -323,11 +316,8 @@ namespace Game.Traits
             if (trait.Owner.Drawer.IsSelected && !trait.Owner.Drawer.Traits.elements.IsAnySelected)
                 Menu.WriteDescToCurrent(trait.Owner.DescRich());
 
-            Color color = ColorPalette.GetColor(0);
-
             _nameText.text = trait.Data.name;
-            _stacksText.color = color;
-            _traitIconRenderer.color = color;
+            SetColor(GetCooldownColor());
         }
         protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
         {
@@ -344,7 +334,7 @@ namespace Game.Traits
         protected override void OnEnableBase(object sender, EventArgs e)
         {
             base.OnEnableBase(sender, e);
-            SetColorByCooldown();
+            SetColor(GetCooldownColor());
         }
 
         Tween AnimAlpha(float to)

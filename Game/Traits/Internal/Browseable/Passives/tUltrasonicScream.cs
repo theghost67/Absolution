@@ -69,7 +69,7 @@ namespace Game.Traits
             await trait.AnimActivation();
             await trait.Owner.Drawer.transform.DOAShake(0.04f).AsyncWaitForCompletion();
             ownerOppositeFieldCard.Drawer?.AnimHideSelection();
-            await ownerOppositeFieldCard.moxie.AdjustValueAbs(-MOXIE_DECREASE * trait.GetStacks(), trait);
+            await ownerOppositeFieldCard.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait);
         }
     }
 }

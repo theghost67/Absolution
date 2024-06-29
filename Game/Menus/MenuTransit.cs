@@ -2,6 +2,7 @@
 using DG.Tweening;
 using GreenOne;
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Game.Menus
@@ -20,23 +21,31 @@ namespace Game.Menus
 
         static readonly GameObject _prefab = Resources.Load<GameObject>($"Prefabs/Menus/{ID}");
         static readonly MenuTransit _instance = new();
-        static Tween _tween;
 
-        private MenuTransit() : base(ID, _prefab) { _tween = Utils.emptyTween; }
+        Tween _tween;
+        private MenuTransit() : base(ID, _prefab) { }
 
         public static UniTask Between(Menu? from, Menu? to, Action? action = null)
         {
-            return _instance.BetweenInternal(from, to, action);
+            return _instance.BetweenInternal(from, to, action, false);
         }
-        async UniTask BetweenInternal(Menu from, Menu to, Action action)
+        public static UniTask BetweenWithColliders(Menu? from, Menu? to, Action? action = null)
+        {
+            return _instance.BetweenInternal(from, to, null, true);
+        }
+        async UniTask BetweenInternal(Menu from, Menu to, Action action, bool setColliders)
         {
             from?.SetColliders(false);
             await OpenAnimated();
             await UniTask.Delay((int)(DURATION * 1000));
             from?.CloseInstantly();
             to?.OpenInstantly();
+            if (setColliders)
+                to?.SetColliders(false);
             action?.Invoke();
             await CloseAnimated();
+            if (setColliders)
+                to?.SetColliders(true);
         }
 
         public override UniTask OpenAnimated()

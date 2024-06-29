@@ -48,20 +48,25 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
             if (trait.WasAdded(e))
             {
-                trait.Owner.Territory.OnCardAttachedToField.Add(OnTerritoryCardAttachedToField, PRIORITY);
-                foreach (BattleField field in trait.Owner.Territory.Fields().WithCard())
-                    field.Card.OnPostKilled.Add(OnTerritoryCardPostKilled, PRIORITY);
+                foreach (BattleField field in trait.Territory.Fields())
+                {
+                    field.Card?.OnPostKilled.Add(OnTerritoryCardPostKilled, PRIORITY);
+                    field.OnCardAttached.Add(OnCardAttachedToAnyField, PRIORITY);
+                }
             }
             else if (trait.WasRemoved(e))
             {
-                trait.Owner.Territory.OnCardAttachedToField.Remove(OnTerritoryCardAttachedToField);
-                foreach (BattleField field in trait.Owner.Territory.Fields().WithCard())
-                    field.Card.OnPostKilled.Remove(OnTerritoryCardPostKilled);
+                foreach (BattleField field in trait.Territory.Fields())
+                {
+                    field.Card?.OnPostKilled.Remove(OnTerritoryCardPostKilled);
+                    field.OnCardAttached.Remove(OnCardAttachedToAnyField);
+                }
             }
         }
 
-        async UniTask OnTerritoryCardAttachedToField(object sender, BattleField field)
+        async UniTask OnCardAttachedToAnyField(object sender, EventArgs e)
         {
+            BattleField field = (BattleField)sender;
             field.Card.OnPostKilled.Add(OnTerritoryCardPostKilled, PRIORITY);
         }
         async UniTask OnTerritoryCardPostKilled(object sender, ITableEntrySource source)
@@ -70,9 +75,10 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(terrCard.Territory);
             if (trait == null) return;
             if (trait.Owner.Field == null) return;
+            if (terrCard == trait.Owner) return;
 
             await trait.AnimActivation();
-            await trait.Owner.health.AdjustValueRel(HEALTH_REL_INCREASE * trait.GetStacks(), trait);
+            await trait.Owner.health.AdjustValueScale(HEALTH_REL_INCREASE * trait.GetStacks(), trait);
         }
     }
 }

@@ -1,8 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
+using Game.Core;
 using GreenOne;
 using System;
+using System.Security.Cryptography;
 using Unity.Mathematics;
 using static Unity.VisualScripting.Member;
+using static UnityEngine.Rendering.DebugUI;
 
 namespace Game
 {
@@ -10,37 +13,43 @@ namespace Game
     /// Класс, представляющий характеристику типа <see cref="int"/>, изменение значения которой вызывает события перед/после изменения этой характеристики.<br/>
     /// Событие, вызываемое перед изменением, может полностью отменить это изменение.
     /// </summary>
-    public sealed class TableStat : ICloneableWithArgs, IDisposable
+    public sealed class TableStat : ITableLoggable, ICloneableWithArgs, IDisposable
     {
         public IIdEventVoidAsync<PreSetArgs> OnPreSet => _onPreSet;
         public IIdEventVoidAsync<PostSetArgs> OnPostSet => _onPostSet;
 
         public object Owner => _owner;
-        public float AbsValue => _absValue;
-        public float RelValue => _relValue;
+        public float PosValue => _posValue;
+        public float PosScale => _posScale;
+        public float NegValue => _negValue;
 
+        public string TableName => _id;
+        public string TableNameDebug => _id;
+
+        readonly string _id;
         readonly object _owner;
         readonly TableEventVoid<PreSetArgs> _onPreSet;
         readonly TableEventVoid<PostSetArgs> _onPostSet;
-        readonly TableEntryDict _absEntries;
-        readonly TableEntryDict _relEntries;
+        readonly TableEntryDict _valueEntries;
+        readonly TableEntryDict _valueScaleEntries;
 
-        float _absValue;
-        float _relValue;
+        float _posValue;
+        float _posScale;
+        float _negValue;
         float _relDelta;
         int _value;
 
         public class PreSetArgs
         {
-            public readonly bool isAbsolute;
+            public readonly bool isRelative;
             public readonly ITableEntrySource source;
             public readonly int oldStatValue;
             public float deltaValue;
             public bool handled;
 
-            public PreSetArgs(int oldStatValue, float deltaValue, bool isAbsolute, ITableEntrySource source)
+            public PreSetArgs(int oldStatValue, float deltaValue, bool isRelative, ITableEntrySource source)
             {
-                this.isAbsolute = isAbsolute;
+                this.isRelative = isRelative;
                 this.source = source;
                 this.oldStatValue = oldStatValue;
                 this.deltaValue = deltaValue;
@@ -49,15 +58,15 @@ namespace Game
         }
         public class PostSetArgs
         {
-            public readonly bool isAbsolute;
+            public readonly bool isRelative;
             public readonly ITableEntrySource source;
             public readonly int oldStatValue;
             public readonly int newStatValue;
             public readonly int totalDeltaValue;
 
-            public PostSetArgs(int oldStatValue, int newStatValue, bool isAbsolute, ITableEntrySource source)
+            public PostSetArgs(int oldStatValue, int newStatValue, bool isRelative, ITableEntrySource source)
             {
-                this.isAbsolute = isAbsolute;
+                this.isRelative = isRelative;
                 this.oldStatValue = oldStatValue;
                 this.newStatValue = newStatValue;
                 this.source = source;
@@ -65,22 +74,25 @@ namespace Game
             }
         }
 
-        public TableStat(object owner, int absValue = 0)
+        public TableStat(string id, object owner, int defaultValue)
         {
+            _id = id;
             _owner = owner;
 
             _onPreSet = new TableEventVoid<PreSetArgs>();
             _onPostSet = new TableEventVoid<PostSetArgs>();
 
-            _absEntries = new TableEntryDict();
-            _relEntries = new TableEntryDict();
+            _valueEntries = new TableEntryDict();
+            _valueScaleEntries = new TableEntryDict();
 
-            _absValue = absValue;
-            _relValue = 1;
-            _value = absValue;
+            _posValue = defaultValue;
+            _negValue = 0;
+            _posScale = 1;
+            _value = defaultValue;
         }
         private TableStat(TableStat src, TableStatCloneArgs args)
         {
+            _id = string.Copy(src._id);
             _owner = args.ownerClone;
 
             _onPreSet = (TableEventVoid<PreSetArgs>)src._onPreSet.Clone();
@@ -88,11 +100,12 @@ namespace Game
 
             TableEntryDictCloneArgs entriesCArgs = new(args.terrCArgs);
 
-            _absEntries = (TableEntryDict)src._absEntries.Clone(entriesCArgs);
-            _relEntries = (TableEntryDict)src._relEntries.Clone(entriesCArgs);
+            _valueEntries = (TableEntryDict)src._valueEntries.Clone(entriesCArgs);
+            _valueScaleEntries = (TableEntryDict)src._valueScaleEntries.Clone(entriesCArgs);
 
-            _absValue = src._absValue;
-            _relValue = src._relValue;
+            _posValue = src._posValue;
+            _negValue = src._negValue;
+            _posScale = src._posScale;
             _value = src._value;
         }
 
@@ -102,8 +115,7 @@ namespace Game
         {
             _onPreSet.Clear();
             _onPostSet.Clear();
-            _absEntries.Clear();
-            _relEntries.Clear();
+            _valueScaleEntries.Clear();
         }
         public object Clone(CloneArgs args)
         {
@@ -116,52 +128,52 @@ namespace Game
             return _value.ToString();
         }
 
-        // use entryId and Revert methods to revert applied effect instead of calling these methods with negative value
+        // use entryId and RevertValue to revert applied effect instead of calling AdjustValue with negative value
         // (as value can be modified by OnPreSet event)
 
-        public UniTask SetValueAbs(float value, ITableEntrySource source, string entryId = null)
+        public float EntryValue(string entryId)
         {
-            return AdjustValue(value - _value, isAbsolute: true, source, entryId);
-        }
-        public UniTask SetValueRel(float value, ITableEntrySource source, string entryId = null)
-        {
-            return AdjustValue(value - _value, isAbsolute: false, source, entryId);
-        }
-
-        public UniTask AdjustValueAbs(float value, ITableEntrySource source, string entryId = null) 
-        {
-            return AdjustValue(value, isAbsolute: true, source, entryId);
-        }
-        public UniTask AdjustValueRel(float value, ITableEntrySource source, string entryId = null) 
-        {
-            return AdjustValue(value, isAbsolute: false, source, entryId);
-        }
-
-        public UniTask RevertValueAbs(string entryId)
-        {
-            return RevertValue(entryId, isAbsolute: true);
-        }
-        public UniTask RevertValueRel(string entryId)
-        {
-            return RevertValue(entryId, isAbsolute: false);
-        }
-
-        public float EntryValueAbs(string entryId)
-        {
-            if (_absEntries.TryGetValue(entryId, out TableEntry entry))
+            if (_valueEntries.TryGetValue(entryId, out TableEntry entry))
                  return entry.value;
             else return 0;
         }
-        public float EntryValueRel(string entryId)
+        public float EntryValueScale(string entryId)
         {
-            if (_relEntries.TryGetValue(entryId, out TableEntry entry))
+            if (_valueScaleEntries.TryGetValue(entryId, out TableEntry entry))
                 return entry.value;
             else return 0;
         }
 
-        async UniTask AdjustValue(float value, bool isAbsolute, ITableEntrySource source, string entryId)
+        public UniTask SetValue(float value, ITableEntrySource source, string entryId = null)
         {
-            PreSetArgs preArgs = new(_value, value, isAbsolute, source);
+            return AdjustValue(value - _posValue - _negValue, source, entryId, false);
+        }
+        public UniTask SetValueScale(float value, ITableEntrySource source, string entryId = null)
+        {
+            return AdjustValue(value - _posScale, source, entryId, true);
+        }
+
+        public UniTask AdjustValue(float value, ITableEntrySource source, string entryId = null)
+        {
+            return AdjustValue(value, source, entryId, false);
+        }
+        public UniTask AdjustValueScale(float value, ITableEntrySource source, string entryId = null)
+        {
+            return AdjustValue(value, source, entryId, true);
+        }
+
+        public UniTask RevertValue(string entryId)
+        {
+            return RevertValue(entryId, false);
+        }
+        public UniTask RevertValueScale(string entryId)
+        {
+            return RevertValue(entryId, true);
+        }
+
+        async UniTask AdjustValue(float value, ITableEntrySource source, string entryId, bool isRelative)
+        {
+            PreSetArgs preArgs = new(_value, value, isRelative, source);
             foreach (var preSetSub in _onPreSet)
             {
                 await preSetSub.Delegate.Invoke(this, preArgs);
@@ -169,49 +181,55 @@ namespace Game
             }
 
             float preArgsDelta = preArgs.deltaValue;
-            if (isAbsolute)
+            if (preArgsDelta == 0) return;
+            TableEntry entry = new(preArgsDelta, source);
+
+            if (!isRelative)
             {
-                _absValue += preArgsDelta;
-                if (preArgsDelta != 0)
-                    _absEntries.Add(entryId, new TableEntry(preArgsDelta, source));
+                if (preArgsDelta < 0)
+                     _negValue -= preArgsDelta;
+                else _posValue += preArgsDelta;
+                _valueEntries.Add(entryId, entry);
             }
             else
             {
                 UpdateRelValue(preArgsDelta);
-                if (preArgsDelta != 0)
-                    _relEntries.Add(entryId, new TableEntry(preArgsDelta, source));
+                _valueScaleEntries.Add(entryId, entry);
             }
 
             RecalculateValue();
-            await _onPostSet.Invoke(this, new PostSetArgs(preArgs.oldStatValue, _value, isAbsolute, source));
+            await _onPostSet.Invoke(this, new PostSetArgs(preArgs.oldStatValue, _value, isRelative, source));
         }
-        async UniTask RevertValue(string entryId, bool isAbsolute)
+        async UniTask RevertValue(string entryId, bool isRelative)
         {
             int oldValue = _value;
-            TableEntryDict entries = isAbsolute ? _absEntries : _relEntries;
+            TableEntryDict entries = isRelative ? _valueScaleEntries : _valueEntries;
+
             if (!entries.TryGetValue(entryId, out TableEntry entry))
                 return;
-
-            if (isAbsolute)
-                 _absValue -= entry.value;
+            if (!isRelative)
+            {
+                if (entry.value < 0)
+                    _negValue += entry.value;
+                else _posValue -= entry.value;
+            }
             else UpdateRelValue(-entry.value);
 
             entries.Remove(entryId);
             RecalculateValue();
-
-            await _onPostSet.Invoke(this, new PostSetArgs(oldValue, _value, isAbsolute, null));
+            await _onPostSet.Invoke(this, new PostSetArgs(oldValue, _value, isRelative, null));
         }
 
         void UpdateRelValue(float delta)
         {
             _relDelta += delta;
             if (_relDelta > 0)
-                 _relValue = 1 * (1 + _relDelta);
-            else _relValue = 1 / (1 - _relDelta);
+                 _posScale = 1 * (1 + _relDelta);
+            else _posScale = 1 / (1 - _relDelta);
         }
         void RecalculateValue()
         {
-            _value = (_absValue * _relValue).Ceiling();
+            _value = (_posValue * _posScale - _negValue).Ceiling();
         }
     }
 }

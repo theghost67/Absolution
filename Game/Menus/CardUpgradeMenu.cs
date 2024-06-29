@@ -106,9 +106,6 @@ namespace Game.Menus
                 foreach (StatToUpgrade stat in _stats)
                     stat.OnGraded += delta => OnAnyStatGraded(delta);
 
-                _scaleTween = Utils.emptyTween;
-                _posTween = Utils.emptyTween;
-
                 Drawer.ChangePointer = true;
                 Drawer.OnMouseClickLeft += (s, e) => { if (_selected != this) Select(); };
             }
@@ -386,20 +383,20 @@ namespace Game.Menus
                 if (times == 0) return UniTask.CompletedTask;
                 card.Data.price.value -= times;
                 upgradedTimes = 0;
-                return card.price.SetValueAbs(card.Data.price.value, null);
+                return card.price.AdjustValue(card.Data.price.value - card.price, null);
             }
 
             protected override UniTask Upgrade()
             {
                 card.Data.price.value++;
                 upgradedTimes++;
-                return card.price.SetValueAbs(card.Data.price.value, null);
+                return card.price.AdjustValue(card.Data.price.value - card.price, null);
             }
             protected override UniTask Downgrade()
             {
                 card.Data.price.value--;
                 upgradedTimes--;
-                return card.price.SetValueAbs(card.Data.price.value, null);
+                return card.price.AdjustValue(card.Data.price.value - card.price, null);
             }
 
             protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
@@ -426,20 +423,20 @@ namespace Game.Menus
                 if (times == 0) return UniTask.CompletedTask;
                 card.Data.moxie -= times;
                 upgradedTimes = 0;
-                return card.moxie.SetValueAbs(card.Data.moxie, null);
+                return card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
             }
 
             protected override UniTask Upgrade()
             {
                 card.Data.moxie++;
                 upgradedTimes++;
-                return card.moxie.SetValueAbs(card.Data.moxie, null);
+                return card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
             }
             protected override UniTask Downgrade()
             {
                 card.Data.moxie--;
                 upgradedTimes--;
-                return card.moxie.SetValueAbs(card.Data.moxie, null);
+                return card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
             }
 
             protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
@@ -466,20 +463,20 @@ namespace Game.Menus
                 if (times == 0) return UniTask.CompletedTask;
                 card.Data.health -= times;
                 upgradedTimes = 0;
-                return card.health.SetValueAbs(card.Data.health, null);
+                return card.health.AdjustValue(card.Data.health - card.health, null);
             }
 
             protected override UniTask Upgrade()
             {
                 card.Data.health++;
                 upgradedTimes++;
-                return card.health.SetValueAbs(card.Data.health, null);
+                return card.health.AdjustValue(card.Data.health - card.health, null);
             }
             protected override UniTask Downgrade()
             {
                 card.Data.health--;
                 upgradedTimes--;
-                return card.health.SetValueAbs(card.Data.health, null);
+                return card.health.AdjustValue(card.Data.health - card.health, null);
             }
 
             protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
@@ -506,20 +503,20 @@ namespace Game.Menus
                 if (times == 0) return UniTask.CompletedTask;
                 card.Data.strength -= times;
                 upgradedTimes = 0;
-                return card.strength.SetValueAbs(card.Data.strength, null);
+                return card.strength.AdjustValue(card.Data.strength - card.strength, null);
             }
 
             protected override UniTask Upgrade()
             {
                 card.Data.strength++;
                 upgradedTimes++;
-                return card.strength.SetValueAbs(card.Data.strength, null);
+                return card.strength.AdjustValue(card.Data.strength - card.strength, null);
             }
             protected override UniTask Downgrade()
             {
                 card.Data.strength--;
                 upgradedTimes--;
-                return card.strength.SetValueAbs(card.Data.strength, null);
+                return card.strength.AdjustValue(card.Data.strength - card.strength, null);
             }
 
             protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
@@ -605,19 +602,14 @@ namespace Game.Menus
             }
         }
 
-        class InfoButtonDrawer : ButtonDrawer
+        class InfoButtonDrawer : Drawer
         {
-            public InfoButtonDrawer(CardUpgradeMenu menu) : base(menu, menu.Transform.Find("Info icon")) { }
-            protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
+            public InfoButtonDrawer(CardUpgradeMenu menu) : base(menu, menu.Transform.Find("Info button"))
             {
-                const string NOTES = "Нажмите ЛКМ или ПКМ по иконке характеристики, чтобы увеличить или уменьшить её значение.\n\n" +
-                                     "Нажатие мышью на навык изменит изначальное количество его зарядов.\n\n" +
-                                     "Доступные характеристики для изменения:\n- Стоимость\n- Инициатива\n- Здоровье\n- Сила\n- Заряды навыков";
-                Tooltip.Show(NOTES);
-            }
-            protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
-            {
-                Tooltip.Hide();
+                const string TEXT = "Нажмите ЛКМ или ПКМ по иконке характеристики, чтобы увеличить или уменьшить её значение.\n\n" +
+                                    "Нажатие мышью на навык изменит изначальное количество его зарядов.\n\n" +
+                                    "Доступные характеристики для изменения:\n- Стоимость\n- Инициатива\n- Здоровье\n- Сила\n- Заряды навыков";
+                Tooltip = () => TEXT;
             }
         }
         class ResetAllButtonDrawer : ButtonDrawer
@@ -778,6 +770,14 @@ namespace Game.Menus
             Global.OnUpdate -= CardToUpgrade.OnUpdate;
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Kill();
+        }
+        public override void SetColliders(bool value)
+        {
+            base.SetColliders(value);
+            _infoButton.SetCollider(value);
+            _resetAllButton.SetCollider(value);
+            _resetThisButton.SetCollider(value);
+            _finishButton.SetCollider(value);
         }
 
         public override void WriteDesc(string text)

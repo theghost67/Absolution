@@ -1,7 +1,6 @@
 ﻿using Game.Cards;
 using Game.Menus;
 using Game.Territories;
-using Game.Traits;
 using GreenOne.Console;
 using System.Linq;
 using UnityEngine;
@@ -90,7 +89,7 @@ namespace Game
         {
             if (Menu.GetCurrent() is not IMenuWithTerritory menu || menu.Territory is not BattleTerritory territory)
             {
-                TableConsole.WriteLine("Текущее меню не содержит территорию сражения.", LogType.Error);
+                TableConsole.Log("Текущее меню не содержит территорию сражения.", LogType.Error);
                 return;
             }
 
@@ -98,23 +97,29 @@ namespace Game
             int points = args["points"].ValueAs<int>();
             Pos pos = args["pos"].ValueAs<Pos>();
 
-            Card card = CardBrowser.NewCard(id);
             BattleField field;
             if (pos.isPlayer)
                  field = territory.Field(pos.x, BattleTerritory.PLAYER_FIELDS_Y);
             else field = territory.Field(pos.x, BattleTerritory.ENEMY_FIELDS_Y);
 
+            if (field.Card != null)
+            {
+                TableConsole.Log($"Указанное поле для установки карты уже занято.", LogType.Error);
+                return;
+            }
+
+            Card card = CardBrowser.NewCard(id);
             if (card is FieldCard fCard)
                  territory.PlaceFieldCard(fCard.ShuffleMainStats().UpgradeWithTraitAdd(points), field, null);
             else territory.PlaceFloatCard((FloatCard)card, field.Side, null);
 
-            TableConsole.WriteLine($"Карта {id} создана и установлена (от: null, принадлежит владельцу поля).", LogType.Log);
+            TableConsole.Log($"Карта {id} создана и установлена (от: null, принадлежит владельцу поля).", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {
+            new IdArg(this),
             new PointsArg(this),
             new PosArg(this),
-            new IdArg(this),
         };
     }
 }

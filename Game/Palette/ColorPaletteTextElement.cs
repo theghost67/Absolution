@@ -1,4 +1,3 @@
-using MyBox;
 using TMPro;
 using UnityEngine;
 
@@ -11,8 +10,16 @@ namespace Game.Palette
     [RequireComponent(typeof(TextMeshPro))]
     public class ColorPaletteTextElement : MonoBehaviour
     {
+        public Color SyncedColor => GetPaletteColor();
+        public int SyncedColorIndex => _syncedColorIndex;
+        public float Opacity => _opacity;
+        public float Multiplier => _multiplier;
+
+        public bool setColorOnStart = true;
+
         [SerializeField] int _syncedColorIndex = 0;
         [SerializeField] float _opacity = -1;
+        [SerializeField] float _multiplier = 1;
         private TextMeshPro _textMesh;
 
         void Start()
@@ -34,7 +41,9 @@ namespace Game.Palette
         Color GetPaletteColor()
         {
             float a = _opacity == -1 ? _textMesh.color.a : _opacity;
-            return ColorPalette.GetColor(_syncedColorIndex).WithAlpha(a);
+            Color color = ColorPalette.GetColor(_syncedColorIndex) * _multiplier;
+            color.a = a;
+            return color;
         }
     }
 }

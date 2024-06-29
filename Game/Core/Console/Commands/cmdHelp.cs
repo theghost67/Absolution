@@ -26,9 +26,9 @@ namespace Game
         protected override void Execute(CommandArgInputDict args)
         {
             if (args.ContainsKey("cmd"))
-                TableConsole.WriteLine(Commands.List.First(c => c.id == args["cmd"].input).ToFullString(), LogType.Log);
+                TableConsole.Log(Commands.List.First(c => c.id == args["cmd"].input).ToFullString(), LogType.Log);
             else foreach (Command cmd in Commands.List)
-                TableConsole.WriteLine(cmd.ToString(), LogType.Log);
+                TableConsole.Log(cmd.ToString(), LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[] { new CmdArg(this) };
     }

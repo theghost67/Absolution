@@ -36,8 +36,6 @@ namespace Game
                     return false;
                 if (!int.TryParse(str, out int parse))
                     return false;
-                if (parse <= 0)
-                    return false;
 
                 value = parse;
                 return true;
@@ -53,7 +51,7 @@ namespace Game
 
             if (drawer == null)
             {
-                TableConsole.WriteLine("Наведите курсор на карту, значение характеристики которой нужно изменить.", LogType.Error);
+                TableConsole.Log("Наведите курсор на карту, значение характеристики которой нужно изменить.", LogType.Error);
                 return;
             }
 
@@ -64,11 +62,11 @@ namespace Game
             {
                 if (id != "price")
                 {
-                    TableConsole.WriteLine("Карта способности не имеет данной характеристики.", LogType.Error);
+                    TableConsole.Log("Карта способности не имеет данной характеристики.", LogType.Error);
                     return;
                 }
-                card.price.AdjustValueAbs(value, null);
-                TableConsole.WriteLine($"Характеристика ({id}) карты была изменена на {value} (от: null).", LogType.Log);
+                card.price.AdjustValue(value, null);
+                TableConsole.Log($"Характеристика ({id}) карты была изменена на {value} (от: null).", LogType.Log);
                 return;
             }
 
@@ -82,8 +80,8 @@ namespace Game
                 _ => throw new System.NotSupportedException(),
             };
 
-            stat.AdjustValueAbs(value, null);
-            TableConsole.WriteLine($"Характеристика ({id}) карты была изменена на {value} (от: null).", LogType.Log);
+            stat.AdjustValue(value, null);
+            TableConsole.Log($"Характеристика ({id}) карты была изменена на {value} (от: null).", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

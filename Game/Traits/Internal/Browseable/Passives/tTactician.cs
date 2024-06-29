@@ -60,7 +60,7 @@ namespace Game.Traits
             if (trait.Owner.Field == null) return;
 
             await trait.AnimActivation();
-            await trait.Owner.moxie.AdjustValueAbs(MOXIE_INCREASE * trait.GetStacks(), trait);
+            await trait.Owner.moxie.AdjustValue(MOXIE_INCREASE * trait.GetStacks(), trait);
         }
     }
 }

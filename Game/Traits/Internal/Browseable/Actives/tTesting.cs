@@ -51,7 +51,7 @@ namespace Game.Traits
             foreach (BattleFieldCard card in fields.Select(f => f.Card))
             {
                 if (card.moxie <= MOXIE_THRESHOLD)
-                    await card.health.AdjustValueAbs(-DAMAGE, owner);
+                    await card.health.AdjustValue(-DAMAGE, owner);
             }
 
             trait.SetStacks(0, owner.Side);

@@ -1,4 +1,5 @@
 ﻿using Game.Territories;
+using System;
 using System.Collections.Generic;
 
 namespace Game
@@ -27,7 +28,7 @@ namespace Game
         public new void Add(string id, TableEntry entry) => base.Add(id ?? NewId(), entry);
         public void Add(TableEntry entry) => base.Add(NewId(), entry);
 
-        static string NewId() => "_" + Unique.NewGuid.ToString();
+        static string NewId() => "_" + Unique.NewGuidStr;
         void Clone_OnTerritoryReady(TableEntryDict src, TableTerritory terr)
         {
             foreach (KeyValuePair<string, TableEntry> pair in src)

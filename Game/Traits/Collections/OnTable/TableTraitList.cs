@@ -1,9 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
+using Game.Territories;
 using GreenOne;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Game.Traits
 {
@@ -152,9 +154,10 @@ namespace Game.Traits
             TableTraitList list = (TableTraitList)sender;
             TableFieldCard owner = list.Set.Owner;
 
-            if (e.source != null)
-                 owner.Field?.Territory?.WriteLogForDebug($"{owner.TableName}: навык {e.id}: попытка изменения на {e.stacks} ед. от {e.source.TableName}.");
-            else owner.Field?.Territory?.WriteLogForDebug($"{owner.TableName}: навык {e.id}: попытка изменения на {e.stacks} ед.");
+            string ownerName = owner.TableNameDebug;
+            string sourceName = e.source?.TableNameDebug;
+
+            TableConsole.LogToFile($"{ownerName}: traits: {e.id}: OnTryToChange: delta: {e.stacks} (by: {sourceName}).");
             return UniTask.FromResult(true);
         }
         protected virtual UniTask OnStacksChangedBase_TOP(object sender, TableTraitStacksSetArgs e)
@@ -162,9 +165,10 @@ namespace Game.Traits
             TableTraitList list = (TableTraitList)sender;
             TableFieldCard owner = list.Set.Owner;
 
-            if (e.source != null)
-                 owner.Field?.Territory?.WriteLogForDebug($"{owner.TableName}: навык {e.Trait.Data.id}: изменение на {e.delta} ед. от {e.source.TableName}.");
-            else owner.Field?.Territory?.WriteLogForDebug($"{owner.TableName}: навык {e.Trait.Data.id}: изменение на {e.delta} ед.");
+            string ownerName = owner.TableNameDebug;
+            string sourceName = e.source?.TableNameDebug;
+
+            TableConsole.LogToFile($"{ownerName}: traits: {e.Trait.Data.id}: OnChanged: delta: {e.delta} (by: {sourceName}).");
             return UniTask.CompletedTask;
         }
 

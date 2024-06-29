@@ -16,7 +16,7 @@ namespace Game.Effects
     {
         public static Tween DOAShake(this Transform transform, float power = 0.02f, float duration = 0.25f)
         {
-            if (transform == null) return Utils.emptyTween;
+            if (transform == null) return null;
             transform.DOKill(complete: true);
             Vector3 defaultPos = transform.localPosition;
 

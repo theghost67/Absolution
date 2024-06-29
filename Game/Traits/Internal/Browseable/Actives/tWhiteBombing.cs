@@ -18,7 +18,7 @@ namespace Game.Traits
 
         public tWhiteBombing() : base(ID)
         {
-            name = "Белоснежная бомбардивка";
+            name = "Белоснежная бомбардировка";
             desc = "Чёрт, это опять те голуби, бежим отсюда, пока не поздно!";
 
             rarity = Rarity.Rare;
@@ -31,7 +31,6 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             string traitName = TraitBrowser.GetTrait(SPAWN_TRAIT_ID).name;
-            string cardName = TraitBrowser.GetTrait(SPAWN_TRAIT_ID).name;
             int effect = SPAWN_TRAIT_STACKS * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {

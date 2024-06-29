@@ -18,6 +18,9 @@ namespace Game.Territories
             get => _receiver; 
             set
             {
+                if (value == null)
+                    throw new ArgumentNullException($"Receiver must have not null reference (to cancel initiation or remove this field from targets, handle it in {nameof(Sender.OnInitiationPreSent)})");
+
                 _receiver = value;
                 _receiverChanged = true;
                 OnReceiverChanged?.Invoke(this, value);
@@ -35,7 +38,7 @@ namespace Game.Territories
         public BattleInitiationRecvArgs(BattleField receiver, BattleInitiationSendArgs sArgs)
         {
             Sender = sArgs.Sender;
-            strength = new TableStat(this, sArgs.strength);
+            strength = new TableStat(nameof(strength), this, sArgs.strength);
             strength.OnPostSet.Add(OnStrengthPostSet);
             receiverDefault = receiver;
             _receiver = receiver;

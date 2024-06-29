@@ -11,6 +11,7 @@ namespace Game.Cards
     /// </summary>
     public abstract class Card : Unique, ISerializable
     {
+        public const float POINTS_MAX = 9999;
         public readonly string id;
         public readonly bool isField; // used to remove 'is' type checks as there are only two derived types 
 

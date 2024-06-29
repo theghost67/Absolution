@@ -18,6 +18,7 @@ namespace Game
         static Vector3 _position;
         static Sprite _typeSprite;
 
+        static bool _update;
         static Pointer _instance;
         static SpriteRenderer _renderer;
         static Transform _transform;
@@ -79,13 +80,20 @@ namespace Game
             SetVisibility(true);
             SetType(PointerType.Normal);
         }
+        void OnApplicationFocus(bool focus)
+        {
+            _update = focus;
+        }
+
         void Update()
         {
+            if (!_update) return;
             _position = Utils.MouseToWorldPos(Global.Camera, 0);
             transform.position = _position;
         }
         void FixedUpdate()
         {
+            if (!_update) return;
             bool changePointer = false;
             foreach (Drawer drawer in Drawer.SelectedDrawers)
             {

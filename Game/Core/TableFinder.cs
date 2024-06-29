@@ -8,19 +8,8 @@ namespace Game
     /// </summary>
     public abstract class TableFinder
     {
-        public string DefaultName => _name;
-        public string TableName => _src.TableName;
-        readonly string _name;
-        readonly ITableEntrySource _src;
-
-        public TableFinder(ITableFindable findable) 
-        {
-            _name = findable.ToString();
-        }
-        public TableFinder(ITableEntrySource source)
-        {
-            _src = source;
-        }
+        public readonly ITableFindable findable;
+        public TableFinder(ITableFindable findable) { this.findable = findable; }
 
         public abstract object FindInTerritory(TableTerritory territory);
         public abstract object FindInSleeve(TableSleeve sleeve);

@@ -7,14 +7,15 @@ namespace Game.Menus
     /// <summary>
     /// Интерфейс, реализующий объект как игровое меню.
     /// </summary>
-    public interface IMenu
+    public interface IMenu : ITableFindable
     {
         public event Action OnOpened;
         public event Action OnClosed;
 
+        public string Id { get; }
         public GameObject GameObject { get; }
         public Transform Transform { get; }
-        public string Id { get; }
+        public Func<Menu> MenuWhenClosed { get; set; }
 
         public bool IsDestroyed { get; }
         public bool IsOpened { get; }

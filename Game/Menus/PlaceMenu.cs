@@ -9,9 +9,10 @@ namespace Game.Menus
     /// <summary>
     /// Абстрактный класс, представляющий меню для взаимодействия с местом локации (см. <see cref="LocationPlace"/>).
     /// </summary>
-    public abstract class PlaceMenu : Menu, ITableEntrySource, IUnique
+    public abstract class PlaceMenu : Menu, ITableEntrySource
     {
         public string TableName => Id;
+        public string TableNameDebug => Id;
 
         protected abstract string PlaceId { get; }
         protected abstract string HeaderText { get; }
@@ -30,9 +31,8 @@ namespace Game.Menus
         readonly Drawer _deckButton;
         readonly Drawer _leaveButton;
 
-        int IUnique.Guid => 0xACE;
-        string IUnique.GuidStr => 0xACE.ToString();
-        TableFinder ITableFindable.Finder => null;
+        int IUnique.Guid => 0x0ACE;
+        string IUnique.GuidStr => 0x0ACE.ToString();
 
         /// <summary>
         /// Содержит флаги, позволяющие определить элементы графического интерфейса у меню.

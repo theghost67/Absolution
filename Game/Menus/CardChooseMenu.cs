@@ -26,10 +26,13 @@ namespace Game.Menus
         public int RerollsLeft => _rerollsLeft;
         public int FieldsChoicesLeft => _fieldsChoicesLeft;
         public int FloatsChoicesLeft => _floatsChoicesLeft;
+        public int AllChoicesLeft => _fieldsChoicesLeft + _floatsChoicesLeft;
 
         readonly Transform _cardsParent;
         readonly TextMeshPro _headerTextMesh;
         readonly TextMeshPro _descTextMesh;
+        readonly RerollButtonDrawer _rerollButton;
+        readonly DeclineButtonDrawer _declineButton;
         readonly ArrowsAnim[] _arrows;
 
         int _cardPoints; // increase to show more powerful cards
@@ -39,6 +42,7 @@ namespace Game.Menus
         int _floatsChoicesLeft;
         CardToChoose[] _cards;
         bool _cardsAreShown;
+        bool _cardsAreFields;
 
         // one of the field cards in this menu
         class CardToChoose
@@ -52,14 +56,12 @@ namespace Game.Menus
             static readonly Vector3 minScale = Vector3.one;
             static readonly Vector3 maxScale = Vector3.one * 1.15f;
 
-            public readonly CardChooseMenu menu;
-            public readonly int index;
-
-            readonly bool _isField;
+            readonly CardChooseMenu _menu;
             readonly TableCard _onTable;
+            readonly int _index;
 
-            TableCardDrawer Drawer => _onTable.Drawer;
-            Card Data => _onTable.Data;
+            public TableCardDrawer Drawer => _onTable.Drawer;
+            public Card Data => _onTable.Data;
 
             bool _chosen;
             Tween _scaleTween;
@@ -68,14 +70,9 @@ namespace Game.Menus
 
             public CardToChoose(CardChooseMenu menu, TableCard onTable, int index)
             {
-                this.menu = menu;
-                this.index = index;
-
-                _isField = onTable.Data.isField;
+                _menu = menu;
                 _onTable = onTable;
-                _scaleTween = Utils.emptyTween;
-                _posTween = Utils.emptyTween;
-                _alphaTween = Utils.emptyTween;
+                _index = index;
 
                 float xHalfOffset = -menu._cardsCount / 2f + 0.5f;
                 TableCardDrawer drawer = _onTable.Drawer;
@@ -107,6 +104,8 @@ namespace Game.Menus
             }
             public Tween AnimHide()
             {
+                Drawer.SetCollider(false);
+
                 Sequence seq = DOTween.Sequence();
                 seq.AppendCallback(() =>
                 {
@@ -114,6 +113,7 @@ namespace Game.Menus
                     AnimFadeOut();
                 });
                 seq.AppendInterval(ANIM_DURATION * 2);
+                seq.OnComplete(() => _onTable.DestroyDrawer(true));
 
                 return seq.Play();
             }
@@ -169,43 +169,8 @@ namespace Game.Menus
             }
             void OnCardMouseClickLeft(object sender, DrawerMouseEventArgs e)
             {
-                ConfirmChoice();
-            }
-
-            async void ConfirmChoice()
-            {
-                foreach (CardToChoose card in menu._cards)
-                    card.Drawer.SetCollider(false);
-
                 _chosen = true;
-                Drawer.HighlightOutline(GetHighlightColor());
-
-                if (_isField)
-                {
-                    Player.Deck.fieldCards.Add((FieldCard)Data);
-                    menu._fieldsChoicesLeft--;
-                }
-                else
-                {
-                    Player.Deck.floatCards.Add((FloatCard)Data);
-                    menu._floatsChoicesLeft--;
-                }
-
-                await UniTask.Delay(1500);
-                await menu.HideCards();
-
-                if (menu._fieldsChoicesLeft > 0 || menu._floatsChoicesLeft > 0)
-                     await menu.ShowCards();
-                else await menu.CloseAnimated();
-            }
-            Color GetHighlightColor()
-            {
-                if (_isField)
-                {
-                    Color color = Drawer.Outline.GetColor();
-                    if (color.a != 0) return color;
-                }
-                return ColorPalette.GetColor(1);
+                _menu.ConfirmChoice(_onTable);
             }
         }
         class ArrowsAnim
@@ -235,7 +200,84 @@ namespace Game.Menus
             }
         }
 
-        public CardChooseMenu(int cardPoints, int fieldsChoices, int floatsChoices = 0, int cardsCount = 3, int rerolls = 0) : base(ID, _prefab)
+        class RerollButtonDrawer : Drawer
+        {
+            readonly CardChooseMenu _menu;
+            readonly SpriteRenderer _renderer;
+            readonly ColorPaletteSpriteElement _paletteElement;
+
+            public RerollButtonDrawer(CardChooseMenu menu) : base(menu, menu.Transform.Find("Reroll button"))
+            {
+                _menu = menu;
+                _renderer = gameObject.GetComponent<SpriteRenderer>();
+                _paletteElement = gameObject.GetComponent<ColorPaletteSpriteElement>();
+                _paletteElement.setColorOnStart = false;
+                Tooltip = () => $"Перебросить карты ({_menu._rerollsLeft}x). Обновите ассортимент карт, если текущий выбор вас не устраивает.";
+            }
+            public override void SetColor(Color value)
+            {
+                base.SetColor(value);
+                _renderer.color = value;
+            }
+            public override void SetCollider(bool value)
+            {
+                base.SetCollider(value);
+                SetColor(value ? _paletteElement.SyncedColor : Color.gray);
+            }
+
+            protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+            {
+                base.OnMouseClickLeftBase(sender, e);
+                if (e.handled) return;
+                _menu.Reroll();
+            }
+        }
+        class DeclineButtonDrawer : Drawer
+        {
+            readonly CardChooseMenu _menu;
+            readonly SpriteRenderer _renderer;
+            readonly ColorPaletteSpriteElement _paletteElement;
+
+            public DeclineButtonDrawer(CardChooseMenu menu) : base(menu, menu.Transform.Find("Decline button")) 
+            {
+                _menu = menu;
+                _renderer = transform.GetComponent<SpriteRenderer>();
+                _paletteElement = gameObject.GetComponent<ColorPaletteSpriteElement>();
+                _paletteElement.setColorOnStart = false;
+                Tooltip = () => "<color=red>Отказаться от карты.</color> Полезно, когда выбирать из того, что есть, не хочется.";
+            }
+            public override void SetColor(Color value)
+            {
+                base.SetColor(value);
+                _renderer.color = value;
+            }
+            public override void SetCollider(bool value)
+            {
+                base.SetCollider(value);
+                SetColor(value ? _paletteElement.SyncedColor : Color.gray);
+            }
+
+            protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
+            {
+                base.OnMouseEnterBase(sender, e);
+                if (e.handled) return;
+                SetColor(Color.red);
+            }
+            protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
+            {
+                base.OnMouseLeaveBase(sender, e);
+                if (e.handled) return;
+                SetColor(Color.white);
+            }
+            protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+            {
+                base.OnMouseClickLeftBase(sender, e);
+                if (e.handled) return;
+                _menu.ConfirmChoice(null);
+            }
+        }
+
+        public CardChooseMenu(int cardPoints, int fieldsChoices, int floatsChoices, int cardsCount, int rerolls) : base(ID, _prefab)
         {
             _cardPoints = cardPoints;
             _cardsCount = cardsCount;
@@ -247,6 +289,8 @@ namespace Game.Menus
             _cardsParent = Transform.Find("Cards");
             _headerTextMesh = Transform.Find<TextMeshPro>("Header text");
             _descTextMesh = Transform.Find<TextMeshPro>("Desc text");
+            _rerollButton = new RerollButtonDrawer(this);
+            _declineButton = new DeclineButtonDrawer(this);
             _arrows = new ArrowsAnim[]
             {
                 new(Transform.Find("Arrows 1"), 50, -3.6f, 3.68f),
@@ -267,7 +311,14 @@ namespace Game.Menus
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Kill();
         }
-
+        public override void SetColliders(bool value)
+        {
+            base.SetColliders(value);
+            foreach (CardToChoose card in _cards)
+                card.Drawer?.SetCollider(value);
+            _rerollButton.SetCollider(value && _rerollsLeft > 0);
+            _declineButton.SetCollider(value);
+        }
         public override void WriteDesc(string text)
         {
             base.WriteDesc(text);
@@ -305,6 +356,50 @@ namespace Game.Menus
             }
             else throw new Exception("There are no card choices left to generate cards for.");
         }
+        async void ConfirmChoice(TableCard? chosenCard)
+        {
+            if (AllChoicesLeft <= 0)
+                return;
+
+            SetColliders(false);
+            if (chosenCard != null)
+            {
+                if (chosenCard.Drawer.Outline.GetColor().a == 0)
+                    chosenCard.Drawer.Outline.SetColor(Color.white);
+                chosenCard.Drawer.HighlightOutline(chosenCard.Drawer.Outline.GetColor());
+
+                Card data = chosenCard.Data;
+                if (data.isField)
+                     Player.Deck.fieldCards.Add((FieldCard)data);
+                else Player.Deck.floatCards.Add((FloatCard)data);
+                await UniTask.Delay(1500);
+            }
+
+            if (_cardsAreFields)
+                 _fieldsChoicesLeft--;
+            else _floatsChoicesLeft--;
+            
+            await HideCards();
+            if (AllChoicesLeft <= 0)
+            {
+                CloseAnimated();
+                return;
+            }
+
+            await ShowCards();
+            SetColliders(true);
+        }
+        async void Reroll()
+        {
+            if (_rerollsLeft <= 0)
+                return;
+
+            _rerollsLeft--;
+            SetColliders(false);
+            await HideCards();
+            await ShowCards();
+            SetColliders(true);
+        }
 
         public async UniTask ShowCards()
         {
@@ -314,9 +409,10 @@ namespace Game.Menus
             if (_cardsAreShown) return;
             _cardsAreShown = true;
 
-            Tween lastTween = Utils.emptyTween;
+            Tween lastTween = null;
             Card[] generatedCards = GenerateCardsToChoose();
             _cards = new CardToChoose[generatedCards.Length];
+            _cardsAreFields = generatedCards[0].isField;
 
             for (int i = 0; i < generatedCards.Length; i++)
             {
@@ -338,7 +434,7 @@ namespace Game.Menus
             if (!_cardsAreShown) return;
             _cardsAreShown = false;
 
-            Tween lastTween = Utils.emptyTween;
+            Tween lastTween = null;
             foreach (CardToChoose card in _cards)
                 lastTween = card.AnimHide();
 

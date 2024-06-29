@@ -14,13 +14,8 @@ namespace Game.Cards
     /// </summary>
     public class TableFieldCardDrawer : TableCardDrawer
     {
-        const float BG_ALPHA_MAX = 0.8f;
-
         public TableTraitListSetDrawer Traits => attached.Traits.Drawer;
         public readonly new TableFieldCard attached;
-
-        readonly SpriteRenderer _bgRenderer;
-        Tween _bgTween;
 
         public TableFieldCardDrawer(TableFieldCard card, Transform parent) : base(card, parent)
         {
@@ -34,9 +29,6 @@ namespace Game.Cards
 
             OnMouseScrollUp += OnMouseScrollUpBase;
             OnMouseScrollDown += OnMouseScrollDownBase;
-
-            _bgRenderer = transform.Find<SpriteRenderer>("BG");
-            _bgTween = Utils.emptyTween;
 
             RedrawHealth(card.Data.health, true);
             RedrawStrength(card.Data.strength, true);
@@ -52,21 +44,16 @@ namespace Game.Cards
         public override void SetSortingOrder(int value, bool asDefault = false)
         {
             base.SetSortingOrder(value, asDefault);
-            _bgRenderer.sortingOrder = value + 2;
             Traits?.SetSortingOrder(value + 3);
         }
         public override void SetAlpha(float value)
         {
             base.SetAlpha(value);
-            if (_bgRenderer.color.a != 0)
-                _bgRenderer.SetAlpha(value * BG_ALPHA_MAX);
             Traits.SetAlpha(value);
         }
         public override void SetColor(Color value)
         {
             base.SetColor(value);
-            if (_bgRenderer.color.a != 0)
-                _bgRenderer.color = value * BG_ALPHA_MAX;
             Traits.SetColor(value);
         }
 
@@ -116,28 +103,6 @@ namespace Game.Cards
             upperRightIcon.RedrawChunks(moxie);
         }
 
-        public void ShowBg()
-        {
-            _bgTween.Kill();
-            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(BG_ALPHA_MAX), 0.25f);
-        }
-        public void HideBg()
-        {
-            _bgTween.Kill();
-            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(0f), 0.25f);
-        }
-
-        public void ShowBgInstantly()
-        {
-            _bgTween.Kill();
-            _bgRenderer.color = Color.white.WithAlpha(BG_ALPHA_MAX);
-        }
-        public void HideBgInstantly()
-        {
-            _bgTween.Kill();
-            _bgRenderer.color = Color.white.WithAlpha(0f);
-        }
-
         protected virtual bool RedrawRangeFlipY() => true;
         protected override void DestroyInstantly()
         {
@@ -159,49 +124,49 @@ namespace Game.Cards
 
             int priceDefault = attached.Data.price.value;
             int priceCurrent = attached.price;
-            Tooltip.Show($"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault} ед.\nТекущее: {priceCurrent} ед.\n<color=grey><i>Стоимость: цена установки на территорию.");
+            Game.Tooltip.Show($"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault} ед.\nТекущее: {priceCurrent} ед.\n<color=grey><i>Стоимость: цена установки на территорию.");
         }
         protected override void OnUpperRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return; 
             int moxieDefault = attached.Data.moxie;
             int moxieCurrent = attached.moxie;
-            Tooltip.Show($"По умолчанию: {moxieDefault} ед.\nТекущее: {moxieCurrent} ед.\n<color=grey><i>Инициатива: определяет быстроту действий.");
+            Game.Tooltip.Show($"По умолчанию: {moxieDefault} ед.\nТекущее: {moxieCurrent} ед.\n<color=grey><i>Инициатива: определяет быстроту действий.");
         }
         protected override void OnLowerLeftIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return; 
             int healthDefault = attached.Data.health;
             int healthCurrent = attached.health;
-            Tooltip.Show($"По умолчанию: {healthDefault} ед.\nТекущее: {healthCurrent} ед.\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
+            Game.Tooltip.Show($"По умолчанию: {healthDefault} ед.\nТекущее: {healthCurrent} ед.\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
         }
         protected override void OnLowerRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return; 
             int strengthDefault = attached.Data.strength;
             int strengthCurrent = attached.strength;
-            Tooltip.Show($"По умолчанию: {strengthDefault} ед.\nТекущее: {strengthCurrent} ед.\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
+            Game.Tooltip.Show($"По умолчанию: {strengthDefault} ед.\nТекущее: {strengthCurrent} ед.\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
         }
 
         protected override void OnUpperLeftIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Hide();
+            if (e.handled) return;
+            Game.Tooltip.Hide();
         }
         protected override void OnUpperRightIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Hide();
+            if (e.handled) return;
+            Game.Tooltip.Hide();
         }
         protected override void OnLowerLeftIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Hide();
+            if (e.handled) return;
+            Game.Tooltip.Hide();
         }
         protected override void OnLowerRightIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
-            Tooltip.Hide();
+            if (e.handled) return;
+            Game.Tooltip.Hide();
         }
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)

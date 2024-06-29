@@ -59,7 +59,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await rArgs.strength.AdjustValueRel(-DAMAGE_REL_DECREASE * trait.GetStacks(), trait);
+            await rArgs.strength.AdjustValueScale(-DAMAGE_REL_DECREASE * trait.GetStacks(), trait);
         }
     }
 }

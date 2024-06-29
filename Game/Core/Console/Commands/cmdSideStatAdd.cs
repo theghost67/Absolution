@@ -35,8 +35,6 @@ namespace Game
                     return false;
                 if (!int.TryParse(str, out int parse))
                     return false;
-                if (parse <= 0)
-                    return false;
 
                 value = parse;
                 return true;
@@ -61,7 +59,7 @@ namespace Game
         {
             if (Menu.GetCurrent() is not IMenuWithTerritory menu || menu.Territory is not BattleTerritory territory)
             {
-                TableConsole.WriteLine("Текущее меню не содержит территорию сражения.", LogType.Error);
+                TableConsole.Log("Текущее меню не содержит территорию сражения.", LogType.Error);
                 return;
             }
 
@@ -78,8 +76,8 @@ namespace Game
                 _ => throw new System.NotSupportedException(),
             };
 
-            stat.AdjustValueAbs(value, null);
-            TableConsole.WriteLine($"Значение характеристики ({id}) стороны было изменено на {value} (от: null).", LogType.Log);
+            stat.AdjustValue(value, null);
+            TableConsole.Log($"Значение характеристики ({id}) стороны было изменено на {value} (от: null).", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

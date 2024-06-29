@@ -1,10 +1,9 @@
 ﻿using Game.Cards;
-using Game.Territories;
+using Game.Core;
+using Game.Menus;
 using GreenOne;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -13,7 +12,7 @@ namespace Game.Territories
     /// <summary>
     /// Класс, представляющий игровую территорию на столе из массива игровых полей (см. <see cref="TableField"/>).
     /// </summary>
-    public class TableTerritory : ITableDrawable, ICloneableWithArgs, IDisposable
+    public class TableTerritory : Unique, ITableDrawable, ITableLoggable, ICloneableWithArgs, IDisposable
     {
         public const int MAX_WIDTH = 5;
         public const int MAX_HEIGHT = 2;
@@ -23,19 +22,19 @@ namespace Game.Territories
         public event EventHandler OnDrawerCreated;
         public event EventHandler OnDrawerDestroyed;
 
-        public string Log => _logString;
         public Drawer Drawer => null;
-        public bool HasFieldDrawers => _hasFieldDrawers;
+        public bool DrawersAreNull => _fieldsDrawersAreNull;
+
+        public string TableName => "Территория" + (_fieldsDrawersAreNull ? " (виртуальная)" : "");
+        public string TableNameDebug => $"{Menu.GetCurrent().Id}/territory+{GuidStr}";
 
         public readonly int2 grid;
         public readonly Transform transform;
         public readonly Transform transformForFields;
 
-        readonly TableField[,] _fields;
         readonly AlignSettings _alignSettings;
-        StringBuilder _logBuilder;
-        string _logString;
-        bool _hasFieldDrawers;
+        readonly TableField[,] _fields;
+        bool _fieldsDrawersAreNull;
 
         public TableTerritory(int2 grid, Transform parent, bool createFields = true, bool withDrawers = true)
         {
@@ -49,13 +48,13 @@ namespace Game.Territories
             transform = parent.CreateEmptyObject("Territory");
             transformForFields = transform.CreateEmptyObject("Fields");
 
-            _fields = new TableField[grid.x, grid.y];
-            _hasFieldDrawers = withDrawers;
             _alignSettings = new AlignSettings(Vector2.zero, AlignAnchor.MiddleCenter, alignDistance, true, grid.x);
-            _logBuilder = new StringBuilder();
+            _fields = new TableField[grid.x, grid.y];
+            _fieldsDrawersAreNull = !withDrawers;
 
             if (createFields) 
                 CreateFields();
+            TableConsole.LogToFile($"--------- {TableNameDebug} CREATED ---------");
         }
         protected TableTerritory(TableTerritory src, TableTerritoryCloneArgs args)
         {
@@ -65,25 +64,24 @@ namespace Game.Territories
             grid = src.grid;
 
             _fields = new TableField[grid.x, grid.y];
-            _hasFieldDrawers = false;
+            _fieldsDrawersAreNull = true;
             _alignSettings = src._alignSettings;
-            _logBuilder = new StringBuilder(src._logBuilder.ToString());
-            _logBuilder.AppendLine("/// КЛОН ///");
 
             args.AddOnClonedAction(src.GetType(), typeof(TableTerritory), () =>
             {
                 CloneFields(src, args);
                 args.OnTerritoryReadyInvoke(this);
             });
+            TableConsole.LogToFile($"--------- {TableNameDebug} CREATED ---------");
         }
 
         public virtual void Dispose()
         {
-            _hasFieldDrawers = false;
-
+            if (_fieldsDrawersAreNull)
+                TableConsole.LogToFile($"--------- {TableNameDebug} DISPOSED ---------");
+            _fieldsDrawersAreNull = true;
             foreach (TableField field in _fields)
                 field?.Dispose();
-
             if (transform != null)
                 transform.gameObject.Destroy();
         }
@@ -94,25 +92,15 @@ namespace Game.Territories
             else return null;
         }
 
-        public virtual void WriteLog(string text, bool isForDebug = false)
-        {
-            _logBuilder.AppendLine(text);
-            _logString = _logBuilder.ToString();
-        }
-        public void WriteLogForDebug(string text)
-        {
-            WriteLog(text, isForDebug: true);
-        }
-
         public void CreateDrawer(Transform parent)
         {
-            _hasFieldDrawers = true;
+            _fieldsDrawersAreNull = false;
             foreach (TableField field in Fields())
                 field.CreateDrawer(transform);
         }
         public void DestroyDrawer(bool instantly)
         {
-            _hasFieldDrawers = false;
+            _fieldsDrawersAreNull = true;
             foreach (TableField field in Fields())
                 field.DestroyDrawer(instantly);
         }
@@ -121,28 +109,19 @@ namespace Game.Territories
         {
             foreach (TableField field in Fields())
             {
-                if (!field.Drawer.IsDestroyed)
-                    field.Drawer.SetCollider(value);
-
-                if (field.Card != null && !field.Card.Drawer.IsDestroyed)
-                    field.Card.Drawer.SetCollider(value);
+                field.Drawer?.SetCollider(value);
+                field.Card?.Drawer?.SetCollider(value);
             }
         }
         public void SetFieldsColliders(bool value)
         {
             foreach (TableField field in Fields())
-            {
-                if (!field.Drawer.IsDestroyed)
-                    field.Drawer.SetCollider(value);
-            }
+                field.Drawer?.SetCollider(value);
         }
         public void SetFieldsHighlight(bool value)
         {
             foreach (TableField field in Fields())
-            {
-                if (!field.Drawer.IsDestroyed)
-                    field.Drawer.SetHighlight(value);
-            }
+                field.Drawer?.SetHighlight(value);
         }
         public void SetCardsColliders(bool value)
         {
@@ -242,12 +221,11 @@ namespace Game.Territories
 
         protected virtual TableField FieldCreator(int x, int y)
         {
-            return new TableField(this, new int2(x, y), transformForFields, HasFieldDrawers);
+            return new TableField(this, new int2(x, y), transformForFields, !DrawersAreNull);
         }
         protected virtual TableField FieldCloner(TableField src, TableTerritoryCloneArgs args)
         {
-            FieldCard srcFieldCardDataClone = (FieldCard)src.Card.Data.Clone();
-            TableFieldCloneArgs fieldCArgs = new(srcFieldCardDataClone, args);
+            TableFieldCloneArgs fieldCArgs = new(this, args);
             return (TableField)src.Clone(fieldCArgs);
         }
 

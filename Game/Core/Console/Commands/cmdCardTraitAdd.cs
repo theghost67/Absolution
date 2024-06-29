@@ -36,8 +36,6 @@ namespace Game
                     return false;
                 if (!int.TryParse(str, out int parse))
                     return false;
-                if (parse <= 0)
-                    return false;
 
                 value = parse;
                 return true;
@@ -53,7 +51,7 @@ namespace Game
 
             if (drawer == null)
             {
-                TableConsole.WriteLine("Наведите курсор на карту, значение зарядов навыка которой нужно изменить.", LogType.Error);
+                TableConsole.Log("Наведите курсор на карту, значение зарядов навыка которой нужно изменить.", LogType.Error);
                 return;
             }
 
@@ -62,7 +60,7 @@ namespace Game
 
             if (!card.Data.isField)
             {
-                TableConsole.WriteLine($"Карты способностей не могут иметь заряды навыков.", LogType.Error);
+                TableConsole.Log($"Карты способностей не могут иметь заряды навыков.", LogType.Error);
                 return;
             }
 
@@ -71,7 +69,7 @@ namespace Game
             if (trait.isPassive)
                  fieldCard.Traits.Passives.AdjustStacks(id, value, null);
             else fieldCard.Traits.Actives.AdjustStacks(id, value, null);
-            TableConsole.WriteLine($"Заряды навыка ({id}) карты были изменена на {value} (от: null).", LogType.Log);
+            TableConsole.Log($"Заряды навыка ({id}) карты были изменена на {value} (от: null).", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

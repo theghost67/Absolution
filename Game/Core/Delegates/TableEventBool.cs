@@ -10,7 +10,7 @@ namespace Game
 
     /// <summary>
     /// Событие с уникальными делегатами типа <see cref="IdEventFuncHandlerAsync{bool}"/> (с возвратом <see cref="bool"/>) и приоритетами.<br/>
-    /// Вызываемые делегаты являются асихнронными, позволяя выполнять их последовательно.<br/>
+    /// Вызываемые делегаты являются асинхронными, позволяя выполнять их последовательно.<br/>
     /// Вызов события добавляет его в <see cref="TableEventManager"/> до момента завершения вызова.
     /// </summary>
     public class TableEventBool : IdDelegate<IdEventFuncHandlerAsync<bool>>, IIdEventBoolAsync
@@ -107,7 +107,7 @@ namespace Game
     }
     /// <summary>
     /// Событие с уникальными делегатами типа <see cref="IdEventFuncHandlerAsync{bool, T}"/> (с возвратом <see cref="bool"/> и параметром <typeparamref name="T"/>) и приоритетами.<br/>
-    /// Вызываемые делегаты добавляются в очередь <see cref="TableQueue"/>, позволяя выполнять их последовательно.
+    /// Вызываемые делегаты являются асинхронными, позволяя выполнять их последовательно.<br/>
     /// Вызов события добавляет его в <see cref="TableEventManager"/> до момента завершения вызова.
     /// </summary>
     public class TableEventBool<T> : IdDelegate<IdEventFuncHandlerAsync<bool, T>>, IIdEventBoolAsync<T>

@@ -18,8 +18,11 @@ namespace Game.Cards
     {
         public const int WIDTH = 74;
         public const int HEIGHT = 112;
+        const float BG_ALPHA_MAX = 0.8f;
 
         public bool IgnoreFirstMouseEnter { get; set; }
+        public bool BgIsVisible => _bgRenderer.color.a != 0;
+
         public SpriteRendererOutline Outline => _outline;
         protected override SpriteRenderer SelectableRenderer => _spriteRenderer;
 
@@ -50,7 +53,10 @@ namespace Game.Cards
         readonly TextMeshPro _headerTextMesh;
         readonly TextMeshPro _subheaderTextMesh;
 
-        SpriteRendererOutline _outline;
+        readonly SpriteRenderer _bgRenderer;
+        readonly SpriteRendererOutline _outline;
+
+        Tween _bgTween;
         Tween _headerTween;
 
         protected enum OutlineType
@@ -87,6 +93,7 @@ namespace Game.Cards
             _headerTextMesh = transform.Find<TextMeshPro>("Header");
             _subheaderTextMesh = transform.Find<TextMeshPro>("Subheader");
             _portraitRenderer = gameObject.Find<SpriteRenderer>("Portrait");
+            _bgRenderer = transform.Find<SpriteRenderer>("BG");
             _outline = new SpriteRendererOutline(_spriteRenderer, paletteSupport: true);
 
             upperLeftIcon = new TableCardIconDrawer(this, transform.Find("Upper left icon"), TableCardIconType.Chunks);
@@ -122,6 +129,7 @@ namespace Game.Cards
             _portraitRenderer.sortingOrder = overlapOrder;
             _headerTextMesh.sortingOrder = overlapOrder;
             _subheaderTextMesh.sortingOrder = overlapOrder;
+            _bgRenderer.sortingOrder = overlapOrder + 1;
 
             upperLeftIcon.SetSortingOrder(overlapOrder);
             upperRightIcon.SetSortingOrder(overlapOrder);
@@ -141,6 +149,9 @@ namespace Game.Cards
         {
             base.SetAlpha(value);
 
+            if (_bgRenderer.color.a != 0)
+                _bgRenderer.SetAlpha(value * BG_ALPHA_MAX);
+
             upperLeftIcon.SetAlpha(value);
             upperRightIcon.SetAlpha(value);
             lowerLeftIcon.SetAlpha(value);
@@ -154,6 +165,9 @@ namespace Game.Cards
         public override void SetColor(Color value)
         {
             base.SetColor(value);
+
+            if (_bgRenderer.color.a != 0)
+                _bgRenderer.color = value * BG_ALPHA_MAX;
 
             upperLeftIcon.SetColor(value);
             upperRightIcon.SetColor(value);
@@ -221,35 +235,26 @@ namespace Game.Cards
             upperLeftIcon.RedrawSprite(currency == CardBrowser.GetCurrency("gold") ? uGoldIconSprite : uEtherIconSprite);
         }
 
-        protected void RedrawOutline()
+        public void ShowBg()
         {
-            const float DURATION = 1.5f;
-            switch (GetOutlineType())
-            {
-                case OutlineType.Passive: Outline.TweenColor(_outlineDimPassiveColor, DURATION); break;
-                case OutlineType.Active: Outline.TweenColor(_outlineDimActiveColor, DURATION); break;
-                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, DURATION, DURATION); break;
-
-                default:
-                    if (Outline.GetColor().a != 0)
-                        Outline.TweenColor(Color.clear, DURATION);
-                    break;
-            }
+            _bgTween.Kill();
+            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(BG_ALPHA_MAX), 0.25f);
         }
-        protected void RedrawOutlineInstantly()
+        public void HideBg()
         {
-            const float DURATION = 1.5f;
-            switch (GetOutlineType())
-            {
-                case OutlineType.Passive: Outline.SetColor(_outlineDimPassiveColor); break;
-                case OutlineType.Active: Outline.SetColor(_outlineDimActiveColor); break;
-                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, 0, DURATION); break;
+            _bgTween.Kill();
+            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(0f), 0.25f);
+        }
 
-                default:
-                    if (Outline.GetColor().a != 0)
-                        Outline.SetColor(Color.clear);
-                    break;
-            }
+        public void ShowBgInstantly()
+        {
+            _bgTween.Kill();
+            _bgRenderer.color = Color.white.WithAlpha(BG_ALPHA_MAX);
+        }
+        public void HideBgInstantly()
+        {
+            _bgTween.Kill();
+            _bgRenderer.color = Color.white.WithAlpha(0f);
         }
 
         public async UniTask RedrawHeaderTypingWithReset(params string[] texts)
@@ -297,6 +302,37 @@ namespace Game.Cards
         protected virtual OutlineType GetOutlineType()
         {
             return OutlineType.None;
+        }
+
+        protected void RedrawOutline()
+        {
+            const float DURATION = 1.5f;
+            switch (GetOutlineType())
+            {
+                case OutlineType.Passive: Outline.TweenColor(_outlineDimPassiveColor, DURATION); break;
+                case OutlineType.Active: Outline.TweenColor(_outlineDimActiveColor, DURATION); break;
+                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, DURATION, DURATION); break;
+
+                default:
+                    if (Outline.GetColor().a != 0)
+                        Outline.TweenColor(Color.clear, DURATION);
+                    break;
+            }
+        }
+        protected void RedrawOutlineInstantly()
+        {
+            const float DURATION = 1.5f;
+            switch (GetOutlineType())
+            {
+                case OutlineType.Passive: Outline.SetColor(_outlineDimPassiveColor); break;
+                case OutlineType.Active: Outline.SetColor(_outlineDimActiveColor); break;
+                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, 0, DURATION); break;
+
+                default:
+                    if (Outline.GetColor().a != 0)
+                        Outline.SetColor(Color.clear);
+                    break;
+            }
         }
 
         protected virtual void OnUpperLeftIconMouseEnter(object sender, DrawerMouseEventArgs e) { }

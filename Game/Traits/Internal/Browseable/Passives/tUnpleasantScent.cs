@@ -62,7 +62,7 @@ namespace Game.Traits
             if (killer == null) return;
 
             await trait.AnimActivation();
-            await killer.moxie.AdjustValueAbs(-MOXIE_DECREASE * trait.GetStacks(), trait);
+            await killer.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait);
         }
     }
 }

@@ -38,7 +38,7 @@ namespace Game.Territories
             _sender = sender;
             _receivers = new List<BattleField>(receivers);
 
-            this.strength = new TableStat(this, strength);
+            this.strength = new TableStat(nameof(this.strength), this, strength);
             this.strength.OnPostSet.Add(OnStrengthPostSet);
 
             this.manualAim = manualAim;
