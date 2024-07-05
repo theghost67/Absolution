@@ -1,5 +1,4 @@
-﻿using Game.Cards;
-using Game.Effects;
+﻿using Game.Effects;
 using Game.Sleeves;
 using UnityEngine;
 
@@ -26,28 +25,20 @@ namespace Game.Traits
         {
             base.OnMouseEnterBase(sender, e);
             if (e.handled) return;
-
-            BattleFieldCard owner = _attachedTrait.Owner;
-            if (owner == null) return;
-            if (owner.Field != null)
-                _attachedTrait.Area.CreateTargetsHighlight();
+            _attachedTrait.Area.CreateTargetsHighlight();
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseLeaveBase(sender, e);
             if (e.handled) return;
-
-            BattleFieldCard owner = _attachedTrait.Owner;
-            if (owner == null) return;
-            if (owner.Field != null)
-                _attachedTrait.Area.DestroyTargetsHighlight();
+            _attachedTrait.Area.DestroyTargetsHighlight();
         }
         protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseClickLeftBase(sender, e);
             if (e.handled) return;
 
-            bool used = _attachedTrait.TryUseWithAim(attached.Trait.Territory.player);
+            bool used = _attachedTrait.TryUseWithAim(attached.Trait.Territory.Player);
             if (!used)
                 transform.DOAShake();
             else if (_attachedTrait.Owner is ITableSleeveCard sleeveCard)

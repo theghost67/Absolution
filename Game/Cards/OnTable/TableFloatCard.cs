@@ -10,26 +10,23 @@ namespace Game.Cards
     public class TableFloatCard : TableCard
     {
         public new FloatCard Data => _data;
-        public new TableFloatCardDrawer Drawer => _drawer;
+        public new TableFloatCardDrawer Drawer => ((TableObject)this).Drawer as TableFloatCardDrawer;
         public override TableFinder Finder => _finder;
 
         readonly FloatCard _data;
         readonly TableFinder _finder;
-        TableFloatCardDrawer _drawer;
-        bool _isUsing;
 
-        public TableFloatCard(FloatCard data, Transform parent, bool withDrawer = true) : base(data, parent, withDrawer: false)
+        public TableFloatCard(FloatCard data, Transform parent) : base(data, parent)
         {
             _data = data;
             _finder = new TableFloatCardFinder(this);
-
-            if (withDrawer)
-                CreateDrawer(parent);
+            TryOnInstantiatedAction(GetType(), typeof(TableFloatCard));
         }
         protected TableFloatCard(TableFloatCard src, TableFloatCardCloneArgs args) : base(src, args)
         {
             _data = args.srcCardDataClone;
             _finder = new TableFloatCardFinder(this);
+            TryOnInstantiatedAction(GetType(), typeof(TableFloatCard));
         }
 
         public override object Clone(CloneArgs args)
@@ -42,7 +39,7 @@ namespace Game.Cards
         public bool TryUse(TableFloatCardUseArgs e)
         {
             if (!IsUsable(e)) return false;
-            if (_drawer == null)
+            if (Drawer == null)
             {
                 TableEventManager.Add();
                 OnUsed(e).ContinueWith(TableEventManager.Remove);
@@ -58,22 +55,11 @@ namespace Game.Cards
             return _data.IsUsable(e);
         }
 
-        public async UniTask AwaitUse()
-        {
-            while (_isUsing)
-                await UniTask.Yield();
-        }
         protected virtual UniTask OnUsed(TableFloatCardUseArgs e)
         {
             return _data.OnUse(e);
         }
-
-        protected override void DrawerSetter(TableCardDrawer value)
-        {
-            base.DrawerSetter(value);
-            _drawer = (TableFloatCardDrawer)value;
-        }
-        protected override TableCardDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             TableFloatCardDrawer drawer = new(this, parent);
             drawer.SetSortingOrder(10, asDefault: true);
@@ -83,9 +69,10 @@ namespace Game.Cards
         // TODO: improve
         Tween AnimUse()
         {
-            _drawer.SetCollider(false);
-            _drawer.SetSortingAsTop();
-            return _drawer.AnimExplosion();
+            TableFloatCardDrawer drawer = Drawer;
+            drawer.SetCollider(false);
+            drawer.SetSortingAsTop();
+            return drawer.AnimExplosion();
         }
     }
 }

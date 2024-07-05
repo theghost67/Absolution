@@ -9,9 +9,14 @@ namespace Game.Cards
     public class TableFloatCardDrawer : TableCardDrawer
     {
         public readonly new TableFloatCard attached;
-        public TableFloatCardDrawer(TableFloatCard card, Transform parent) : base(card, parent)
+        public TableFloatCardDrawer(TableFloatCard card, Transform parent) : base(card, parent, redrawIcons: false)
         {
             attached = card;
+            RedrawIcons();
+
+            moxieIcon.RedrawValueAsNull();
+            healthIcon.RedrawValueAsNull();
+            strengthIcon.RedrawValueAsNull();
             RedrawSubheader("Способность");
         }
 
@@ -23,43 +28,43 @@ namespace Game.Cards
 
             int priceDefault = attached.Data.price.value;
             int priceCurrent = attached.price;
-            Game.Tooltip.Show($"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault} ед.\nТекущее: {priceCurrent} ед.\n<color=grey><i>Стоимость: цена установки на территорию.");
+            Tooltip.Show($"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault} ед.\nТекущее: {priceCurrent} ед.\n<color=grey><i>Стоимость: цена установки на территорию.");
         }
         protected override void OnUpperRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Инициатива: определяет быстроту действий.");
+            Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Инициатива: определяет быстроту действий.");
         }
         protected override void OnLowerLeftIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
+            Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
         }
         protected override void OnLowerRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
+            Tooltip.Show($"Отсутствует у карт способностей\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
         }
 
         protected override void OnUpperLeftIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Hide();
+            Tooltip.Hide();
         }
         protected override void OnUpperRightIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Hide();
+            Tooltip.Hide();
         }
         protected override void OnLowerLeftIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Hide();
+            Tooltip.Hide();
         }
         protected override void OnLowerRightIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Hide();
+            Tooltip.Hide();
         }
     }
 }

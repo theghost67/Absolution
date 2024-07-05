@@ -1,14 +1,12 @@
-﻿using System;
-
-namespace Game.Cards
+﻿namespace Game.Cards
 {
     /// <summary>
     /// Реализует объект стола как карту на столе.
     /// </summary>
-    public interface ITableCard : ITableDrawable, ITableEntrySource, ICloneableWithArgs, IUnique, IDisposable
+    public interface ITableCard : ITableObject, ITableEntrySource, ICloneableWithArgs
     {
         public Card Data { get; }
         public new TableCardDrawer Drawer { get; }
-        Drawer ITableDrawable.Drawer => Drawer;
+        Drawer ITableObject.Drawer => Drawer;
     }
 }

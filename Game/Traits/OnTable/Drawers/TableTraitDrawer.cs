@@ -22,7 +22,7 @@ namespace Game.Traits
 
         static TableTraitDrawer()
         {
-            _prefab = Resources.Load<GameObject>("Prefabs/Trait");
+            _prefab = Resources.Load<GameObject>("Prefabs/Traits/Trait");
         }
         public TableTraitDrawer(TableTrait trait, Transform parent) : base(trait, _prefab, parent)
         {

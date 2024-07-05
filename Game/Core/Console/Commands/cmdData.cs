@@ -12,7 +12,12 @@ namespace Game
         public cmdData() : base(ID, DESC) { }
         protected override void Execute(CommandArgInputDict args)
         {
-            Process.Start(Application.persistentDataPath);
+            try
+            {
+                ProcessStartInfo info = new(Application.persistentDataPath) { UseShellExecute = true };
+                Process.Start(info);
+            }
+            catch { TableConsole.Log("Не удалось запустить процесс.", LogType.Error); }
         }
     }
 }

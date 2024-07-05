@@ -25,30 +25,26 @@ namespace Game.Menus
         Tween _tween;
         private MenuTransit() : base(ID, _prefab) { }
 
+        // call to?.SetColliders(true) in TransitToThis
+        // call from?.SetColliders(false) in TransitFromThis
         public static UniTask Between(Menu? from, Menu? to, Action? action = null)
         {
-            return _instance.BetweenInternal(from, to, action, false);
+            return _instance.BetweenInternal(from, to, action);
         }
-        public static UniTask BetweenWithColliders(Menu? from, Menu? to, Action? action = null)
+        async UniTask BetweenInternal(Menu? from, Menu? to, Action? action)
         {
-            return _instance.BetweenInternal(from, to, null, true);
-        }
-        async UniTask BetweenInternal(Menu from, Menu to, Action action, bool setColliders)
-        {
-            from?.SetColliders(false);
-            await OpenAnimated();
+            from?.OnTransitStart();
+            await AnimShow();
             await UniTask.Delay((int)(DURATION * 1000));
             from?.CloseInstantly();
             to?.OpenInstantly();
-            if (setColliders)
-                to?.SetColliders(false);
+            to?.SetColliders(false);
             action?.Invoke();
-            await CloseAnimated();
-            if (setColliders)
-                to?.SetColliders(true);
+            await AnimHide();
+            to?.OnTransitEnd();
         }
 
-        public override UniTask OpenAnimated()
+        public UniTask AnimShow()
         {
             OpenInstantly();
 
@@ -56,7 +52,7 @@ namespace Game.Menus
             _tween = Transform.DOLocalMoveY(Y_TO_OPENED, DURATION).SetEase(Ease.InOutQuad);
             return _tween.AsyncWaitForCompletion();
         }
-        public override UniTask CloseAnimated()
+        public UniTask AnimHide()
         {
             _tween.Kill();
             _tween = Transform.DOLocalMoveY(Y_TO_CLOSED, DURATION).SetEase(Ease.InOutQuad).OnComplete(OnCloseTweenComplete);

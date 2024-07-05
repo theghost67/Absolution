@@ -10,27 +10,22 @@ namespace Game.Territories
     /// </summary>
     public class BattleField : TableField, IBattleEntity
     {
-        public new BattleFieldCard Card => _card;
-        public new BattleFieldDrawer Drawer => _drawer;
+        public new BattleFieldCard Card => base.Card as BattleFieldCard;
+        public new BattleFieldDrawer Drawer => ((TableObject)this).Drawer as BattleFieldDrawer;
         public new BattleTerritory Territory => _side.Territory;
         public BattleSide Side => _side;
-
         readonly BattleSide _side;
-        BattleFieldCard _card;
-        BattleFieldDrawer _drawer;
 
-        public BattleField(BattleSide side, int2 position, Transform parent, bool withDrawer = true) : base(side.Territory, position, null, withDrawer: false)
+        public BattleField(BattleSide side, int2 position, Transform parent) : base(side.Territory, position, parent)
         {
             _side = side;
             health.OnPostSet.Add(OnHealthPostSet);
-
-            if (withDrawer)
-                CreateDrawer(parent);
+            TryOnInstantiatedAction(GetType(), typeof(BattleField));
         }
         public BattleField(BattleField src, BattleFieldCloneArgs args) : base(src, args) 
         {
             _side = args.srcFieldSideClone;
-            args.TryOnClonedAction(src.GetType(), typeof(BattleField));
+            TryOnInstantiatedAction(GetType(), typeof(BattleField));
         }
 
         public override object Clone(CloneArgs args)
@@ -40,19 +35,9 @@ namespace Game.Territories
             else return null;
         }
 
-        protected override void DrawerSetter(TableFieldDrawer value)
-        {
-            base.DrawerSetter(value);
-            _drawer = (BattleFieldDrawer)value;
-        }
-        protected override TableFieldDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             return new BattleFieldDrawer(this, parent);
-        }
-        protected override void CardBaseSetter(TableFieldCard value)
-        {
-            base.CardBaseSetter(value);
-            _card = (BattleFieldCard)value;
         }
         protected override TableFieldCard CardCloner(TableFieldCard src, TableFieldCloneArgs args)
         {

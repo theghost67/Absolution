@@ -10,27 +10,19 @@ namespace Game.Traits
     public class BattleTraitListSet : TableTraitListSet, IEnumerable<IBattleTraitListElement>
     {
         public new BattleFieldCard Owner => _owner;
-        public new BattlePassiveTraitList Passives => _passives;
-        public new BattleActiveTraitList Actives => _actives;
-
+        public new BattlePassiveTraitList Passives => base.Passives as BattlePassiveTraitList;
+        public new BattleActiveTraitList Actives => base.Actives as BattleActiveTraitList;
         readonly BattleFieldCard _owner;
-        BattlePassiveTraitList _passives;
-        BattleActiveTraitList _actives;
 
         public BattleTraitListSet(BattleFieldCard owner) : base(owner)
         {
             _owner = owner;
-            _passives = (BattlePassiveTraitList)base.Passives;
-            _actives = (BattleActiveTraitList)base.Actives;
+            TryOnInstantiatedAction(GetType(), typeof(BattleTraitListSet));
         }
         public BattleTraitListSet(BattleTraitListSet src, BattleTraitListSetCloneArgs args) : base(src, args)
         {
             _owner = args.srcSetOwnerClone;
-            args.AddOnClonedAction(src.GetType(), typeof(BattleTraitListSet), () =>
-            {
-                _passives = (BattlePassiveTraitList)base.Passives;
-                _actives = (BattleActiveTraitList)base.Actives;
-            });
+            TryOnInstantiatedAction(GetType(), typeof(BattleTraitListSet));
         }
 
         public override object Clone(CloneArgs args)
@@ -42,9 +34,9 @@ namespace Game.Traits
 
         public new IEnumerator<IBattleTraitListElement> GetEnumerator()
         {
-            foreach (BattlePassiveTraitListElement element in _passives)
+            foreach (BattlePassiveTraitListElement element in Passives)
                 yield return element;
-            foreach (BattleActiveTraitListElement element in _actives)
+            foreach (BattleActiveTraitListElement element in Actives)
                 yield return element;
         }
 

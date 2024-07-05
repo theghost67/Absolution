@@ -129,7 +129,7 @@ namespace Game.Traits
         }
         public void RedrawStacksAsDefault()
         {
-            RedrawStacks(attached.Trait.Owner.Data.traits[attached.Trait.Data.id].Stacks);
+            RedrawStacks(attached.Trait.Owner.Data.traits[attached.Trait.Data.id]?.Stacks ?? 0);
         }
 
         public void RedrawRarityIcon(Sprite sprite)

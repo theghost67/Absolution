@@ -207,7 +207,7 @@ namespace Game.Cards
 
         public static FieldCard ShuffleMainStats(this FieldCard card)
         {
-            if (Config.shufflePrice)
+            if (Global.shufflePrice)
                 card.price.value = Random.Range(0, 6);
             card.moxie = Random.Range(0, 6);
             return card;

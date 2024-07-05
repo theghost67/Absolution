@@ -12,23 +12,22 @@ namespace Game.Traits
     {
         public override TableFinder Finder => _finder;
         public new ActiveTrait Data => _data;
-        public new TableActiveTraitDrawer Drawer => _drawer;
+        public new TableActiveTraitDrawer Drawer => ((TableObject)this).Drawer as TableActiveTraitDrawer;
 
         readonly TableActiveTraitFinder _finder;
         readonly ActiveTrait _data;
-        TableActiveTraitDrawer _drawer;
 
-        public TableActiveTrait(ActiveTrait data, TableFieldCard owner, Transform parent, bool withDrawer = true) : base(data, owner, parent, withDrawer: false)
+        public TableActiveTrait(ActiveTrait data, TableFieldCard owner, Transform parent) : base(data, owner, parent)
         {
             _data = data;
             _finder = new TableActiveTraitFinder(this);
-            if (withDrawer)
-                CreateDrawer(parent);
+            TryOnInstantiatedAction(GetType(), typeof(TableActiveTrait));
         }
         protected TableActiveTrait(TableActiveTrait src, TableActiveTraitCloneArgs args) : base(src, args)
         {
             _data = args.srcTraitDataClone;
             _finder = new TableActiveTraitFinder(this);
+            TryOnInstantiatedAction(GetType(), typeof(TableActiveTrait));
         }
 
         public override object Clone(CloneArgs args)
@@ -61,12 +60,12 @@ namespace Game.Traits
             _data.OnUse(e).ContinueWith(TableEventManager.Remove);
             return true;
         }
-
-        protected override void DrawerSetter(TableTraitDrawer value)
+        public bool IsUsable(TableActiveTraitUseArgs e)
         {
-            _drawer = (TableActiveTraitDrawer)value;
+            return _data.IsUsable(e);
         }
-        protected override TableTraitDrawer DrawerCreator(Transform parent)
+
+        protected override Drawer DrawerCreator(Transform parent)
         {
             return new TableActiveTraitDrawer(this, parent);
         }

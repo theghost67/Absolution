@@ -5,7 +5,6 @@ using MyBox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
 
 namespace Game
@@ -33,10 +32,6 @@ namespace Game
             set => _blocksSelection = value;
         }
 
-        public Func<string> Tooltip 
-        {
-            set => _tooltipFunc = value;
-        }
         public bool ChangePointer
         {
             get => _changePointer;
@@ -416,6 +411,15 @@ namespace Game
                 gameObject.SetActive(value.a != 0);
         }
 
+        public void SetTooltip(string str)
+        {
+            _tooltipFunc = () => str;
+        }
+        public void SetTooltip(Func<string> func)
+        {
+            _tooltipFunc = func;
+        }
+
         public int GetSortingOrder()
         {
             return _sortingOrder;
@@ -456,14 +460,14 @@ namespace Game
         {
             if (e.handled) return;
             if (_tooltipFunc != null)
-                Game.Tooltip.Show(_tooltipFunc());
+                Tooltip.Show(_tooltipFunc());
         }
         protected virtual void OnMouseHoverBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e) 
         {
             if (e.handled) return;
             if (_tooltipFunc != null)
-                Game.Tooltip.Hide();
+                Tooltip.Hide();
         }
         protected virtual void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseClickRightBase(object sender, DrawerMouseEventArgs e) { }

@@ -66,7 +66,7 @@ namespace Game.Traits
         public Tween ShowStoredElements()
         {
             if (!elements.ContainsTraits) return _animAlphaTween;
-            if (gameObject.activeSelf && !_animAlphaTween.active && _animAlpha == 1) return _animAlphaTween;
+            if (gameObject.activeSelf && !_animAlphaTween.IsActive() && _animAlpha == 1) return _animAlphaTween;
 
             gameObject.SetActive(true);
             attached.Owner.Drawer.ShowBg();
@@ -77,7 +77,7 @@ namespace Game.Traits
         public Tween HideStoredElements()
         {
             if (!elements.ContainsTraits) return _animAlphaTween;
-            if (!gameObject.activeSelf || (!_animAlphaTween.active && _animAlpha == 0)) return _animAlphaTween;
+            if (!gameObject.activeSelf || (!_animAlphaTween.IsActive() && _animAlpha == 0)) return _animAlphaTween;
 
             attached.Owner.Drawer.HideBg();
             _animAlphaTween.Kill();

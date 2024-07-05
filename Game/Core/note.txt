@@ -1,1 +1,0 @@
-Side territory cloning occurs using BattleTerritory clone constructor, thus more derived constructor will not invoke. Rewrite?

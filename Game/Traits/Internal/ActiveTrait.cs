@@ -19,17 +19,21 @@ namespace Game.Traits
         }
 
         // see how weight threshold is used in BattleAI.CalculateWeightDeltas()
-        public virtual BattleWeight GetWeightDeltaUseThreshold(BattleActiveTrait trait) => new(0, 0.12f);
+        public virtual BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait) => new(0, 0.12f);
 
+        public virtual bool IsUsableInSleeve() => false;
         public virtual bool IsUsable(TableActiveTraitUseArgs e)
         {
             bool cooldown = e.trait.Storage.turnsDelay > 0;
             if (cooldown) return false;
 
+            bool usedInSleeve = (e.target == null) == IsUsableInSleeve();
+            if (!usedInSleeve) return false;
+
             if (e.isInBattle)
             {
                 IBattleTrait trait = (IBattleTrait)e.trait;
-                return trait.Side.isMe && trait.Territory.PhaseSide == trait.Side;
+                return trait.Territory.PhaseSide == trait.Side;
             }
             return true;
         }

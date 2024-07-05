@@ -1,19 +1,15 @@
-﻿using GreenOne;
-using System;
-using UnityEngine;
-
-namespace Game.Traits
+﻿namespace Game.Traits
 {
     /// <summary>
     /// Абстрактный класс, представляющий один из элементов списка трейтов на столе (см. <see cref="ITableTraitList"/>).
     /// </summary>
-    public abstract class TableTraitListElement : ITableTraitListElement
+    public abstract class TableTraitListElement : TableObject, ITableTraitListElement
     {
-        public event EventHandler OnDrawerCreated;
-        public event EventHandler OnDrawerDestroyed;
-
         public int Stacks { get => _stacks; }
-        public TableTraitListElementDrawer Drawer => _drawer;
+        public new TableTraitListElementDrawer Drawer => ((TableObject)this).Drawer as TableTraitListElementDrawer;
+
+        public override string TableName => _trait.TableName;
+        public override string TableNameDebug => _trait.TableNameDebug;
 
         public ITableTraitList List => _list;
         public ITableTrait Trait => _trait;
@@ -22,29 +18,23 @@ namespace Game.Traits
         readonly ITableTraitList _list;
         readonly ITableTrait _trait;
         readonly TableEntryDict _stacksEntries;
-
         int _stacks;
-        TableTraitListElementDrawer _drawer;
 
-        public TableTraitListElement(ITableTraitList list, ITableTrait trait, bool withDrawer = true)
+        public TableTraitListElement(ITableTraitList list, ITableTrait trait) : base(list.Set.Drawer?.transform)
         {
             _list = list;
             _trait = trait;
             _stacksEntries = new TableEntryDict();
-
-            if (withDrawer)
-                CreateDrawer(null);
+            TryOnInstantiatedAction(GetType(), typeof(TableTraitListElement));
         }
         protected TableTraitListElement(TableTraitListElement src, TableTraitListElementCloneArgs args)
         {
-            OnDrawerCreated = (EventHandler)src.OnDrawerCreated?.Clone();
-            OnDrawerDestroyed = (EventHandler)src.OnDrawerDestroyed?.Clone();
-
             _list = args.srcListClone;
             _trait = TraitCloner(src._trait, args);
 
             TableEntryDictCloneArgs entriesCArgs = new(args.terrCArgs);
             _stacksEntries = (TableEntryDict)src._stacksEntries.Clone(entriesCArgs);
+            TryOnInstantiatedAction(GetType(), typeof(TableTraitListElement));
         }
 
         public bool Equals(ITableTraitListElement other)
@@ -56,35 +46,14 @@ namespace Game.Traits
             return (_trait.Guid == trait.Guid) && (_trait.Owner.Guid == trait.Owner.Guid);
         }
 
-        public void CreateDrawer(Transform parent)
-        {
-            if (_drawer != null) return;
-            TableTraitListElementDrawer drawer = DrawerCreator(parent);
-            DrawerSetter(drawer);
-            OnDrawerCreated?.Invoke(this, EventArgs.Empty);
-        }
-        public void DestroyDrawer(bool instantly)
-        {
-            if (_drawer == null) return;
-            _drawer.TryDestroy(instantly);
-            DrawerSetter(null);
-            OnDrawerDestroyed?.Invoke(this, EventArgs.Empty);
-        }
-
         public void Dispose()
         {
             _stacksEntries.Clear();
             _trait.Dispose();
-            _drawer?.Dispose();
+            Drawer?.Dispose();
         }
         public abstract object Clone(CloneArgs args);
-
         protected abstract ITableTrait TraitCloner(ITableTrait src, TableTraitListElementCloneArgs args);
-        protected virtual void DrawerSetter(TableTraitListElementDrawer value)
-        {
-            _drawer = value;
-        }
-        protected abstract TableTraitListElementDrawer DrawerCreator(Transform parent);
 
         // NOTE 1: used only inside of the TableTraitList instance
         // NOTE 2: can be used for delta calculations (first call with positive value, second call with negative)

@@ -33,10 +33,10 @@ namespace Game.Cards
         protected static readonly Sprite lStrengthIconSprite;
 
         public readonly new TableCard attached;
-        public readonly TableCardIconDrawer upperLeftIcon;
-        public readonly TableCardIconDrawer upperRightIcon;
-        public readonly TableCardIconDrawer lowerLeftIcon;
-        public readonly TableCardIconDrawer lowerRightIcon;
+        public readonly TableCardUpperIconDrawer priceIcon;
+        public readonly TableCardUpperIconDrawer moxieIcon;
+        public readonly TableCardLowerIconDrawer healthIcon;
+        public readonly TableCardLowerIconDrawer strengthIcon;
 
         static readonly GameObject _prefab;
         static readonly Sprite _cardRarity1Sprite;
@@ -84,7 +84,7 @@ namespace Game.Cards
             OnPaletteColorChanged_Static(ColorPalette.ACTIVE_INDEX);
             ColorPalette.OnColorChanged += OnPaletteColorChanged_Static;
         }
-        public TableCardDrawer(TableCard card, Transform parent) : base(card, _prefab, parent)
+        public TableCardDrawer(TableCard card, Transform parent, bool redrawIcons) : base(card, _prefab, parent)
         {
             attached = card;
             gameObject.name = attached.Data.id;
@@ -96,28 +96,30 @@ namespace Game.Cards
             _bgRenderer = transform.Find<SpriteRenderer>("BG");
             _outline = new SpriteRendererOutline(_spriteRenderer, paletteSupport: true);
 
-            upperLeftIcon = new TableCardIconDrawer(this, transform.Find("Upper left icon"), TableCardIconType.Chunks);
-            upperLeftIcon.OnMouseEnter += OnUpperLeftIconMouseEnter;
-            upperLeftIcon.OnMouseLeave += OnUpperLeftIconMouseLeave;
+            priceIcon = new TableCardUpperIconDrawer(this, () => UpperLeftIconDisplayValue(), transform.Find("Upper left icon"));
+            priceIcon.OnMouseEnter += OnUpperLeftIconMouseEnter;
+            priceIcon.OnMouseLeave += OnUpperLeftIconMouseLeave;
 
-            upperRightIcon = new TableCardIconDrawer(this, transform.Find("Upper right icon"), TableCardIconType.Chunks);
-            upperRightIcon.OnMouseEnter += OnUpperRightIconMouseEnter;
-            upperRightIcon.OnMouseLeave += OnUpperRightIconMouseLeave;
+            moxieIcon = new TableCardUpperIconDrawer(this, () => UpperRightIconDisplayValue(), transform.Find("Upper right icon"));
+            moxieIcon.OnMouseEnter += OnUpperRightIconMouseEnter;
+            moxieIcon.OnMouseLeave += OnUpperRightIconMouseLeave;
 
-            lowerLeftIcon = new TableCardIconDrawer(this, transform.Find("Lower left icon"), TableCardIconType.Texts);
-            lowerLeftIcon.OnMouseEnter += OnLowerLeftIconMouseEnter;
-            lowerLeftIcon.OnMouseLeave += OnLowerLeftIconMouseLeave;
+            healthIcon = new TableCardLowerIconDrawer(this, () => LowerLeftIconDisplayValue(), transform.Find("Lower left icon"));
+            healthIcon.OnMouseEnter += OnLowerLeftIconMouseEnter;
+            healthIcon.OnMouseLeave += OnLowerLeftIconMouseLeave;
 
-            lowerRightIcon = new TableCardIconDrawer(this, transform.Find("Lower right icon"), TableCardIconType.Texts);
-            lowerRightIcon.OnMouseEnter += OnLowerRightIconMouseEnter;
-            lowerRightIcon.OnMouseLeave += OnLowerRightIconMouseLeave;
+            strengthIcon = new TableCardLowerIconDrawer(this, () => LowerRightIconDisplayValue(), transform.Find("Lower right icon"));
+            strengthIcon.OnMouseEnter += OnLowerRightIconMouseEnter;
+            strengthIcon.OnMouseLeave += OnLowerRightIconMouseLeave;
 
             ColorPalette.OnColorChanged += OnPaletteColorChanged;
             RedrawSpriteAsDefault();
             RedrawPortraitAsDefault();
             RedrawHeaderAsDefault();
             RedrawHeaderColor(Color.black);
-            RedrawPriceAsDefault();
+
+            if (redrawIcons)
+                RedrawIcons();
         }
 
         public override void SetSortingOrder(int value, bool asDefault = false)
@@ -131,19 +133,19 @@ namespace Game.Cards
             _subheaderTextMesh.sortingOrder = overlapOrder;
             _bgRenderer.sortingOrder = overlapOrder + 1;
 
-            upperLeftIcon.SetSortingOrder(overlapOrder);
-            upperRightIcon.SetSortingOrder(overlapOrder);
-            lowerLeftIcon.SetSortingOrder(overlapOrder);
-            lowerRightIcon.SetSortingOrder(overlapOrder);
+            priceIcon.SetSortingOrder(overlapOrder);
+            moxieIcon.SetSortingOrder(overlapOrder);
+            healthIcon.SetSortingOrder(overlapOrder);
+            strengthIcon.SetSortingOrder(overlapOrder);
         }
         public override void SetCollider(bool value)
         {
             base.SetCollider(value);
 
-            upperLeftIcon.SetCollider(value);
-            upperRightIcon.SetCollider(value);
-            lowerLeftIcon.SetCollider(value);
-            lowerRightIcon.SetCollider(value);
+            priceIcon.SetCollider(value);
+            moxieIcon.SetCollider(value);
+            healthIcon.SetCollider(value);
+            strengthIcon.SetCollider(value);
         }
         public override void SetAlpha(float value)
         {
@@ -152,10 +154,10 @@ namespace Game.Cards
             if (_bgRenderer.color.a != 0)
                 _bgRenderer.SetAlpha(value * BG_ALPHA_MAX);
 
-            upperLeftIcon.SetAlpha(value);
-            upperRightIcon.SetAlpha(value);
-            lowerLeftIcon.SetAlpha(value);
-            lowerRightIcon.SetAlpha(value);
+            priceIcon.SetAlpha(value);
+            moxieIcon.SetAlpha(value);
+            healthIcon.SetAlpha(value);
+            strengthIcon.SetAlpha(value);
 
             _portraitRenderer.SetAlpha(value);
             _spriteRenderer.SetAlpha(value);
@@ -169,10 +171,10 @@ namespace Game.Cards
             if (_bgRenderer.color.a != 0)
                 _bgRenderer.color = value * BG_ALPHA_MAX;
 
-            upperLeftIcon.SetColor(value);
-            upperRightIcon.SetColor(value);
-            lowerLeftIcon.SetColor(value);
-            lowerRightIcon.SetColor(value);
+            priceIcon.SetColor(value);
+            moxieIcon.SetColor(value);
+            healthIcon.SetColor(value);
+            strengthIcon.SetColor(value);
 
             _portraitRenderer.color = value;
             _spriteRenderer.color = value;
@@ -199,10 +201,6 @@ namespace Game.Cards
         {
             RedrawHeader(attached.Data.name);
         }
-        public void RedrawPriceAsDefault()
-        {
-            RedrawPrice(attached.Data.price.value, attached.Data.price.currency);
-        }
 
         public void RedrawSprite(Sprite sprite)
         {
@@ -228,11 +226,6 @@ namespace Game.Cards
         public void RedrawSubheaderColor(Color color)
         {
             _subheaderTextMesh.color = color;
-        }
-        public void RedrawPrice(int price, CardCurrency currency)
-        {
-            upperLeftIcon.RedrawChunks(price);
-            upperLeftIcon.RedrawSprite(currency == CardBrowser.GetCurrency("gold") ? uGoldIconSprite : uEtherIconSprite);
         }
 
         public void ShowBg()
@@ -266,7 +259,7 @@ namespace Game.Cards
             await RedrawHeaderTypingBase(resetOnFinish: false, texts);
         }
 
-        public void HighlightOutline(Color color, float duration = 1)
+        public void HighlightOutline(Color color, float duration = 1, bool redraw = true)
         {
             Color prevColor = Outline.GetColor();
             float brightF = Mathf.Pow(2, 6);
@@ -279,31 +272,43 @@ namespace Game.Cards
                 duration = 1;
 
             Outline.SetColor(color);
-            Outline.TweenColor(prevColor, duration).SetEase(Ease.InOutQuad).OnComplete(RedrawOutline);
+            Outline.TweenColor(prevColor, duration).SetEase(Ease.InOutQuad);
+            if (redraw) 
+                Outline.GetColorTween().OnComplete(RedrawOutline);
         }
-        public void HighlightOutline(bool asPassive, float duration = 1)
+        public void HighlightOutline(bool asPassive, float duration = 1, bool redraw = true)
         {
             if (asPassive)
             {
                 Outline.SetColor(_outlineBrightPassiveColor);
-                Outline.TweenColor(_outlineDimPassiveColor, duration).SetEase(Ease.OutQuad).OnComplete(RedrawOutline);
+                Outline.TweenColor(_outlineDimPassiveColor, duration).SetEase(Ease.OutQuad);
             }
             else
             {
                 Outline.SetColor(_outlineBrightActiveColor);
-                Outline.TweenColor(_outlineDimActiveColor, duration).SetEase(Ease.OutQuad).OnComplete(RedrawOutline);
+                Outline.TweenColor(_outlineDimActiveColor, duration).SetEase(Ease.OutQuad);
             }
+            if (redraw)
+                Outline.GetColorTween().OnComplete(RedrawOutline);
         }
 
         public Tween AnimExplosion()
         {
             return _spriteRenderer.DOAExplosion();
         }
-        protected virtual OutlineType GetOutlineType()
-        {
-            return OutlineType.None;
-        }
 
+        protected void RedrawIcons()
+        {
+            // TODO: add 'iconSprite' to CardCurrency
+            if (attached.Data.price.currency.id == "gold")
+                priceIcon.RedrawSprite(uGoldIconSprite);
+            else priceIcon.RedrawSprite(uEtherIconSprite);
+
+            priceIcon.RedrawValue();
+            moxieIcon.RedrawValue();
+            healthIcon.RedrawValue();
+            strengthIcon.RedrawValue();
+        }
         protected void RedrawOutline()
         {
             const float DURATION = 1.5f;
@@ -333,6 +338,27 @@ namespace Game.Cards
                         Outline.SetColor(Color.clear);
                     break;
             }
+        }
+        protected virtual OutlineType GetOutlineType()
+        {
+            return OutlineType.None;
+        }
+
+        protected virtual int UpperLeftIconDisplayValue()
+        {
+            return attached.price;
+        }
+        protected virtual int UpperRightIconDisplayValue() 
+        {
+            return 0;
+        }
+        protected virtual int LowerLeftIconDisplayValue() 
+        {
+            return 0;
+        }
+        protected virtual int LowerRightIconDisplayValue() 
+        {
+            return 0;
         }
 
         protected virtual void OnUpperLeftIconMouseEnter(object sender, DrawerMouseEventArgs e) { }
@@ -375,19 +401,19 @@ namespace Game.Cards
             _headerTween.Kill();
             ColorPalette.OnColorChanged -= OnPaletteColorChanged;
 
-            upperLeftIcon.TryDestroyInstantly();
-            upperRightIcon.TryDestroyInstantly();
-            lowerLeftIcon.TryDestroyInstantly();
-            lowerRightIcon.TryDestroyInstantly();
+            priceIcon.TryDestroyInstantly();
+            moxieIcon.TryDestroyInstantly();
+            healthIcon.TryDestroyInstantly();
+            strengthIcon.TryDestroyInstantly();
         }
         protected override UniTask DestroyAnimated()
         {
             base.DestroyAnimated();
 
-            upperLeftIcon.TryDestroyAnimated();
-            upperRightIcon.TryDestroyAnimated();
-            lowerLeftIcon.TryDestroyAnimated();
-            lowerRightIcon.TryDestroyAnimated();
+            priceIcon.TryDestroyAnimated();
+            moxieIcon.TryDestroyAnimated();
+            healthIcon.TryDestroyAnimated();
+            strengthIcon.TryDestroyAnimated();
 
             return UniTask.CompletedTask;
         }

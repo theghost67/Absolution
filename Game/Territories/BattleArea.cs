@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
 using GreenOne;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 namespace Game.Territories
 {
@@ -42,6 +44,7 @@ namespace Game.Territories
         BattleField[] _potentialTargets;
         BattleField[][] _possibleTargets;
 
+        IEnumerable<BattleField> _highlightedTargets;
         Func<BattleField, bool> _aimFilter;
         Action<BattleField> _onAimFinish;
         Action _onAimCancel;
@@ -179,8 +182,8 @@ namespace Game.Territories
 
             Pointer.Type = PointerType.Aiming;
             observingPoint.Territory.SetCardsColliders(false);
-            _isAnyAiming = true;
             _isAiming = true;
+            _isAnyAiming = true;
             _currentlyAimingArea = this;
 
             _aimFilter = filter;
@@ -200,40 +203,38 @@ namespace Game.Territories
 
             Pointer.Type = PointerType.Normal;
             observingPoint.Territory.SetCardsColliders(true);
-            _isAnyAiming = false;
             _isAiming = false;
+            _isAnyAiming = false;
             _currentlyAimingArea = null;
         }
 
         public void CreateTargetsHighlight()
         {
+            if (_highlightedTargets != null) return;
             if (Range.potential.targetIsSingle)
             {
-                foreach (BattleField[] targets in _possibleTargets)
-                {
-                    foreach (BattleField target in targets)
-                        target.Drawer.AnimShowCovering();
-                }
+                _highlightedTargets = _possibleTargets.SelectMany(arr => arr);
+                foreach (BattleField target in _highlightedTargets)
+                    target.Drawer.AnimShowCovering();
             }
             else
             {
-                foreach (var field in _potentialTargets)
+                _highlightedTargets = _potentialTargets;
+                foreach (BattleField field in _highlightedTargets)
                     field.Drawer.AnimShowOutline();
             }
         }
         public void DestroyTargetsHighlight()
         {
+            if (_highlightedTargets == null) return;
             if (Range.potential.targetIsSingle)
             {
-                foreach (BattleField[] targets in _possibleTargets)
-                {
-                    foreach (BattleField target in targets)
-                        target.Drawer.AnimHideCovering();
-                }
+                foreach (BattleField target in _highlightedTargets)
+                    target.Drawer.AnimHideCovering();
             }
             else
             {
-                foreach (var field in _potentialTargets)
+                foreach (BattleField field in _highlightedTargets)
                     field.Drawer.AnimHideOutline();
             }
         }

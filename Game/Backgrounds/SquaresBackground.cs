@@ -114,17 +114,8 @@ namespace Game.Backgrounds
             for (int i = 0; i < TWEENS_MAX; i++)
             {
                 Tween tween = _tweens[i];
-                if (tween == null || !tween.active) continue;
-                _tweens[i].onUpdate();
-
-                //SpriteRenderer square = (SpriteRenderer)tween.target;
-                //float elapsed = tween.Elapsed();
-                //if (tween.IsComplete()) continue;
-
-                //tween.Kill();
-                //tween = CreateSquareTween(square);
-                //tween.Goto(elapsed, andPlay: true);
-                //_tweens[i] = tween;
+                if (tween.IsActive())
+                    _tweens[i].onUpdate();
             }
         }
 

@@ -15,7 +15,7 @@ namespace Game.Territories
         public override object FindInTerritory(TableTerritory territory)
         {
             if (territory is BattleTerritory bTerr)
-                 return bTerr.player.isMe == _isMe ? bTerr.player : bTerr.enemy;
+                 return bTerr.Player.isMe == _isMe ? bTerr.Player : bTerr.Enemy;
             else return null;
         }
         public override object FindInSleeve(TableSleeve sleeve)

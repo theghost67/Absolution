@@ -1,7 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
-using Game.Traits;
-using MyBox;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,44 +10,34 @@ namespace Game.Sleeves
     /// <summary>
     /// Класс, представляющий возможность подбирания игроком карт рукава типа <see cref="ITableSleeveCard"/> (из привязанной колоды карт).
     /// </summary>
-    public class TableSleeve : ITableDrawable, ICloneableWithArgs, IEnumerable<ITableSleeveCard>, IDisposable
+    public class TableSleeve : TableObject, ICloneableWithArgs, IEnumerable<ITableSleeveCard>
     {
-        public event EventHandler OnDrawerCreated;
-        public event EventHandler OnDrawerDestroyed;
-
         public CardDeck Deck => _deck;
         public int Count => _cards.Count;
         public ITableSleeveCardsCollection Cards => _cards;
-
-        public TableSleeveDrawer Drawer => _drawer;
+        public new TableSleeveDrawer Drawer => ((TableObject)this).Drawer as TableSleeveDrawer;
 
         public readonly bool isForMe;
         readonly CardDeck _deck;
-
+        readonly HashSet<int> _takenCardsGuids;
         ITableSleeveCardsCollection _cards;
-        Drawer ITableDrawable.Drawer => _drawer;
-        TableSleeveDrawer _drawer;
 
         // NOTE: pass player deck clone to separate sleeve.Deck and Player.Deck card add/remove 
-        public TableSleeve(CardDeck deck, bool isForMe, Transform parent, bool withDrawer = true)
+        public TableSleeve(CardDeck deck, bool forMe, Transform parent) : base(parent)
         {
+            isForMe = forMe;
+            _deck = deck;
+            _takenCardsGuids = new HashSet<int>();
             _cards = CollectionCreator();
-            _deck = deck; 
-            this.isForMe = isForMe;
-
-            if (withDrawer)
-                CreateDrawer(parent);
+            TryOnInstantiatedAction(GetType(), typeof(TableSleeve));
         }
-        protected TableSleeve(TableSleeve src, TableSleeveCloneArgs args)
+        protected TableSleeve(TableSleeve src, TableSleeveCloneArgs args) : base(src)
         {
-            OnDrawerCreated = (EventHandler)src.OnDrawerCreated?.Clone();
-            OnDrawerDestroyed = (EventHandler)src.OnDrawerDestroyed?.Clone();
-
-            _cards = CollectionCreator();
-            _deck = args.srcSleeveDeckClone;
             isForMe = src.isForMe;
-
-            args.AddOnClonedAction(src.GetType(), typeof(TableSleeve), () =>
+            _deck = args.srcSleeveDeckClone;
+            _takenCardsGuids = new HashSet<int>(src._takenCardsGuids);
+            _cards = CollectionCreator();
+            AddOnInstantiatedAction(GetType(), typeof(TableSleeve), () =>
             {
                 foreach (ITableSleeveCard card in src)
                     Add(HoldingCardCloner(card, args));
@@ -60,7 +48,7 @@ namespace Game.Sleeves
 
         public UniTask TakeMissingCards(bool instantly = false)
         {
-            if (_drawer == null || _drawer.IsMovedOut || instantly)
+            if (instantly || (Drawer?.IsMovedOut ?? true))
             {
                 TakeMissingCardsInstantly();
                 return UniTask.CompletedTask;
@@ -69,27 +57,12 @@ namespace Game.Sleeves
         }
         public UniTask TakeCards(int count, bool instantly = false)
         {
-            if (_drawer == null || _drawer.IsMovedOut || instantly)
+            if (instantly || (Drawer?.IsMovedOut ?? true))
             {
                 TakeCardsInstantly(count);
                 return UniTask.CompletedTask;
             }
             else return TakeCardsAnimated(count);
-        }
-
-        public void CreateDrawer(Transform parent)
-        {
-            if (_drawer != null) return;
-            TableSleeveDrawer drawer = DrawerCreator(parent);
-            DrawerSetter(drawer);
-            OnDrawerCreated?.Invoke(this, EventArgs.Empty);
-        }
-        public void DestroyDrawer(bool instantly)
-        {
-            if (_drawer == null) return;
-            _drawer.TryDestroy(instantly);
-            DrawerSetter(null);
-            OnDrawerDestroyed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Add(Card card)
@@ -99,12 +72,12 @@ namespace Game.Sleeves
         public void Add(ITableSleeveCard card)
         {
             _cards.Add(card);
-            _drawer?.AddCardDrawer(card);
+            Drawer?.AddCardDrawer(card);
         }
         public void Remove(ITableSleeveCard card)
         {
             _cards.Remove(card);
-            _drawer?.RemoveCardDrawer(card);
+            Drawer?.RemoveCardDrawer(card);
         }
         public bool Contains(ITableSleeveCard card)
         {
@@ -116,12 +89,11 @@ namespace Game.Sleeves
             return false;
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             _cards.Clear();
-            _deck.Dispose();
-            _drawer?.Dispose();
-            _drawer = null;
+            Drawer?.Dispose();
         }
         public virtual object Clone(CloneArgs args)
         {
@@ -130,11 +102,7 @@ namespace Game.Sleeves
             else return null;
         }
 
-        protected virtual void DrawerSetter(TableSleeveDrawer value)
-        {
-            _drawer = value;
-        }
-        protected virtual TableSleeveDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             return new TableSleeveDrawer(this, parent);
         }
@@ -159,13 +127,13 @@ namespace Game.Sleeves
         async UniTask TakeCardsAnimated(int count)
         {
             if (count <= 0) return;
-            _drawer.SetCollider(false);
+            Drawer.SetCollider(false);
 
             List<ITableSleeveCard> cards = new(count);
             int delay = 500;
             for (int i = 0; i < count; i++)
             {
-                Card takenCard = _deck.Take();
+                Card takenCard = TakeCardFromDeck();
                 if (takenCard == null) break;
 
                 ITableSleeveCard sCard = HoldingCardCreator(takenCard);
@@ -183,7 +151,7 @@ namespace Game.Sleeves
             await UniTask.Delay(500);
             foreach (ITableSleeveCard card in cards)
                 card.PullInBase();
-            _drawer.SetCollider(true);
+            Drawer.SetCollider(true);
         }
 
         void TakeMissingCardsInstantly()
@@ -194,7 +162,7 @@ namespace Game.Sleeves
         {
             for (int i = 0; i < count; i++)
             {
-                Card takenCard = _deck.Take();
+                Card takenCard = TakeCardFromDeck();
                 if (takenCard == null) break;
 
                 ITableSleeveCard sCard = HoldingCardCreator(takenCard);
@@ -202,6 +170,20 @@ namespace Game.Sleeves
                 
                 Add(sCard);
             }
+        }
+
+        Card TakeCardFromDeck()
+        {
+            Card card = null;
+            foreach (Card deckCard in _deck)
+            {
+                if (_takenCardsGuids.Contains(deckCard.Guid))
+                    continue;
+                _takenCardsGuids.Add(deckCard.Guid);
+                card = deckCard;
+                break;
+            }
+            return card;
         }
 
         public IEnumerator<ITableSleeveCard> GetEnumerator() => _cards.GetEnumerator();

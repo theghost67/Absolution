@@ -19,10 +19,10 @@ namespace Game
             object result = FindInTerritory(territory);
             if (result != null) return result;
 
-            result = FindInSleeve(territory.player.Sleeve);
+            result = FindInSleeve(territory.Player.Sleeve);
             if (result != null) return result;
 
-            result = FindInSleeve(territory.enemy.Sleeve);
+            result = FindInSleeve(territory.Enemy.Sleeve);
             return result;
         }
         public object FindOnTable(TableTerritory territory, params TableSleeve[] sleeves)

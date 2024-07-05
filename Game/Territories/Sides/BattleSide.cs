@@ -13,18 +13,15 @@ namespace Game.Territories
     /// <summary>
     /// Класс, содержащий и отображающий данные об одной из сторон, находящейся на территории сражения.
     /// </summary>
-    public class BattleSide : Unique, ITableDrawable, ITableEntrySource, ICloneableWithArgs, IEquatable<BattleSide>
+    public class BattleSide : TableObject, ITableEntrySource, ICloneableWithArgs, IEquatable<BattleSide>
     {
-        public event EventHandler OnDrawerCreated;
-        public event EventHandler OnDrawerDestroyed;
-
         public BattleTerritory Territory => _territory;
         public BattleSide Opposite => _territory.GetOppositeOf(this);
-        public BattleSideDrawer Drawer => _drawer;
         public TableFinder Finder => _finder;
+        public new BattleSideDrawer Drawer => ((TableObject)this).Drawer as BattleSideDrawer;
 
-        public string TableName => isMe ? Player.Name : "Противник";
-        public string TableNameDebug => isMe ? "player" : "enemy";
+        public override string TableName => isMe ? Player.Name : "Противник";
+        public override string TableNameDebug => isMe ? "player" : "enemy";
 
         public BattleSleeve Sleeve => _sleeve;
         public CardDeck Deck => _deck;
@@ -41,19 +38,13 @@ namespace Game.Territories
         public readonly TableStat ether;
 
         readonly BattleSideFinder _finder;
-        readonly CardDeck _deck;
         readonly BattleTerritory _territory;
         readonly int _fieldsYIndex;
-
+        CardDeck _deck;
         BattleSleeve _sleeve;
-        BattleSideDrawer _drawer;
-        Drawer ITableDrawable.Drawer => _drawer;
 
-        public BattleSide(BattleTerritory territory, bool isMe, bool withDrawer = true)
+        public BattleSide(BattleTerritory territory, bool isMe) : base(territory.Transform)
         {
-            OnDrawerCreated += OnDrawerCreatedBase;
-            OnDrawerDestroyed += OnDrawerDestroyedBase;
-
             this.ai = new BattleAI(this);
             this.isMe = isMe;
 
@@ -61,7 +52,6 @@ namespace Game.Territories
             _territory = territory;
             _fieldsYIndex = isMe ? BattleTerritory.PLAYER_FIELDS_Y : BattleTerritory.ENEMY_FIELDS_Y;
             _deck = DeckCreator();
-            _sleeve = SleeveCreator(null);
 
             health = new TableStat(nameof(health), this, HealthAtStart);
             health.OnPreSet.Add(OnStatPreSetBase_TOP);
@@ -75,14 +65,10 @@ namespace Game.Territories
             ether.OnPreSet.Add(OnStatPreSetBase_TOP);
             ether.OnPostSet.Add(OnStatPostSetBase_TOP);
 
-            if (withDrawer)
-                CreateDrawer(_territory.transform);
+            AddOnInstantiatedAction(GetType(), typeof(BattleSide), () => CreateSleeve(Drawer?.transform));
         }
-        protected BattleSide(BattleSide src, BattleSideCloneArgs args) : base(src.Guid)
+        protected BattleSide(BattleSide src, BattleSideCloneArgs args) : base(src)
         {
-            OnDrawerCreated = (EventHandler)src.OnDrawerCreated?.Clone();
-            OnDrawerDestroyed = (EventHandler)src.OnDrawerDestroyed?.Clone();
-
             ai = new BattleAI(this);
             isMe = src.isMe;
 
@@ -96,30 +82,17 @@ namespace Game.Territories
             health = (TableStat)src.health.Clone(statCArgs);
             gold = (TableStat)src.gold.Clone(statCArgs);
             ether = (TableStat)src.ether.Clone(statCArgs);
+
+            TryOnInstantiatedAction(GetType(), typeof(BattleSide));
         }
 
         public bool Equals(BattleSide other)
         {
             return isMe == other.isMe;
         }
-        public void CreateDrawer(Transform parent)
+        public override void Dispose()
         {
-            if (_drawer != null) return;
-            BattleSideDrawer drawer = DrawerCreator(parent);
-            DrawerSetter(drawer);
-            OnDrawerCreated?.Invoke(this, EventArgs.Empty);
-        }
-        public void DestroyDrawer(bool instantly)
-        {
-            if (_drawer == null) return;
-            _drawer.TryDestroy(instantly);
-            DrawerSetter(null);
-            OnDrawerDestroyed?.Invoke(this, EventArgs.Empty);
-        }
-
-        public virtual void Dispose()
-        {
-            DestroyDrawer(true);
+            base.Dispose();
             health.OnPreSet.Clear();
             health.OnPostSet.Clear();
             gold.OnPreSet.Clear();
@@ -134,15 +107,24 @@ namespace Game.Territories
             else return null;
         }
 
+        public void CreateSleeve(Transform parent)
+        {
+            _sleeve = SleeveCreator(parent);
+        }
+        public void DestroySleeve(bool instantly)
+        {
+            _sleeve.DestroyDrawer(instantly);
+            _sleeve = null;
+        }
+
         public IEnumerable<BattleField> Fields()
         {
-            for (int i = 0; i < _territory.grid.x; i++)
+            for (int i = 0; i < _territory.Grid.x; i++)
             {
                 BattleField field = _territory.Field(i, _fieldsYIndex);
                 if (field != null) yield return field;
             }
         }
-
         public bool Owns(BattleFieldCard card)
         {
             if (card != null)
@@ -192,18 +174,14 @@ namespace Game.Territories
             else ether.AdjustValue(-card.price.value, this);
         }
 
-        protected virtual void DrawerSetter(BattleSideDrawer value)
-        {
-            _drawer = value;
-        }
-        protected virtual BattleSideDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             return new BattleSideDrawer(this, parent);
         }
 
         protected virtual BattleSleeve SleeveCreator(Transform parent)
         {
-            return new BattleSleeve(this, parent, _drawer != null);
+            return new BattleSleeve(this, parent);
         }
         protected virtual BattleSleeve SleeveCloner(BattleSleeve src, BattleSideCloneArgs args)
         {
@@ -252,15 +230,15 @@ namespace Game.Territories
             return (CardDeck)src.Clone();
         }
 
-        void OnDrawerCreatedBase(object sender, EventArgs e)
+        protected override void OnDrawerCreatedBase(object sender, EventArgs e)
         {
             BattleSide side = (BattleSide)sender;
-            side.Sleeve.CreateDrawer(side.Drawer.transform);
+            side.Sleeve?.CreateDrawer(side.Drawer.transform);
         }
-        void OnDrawerDestroyedBase(object sender, EventArgs e)
+        protected override void OnDrawerDestroyedBase(object sender, EventArgs e)
         {
             BattleSide side = (BattleSide)sender;
-            side.Sleeve.DestroyDrawer(true);
+            side.Sleeve?.DestroyDrawer(Drawer?.IsDestroyed ?? true);
         }
 
         float CalculateWeight()

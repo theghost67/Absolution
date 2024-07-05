@@ -10,7 +10,7 @@ namespace Game.Traits
     /// </summary>
     public class BattlePassiveTrait : TablePassiveTrait, IBattleTrait
     {
-        public new BattlePassiveTraitDrawer Drawer => _drawer;
+        public new BattlePassiveTraitDrawer Drawer => ((TableObject)this).Drawer as BattlePassiveTraitDrawer;
         public new BattleFieldCard Owner => _owner;
         public BattleTerritory Territory => _owner.Territory;
         public BattleSide Side => _owner.Side;
@@ -23,22 +23,20 @@ namespace Game.Traits
         readonly BattleArea _area;
         BattlePassiveTraitDrawer _drawer;
 
-        public BattlePassiveTrait(PassiveTrait data, BattleFieldCard owner, Transform parent, bool withDrawer = true) : base(data, owner, parent, withDrawer: false)
+        public BattlePassiveTrait(PassiveTrait data, BattleFieldCard owner, Transform parent) : base(data, owner, parent)
         {
             _owner = owner;
             _area = new BattleArea(this, owner);
             _area.OnCardSeen.Add(OnCardSeen);
             _area.OnCardUnseen.Add(OnCardUnseen);
-
-            if (withDrawer)
-                CreateDrawer(parent);
+            TryOnInstantiatedAction(GetType(), typeof(BattlePassiveTrait));
         }
         protected BattlePassiveTrait(BattlePassiveTrait src, BattlePassiveTraitCloneArgs args) : base(src, args)
         {
             _owner = args.srcTraitOwnerClone;
-
             BattleAreaCloneArgs areaCArgs = new(this, _owner, args.terrCArgs);
             _area = (BattleArea)src._area.Clone(areaCArgs);
+            TryOnInstantiatedAction(GetType(), typeof(BattlePassiveTrait));
         }
 
         public override void Dispose()
@@ -52,12 +50,7 @@ namespace Game.Traits
                 return new BattlePassiveTrait(this, cArgs);
             else return null;
         }
-
-        protected override void DrawerSetter(TableTraitDrawer value)
-        {
-            _drawer = (BattlePassiveTraitDrawer)value;
-        }
-        protected override TableTraitDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             return new BattlePassiveTraitDrawer(this, parent);
         }

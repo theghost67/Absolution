@@ -10,7 +10,7 @@ namespace Game
     public class cmdSideCardPlace : Command
     {
         const string ID = "side_card_place";
-        const string DESC = "создаёт и устанавливает карту на территорию";
+        const string DESC = "создаёт и устанавливает карту на наведённое поле сражения";
 
         class IdArg : CommandArg
         {
@@ -44,33 +44,6 @@ namespace Game
                 return true;
             }
         }
-        class PosArg : CommandArg
-        {
-            const string ID = "pos";
-            const string DESC = "позиция поля, на которую будет установлена карта (1p, 5e и т.д.)";
-
-            public PosArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
-            public override bool TryParseValue(string str, out object value)
-            {
-                if (!base.TryParseValue(str, out value))
-                    return false;
-                if (str.Length < 2)
-                    return false;
-
-                char posChar = str[0];
-                char sideChar = str[1];
-
-                if (!int.TryParse(posChar.ToString(), out int posParse))
-                    return false;
-                if (posParse < 1 || posParse > 5)
-                    return false;
-                if (sideChar != 'p' && sideChar != 'e')
-                    return false;
-
-                value = new Pos(posParse - 1, sideChar == 'p');
-                return true;
-            }
-        }
 
         readonly struct Pos
         {
@@ -93,14 +66,16 @@ namespace Game
                 return;
             }
 
+            BattleFieldDrawer drawer = (BattleFieldDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is BattleFieldDrawer);
+            if (drawer == null)
+            {
+                TableConsole.Log("Наведите курсор на поле, на которое нужно установить карту.", LogType.Error);
+                return;
+            }
+
             string id = args["id"].input;
             int points = args["points"].ValueAs<int>();
-            Pos pos = args["pos"].ValueAs<Pos>();
-
-            BattleField field;
-            if (pos.isPlayer)
-                 field = territory.Field(pos.x, BattleTerritory.PLAYER_FIELDS_Y);
-            else field = territory.Field(pos.x, BattleTerritory.ENEMY_FIELDS_Y);
+            BattleField field = drawer.attached;
 
             if (field.Card != null)
             {
@@ -119,7 +94,6 @@ namespace Game
         {
             new IdArg(this),
             new PointsArg(this),
-            new PosArg(this),
         };
     }
 }

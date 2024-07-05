@@ -14,7 +14,7 @@ namespace Game.Environment
         public string desc;
         public float frequency;
         public string iconPath;
-        public Func<PlaceMenu> menuCreator;
+        public Func<Menu> menuCreator;
 
         public LocationPlace(string id) 
         {

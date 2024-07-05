@@ -6,7 +6,7 @@
     /// </summary>
     public interface IBattleThresholdUsable<T> where T : IBattleEntity
     {
-        public abstract BattleWeight GetWeightDeltaUseThreshold(T entity);
+        public abstract BattleWeight WeightDeltaUseThreshold(T entity);
 
         public bool WeightIsEnough(BattleWeightResult<T> result)
         {
@@ -14,7 +14,7 @@
         }
         public bool WeightIsEnough(T entity, float weightDeltaAbs, float weightDeltaRel)
         {
-            BattleWeight weightThreshold = GetWeightDeltaUseThreshold(entity);
+            BattleWeight weightThreshold = WeightDeltaUseThreshold(entity);
             if (weightThreshold.relative > 0 && weightDeltaRel >= weightThreshold.relative)
                 return true;
             if (weightThreshold.absolute > 0 && weightDeltaAbs >= weightThreshold.absolute)

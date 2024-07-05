@@ -8,7 +8,10 @@ namespace Game.Traits
     /// </summary>
     public class ActiveTraitList : TraitList, IReadOnlyList<ActiveTraitListElement>
     {
-        public ActiveTraitList(TraitListSet set) : base(set) { }
+        public ActiveTraitList(TraitListSet set) : base(set) 
+        { 
+
+        }
         protected ActiveTraitList(ActiveTraitList src, TraitListCloneArgs args) : base(src, args)
         {
             args.TryOnClonedAction(src.GetType(), typeof(ActiveTraitList));

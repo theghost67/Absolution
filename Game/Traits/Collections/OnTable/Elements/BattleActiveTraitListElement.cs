@@ -1,5 +1,4 @@
-﻿using Game.Cards;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Game.Traits
 {
@@ -10,27 +9,25 @@ namespace Game.Traits
     {
         public new BattleActiveTraitList List => _list;
         public new BattleActiveTrait Trait => _trait;
-        public new BattleActiveTraitListElementDrawer Drawer => _drawer;
+        public new BattleActiveTraitListElementDrawer Drawer => ((TableObject)this).Drawer as BattleActiveTraitListElementDrawer;
 
         readonly BattleActiveTraitList _list;
         readonly BattleActiveTrait _trait;
-        BattleActiveTraitListElementDrawer _drawer;
 
         IBattleTraitList IBattleTraitListElement.List => _list;
         IBattleTrait IBattleTraitListElement.Trait => _trait;
 
-        public BattleActiveTraitListElement(BattleActiveTraitList list, BattleActiveTrait trait, bool withDrawer = true) : base(list, trait, withDrawer: false)
+        public BattleActiveTraitListElement(BattleActiveTraitList list, BattleActiveTrait trait) : base(list, trait)
         {
             _list = list;
             _trait = trait;
-
-            if (withDrawer)
-                CreateDrawer(_list.Set.Drawer.transform);
+            TryOnInstantiatedAction(GetType(), typeof(BattleActiveTraitListElement));
         }
         protected BattleActiveTraitListElement(BattleActiveTraitListElement src, BattleTraitListElementCloneArgs args) : base(src, args)
         {
             _list = (BattleActiveTraitList)args.srcListClone;
             _trait = (BattleActiveTrait)base.Trait;
+            TryOnInstantiatedAction(GetType(), typeof(BattleActiveTraitListElement));
         }
 
         public override object Clone(CloneArgs args)
@@ -46,12 +43,7 @@ namespace Game.Traits
             BattleActiveTraitCloneArgs traitCArgs = new((ActiveTrait)src.Data.Clone(), argsCast.srcListClone.Set.Owner, argsCast.terrCArgs);
             return (BattleActiveTrait)src.Clone(traitCArgs);
         }
-        protected override void DrawerSetter(TableTraitListElementDrawer value)
-        {
-            base.DrawerSetter(value);
-            _drawer = (BattleActiveTraitListElementDrawer)value;
-        }
-        protected override TableTraitListElementDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             return new BattleActiveTraitListElementDrawer(this, parent);;
         }

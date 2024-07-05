@@ -188,7 +188,7 @@ namespace Game.Territories
         }
         void SleeveSetActive(bool value)
         {
-            BattleSleeveDrawer drawer = attached.Sleeve.Drawer;
+            BattleSleeveDrawer drawer = attached.Sleeve?.Drawer;
             if (drawer == null) return;
             if (value)
                  drawer.MoveIn();

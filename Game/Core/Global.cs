@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Game.Cards;
+using Game.Effects;
 using Game.Environment;
 using Game.Menus;
 using Game.Traits;
@@ -12,7 +13,8 @@ using UnityEngine;
 namespace Game
 {
     /// <summary>
-    /// Класс, содержащий неотъемлимые данные игрового процесса и инициализирующий основные игровые системы.
+    /// Класс, содержащий неотъемлимые данные игрового процесса и инициализирующий основные игровые системы.<br/>
+    /// Так же содержит данные конфигурации игры.
     /// </summary>
     public sealed class Global : MonoBehaviour
     {
@@ -27,6 +29,11 @@ namespace Game
 
         public static Transform Root => _root;
         public static Camera Camera => _camera;
+
+        public static bool writeConsoleLogs = true;
+        public static bool shufflePrice = false;
+        public static float soundVolumeScale = 1.0f; // set by player
+        public static float musicVolumeScale = 1.0f; // in settings
 
         static Transform _root;
         static Camera _camera;
@@ -50,8 +57,9 @@ namespace Game
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 ShowErrors();
-                TableConsole.LogToFile($"////// {condition} //////");
-                TableConsole.Log($"{condition}. См. лог отладки для подробностей.", type);
+                const string TERMINATOR = "////////////////////////";
+                TableConsole.LogToFile($"{TERMINATOR} {condition} {TERMINATOR}");
+                TableConsole.Log($"{condition}\nСм. лог отладки для подробностей.", type);
             });
         }
         static bool OnWantToQuit()
@@ -75,10 +83,10 @@ namespace Game
         }
 
         // TODO: remove
-        Menu demo_CreateCardChoose(Location location)
+        Menu demo_CreateCardChoose(int stage)
         {
-            CardChooseMenu menu = new(location.stage, 4, 0, 3, 4);
-            menu.MenuWhenClosed = () => Traveler.CreateDemoMenu(location);
+            CardChooseMenu menu = new(stage, 4, 0, 3, 4);
+            menu.MenuWhenClosed = () => new BattlePlaceMenu();
             menu.OnClosed += menu.DestroyInstantly;
             return menu;
         }
@@ -92,7 +100,7 @@ namespace Game
             _errorGameObject = _root.Find("CORE/Errors").gameObject;
             _errorTextMesh = _errorGameObject.Find<TextMeshPro>("Text");
 
-            Application.targetFrameRate = Config.frameRate;
+            Application.targetFrameRate = (int)Screen.currentResolution.refreshRateRatio.value;
             Application.logMessageReceivedThreaded += LogReceived;
             Application.logMessageReceived += LogReceived;
             Application.wantsToQuit += OnWantToQuit;
@@ -102,23 +110,16 @@ namespace Game
             TraitBrowser.Initialize();
             CardBrowser.Initialize();
             EnvironmentBrowser.Initialize();
-            Player.Load();
-
-            SaveSystem.LoadAll();
-            //MusicPack.Initiailize();
-            //WorldMenu.instance.OpenAnimated();
-
+            AudioBrowser.Initialize();
             TableConsole.Initialize();
-            MenuTransit.BetweenWithColliders(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"]));
-            //MenuTransit.Between(null, Traveler.CreateDemoMenu(EnvironmentBrowser.Locations["college"]));
 
-            // TODO: remove
-            //for (int i = 0; i < 10; i++)
-            //    Player.Deck.fieldCards.Add(CardBrowser.NewField("vavulov"));
+            Player.Load();
+            SaveSystem.LoadAll();
 
-            //Menu menu = new CardUpgradeMenu(Player.Deck, 100);
-            //menu.MenuWhenClosed = () => Traveler.CreateDemoMenu(EnvironmentBrowser.Locations["college"]);
-            //MenuTransit.Between(null, menu);
+            Traveler.TryStartTravel(new LocationMission(EnvironmentBrowser.Locations["college"]));
+
+            //MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
+            MenuTransit.Between(null, new BattlePlaceMenu());
         }
         void Update()
         {

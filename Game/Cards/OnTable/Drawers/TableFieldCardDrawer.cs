@@ -17,7 +17,7 @@ namespace Game.Cards
         public TableTraitListSetDrawer Traits => attached.Traits.Drawer;
         public readonly new TableFieldCard attached;
 
-        public TableFieldCardDrawer(TableFieldCard card, Transform parent) : base(card, parent)
+        public TableFieldCardDrawer(TableFieldCard card, Transform parent) : base(card, parent, redrawIcons: false)
         {
             attached = card;
             attached.price.OnPostSet.Add(OnPriceStatPostSet);
@@ -30,9 +30,7 @@ namespace Game.Cards
             OnMouseScrollUp += OnMouseScrollUpBase;
             OnMouseScrollDown += OnMouseScrollDownBase;
 
-            RedrawHealth(card.Data.health, true);
-            RedrawStrength(card.Data.strength, true);
-            RedrawMoxie(card.Data.moxie, true);
+            RedrawIcons();
             RedrawOutlineInstantly();
         }
 
@@ -57,53 +55,6 @@ namespace Game.Cards
             Traits.SetColor(value);
         }
 
-        public void RedrawHealthAsDefault()
-        {
-            RedrawHealth(attached.Data.health);
-        }
-        public void RedrawStrengthAsDefault()
-        {
-            RedrawStrength(attached.Data.strength);
-        }
-        public void RedrawMoxieAsDefault()
-        {
-            RedrawMoxie(attached.Data.moxie);
-        }
-
-        public void RedrawHealthAsCurrent()
-        {
-            RedrawHealth(attached.health);
-        }
-        public void RedrawStrengthAsCurrent()
-        {
-            RedrawStrength(attached.strength);
-        }
-        public void RedrawMoxieAsCurrent()
-        {
-            RedrawMoxie(attached.moxie);
-        }
-
-        public void RedrawHealth(int health, bool instantly = false)
-        {
-            lowerLeftIcon.RedrawSprite(lHealthIconSprite);
-            if (instantly)
-                 lowerLeftIcon.RedrawText(health);
-            else lowerLeftIcon.AnimTextNumberDelta(health);
-        }
-        public void RedrawStrength(int strength, bool instantly = false)
-        {
-            lowerRightIcon.RedrawSprite(lStrengthIconSprite);
-            if (instantly)
-                lowerRightIcon.RedrawText(strength);
-            else lowerRightIcon.AnimTextNumberDelta(strength);
-        }
-        public void RedrawMoxie(int moxie, bool instantly = false)
-        {
-            upperRightIcon.RedrawSprite(uMoxieIconSprite);
-            upperRightIcon.RedrawChunks(moxie);
-        }
-
-        protected virtual bool RedrawRangeFlipY() => true;
         protected override void DestroyInstantly()
         {
             base.DestroyInstantly();
@@ -115,58 +66,72 @@ namespace Game.Cards
             attached.Traits.Passives.OnStacksChanged.Remove(OnTraitsStacksChanged);
             attached.Traits.Actives.OnStacksChanged.Remove(OnTraitsStacksChanged);
         }
+        protected override int UpperLeftIconDisplayValue()
+        {
+            return attached.price;
+        }
+        protected override int UpperRightIconDisplayValue()
+        {
+            return attached.moxie;
+        }
+        protected override int LowerLeftIconDisplayValue()
+        {
+            return attached.health;
+        }
+        protected override int LowerRightIconDisplayValue()
+        {
+            return attached.strength;
+        }
 
         protected override void OnUpperLeftIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
             CardCurrency priceCurrency = attached.Data.price.currency;
             string priceCurrencyStr = priceCurrency.name.Colored(priceCurrency.color);
-
             int priceDefault = attached.Data.price.value;
-            int priceCurrent = attached.price;
-            Game.Tooltip.Show($"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault} ед.\nТекущее: {priceCurrent} ед.\n<color=grey><i>Стоимость: цена установки на территорию.");
+            Tooltip.Show($"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault}.\nТекущее: {attached.price.StatToStringRich(priceDefault)} ед.\n<color=grey><i>Стоимость: цена установки на территорию.");
         }
         protected override void OnUpperRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
+            if (e.handled) return;
             int moxieDefault = attached.Data.moxie;
-            int moxieCurrent = attached.moxie;
-            Game.Tooltip.Show($"По умолчанию: {moxieDefault} ед.\nТекущее: {moxieCurrent} ед.\n<color=grey><i>Инициатива: определяет быстроту действий.");
+            int initiationOrder = (attached as BattleFieldCard)?.InitiationOrder ?? -1;
+            if (initiationOrder == -1)
+                 Tooltip.Show($"По умолчанию: {moxieDefault}.\nТекущее: {attached.moxie.StatToStringRich(moxieDefault)} ед.\n<color=grey><i>Инициатива: определяет быстроту действий.");
+            else Tooltip.Show($"По умолчанию: {moxieDefault}.\nТекущее: {attached.moxie.StatToStringRich(moxieDefault)} ед.\nПозиция в очереди: {initiationOrder}.\n<color=grey><i>Инициатива: определяет быстроту действий.");
         }
         protected override void OnLowerLeftIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
+            if (e.handled) return;
             int healthDefault = attached.Data.health;
-            int healthCurrent = attached.health;
-            Game.Tooltip.Show($"По умолчанию: {healthDefault} ед.\nТекущее: {healthCurrent} ед.\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
+            Tooltip.Show($"По умолчанию: {healthDefault} ед.\nТекущее: {attached.health.StatToStringRich(healthDefault)} ед.\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.");
         }
         protected override void OnLowerRightIconMouseEnter(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return; 
+            if (e.handled) return;
             int strengthDefault = attached.Data.strength;
-            int strengthCurrent = attached.strength;
-            Game.Tooltip.Show($"По умолчанию: {strengthDefault} ед.\nТекущее: {strengthCurrent} ед.\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
+            Tooltip.Show($"По умолчанию: {strengthDefault} ед.\nТекущее: {attached.strength.StatToStringRich(strengthDefault)} ед.\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.");
         }
 
         protected override void OnUpperLeftIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Hide();
+            Tooltip.Hide();
         }
         protected override void OnUpperRightIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Hide();
+            Tooltip.Hide();
         }
         protected override void OnLowerLeftIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Hide();
+            Tooltip.Hide();
         }
         protected override void OnLowerRightIconMouseLeave(object sender, DrawerMouseEventArgs e)
         {
             if (e.handled) return;
-            Game.Tooltip.Hide();
+            Tooltip.Hide();
         }
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
@@ -217,30 +182,28 @@ namespace Game.Cards
         {
             TableStat stat = (TableStat)sender;
             TableFieldCard card = (TableFieldCard)stat.Owner;
-            card.Drawer?.RedrawPriceAsDefault();
+            card.Drawer?.priceIcon.RedrawValue(e.newStatValue);
             return UniTask.CompletedTask;
         }
         UniTask OnMoxieStatPostSet(object sender, TableStat.PostSetArgs e)
         {
             TableStat stat = (TableStat)sender;
             TableFieldCard card = (TableFieldCard)stat.Owner;
-            card.Drawer?.RedrawMoxieAsCurrent();
+            card.Drawer?.moxieIcon.RedrawValue(e.newStatValue);
             return UniTask.CompletedTask;
         }
         UniTask OnHealthStatPostSet(object sender, TableStat.PostSetArgs e)
         {
             TableStat stat = (TableStat)sender;
             TableFieldCard card = (TableFieldCard)stat.Owner;
-            TableFieldCardDrawer drawer = card.Drawer;
-            drawer?.RedrawHealthAsCurrent();
+            card.Drawer?.healthIcon.RedrawValue(e.newStatValue);
             return UniTask.CompletedTask;
         }
         UniTask OnStrengthStatPostSet(object sender, TableStat.PostSetArgs e)
         {
             TableStat stat = (TableStat)sender;
             TableFieldCard card = (TableFieldCard)stat.Owner;
-            TableFieldCardDrawer drawer = card.Drawer;
-            drawer?.RedrawStrengthAsCurrent();
+            card.Drawer?.strengthIcon.RedrawValue(e.newStatValue);
             return UniTask.CompletedTask;
         }
     }

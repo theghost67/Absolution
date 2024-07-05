@@ -35,11 +35,13 @@ namespace Game
 
         static void SetVisibility(bool value)
         {
+            if (!_update) return;
             _isVisible = value;
             _renderer.enabled = value;
         }
         static void SetType(PointerType type)
         {
+            if (!_update) return;
             _type = type;
             switch (type)
             {
@@ -72,6 +74,7 @@ namespace Game
         void Awake()
         {
             _instance = this;
+            _update = true;
             _transform = transform;
             _renderer = _transform.Find("Sprite").GetComponent<SpriteRenderer>();
 
@@ -83,6 +86,7 @@ namespace Game
         void OnApplicationFocus(bool focus)
         {
             _update = focus;
+            Cursor.visible = !focus;
         }
 
         void Update()

@@ -10,7 +10,7 @@ namespace Game.Traits
     /// </summary>
     public class BattleActiveTrait : TableActiveTrait, IBattleTrait
     {
-        public new BattleActiveTraitDrawer Drawer => _drawer;
+        public new BattleActiveTraitDrawer Drawer => ((TableObject)this).Drawer as BattleActiveTraitDrawer;
         public new BattleFieldCard Owner => _owner;
         public BattleTerritory Territory => _owner.Territory;
         public BattleSide Side => _owner.Side;
@@ -21,24 +21,21 @@ namespace Game.Traits
 
         readonly BattleFieldCard _owner;
         readonly BattleArea _area;
-        BattleActiveTraitDrawer _drawer;
 
-        public BattleActiveTrait(ActiveTrait data, BattleFieldCard owner, Transform parent, bool withDrawer = true) : base(data, owner, parent, withDrawer: false)
+        public BattleActiveTrait(ActiveTrait data, BattleFieldCard owner, Transform parent) : base(data, owner, parent)
         {
             _owner = owner;
             _area = new BattleArea(this, owner);
             _area.OnCardSeen.Add(OnCardSeen);
             _area.OnCardUnseen.Add(OnCardUnseen);
-
-            if (withDrawer)
-                CreateDrawer(parent);
+            TryOnInstantiatedAction(GetType(), typeof(BattleActiveTrait));
         }
         protected BattleActiveTrait(BattleActiveTrait src, BattleActiveTraitCloneArgs args) : base(src, args)
         {
             _owner = args.srcTraitOwnerClone;
-
             BattleAreaCloneArgs areaCArgs = new(this, _owner, args.terrCArgs);
             _area = (BattleArea)src._area.Clone(areaCArgs);
+            TryOnInstantiatedAction(GetType(), typeof(BattleActiveTrait));
         }
 
         public override void Dispose()
@@ -52,6 +49,10 @@ namespace Game.Traits
                 return new BattleActiveTrait(this, cArgs);
             else return null;
         }
+        protected override Drawer DrawerCreator(Transform parent)
+        {
+            return new BattleActiveTraitDrawer(this, parent);
+        }
 
         public bool TryUseWithAim(BattleSide by)
         {
@@ -61,15 +62,6 @@ namespace Game.Traits
 
             _area.StartTargetAiming(AimFilter, AimFinished);
             return true;
-        }
-
-        protected override void DrawerSetter(TableTraitDrawer value)
-        {
-            _drawer = (BattleActiveTraitDrawer)value;
-        }
-        protected override TableTraitDrawer DrawerCreator(Transform parent)
-        {
-            return new BattleActiveTraitDrawer(this, parent);
         }
 
         UniTask OnCardSeen(object sender, BattleFieldCard card)

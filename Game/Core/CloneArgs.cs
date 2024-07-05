@@ -13,10 +13,7 @@ namespace Game
 
         public CloneArgs() { }
 
-        public void AddOnClonedAction(Action action)
-        {
-            _onCloned += action;
-        }
+        // USE ONLY IF CLASS IS NOT DERIVED FROM TableObject (see it's implementation)
         public void AddOnClonedAction(Type srcType, Type instanceType, Action action)
         {
             _onCloned += action;

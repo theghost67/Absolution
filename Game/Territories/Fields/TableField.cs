@@ -2,7 +2,6 @@
 using DG.Tweening;
 using Game.Cards;
 using Game.Core;
-using GreenOne;
 using MyBox;
 using System;
 using Unity.Mathematics;
@@ -13,22 +12,18 @@ namespace Game.Territories
     /// <summary>
     /// Класс, представляющий игровое поле на столе с возможностью хранения карты типа <see cref="TableFieldCard"/>.
     /// </summary>
-    public class TableField : Unique, ITableDrawable, ITableFindable, ITableLoggable, ICloneableWithArgs, IDisposable
+    public class TableField : TableObject, ITableFindable, ITableLoggable, ICloneableWithArgs
     {
-        public event EventHandler OnDrawerCreated;
-        public event EventHandler OnDrawerDestroyed;
-
         public IIdEventVoidAsync OnCardAttached => _onCardAttached;
         public IIdEventVoidAsync OnCardDetatched => _onCardDetatched;
 
         public TableTerritory Territory => _territory;
         public TableFieldCard Card => _card;
-        public TableFieldDrawer Drawer => _drawer;
+        public new TableFieldDrawer Drawer => ((TableObject)this).Drawer as TableFieldDrawer;
         public TableFinder Finder => _finder;
-        Drawer ITableDrawable.Drawer => _drawer;
 
-        public string TableName => GetTableName();
-        public string TableNameDebug => GetTableNameDebug();
+        public override string TableName => GetTableName();
+        public override string TableNameDebug => GetTableNameDebug();
 
         public readonly int2 pos;
         public readonly TableStat health;
@@ -37,16 +32,11 @@ namespace Game.Territories
         readonly TableFieldFinder _finder;
         readonly TableEventVoid _onCardAttached;
         readonly TableEventVoid _onCardDetatched; // invokes before setting card to null
-
-        TableFieldDrawer _drawer;
         TableFieldCard _card;
 
         // territory can be null
-        public TableField(TableTerritory territory, int2 pos, Transform parent, bool withDrawer = true) : base()
+        public TableField(TableTerritory territory, int2 pos, Transform parent) : base(parent)
         {
-            OnDrawerCreated += OnDrawerCreatedBase;
-            OnDrawerDestroyed += OnDrawerDestroyedBase;
-
             this.pos = pos;
             _territory = territory;
             _finder = new TableFieldFinder(this);
@@ -56,14 +46,13 @@ namespace Game.Territories
             health = new TableStat(nameof(health), this, 0);
             health.OnPostSet.Add(OnHealthPostSet);
 
-            if (withDrawer)
-                CreateDrawer(parent);
-        }
-        protected TableField(TableField src, TableFieldCloneArgs args) : base(src.Guid)
-        {
-            OnDrawerCreated = (EventHandler)src.OnDrawerCreated?.Clone();
-            OnDrawerDestroyed = (EventHandler)src.OnDrawerDestroyed?.Clone();
+            OnDrawerCreated += OnDrawerCreatedBase;
+            OnDrawerDestroyed += OnDrawerDestroyedBase;
 
+            TryOnInstantiatedAction(GetType(), typeof(TableField));
+        }
+        protected TableField(TableField src, TableFieldCloneArgs args) : base(src)
+        {
             pos = src.pos;
             _territory = args.srcTerrClone;
             _finder = new TableFieldFinder(this);
@@ -73,19 +62,14 @@ namespace Game.Territories
             TableStatCloneArgs healthCArgs = new(this, args.terrCArgs);
             health = (TableStat)src.health.Clone(healthCArgs);
 
-            args.AddOnClonedAction(src.GetType(), typeof(TableField), () => CardBaseSetter(CardCloner(src.Card, args)));
+            AddOnInstantiatedAction(GetType(), typeof(TableField), () => _card = CardCloner(src.Card, args));
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
-            if (_card != null)
-            {
-                _card.Dispose();
-                CardBaseSetter(null);
-            }
-
-            if (_drawer != null)
-                _drawer.Dispose();
+            base.Dispose();
+            Card?.Dispose();
+            Drawer?.Dispose();
         }
         public virtual object Clone(CloneArgs args)
         {
@@ -98,53 +82,29 @@ namespace Game.Territories
         {
             if (_card != null) return;
             if (card == null)
-                throw new InvalidOperationException("Cannot attach null card. Use DetatchCard() instead.");
+                DetatchCard(source);
 
-            CardBaseSetter(card);
-            if (_drawer != null)
-                await _drawer.AnimAttachCard(card.Drawer).AsyncWaitForCompletion();
+            _card = card;
+            if (Drawer != null)
+                await Drawer.AnimAttachCard(card.Drawer).AsyncWaitForCompletion();
             await _onCardAttached.Invoke(this, EventArgs.Empty);
-            await card.AttachToAnotherField(this, source);
+            await card.AttachToField(this, source);
         }
         public async UniTask DetatchCard(ITableEntrySource source)
         {
             if (_card == null) return;
             TableFieldCard card = _card;
 
-            CardBaseSetter(null);
+            _card = null;
             await _onCardDetatched.Invoke(this, EventArgs.Empty);
-            if (_drawer != null)
-                await _drawer.AnimDetatchCard(card.Drawer).AsyncWaitForCompletion();
-            await card.AttachToAnotherField(null, source);
+            if (Drawer != null)
+                await Drawer.AnimDetatchCard(card.Drawer).AsyncWaitForCompletion();
+            await card.AttachToField(null, source);
         }
 
-        public void CreateDrawer(Transform parent)
-        {
-            if (_drawer != null) return;
-            TableFieldDrawer drawer = DrawerCreator(parent);
-            DrawerSetter(drawer);
-            OnDrawerCreated?.Invoke(this, EventArgs.Empty);
-        }
-        public void DestroyDrawer(bool instantly)
-        {
-            if (_drawer == null) return;
-            _drawer.TryDestroy(instantly);
-            DrawerSetter(null);
-            OnDrawerDestroyed?.Invoke(this, EventArgs.Empty);
-        }
-
-        protected virtual void DrawerSetter(TableFieldDrawer value)
-        {
-            _drawer = value;
-        }
-        protected virtual TableFieldDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             return new TableFieldDrawer(this, parent);
-        }
-
-        protected virtual void CardBaseSetter(TableFieldCard value)
-        {
-            _card = value;
         }
         protected virtual TableFieldCard CardCloner(TableFieldCard src, TableFieldCloneArgs args)
         {
@@ -153,15 +113,15 @@ namespace Game.Territories
             return (TableFieldCard)src.Clone(cardCArgs);
         }
 
-        protected virtual void OnDrawerCreatedBase(object sender, EventArgs e)
+        protected override void OnDrawerCreatedBase(object sender, EventArgs e)
         {
             TableField field = (TableField)sender;
-            if (field.Card != null) field._card.CreateDrawer(_drawer.transform);
+            field.Card?.CreateDrawer(Drawer.transform);
         }
-        protected virtual void OnDrawerDestroyedBase(object sender, EventArgs e)
+        protected override void OnDrawerDestroyedBase(object sender, EventArgs e)
         {
             TableField field = (TableField)sender;
-            if (field.Card != null) field._card.DestroyDrawer(true);
+            field.Card?.DestroyDrawer(Drawer?.IsDestroyed ?? true);
         }
 
         UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)

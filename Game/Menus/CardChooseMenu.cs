@@ -13,7 +13,7 @@ namespace Game.Menus
     /// <summary>
     /// Класс, представляющий меню с выбором карты поля из нескольких вариантов на добавление в колоду игрока.
     /// </summary>
-    public class CardChooseMenu : Menu // supports only field cards choose
+    public class CardChooseMenu : Menu
     {
         const string ID = "card_choose";
         const int MAX_CARDS = 5;
@@ -43,6 +43,7 @@ namespace Game.Menus
         CardToChoose[] _cards;
         bool _cardsAreShown;
         bool _cardsAreFields;
+        bool _animInProgress;
 
         // one of the field cards in this menu
         class CardToChoose
@@ -113,7 +114,7 @@ namespace Game.Menus
                     AnimFadeOut();
                 });
                 seq.AppendInterval(ANIM_DURATION * 2);
-                seq.OnComplete(() => _onTable.DestroyDrawer(true));
+                seq.OnComplete(_onTable.Dispose);
 
                 return seq.Play();
             }
@@ -212,7 +213,7 @@ namespace Game.Menus
                 _renderer = gameObject.GetComponent<SpriteRenderer>();
                 _paletteElement = gameObject.GetComponent<ColorPaletteSpriteElement>();
                 _paletteElement.setColorOnStart = false;
-                Tooltip = () => $"Перебросить карты ({_menu._rerollsLeft}x). Обновите ассортимент карт, если текущий выбор вас не устраивает.";
+                SetTooltip(() => $"Перебросить карты ({_menu._rerollsLeft}x). Обновите ассортимент карт, если текущий выбор вас не устраивает.");
             }
             public override void SetColor(Color value)
             {
@@ -229,7 +230,7 @@ namespace Game.Menus
             {
                 base.OnMouseClickLeftBase(sender, e);
                 if (e.handled) return;
-                _menu.Reroll();
+                _menu.RerollChoice();
             }
         }
         class DeclineButtonDrawer : Drawer
@@ -244,8 +245,13 @@ namespace Game.Menus
                 _renderer = transform.GetComponent<SpriteRenderer>();
                 _paletteElement = gameObject.GetComponent<ColorPaletteSpriteElement>();
                 _paletteElement.setColorOnStart = false;
-                Tooltip = () => "<color=red>Отказаться от карты.</color> Полезно, когда выбирать из того, что есть, не хочется.";
+                SetTooltip(() => "<color=red>Отказаться от карты.</color> Полезно, когда выбирать из того, что есть, не хочется.");
             }
+            public void SetColor()
+            {
+                SetColor(ColliderEnabled ? _paletteElement.SyncedColor : Color.gray);
+            }
+
             public override void SetColor(Color value)
             {
                 base.SetColor(value);
@@ -254,7 +260,7 @@ namespace Game.Menus
             public override void SetCollider(bool value)
             {
                 base.SetCollider(value);
-                SetColor(value ? _paletteElement.SyncedColor : Color.gray);
+                SetColor();
             }
 
             protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
@@ -267,13 +273,13 @@ namespace Game.Menus
             {
                 base.OnMouseLeaveBase(sender, e);
                 if (e.handled) return;
-                SetColor(Color.white);
+                SetColor();
             }
             protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
             {
                 base.OnMouseClickLeftBase(sender, e);
                 if (e.handled) return;
-                _menu.ConfirmChoice(null);
+                _menu.DeclineChoice();
             }
         }
 
@@ -298,12 +304,18 @@ namespace Game.Menus
             };
         }
 
+        public override async void OnTransitEnd()
+        {
+            //base.OnTransitEnd();
+            await ShowCards();
+            base.OnTransitEnd();
+        }
+
         public override void OpenInstantly()
         {
             base.OpenInstantly();
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Play();
-            DOVirtual.DelayedCall(1, () => ShowCards());
         }
         public override void CloseInstantly()
         {
@@ -356,17 +368,19 @@ namespace Game.Menus
             }
             else throw new Exception("There are no card choices left to generate cards for.");
         }
-        async void ConfirmChoice(TableCard? chosenCard)
+
+        async UniTask ConfirmChoice(TableCard? chosenCard)
         {
-            if (AllChoicesLeft <= 0)
+            if (AllChoicesLeft <= 0 || _animInProgress)
                 return;
 
+            _animInProgress = true;
             SetColliders(false);
             if (chosenCard != null)
             {
                 if (chosenCard.Drawer.Outline.GetColor().a == 0)
                     chosenCard.Drawer.Outline.SetColor(Color.white);
-                chosenCard.Drawer.HighlightOutline(chosenCard.Drawer.Outline.GetColor());
+                chosenCard.Drawer.HighlightOutline(chosenCard.Drawer.Outline.GetColor(), redraw: false);
 
                 Card data = chosenCard.Data;
                 if (data.isField)
@@ -382,24 +396,28 @@ namespace Game.Menus
             await HideCards();
             if (AllChoicesLeft <= 0)
             {
-                CloseAnimated();
+                TransitFromThis();
                 return;
             }
 
             await ShowCards();
             SetColliders(true);
+            _animInProgress = false;
         }
-        async void Reroll()
+        async UniTask RerollChoice()
         {
-            if (_rerollsLeft <= 0)
+            if (_rerollsLeft <= 0 || _animInProgress)
                 return;
 
+            _animInProgress = true;
             _rerollsLeft--;
             SetColliders(false);
             await HideCards();
             await ShowCards();
             SetColliders(true);
+            _animInProgress = false;
         }
+        async UniTask DeclineChoice() => ConfirmChoice(null);
 
         public async UniTask ShowCards()
         {

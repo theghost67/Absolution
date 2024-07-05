@@ -9,10 +9,13 @@ namespace Game.Traits
     /// </summary>
     public class TableActiveTraitList : TableTraitList, IReadOnlyList<TableActiveTraitListElement>
     {
-        public TableActiveTraitList(TableTraitListSet set) : base(set) { }
+        public TableActiveTraitList(TableTraitListSet set) : base(set)
+        {
+            TryOnInstantiatedAction(GetType(), typeof(TableActiveTraitList));
+        }
         protected TableActiveTraitList(TableActiveTraitList src, TableTraitListCloneArgs args) : base(src, args)
         {
-            args.TryOnClonedAction(src.GetType(), typeof(TableActiveTraitList));
+            TryOnInstantiatedAction(GetType(), typeof(TableActiveTraitList));
         }
 
         public override object Clone(CloneArgs args)
@@ -35,8 +38,8 @@ namespace Game.Traits
                 return element;
             }
 
-            TableActiveTrait trait = new(TraitBrowser.NewActive(e.id), Set.Owner, null, withDrawer: false);
-            element = new TableActiveTraitListElement(this, trait, Set.Drawer != null);
+            TableActiveTrait trait = new(TraitBrowser.NewActive(e.id), Set.Owner, null);
+            element = new TableActiveTraitListElement(this, trait);
             element.AdjustStacksInternal(e.stacks);
             return element;
         }

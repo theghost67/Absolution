@@ -7,7 +7,7 @@ namespace Game.Menus
     /// <summary>
     /// Интерфейс, реализующий объект как игровое меню.
     /// </summary>
-    public interface IMenu : ITableFindable
+    public interface IMenu : ITableEntrySource
     {
         public event Action OnOpened;
         public event Action OnClosed;
@@ -30,11 +30,11 @@ namespace Game.Menus
         public Menu GetNext();
         public Menu GetNextOpened();
 
-        public UniTask DestroyAnimated();
-        public UniTask ReturnAnimated();
+        public UniTask TransitToThis();
+        public UniTask TransitFromThis();
 
-        public UniTask OpenAnimated();
-        public UniTask CloseAnimated();
+        public void OnTransitStart();
+        public void OnTransitEnd();
 
         public void OpenInstantly();
         public void CloseInstantly();

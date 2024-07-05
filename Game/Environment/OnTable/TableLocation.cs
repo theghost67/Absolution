@@ -6,29 +6,23 @@ namespace Game.Environment
     /// <summary>
     /// Класс, представляющий локацию на столе (см. <see cref="Location"/>).
     /// </summary>
-    public sealed class TableLocation : ITableDrawable
+    public sealed class TableLocation : TableObject
     {
-        public event EventHandler OnDrawerCreated;
-        public event EventHandler OnDrawerDestroyed;
-
         [Obsolete("Move to Location with RefreshMissions()")] public LocationMission[] Missions => _missions;
         public bool IsUnlocked => Player.LocationLevel >= _data.level - 1;
 
         public Location Data => _data;
-        public TableLocationDrawer Drawer => _drawer;
+        public new TableLocationDrawer Drawer => ((TableObject)this).Drawer as TableLocationDrawer;
 
         readonly Location _data;
-        TableLocationDrawer _drawer;
         LocationMission[] _missions;
-
-        Drawer ITableDrawable.Drawer => _drawer;
 
         public TableLocation(Location data, Transform parent)
         {
             _data = data;
-            CreateDrawer(parent);
             RefreshMissions();
             Traveler.OnTravelEnd += RefreshMissions;
+            TryOnInstantiatedAction(GetType(), typeof(TableLocation));
         }
         void RefreshMissions()
         {
@@ -42,13 +36,9 @@ namespace Game.Environment
             };
         }
 
-        public void CreateDrawer(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
-            _drawer = new TableLocationDrawer(this, parent);
-        }
-        public void DestroyDrawer(bool instantly)
-        {
-            _drawer?.TryDestroy(instantly);
+            return new TableLocationDrawer(this, parent);
         }
     }
 }

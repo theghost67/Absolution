@@ -10,11 +10,15 @@ namespace Game.Traits
     public class BattleActiveTraitList : TableActiveTraitList, IBattleTraitList, IReadOnlyList<BattleActiveTraitListElement>
     {
         public new BattleTraitListSet Set { get; }
-        public BattleActiveTraitList(BattleTraitListSet set) : base(set) { Set = set; }
+        public BattleActiveTraitList(BattleTraitListSet set) : base(set) 
+        {
+            Set = set;
+            TryOnInstantiatedAction(GetType(), typeof(BattleActiveTraitList));
+        }
         protected BattleActiveTraitList(BattleActiveTraitList src, BattleTraitListCloneArgs args) : base(src, args) 
         {
             Set = args.srcListSetClone;
-            args.TryOnClonedAction(src.GetType(), typeof(BattleActiveTraitList));
+            TryOnInstantiatedAction(GetType(), typeof(BattleActiveTraitList));
         }
 
         public override object Clone(CloneArgs args)
@@ -37,8 +41,8 @@ namespace Game.Traits
                 return element;
             }
 
-            BattleActiveTrait trait = new(TraitBrowser.NewActive(e.id), Set.Owner, null, withDrawer: false);
-            element = new BattleActiveTraitListElement(this, trait, Set.Drawer != null);
+            BattleActiveTrait trait = new(TraitBrowser.NewActive(e.id), Set.Owner, null);
+            element = new BattleActiveTraitListElement(this, trait);
             element.AdjustStacksInternal(e.stacks);
             return element;
         }

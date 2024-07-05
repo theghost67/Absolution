@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
 
 namespace Game.Traits
@@ -7,7 +6,7 @@ namespace Game.Traits
     /// <summary>
     /// Интерфейс, реализующий объект как список трейтов на столе (см. <see cref="ITableTraitListElement"/>).
     /// </summary>
-    public interface ITableTraitList : IReadOnlyList<ITableTraitListElement>, ICloneableWithArgs, IDisposable
+    public interface ITableTraitList : ITableObject, IReadOnlyList<ITableTraitListElement>, ICloneableWithArgs
     {
         public IIdEventBoolAsync<TableTraitStacksTryArgs> OnStacksTryToChange { get; } // before trait added/removed (can be canceled)
         public IIdEventVoidAsync<TableTraitStacksSetArgs> OnStacksChanged { get; }   // after trait added/removed

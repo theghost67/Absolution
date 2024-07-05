@@ -67,7 +67,7 @@ namespace Game
             int value = args["value"].ValueAs<int>();
             bool isPlayerSide = args["side"].input == "p";
 
-            BattleSide side = isPlayerSide ? territory.player : territory.enemy;
+            BattleSide side = isPlayerSide ? territory.Player : territory.Enemy;
             TableStat stat = id switch
             {
                 "health" => side.health,

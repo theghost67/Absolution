@@ -47,7 +47,7 @@ namespace Game.Environment
             base.OnMouseClickLeftBase(sender, e);
             if (e.handled) return;
             TableLocationPlaceDrawer drawer = (TableLocationPlaceDrawer)sender;
-            drawer.attached.Data.menuCreator().OpenAnimated();
+            drawer.attached.Data.menuCreator().TransitToThis();
         }
     }
 }

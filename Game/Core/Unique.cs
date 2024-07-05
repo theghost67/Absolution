@@ -17,37 +17,35 @@ namespace Game
         int _guid;
         string _guidStr;
 
-        public Unique()
-        {
-            _guid = NewGuid;
-            _guidStr = _guid.ToString();
-        }
+        public Unique() : this(NewGuid) { }
         public Unique(int guid) 
         { 
             _guid = guid;
             _guidStr = guid.ToString();
         }
-        public Unique(string guid)
+
+        public static bool operator ==(Unique left, Unique right)
         {
-            if (string.IsNullOrEmpty(guid))
-            {
-                _guid = NewGuid;
-                _guidStr = _guid.ToString();
-            }
-            else
-            {
-                _guid = guid.GetHashCode();
-                _guidStr = guid;
-            }
+            if (left is null)
+                 return right is null;
+            else return left.Equals(right);
+        }
+        public static bool operator !=(Unique left, Unique right)
+        {
+            return !(left == right);
         }
 
         public bool Equals(Unique other)
         {
-            return _guid.Equals(other._guid);
+            if (other is null)
+                return false;
+            else return _guid.Equals(other._guid);
         }
         public int CompareTo(Unique other)
         {
-            return _guid.CompareTo(other._guid);
+            if (other is null)
+                return 1;
+            else return _guid.CompareTo(other._guid);
         }
 
         public override bool Equals(object obj)

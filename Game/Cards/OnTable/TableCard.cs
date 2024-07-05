@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using System;
 using UnityEngine;
 
 namespace Game.Cards
@@ -7,73 +6,38 @@ namespace Game.Cards
     /// <summary>
     /// Абстрактный класс для любой карты, находящейся на столе.
     /// </summary>
-    public abstract class TableCard : Unique, ITableCard
+    public abstract class TableCard : TableObject, ITableCard
     {
-        public event EventHandler OnDrawerCreated;
-        public event EventHandler OnDrawerDestroyed;
-
         public Card Data => _data;
-        public TableCardDrawer Drawer => _drawer;
+        public new TableCardDrawer Drawer => ((TableObject)this).Drawer as TableCardDrawer;
         public virtual TableFinder Finder => null;
 
-        public virtual string TableName => Data.name;
-        public virtual string TableNameDebug => $"{Data.id}+{GuidStr}";
+        public override string TableName => Data.name;
+        public override string TableNameDebug => $"{Data.id}[?]+{GuidStr}";
 
         public readonly TableStat price;
         readonly Card _data;
-        TableCardDrawer _drawer;
 
-        public TableCard(Card data, Transform parent, bool withDrawer = true) : base()
+        public TableCard(Card data, Transform parent) : base(parent)
         {
-            OnDrawerCreated += OnDrawerCreatedBase;
-            OnDrawerDestroyed += OnDrawerDestroyedBase;
-
             _data = data;
             price = new TableStat(nameof(price), this, data.price.value);
             price.OnPreSet.Add(OnPricePreSetBase_TOP, 256);
             price.OnPostSet.Add(OnPricePostSetBase_TOP, 256);
 
-            if (withDrawer)
-                CreateDrawer(parent);
+            // class is abstract
+            //TryOnInstantiatedAction(GetType(), typeof(TableCard));
         }
-        protected TableCard(TableCard src, TableCardCloneArgs args) : base(src.Guid)
+        protected TableCard(TableCard src, TableCardCloneArgs args) : base(src)
         {
-            OnDrawerCreated = (EventHandler)src.OnDrawerCreated?.Clone();
-            OnDrawerDestroyed = (EventHandler)src.OnDrawerDestroyed?.Clone();
-
             _data = args.srcCardDataClone;
             price = (TableStat)src.price.Clone(new TableStatCloneArgs(this, args.terrCArgs));
+
+            // class is abstract
+            //TryOnInstantiatedAction(GetType(), typeof(TableCard));
         }
 
-        public virtual void Dispose()
-        {
-            DestroyDrawer(true);
-        }
         public abstract object Clone(CloneArgs args);
-
-        public void CreateDrawer(Transform parent)
-        {
-            if (_drawer != null) return;
-            TableCardDrawer drawer = DrawerCreator(parent);
-            DrawerSetter(drawer);
-            OnDrawerCreated?.Invoke(this, EventArgs.Empty);
-        }
-        public void DestroyDrawer(bool instantly)
-        {
-            if (_drawer == null) return;
-            _drawer.TryDestroy(instantly);
-            DrawerSetter(null);
-            OnDrawerDestroyed?.Invoke(this, EventArgs.Empty);
-        }
-
-        protected virtual void DrawerSetter(TableCardDrawer value)
-        {
-            _drawer = value;
-        }
-        protected abstract TableCardDrawer DrawerCreator(Transform parent);
-
-        protected virtual void OnDrawerCreatedBase(object sender, EventArgs e) { }
-        protected virtual void OnDrawerDestroyedBase(object sender, EventArgs e) { }
 
         // used in BattleFieldCard for logging
         protected virtual UniTask OnPricePreSetBase_TOP(object sender, TableStat.PreSetArgs e)

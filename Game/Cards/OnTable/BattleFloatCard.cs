@@ -10,7 +10,7 @@ namespace Game.Cards
     /// </summary>
     public class BattleFloatCard : TableFloatCard, IBattleCard
     {
-        public new BattleFloatCardDrawer Drawer => _drawer;
+        public new BattleFloatCardDrawer Drawer => ((TableObject)this).Drawer as BattleFloatCardDrawer;
         public override string TableName => base.TableName.Colored(Side.GetSideColor());
 
         public BattleTerritory Territory => _side.Territory;
@@ -30,15 +30,15 @@ namespace Game.Cards
         BattleFloatCardDrawer _drawer;
         BattleSide _side;
 
-        public BattleFloatCard(FloatCard data, BattleSide side, bool withDrawer = true) : base(data, null, withDrawer: false)
+        public BattleFloatCard(FloatCard data, BattleSide side) : base(data, side.Territory.Transform)
         {
             _side = side;
-            if (withDrawer)
-                CreateDrawer(_side.Territory.transform);
+            TryOnInstantiatedAction(GetType(), typeof(TableFloatCard));
         }
         protected BattleFloatCard(BattleFloatCard src, BattleFloatCardCloneArgs args) : base(src, args)
         {
             _side = args.srcCardSideClone;
+            TryOnInstantiatedAction(GetType(), typeof(TableFloatCard));
         }
 
         public override void Dispose()
@@ -52,17 +52,12 @@ namespace Game.Cards
                  return new BattleFloatCard(this, cArgs);
             else return null;
         }
+
         public bool TryUse()
         {
             return TryUse(new TableFloatCardUseArgs(this, _side.Territory));
         }
-
-        protected override void DrawerSetter(TableCardDrawer value)
-        {
-            base.DrawerSetter(value);
-            _drawer = (BattleFloatCardDrawer)value;
-        }
-        protected override TableCardDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             BattleFloatCardDrawer drawer = new(this, parent);
             drawer.SetSortingOrder(10, asDefault: true);

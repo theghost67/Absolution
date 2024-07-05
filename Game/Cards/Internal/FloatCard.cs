@@ -25,7 +25,7 @@ namespace Game.Cards
         public override float Points() => default;
 
         // see how weight threshold is used in BattleAI.CalculateWeightDeltas()
-        public virtual BattleWeight GetWeightDeltaUseThreshold(BattleFloatCard card) => new(0, 0.16f);
+        public virtual BattleWeight WeightDeltaUseThreshold(BattleFloatCard card) => new(0, 0.16f);
 
         public virtual bool IsUsable(TableFloatCardUseArgs e) => false;
         public virtual UniTask OnUse(TableFloatCardUseArgs e) => UniTask.CompletedTask;

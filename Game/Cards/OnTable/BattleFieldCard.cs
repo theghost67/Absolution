@@ -39,9 +39,9 @@ namespace Game.Cards
         public bool IgnoresCards => throw new NotSupportedException(); // TODO: implement (as counters)
         public bool IsKilled => _isKilled;
 
-        public new BattleFieldCardDrawer Drawer => _drawer;
-        public new BattleTraitListSet Traits => _traits; // has StacksChanged events
-        public new BattleField Field => _field;
+        public new BattleFieldCardDrawer Drawer => ((TableObject)this).Drawer as BattleFieldCardDrawer;
+        public new BattleTraitListSet Traits => base.Traits as BattleTraitListSet; // has StacksChanged events
+        public new BattleField Field => base.Field as BattleField;
 
         public BattleTerritory Territory => _side.Territory;
         public BattleSide Side
@@ -49,7 +49,7 @@ namespace Game.Cards
             get => _side;
             set
             {
-                if (_field != null)
+                if (Field != null)
                     throw new InvalidOperationException($"{nameof(Side)} property cannot be changed directly if card is on a field. Try setting card {nameof(Field)} property instead.");
 
                 if (this is not ITableSleeveCard sCard) 
@@ -104,9 +104,6 @@ namespace Game.Cards
         readonly TableEventVoid<BattleInitiationRecvArgs> _onInitiationPreReceived; 
         readonly TableEventVoid<BattleInitiationRecvArgs> _onInitiationPostReceived; 
 
-        BattleFieldCardDrawer _drawer;
-        BattleTraitListSet _traits;
-        BattleField _field;
         BattleSide _side;
         BattleArea _area;
 
@@ -119,8 +116,8 @@ namespace Game.Cards
         int _canInitiateCounter; 
         int _canBeKilledCounter;
 
-        public BattleFieldCard(FieldCard data, BattleSide side, bool withDrawer = true, bool fillTraits = true) 
-            : base(data, null, withDrawer: false, fillTraits: false)
+        public BattleFieldCard(FieldCard data, BattleSide side) 
+            : base(data, side.Territory.Transform)
         {
             _onFieldTryToAttach = new TableEventBool<TableFieldAttachArgs>();
             _onFieldPreAttached = new TableEventVoid<TableFieldAttachArgs>();
@@ -143,19 +140,13 @@ namespace Game.Cards
             _onInitiationPreReceived.Add(OnInitiationPreReceivedBase_TOP, 256);
             _onInitiationPostReceived.Add(OnInitiationPostReceivedBase_TOP, 256);
 
-            _traits = (BattleTraitListSet)base.Traits;
             _side = side;
             _area = new BattleArea(this, this);
 
             Territory.OnStartPhase.Add(OnStartPhase);
             Territory.OnNextPhase.Add(OnNextPhase);
             health.OnPostSet.Add(OnHealthPostSet);
-
-            if (fillTraits)
-                _traits.AdjustStacksInRange(data.traits, this);
-
-            if (withDrawer)
-                CreateDrawer(side.Territory.transform);
+            TryOnInstantiatedAction(GetType(), typeof(BattleFieldCard));
         }
         protected BattleFieldCard(BattleFieldCard src, BattleFieldCardCloneArgs args) : base(src, args)
         {
@@ -179,16 +170,12 @@ namespace Game.Cards
             BattleAreaCloneArgs areaCArgs = new(this, this, args.terrCArgs);
             _side = args.srcCardSideClone;
             _area = (BattleArea)src._area.Clone(areaCArgs);
-
-            _field = (BattleField)base.Field;
-            args.TryOnClonedAction(src.GetType(), typeof(BattleFieldCard));
+            TryOnInstantiatedAction(GetType(), typeof(BattleFieldCard));
         }
 
         public override void Dispose()
         {
             base.Dispose();
-
-            _traits.Dispose();
             _area.Dispose();
 
             OnFieldTryToAttach.Dispose();
@@ -226,7 +213,7 @@ namespace Game.Cards
             if (health > 0)
                 await health.SetValue(0, source);
 
-            _drawer?.transform.DOAShake();
+            Drawer?.transform.DOAShake();
             await _onPreKilled.Invoke(this, source);
 
             if ((!mode.HasFlag(BattleKillMode.IgnoreCanBeKilled) && !CanBeKilled) ||
@@ -272,49 +259,28 @@ namespace Game.Cards
             BattleTraitListSetCloneArgs setArgs = new(this, argsCast.terrCArgs);
             return (TableTraitListSet)src.Clone(setArgs);
         }
-        protected override void TraitListSetSetter(TableTraitListSet value)
-        {
-            base.TraitListSetSetter(value);
-            _traits = (BattleTraitListSet)value;
-        }
 
-        protected override async UniTask FieldPropSetter(TableFieldAttachArgs e)
+        protected override async UniTask AttachToFieldInternal(TableFieldAttachArgs e)
         {
             if (e.field != null && e.field.Card != null) return;
             if (e.field == null && IsKilled) return;
             if (e.field == null)
             {
-                if (_field == null) return;
-                await _field.DetatchCard(e.source);
+                await base.AttachToFieldInternal(e);
                 await SetObserveTargets(false);
-                FieldBaseSetter(null);
                 return;
             }
 
             await _onFieldPreAttached.Invoke(this, e);
             await SetObserveTargets(false);
-            if (_field != null)
-                await _field.DetatchCard(e.source);
 
-            FieldBaseSetter(e.field);
-            _side = _field.Side;
+            await base.AttachToFieldInternal(e);
+            _side = Field.Side;
 
-            await _field.AttachCard(this, e.source);
             await SetObserveTargets(true);
             await _onFieldPostAttached.Invoke(this, e);
         }
-        protected override void FieldBaseSetter(TableField value)
-        {
-            base.FieldBaseSetter(value);
-            _field = (BattleField)value;
-        }
-
-        protected override void DrawerSetter(TableCardDrawer value)
-        {
-            base.DrawerSetter(value);
-            _drawer = (BattleFieldCardDrawer)value;
-        }
-        protected override TableCardDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             BattleFieldCardDrawer drawer = new(this, parent);
             drawer.SetSortingOrder(10, asDefault: true);
@@ -455,7 +421,7 @@ namespace Game.Cards
             BattleFieldCard card = (BattleFieldCard)Finder.FindInBattle(territory);
 
             if (card == null) return;
-            if (card._field == null || card._isKilled) return;
+            if (card.Field == null || card._isKilled) return;
             if (++card._phaseAge <= MOXIE_PRIORITY_VALUE) return;
 
             card.Drawer.CreateTextAsSpeech("* СТАРОСТЬ *", Color.red);
@@ -467,11 +433,11 @@ namespace Game.Cards
             BattleFieldCard card = (BattleFieldCard)Finder.FindInBattle(territory);
 
             if (card == null) return;
-            if (card._field == null || card._isKilled)
+            if (card.Field == null || card._isKilled)
                 return;
 
             card._turnAge++;
-            foreach (ITableTraitListElement element in card._traits)
+            foreach (ITableTraitListElement element in card.Traits)
             {
                 TableTraitStorage storage = element.Trait.Storage;
                 storage.turnsDelay--;
@@ -487,7 +453,7 @@ namespace Game.Cards
         }
         BattleWeight CalculateWeight()
         {
-            if (_isKilled || _field == null)
+            if (_isKilled || Field == null)
                 return BattleWeight.none;
 
             float absWeight = health + strength;

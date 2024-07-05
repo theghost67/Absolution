@@ -12,7 +12,7 @@ namespace Game.Cards
     public class TableFieldCard : TableCard
     {
         public new FieldCard Data => _data;
-        public new TableFieldCardDrawer Drawer => _drawer;
+        public new TableFieldCardDrawer Drawer => ((TableObject)this).Drawer as TableFieldCardDrawer;
         public override TableFinder Finder => _finder;
 
         public override string TableName => $"{Data.name}[{_field?.TableName ?? "-"}]";
@@ -27,11 +27,10 @@ namespace Game.Cards
 
         readonly FieldCard _data;
         readonly TableFieldCardFinder _finder;
-        TableFieldCardDrawer _drawer;
         TableField _field;
         TableTraitListSet _traits;
 
-        public TableFieldCard(FieldCard data, Transform parent, bool withDrawer = true, bool fillTraits = true) : base(data, parent, withDrawer: false)
+        public TableFieldCard(FieldCard data, Transform parent) : base(data, parent)
         {
             _data = data;
             _finder = new TableFieldCardFinder(this);
@@ -48,13 +47,11 @@ namespace Game.Cards
             moxie.OnPreSet.Add(OnStatPreSetBase_TOP, 256);
             moxie.OnPostSet.Add(OnStatPostSetBase_TOP, 256);
 
-            _traits = TraitListSetCreator();
-
-            if (fillTraits)
+            AddOnInstantiatedAction(GetType(), typeof(TableFieldCard), () =>
+            {
+                _traits = TraitListSetCreator();
                 _traits.AdjustStacksInRange(data.traits, this);
-
-            if (withDrawer)
-                CreateDrawer(parent);
+            });
         }
         protected TableFieldCard(TableFieldCard src, TableFieldCardCloneArgs args) : base(src, args)
         {
@@ -67,12 +64,17 @@ namespace Game.Cards
             moxie = (TableStat)src.moxie.Clone(statCArgs);
 
             _field = args.srcCardFieldClone;
-            args.AddOnClonedAction(src.GetType(), typeof(TableFieldCard), () => TraitListSetSetter(TraitListSetCloner(src._traits, args)));
+            AddOnInstantiatedAction(GetType(), typeof(TableFieldCard), () =>
+            {
+                _traits = TraitListSetCloner(src._traits, args);
+            });
         }
 
         public override void Dispose()
         {
             base.Dispose();
+            _traits.Dispose();
+
             health.OnPreSet.Clear();
             health.OnPostSet.Clear();
             strength.OnPreSet.Clear();
@@ -92,12 +94,12 @@ namespace Game.Cards
             bool result = e.field != null && e.field.Card == null;
             return UniTask.FromResult(result);
         }
-        public async UniTask AttachToAnotherField(TableField field, ITableEntrySource source)
+        public async UniTask AttachToField(TableField field, ITableEntrySource source)
         {
             TableEventManager.Add();
             TableFieldAttachArgs args = new(field, source);
             if (await CanBeAttachedToField(args))
-                await FieldPropSetter(args);
+                await AttachToFieldInternal(args);
             TableEventManager.Remove();
         }
 
@@ -110,35 +112,24 @@ namespace Game.Cards
             TableTraitListSetCloneArgs setArgs = new(this, args.terrCArgs);
             return (TableTraitListSet)src.Clone(setArgs);
         }
-        protected virtual void TraitListSetSetter(TableTraitListSet value)
-        {
-            _traits = value;
-        }
 
-        protected virtual async UniTask FieldPropSetter(TableFieldAttachArgs e)
+        protected virtual async UniTask AttachToFieldInternal(TableFieldAttachArgs e)
         {
             if (e.field == null)
             {
-                FieldBaseSetter(null);
+                if (_field == null) return;
                 await _field.DetatchCard(e.source);
+                _field = null;
             }
             else
             {
-                FieldBaseSetter(e.field);
+                if (_field != null) 
+                    await Field.DetatchCard(e.source);
+                _field = e.field;
                 await _field.AttachCard(this, e.source);
             }
         }
-        protected virtual void FieldBaseSetter(TableField value)
-        {
-            _field = value;
-        }
-
-        protected override void DrawerSetter(TableCardDrawer value)
-        {
-            base.DrawerSetter(value);
-            _drawer = (TableFieldCardDrawer)value;
-        }
-        protected override TableCardDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             TableFieldCardDrawer drawer = new(this, parent);
             drawer.SetSortingOrder(10, asDefault: true);
@@ -153,7 +144,7 @@ namespace Game.Cards
         protected override void OnDrawerDestroyedBase(object sender, EventArgs e)
         {
             TableFieldCard owner = (TableFieldCard)sender;
-            owner.Traits.DestroyDrawer(true);
+            owner.Traits.DestroyDrawer(Drawer?.IsDestroyed ?? true);
         }
 
         // used in BattleFieldCard for debug-logging

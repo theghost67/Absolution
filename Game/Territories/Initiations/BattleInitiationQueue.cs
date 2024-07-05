@@ -130,9 +130,6 @@ namespace Game.Territories
                 }
 
                 await ShowInitiationPreviews(sArgs);
-                if (!_territory.DrawersAreNull)
-                    await UniTask.Delay((int)(ANIM_DURATION_HALF * 1000));
-
                 bool receiversSkipped = false;
                 foreach (BattleField receiver in sArgs.ReceiversByPriority)
                 {
@@ -147,10 +144,7 @@ namespace Game.Territories
 
                 if (!receiversSkipped)
                     await InvokeSendArgsEvent(sender.OnInitiationPostSent, sender, sArgs);
-
                 await HideInitiationPreviews(sArgs);
-                if (!_territory.DrawersAreNull)
-                    await UniTask.Delay((int)(ANIM_DURATION_HALF * 1000));
             }
 
             if (!_territory.DrawersAreNull)
@@ -525,9 +519,7 @@ namespace Game.Territories
         }
         static bool TweenIsRunning(Tween t)
         {
-            if (t == null) return false;
-            if (!t.active) return false;
-            return t.IsComplete();
+            return t.IsActive() && !t.IsComplete();
         }
         #endregion
     }

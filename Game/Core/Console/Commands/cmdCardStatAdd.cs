@@ -47,8 +47,6 @@ namespace Game
         protected override void Execute(CommandArgInputDict args)
         {
             TableCardDrawer drawer = (TableCardDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is TableCardDrawer);
-            TableCard card = drawer.attached;
-
             if (drawer == null)
             {
                 TableConsole.Log("Наведите курсор на карту, значение характеристики которой нужно изменить.", LogType.Error);
@@ -57,6 +55,7 @@ namespace Game
 
             string id = args["id"].input;
             int value = args["value"].ValueAs<int>();
+            TableCard card = drawer.attached;
 
             if (!card.Data.isField)
             {

@@ -62,9 +62,9 @@ namespace Game.Environment
         }
         void OnLocationMouseClick(object sender, DrawerMouseEventArgs e)
         {
-            if (_isUnlocked)
-                new MissionMenu(attached.Missions).OpenAnimated();
-            else transform.DOAShake();
+            //if (_isUnlocked)
+            //    new MissionMenu(attached.Missions).TransitToThis();
+            //else transform.DOAShake();
         }
     }
 }

@@ -11,23 +11,22 @@ namespace Game.Traits
     {
         public override TableFinder Finder => _finder;
         public new PassiveTrait Data => _data;
-        public new TablePassiveTraitDrawer Drawer => _drawer;
+        public new TablePassiveTraitDrawer Drawer => ((TableObject)this).Drawer as TablePassiveTraitDrawer;
 
         readonly TablePassiveTraitFinder _finder;
         readonly PassiveTrait _data;
-        TablePassiveTraitDrawer _drawer;
 
-        public TablePassiveTrait(PassiveTrait data, TableFieldCard owner, Transform parent, bool withDrawer = true) : base(data, owner, parent, withDrawer: false)
+        public TablePassiveTrait(PassiveTrait data, TableFieldCard owner, Transform parent) : base(data, owner, parent)
         {
             _data = data;
             _finder = new TablePassiveTraitFinder(this);
-            if (withDrawer)
-                CreateDrawer(parent);
+            TryOnInstantiatedAction(GetType(), typeof(TablePassiveTrait));
         }
         protected TablePassiveTrait(TablePassiveTrait src, TablePassiveTraitCloneArgs args) : base(src, args)
         {
             _data = args.srcTraitDataClone;
             _finder = new TablePassiveTraitFinder(this);
+            TryOnInstantiatedAction(GetType(), typeof(TablePassiveTrait));
         }
 
         public override object Clone(CloneArgs args)
@@ -36,7 +35,6 @@ namespace Game.Traits
                  return new TablePassiveTrait(this, cArgs);
             else return null;
         }
-
         public override int GetStacks()
         {
             if (Owner == null) return 0;
@@ -51,12 +49,7 @@ namespace Game.Traits
                  return UniTask.CompletedTask;
             else return Owner.Traits.Passives.AdjustStacks(_data.id, delta, source);
         }
-
-        protected override void DrawerSetter(TableTraitDrawer value)
-        {
-            _drawer = (TablePassiveTraitDrawer)value;
-        }
-        protected override TableTraitDrawer DrawerCreator(Transform parent)
+        protected override Drawer DrawerCreator(Transform parent)
         {
             return new TablePassiveTraitDrawer(this, parent);
         }

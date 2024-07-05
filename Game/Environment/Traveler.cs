@@ -107,39 +107,19 @@ namespace Game.Environment
             _mission = mission;
             RefreshEntityFrequencies();
 
-            _placesNodeMap = GenerateNodeMap(yLength: _requiredProgress);
-            OnTravelStart?.Invoke();
+            //_placesNodeMap = GenerateNodeMap(yLength: _requiredProgress);
+            //OnTravelStart?.Invoke();
 
-            MusicPack.Get("World").StopFading();
-            SpriteRenderer bg = VFX.CreateScreenBG(Color.black.WithAlpha(0));
-            await bg.DOFade(1, 1).AsyncWaitForCompletion();
+            //MusicPack.Get("World").StopFading();
+            //SpriteRenderer bg = VFX.CreateScreenBG(Color.black.WithAlpha(0));
+            //await bg.DOFade(1, 1).AsyncWaitForCompletion();
 
-            foreach (Menu menu in Menu.GetAllOpened())
-                menu.CloseInstantly();
+            //foreach (Menu menu in Menu.GetAllOpened())
+            //    menu.CloseInstantly();
 
-            await bg.DOFade(0, 1).AsyncWaitForCompletion();
-            new LocationMenu(_location).OpenInstantly();
+            //await bg.DOFade(0, 1).AsyncWaitForCompletion();
+            //new LocationMenu(_location).OpenInstantly();
         }
-        public static Menu CreateDemoMenu(Location location) // remove
-        {
-            if (_isTraveling) return null;
-            location.stage = 50;
-            LocationMission mission = new(location);
-
-            _isTraveling = true;
-            _currentProgress = 0;
-            _requiredProgress = mission.durationLevel.value;
-
-            _location = mission.location;
-            _mission = mission;
-            RefreshEntityFrequencies();
-
-            _placesNodeMap = GenerateNodeMap(yLength: _requiredProgress);
-            OnTravelStart?.Invoke();
-
-            return new BattlePlaceMenu();
-        }
-
         public static void TryStopTravel(bool complete)
         {
             if (!_isTraveling) return;
@@ -164,14 +144,29 @@ namespace Game.Environment
             _currentProgress++;
         }
 
-        public static CardDeck NewDeck(EntityType type = default)
+        public static void DeckCardsCount(int pointsPerCard, out int fieldCardsCount, out int floatCardsCount)
         {
-            int pointsPerCard = _location.stage;
-            DeckCardsCount(pointsPerCard, out int fieldCardsCount, out int floatCardsCount);
+            fieldCardsCount = pointsPerCard < 6 ? 3 : Convert.ToInt32(3 + 2 * Mathf.Log(pointsPerCard - 5));
+            floatCardsCount = pointsPerCard < 28 ? 0 : Convert.ToInt32(Mathf.Log((pointsPerCard - 12) / 16f));
+        }
+        public static void DeckCardsCountRandom(int pointsPerCard, out int fieldCardsCount, out int floatCardsCount)
+        {
+            fieldCardsCount = pointsPerCard < 6 ? 3 : Convert.ToInt32(3 + 2 * Mathf.Log(pointsPerCard - 5));
+            floatCardsCount = pointsPerCard < 28 ? 0 : Convert.ToInt32(Mathf.Log((pointsPerCard - 12) / 16f));
+            fieldCardsCount = UnityEngine.Random.Range(fieldCardsCount / 2, fieldCardsCount);
+        }
+
+        public static CardDeck NewDeck(EntityType type = default, int statPointsPerCard = -1)
+        {
+            if (!_isTraveling)
+                throw new InvalidOperationException("Travel is not in progress.");
+            if (statPointsPerCard == -1)
+                statPointsPerCard = _location.stage;
+            DeckCardsCountRandom(statPointsPerCard, out int fieldCardsCount, out int floatCardsCount);
 
             CardDeck deck = new();
-            int pointsSum = pointsPerCard * fieldCardsCount;
-            int traitsCountSum = Convert.ToInt32(FieldCardUpgradeRules.TraitsCountRaw(pointsPerCard) * fieldCardsCount);
+            int pointsSum = statPointsPerCard * fieldCardsCount;
+            int traitsCountSum = Convert.ToInt32(FieldCardUpgradeRules.TraitsCountRaw(statPointsPerCard) * fieldCardsCount);
             List<float> statPointsRatios = new(capacity: fieldCardsCount);
             List<float> traitsCountRatios = new(capacity: fieldCardsCount);
 
@@ -191,36 +186,36 @@ namespace Game.Environment
                 traitsCountRatios[i] /= traitsCountRatiosSum;
             }
 
-            TravelerDeckPreEventArgs preArgs = new(type, fieldCardsCount, floatCardsCount, pointsPerCard, statPointsRatios);
+            TravelerDeckPreEventArgs preArgs = new(type, fieldCardsCount, floatCardsCount, statPointsPerCard, statPointsRatios);
             OnDeckPreCreated?.Invoke(preArgs);
             if (preArgs.handled) return deck;
 
             // generate cards using ratios (to make more diversed deck)
             for (int i = 0; i < fieldCardsCount; i++)
             {
+                if (deck.LimitReached) break;
                 int points = Convert.ToInt32(statPointsRatios[i] * pointsSum);
                 int traitsCount = Convert.ToInt32(traitsCountRatios[i] * traitsCountSum);
                 deck.fieldCards.Add(NewField(type, points, traitsCount));
             }
 
             for (int i = 0; i < floatCardsCount; i++)
+            {
+                if (deck.LimitReached) break;
                 deck.floatCards.Add(NewFloat());
+            }
 
             OnDeckPostCreated?.Invoke(new TravelerDeckPostEventArgs(deck, preArgs));
             return deck;
         }
-        public static void DeckCardsCount(int pointsPerCard, out int fieldCardsCount, out int floatCardsCount)
-        {
-            fieldCardsCount = pointsPerCard < 6 ? 3 : Convert.ToInt32(3 + 2 * Mathf.Log(pointsPerCard - 5));
-            floatCardsCount = pointsPerCard < 28 ? 0 : Convert.ToInt32(Mathf.Log((pointsPerCard - 12) / 16f));
-        }
-
         public static FieldCard NewField(EntityType type = default)
         {
-            return NewField(type, _location.stage);
+            return NewField(type);
         }
         public static FieldCard NewField(EntityType type = default, int statPoints = -1, int traitsCount = -1)
         {
+            if (!_isTraveling)
+                throw new InvalidOperationException("Travel is not in progress.");
             if (statPoints == -1)
                 statPoints = _location.stage;
             if (traitsCount == -1)
@@ -243,6 +238,8 @@ namespace Game.Environment
         }
         public static FloatCard NewFloat()
         {
+            if (!_isTraveling)
+                throw new InvalidOperationException("Travel is not in progress.");
             string randomId = floatsFrequencies.GetWeightedRandom(pair => pair.Value).Key;
             return CardBrowser.NewFloat(randomId);
         }

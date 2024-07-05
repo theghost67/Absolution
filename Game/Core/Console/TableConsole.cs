@@ -56,14 +56,14 @@ namespace Game
 
         public static void LogToFile(string text)
         {
-            if (OnLogToFile?.Invoke(text) ?? !Config.writeConsoleLogs) return;
+            if (OnLogToFile?.Invoke(text) ?? !Global.writeConsoleLogs) return;
             _fileQueuedLogs.Enqueue(text);
         }
         public static void LogToFile(IEnumerable<string> texts)
         {
             foreach (string text in texts) 
             {
-                if (OnLogToFile?.Invoke(text) ?? !Config.writeConsoleLogs) continue;
+                if (OnLogToFile?.Invoke(text) ?? !Global.writeConsoleLogs) continue;
                 _fileQueuedLogs.Enqueue(text);
             }
         }

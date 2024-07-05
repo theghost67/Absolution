@@ -16,9 +16,6 @@ using UnityEngine;
 
 namespace Game.Menus
 {
-    // TODO: create separate class for buttons (and derived?)
-    // TODO: display upgraded desc from the right side
-
     /// <summary>
     /// Класс, представляющий меню с возможностью улучшать карты поля колоды игрока.
     /// </summary>
@@ -90,24 +87,12 @@ namespace Game.Menus
             bool _isPulling;
             bool _isPulledOut;
 
-            public CardToUpgrade(CardUpgradeMenu menu, FieldCard data, TableSleeve sleeve) : base(data, sleeve.Drawer.transform) 
+            public CardToUpgrade(CardUpgradeMenu menu, FieldCard data, TableSleeve sleeve) : base(data, sleeve.Drawer?.transform) 
             { 
                 _menu = menu;
                 _sleeve = sleeve;
-
-                _stats = new StatToUpgrade[4 + data.traits.Count]; // card main stats count in the game = 4
-                _stats[0] = new PriceStatToUpgrade(menu, this, Drawer.upperLeftIcon);
-                _stats[1] = new MoxieStatToUpgrade(menu, this, Drawer.upperRightIcon);
-                _stats[2] = new HealthStatToUpgrade(menu, this, Drawer.lowerLeftIcon);
-                _stats[3] = new StrengthStatToUpgrade(menu, this, Drawer.lowerRightIcon);
-                int index = 4;
-                foreach (Trait trait in data.traits.Select(e => e.Trait))
-                    _stats[index++] = new TraitStatToUpgrade(menu, this, Drawer.Traits.elements[trait.id]);
-                foreach (StatToUpgrade stat in _stats)
-                    stat.OnGraded += delta => OnAnyStatGraded(delta);
-
-                Drawer.ChangePointer = true;
-                Drawer.OnMouseClickLeft += (s, e) => { if (_selected != this) Select(); };
+                _stats = new StatToUpgrade[4 + Data.traits.Count];
+                TryOnInstantiatedAction(GetType(), typeof(CardToUpgrade));
             }
             public static void OnUpdate()
             {
@@ -192,6 +177,29 @@ namespace Game.Menus
                 Drawer.HighlightOutline(new Color(1.0f, 0.2f, 0.2f), 0.5f);
             }
 
+            protected override void OnDrawerCreatedBase(object sender, EventArgs e)
+            {
+                base.OnDrawerCreatedBase(sender, e);
+
+                _stats[0] = new PriceStatToUpgrade(_menu, this, Drawer.priceIcon);
+                _stats[1] = new MoxieStatToUpgrade(_menu, this, Drawer.moxieIcon);
+                _stats[2] = new HealthStatToUpgrade(_menu, this, Drawer.healthIcon);
+                _stats[3] = new StrengthStatToUpgrade(_menu, this, Drawer.strengthIcon);
+                int index = 4;
+                foreach (Trait trait in Data.traits.Select(e => e.Trait))
+                    _stats[index++] = new TraitStatToUpgrade(_menu, this, Drawer.Traits.elements[trait.id]);
+                foreach (StatToUpgrade stat in _stats)
+                    stat.OnGraded += delta => OnAnyStatGraded(delta);
+
+                Drawer.ChangePointer = true;
+                Drawer.OnMouseClickLeft += (s, e) => { if (_selected != this) Select(); };
+            }
+            protected override void OnDrawerDestroyedBase(object sender, EventArgs e)
+            {
+                base.OnDrawerDestroyedBase(sender, e);
+                Dispose();
+            }
+
             Tween AnimScaleUp()
             {
                 _scaleTween.Kill();
@@ -260,7 +268,11 @@ namespace Game.Menus
         class SleeveToUpgrade : TableSleeve
         {
             readonly CardUpgradeMenu _menu;
-            public SleeveToUpgrade(CardUpgradeMenu menu, CardDeck deck) : base(deck, true, menu.Transform) { _menu = menu; }
+            public SleeveToUpgrade(CardUpgradeMenu menu, CardDeck deck) : base(deck, true, menu.Transform)
+            { 
+                _menu = menu;
+                TryOnInstantiatedAction(GetType(), typeof(SleeveToUpgrade));
+            }
             protected override ITableSleeveCard HoldingCardCreator(Card data)
             {
                 if (data.isField)
@@ -335,6 +347,7 @@ namespace Game.Menus
             {
                 if (CardToUpgrade.Selected != card) return;
                 if (menu._pointsAvailable - upgradePointsDelta < -9999) return;
+                if (!UpgradeIsPossible()) return;
 
                 card.AnimHighlightAsUpgrade();
                 statDrawer.IsSelected = false; // force mouse enter invoke
@@ -577,11 +590,18 @@ namespace Game.Menus
                 return element.List.SetStacks(trait.id, stacks, null, null);
             }
 
+            protected override bool UpgradeIsPossible()
+            {
+                TableTraitListElement element = (TableTraitListElement)statDrawer.attached;
+                Trait trait = element.Trait.Data;
+                return !trait.tags.HasFlag(TraitTag.Static);
+            }
+
             protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
             {
                 if (CardToUpgrade.Selected != card) return;
 
-                TableTraitListElement element = ((TableTraitListElement)statDrawer.attached);
+                TableTraitListElement element = (TableTraitListElement)statDrawer.attached;
                 Trait trait = element.Trait.Data;
 
                 upgradePointsDelta = card.Data.PointsDeltaForTrait(trait, 1);
@@ -609,7 +629,7 @@ namespace Game.Menus
                 const string TEXT = "Нажмите ЛКМ или ПКМ по иконке характеристики, чтобы увеличить или уменьшить её значение.\n\n" +
                                     "Нажатие мышью на навык изменит изначальное количество его зарядов.\n\n" +
                                     "Доступные характеристики для изменения:\n- Стоимость\n- Инициатива\n- Здоровье\n- Сила\n- Заряды навыков";
-                Tooltip = () => TEXT;
+                SetTooltip(TEXT);
             }
         }
         class ResetAllButtonDrawer : ButtonDrawer
@@ -713,7 +733,7 @@ namespace Game.Menus
             protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
             {
                 if (menu.CanLeave())
-                    menu.CloseAnimated();
+                    menu.TransitFromThis();
             }
         }
 
@@ -779,7 +799,6 @@ namespace Game.Menus
             _resetThisButton.SetCollider(value);
             _finishButton.SetCollider(value);
         }
-
         public override void WriteDesc(string text)
         {
             base.WriteDesc(text);
@@ -808,6 +827,8 @@ namespace Game.Menus
             string downgradePriceStr = (-downgradedPointsDelta.Rounded(0)).ToSignedNumberString();
 
             _infoLeftTextMesh.text = $"УЛУЧШИТЬ:\n{upgradePriceStr} ОП";
+            _infoLeftTextMesh.color = upgradedPointsDelta == 0 ? Color.gray : Color.white;
+
             _infoRightTextMesh.text = $"УХУДШИТЬ:\n{downgradePriceStr} ОП";
             _infoRightTextMesh.color = downgradedPointsDelta == 0 ? Color.gray : Color.white;
         }

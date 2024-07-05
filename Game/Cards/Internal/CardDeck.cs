@@ -147,15 +147,6 @@ namespace Game.Cards
             return dict;
         }
 
-        public Card Take()
-        {
-            int index = _allCards.Count - 1;
-            if (index < 0) return null;
-
-            Card card = _allCards[index];
-            _allCards.RemoveAt(index);
-            return card;
-        }
         public void AddRange(CardDeck deck)
         {
             foreach (FieldCard card in deck.fieldCards)

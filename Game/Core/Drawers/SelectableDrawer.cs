@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Game
 {
+    // TODO: merge with TableCardDrawer or TableFieldDrawer
     /// <summary>
     /// Абстрактный класс, представляющий отрисовщик с возможностью его выделения/обводки/покрытия, используя <see cref="SpriteRenderer"/>.
     /// </summary>
@@ -73,11 +74,8 @@ namespace Game
             _isOutlined = true;
             _outlineRenderer = GameObject.Instantiate(_outlinePrefab, Global.Root).GetComponent<SpriteRenderer>();
             _outlineRenderer.transform.position = transform.position;
-            _outlineTween = DOVirtual.Float(0, 1, 1, null).OnComplete(() =>
-            {
-                _outlineRenderer.gameObject.SetActive(!_outlineRenderer.gameObject.activeSelf);
-                _outlineTween.Restart();
-            });
+            _outlineTween = DOVirtual.Float(0, 1, 1, null).SetLoops(-1).OnComplete(() =>
+            _outlineRenderer.gameObject.SetActive(!_outlineRenderer.gameObject.activeSelf));
             return _outlineTween;
         }
         [Obsolete("Implement or remove")] public Tween AnimShowCovering()

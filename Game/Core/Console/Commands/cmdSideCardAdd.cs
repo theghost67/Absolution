@@ -76,8 +76,8 @@ namespace Game
                 ((FieldCard)card).UpgradeWithTraitAdd(points);
 
             if (isPlayerSide)
-                 territory.player.Sleeve.Add(card);
-            else territory.enemy.Sleeve.Add(card);
+                 territory.Player.Sleeve.Add(card);
+            else territory.Enemy.Sleeve.Add(card);
 
             TableConsole.Log($"Карта {id} создана и выдана в рукав.", LogType.Log);
         }

@@ -1,7 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
-using Game.Territories;
-using GreenOne;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +11,7 @@ namespace Game.Traits
     /// Абстрактный класс, представляющий список трейтов на столе (см. <see cref="ITableTraitListElement"/>).<br/>
     /// Список является частью набора списков трейтов (см. <see cref="TableTraitListSet"/>).
     /// </summary>
-    public abstract class TableTraitList : ITableTraitList
+    public abstract class TableTraitList : TableObject, ITableTraitList
     {
         public int Count => _list.Count;
         public IIdEventBoolAsync<TableTraitStacksTryArgs> OnStacksTryToChange => _onStacksTryToChange;
@@ -25,7 +23,7 @@ namespace Game.Traits
         readonly TableTraitListSet _set;
         readonly List<ITableTraitListElement> _list;
 
-        public TableTraitList(TableTraitListSet set) 
+        public TableTraitList(TableTraitListSet set) : base()
         {
             _set = set;
             _list = new List<ITableTraitListElement>();
@@ -34,6 +32,8 @@ namespace Game.Traits
 
             _onStacksTryToChange.Add(OnStacksTryToChangeBase_TOP, 256);
             _onStacksChanged.Add(OnStacksChangedBase_TOP, 256);
+
+            TryOnInstantiatedAction(GetType(), typeof(TableTraitList));
         }
         protected TableTraitList(TableTraitList src, TableTraitListCloneArgs args)
         {
@@ -42,7 +42,7 @@ namespace Game.Traits
             _onStacksTryToChange = (TableEventBool<TableTraitStacksTryArgs>)src._onStacksTryToChange.Clone();
             _onStacksChanged = (TableEventVoid<TableTraitStacksSetArgs>)src._onStacksChanged.Clone();
 
-            args.AddOnClonedAction(src.GetType(), typeof(TableTraitList), () =>
+            AddOnInstantiatedAction(GetType(), typeof(TableTraitList), () =>
             {
                 foreach (ITableTraitListElement srcElement in src)
                     _list.Add(ElementCloner(srcElement, args));
@@ -170,6 +170,10 @@ namespace Game.Traits
 
             TableConsole.LogToFile($"{ownerName}: traits: {e.Trait.Data.id}: OnChanged: delta: {e.delta} (by: {sourceName}).");
             return UniTask.CompletedTask;
+        }
+        protected override Drawer DrawerCreator(Transform parent)
+        {
+            throw new System.NotSupportedException($"Trait list does not have it's own drawer. Use {nameof(_set.Drawer)} instead.");
         }
 
         ITableTraitListElement AdjustInternal(TableTraitStacksTryArgs args)

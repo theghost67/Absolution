@@ -3,13 +3,16 @@ using GreenOne;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
+using Unity.Properties;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Game.Menus
 {
-    // TODO[IMPORTANT]: think out animation for each menu transit (implement in Open/Close() methods)
+    // NOTE: do NOT open multiple menus if they have the same type or derived from the same type (not Menu)
+    // example: BattlePlaceMenu and BossPlaceMenu
+
     /// <summary>
     /// Абстрактный класс, представляющий какой-либо графический интерфейс для пользователя как меню.
     /// </summary>
@@ -24,14 +27,20 @@ namespace Game.Menus
         public GameObject GameObject => _gameObject;
         public Transform Transform => _transform;
         public TableFinder Finder => _finder;
-        public Func<Menu> MenuWhenClosed { get; set; } // invokes on CloseAnimated (if not overriden)
+        public Func<Menu> MenuWhenClosed { get; set; } // invokes on TransitFromThis (if not overriden)
 
         public bool IsDestroyed => _isDestroyed;
         public bool IsOpened => _isOpened;
         public bool ColliderEnabled => _colliderEnabled;
         public int SortingOrder => _sortingOrder;
-        public int OpenDepth => _openDepth; 
+        public int OpenDepth => _openDepth;
         public int FullDepth => _fullDepth;
+
+        public int Guid => 0x0111E;
+        public string GuidStr => Guid.ToString();
+
+        public string TableName => "Меню";
+        public string TableNameDebug => _id;
 
         static readonly Transform _parent = Global.Root.Find("MENUS").transform;
         static readonly List<Menu> _openList = new();
@@ -162,44 +171,23 @@ namespace Game.Menus
             else return null;
         }
 
-        // use (and implement) if this menu is not related to / used in TransitMenu
-        public async UniTask DestroyAnimated()
+        public UniTask TransitToThis()
         {
-            await CloseAnimated();
-            DestroyInstantly();
+            return MenuTransit.Between(GetCurrent(), this);
         }
-        public async UniTask ReturnAnimated()
+        public UniTask TransitFromThis()
         {
-            if (_openDepth == 0) return;
-            await CloseAnimated();
-
-            Menu prev = GetPrevious();
-            if (prev != null)
-                await prev.OpenAnimated();
+            return MenuTransit.Between(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
         }
 
-        public virtual UniTask OpenAnimated() => OpenAnimatedBase();
-        public virtual UniTask CloseAnimated() => CloseAnimatedBase();
-
-        protected UniTask OpenAnimatedBase(bool withColliders = true)
-        {
-            if (withColliders)
-                 return MenuTransit.BetweenWithColliders(GetCurrent(), this);
-            else return MenuTransit.Between(GetCurrent(), this);
-        }
-        protected UniTask CloseAnimatedBase(bool withColliders = true)
-        {
-            if (withColliders)
-                 return MenuTransit.BetweenWithColliders(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
-            else return MenuTransit.Between(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
-        }
-        // ---
+        public virtual void OnTransitStart() => SetColliders(false); // invokes before transit animation on FROM menu
+        public virtual void OnTransitEnd() => SetColliders(true); // invokes after transit animation on TO menu
 
         public virtual void OpenInstantly()
         {
             if (_isOpened) return;
-            _isOpened = true;
 
+            _isOpened = true;
             _openDepth = _openList.Count;
             _openList.Add(this);
             _gameObject.SetActive(true);
