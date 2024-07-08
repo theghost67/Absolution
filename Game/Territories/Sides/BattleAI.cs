@@ -201,10 +201,10 @@ namespace Game.Territories
         async UniTask MakeTurn_Cards(float2 sidesWeight, IBattleWeightResult noPlaceResult)
         {
             int iterations = 0;
-            IBattleSleeveCard[] sleeveCards = ((IEnumerable<IBattleSleeveCard>)_side.Sleeve).ToArray();
             CardsResultsListSet resultsSet = new();
 
-            PlaceAnotherCard:
+            Start:
+            IBattleSleeveCard[] sleeveCards = ((IEnumerable<IBattleSleeveCard>)_side.Sleeve).ToArray();
             IBattleSleeveCard[] availableCards = sleeveCards.Where(c => _side.CanAfford(c)).ToArray();
             TableConsole.LogToFile($"{TERMINATOR1} BattleAI: ITERATION {iterations} {TERMINATOR1}");
 
@@ -290,9 +290,12 @@ namespace Game.Territories
                 await TableEventManager.WhenAll();
                 await UniTask.Delay(TURN_DELAY);
                 TableConsole.LogToFile($"{TERMINATOR1} BattleAI: CARD PLACEMENT ENDS: {result.Entity.TableNameDebug} {TERMINATOR1}");
+                goto End;
             }
+
+            End:
             if (resultsCount != 0)
-                goto PlaceAnotherCard;
+                goto Start;
         }
         async UniTask MakeTurn_Traits(float2 sidesWeight, IBattleWeightResult noUseResult)
         {
@@ -510,8 +513,10 @@ namespace Game.Territories
                 else positiveResults.Add(result);
             }
             if (positiveResults.Count != 0)
-                 return positiveResults.GetWeightedRandom(r => Mathf.Pow(r.WeightDeltaAbs, 3));
-            else return negativeResults.GetWeightedRandom(r => Mathf.Pow(r.WeightDeltaAbs, 3));
+                return positiveResults.GetWeightedRandom(r => Mathf.Pow(r.WeightDeltaAbs, 3));
+            else if (negativeResults.Count != 0)
+                return negativeResults.GetWeightedRandom(r => Mathf.Pow(-r.WeightDeltaAbs, 3));
+            else return default;
         }
 
         void UseVirtual(Action<BattleTerritory> useFunc, float2 sidesWeight, out float2 deltas)

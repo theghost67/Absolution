@@ -33,12 +33,14 @@ namespace Game.Menus
         public UniTask TransitToThis();
         public UniTask TransitFromThis();
 
-        public void OnTransitStart();
-        public void OnTransitEnd();
+        // use 'from' to determine either this menu from which transition begins to 'to' menu
+        public void OnTransitStart(bool from);  // invokes before transit animation
+        public void OnTransitMiddle(bool from); // invokes at the black screen of transit animation
+        public void OnTransitEnd(bool from);    // invokes after transit animation
 
-        public void OpenInstantly();
-        public void CloseInstantly();
-        public void DestroyInstantly();
+        public void Open();
+        public void Close();
+        public void Destroy();
 
         public void WriteLog(string text);
         public void WriteDesc(string text);

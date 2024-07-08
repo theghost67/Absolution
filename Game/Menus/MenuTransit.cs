@@ -1,8 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using GreenOne;
 using System;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Game.Menus
@@ -33,20 +31,23 @@ namespace Game.Menus
         }
         async UniTask BetweenInternal(Menu? from, Menu? to, Action? action)
         {
-            from?.OnTransitStart();
+            from?.OnTransitStart(true);
+            to?.OnTransitStart(false);
             await AnimShow();
             await UniTask.Delay((int)(DURATION * 1000));
-            from?.CloseInstantly();
-            to?.OpenInstantly();
-            to?.SetColliders(false);
+            from?.Close();
+            to?.Open();
+            from?.OnTransitMiddle(true);
+            to?.OnTransitMiddle(false);
             action?.Invoke();
             await AnimHide();
-            to?.OnTransitEnd();
+            from?.OnTransitEnd(true);
+            to?.OnTransitEnd(false);
         }
 
         public UniTask AnimShow()
         {
-            OpenInstantly();
+            Open();
 
             _tween.Kill();
             _tween = Transform.DOLocalMoveY(Y_TO_OPENED, DURATION).SetEase(Ease.InOutQuad);
@@ -62,7 +63,7 @@ namespace Game.Menus
         void OnCloseTweenComplete()
         {
             Transform.localPosition = Vector3.up * Y_TO_RESET;
-            CloseInstantly();
+            Close();
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Game.Backgrounds
     /// </summary>
     public class SquaresBackground : MonoBehaviour
     {
-        const int TWEENS_MAX = 16;
+        const int TWEENS_MAX = 32;
 
         const float START_POS_X = -3.185f;
         const float START_POS_Y = 1.82f;
@@ -37,6 +37,9 @@ namespace Game.Backgrounds
         const float SQUARES_DISTANCE = 0.91f;
         const float SQUARES_VISIBLE_REFRESH_RATE = 0.1f; // seconds
 
+        public bool manualLightUp;
+        public float lightUpDuration = SQUARE_LIGHT_UP_DURATION;
+
         // readonly (set in Start())
         Vector3 _startPosScaled;
         Vector3 _speed;
@@ -49,6 +52,7 @@ namespace Game.Backgrounds
         Color _lightColor;
         Color _defaultColor;
 
+        bool _initialized;
         SpriteRenderer[,] _squares;
         int2[] _squaresLastLightedUpIndexes;
 
@@ -58,6 +62,34 @@ namespace Game.Backgrounds
         int2 _visibleSquareRangeX; // equal to half of the grid width
         int2 _visibleSquareRangeY; // equal to half of the grid height
         float _squareLightUpDelay;
+
+        public void LightUpSquares(int count)
+        {
+            if (!_initialized) return;
+            _squaresLastLightedUpIndexes = new int2[count].FillBy(i => new int2(-1, -1));
+            for (int i = 0; i < count; i++)
+            {
+                if (_tweensFreeIndexes.Count == 0)
+                {
+                    Debug.LogWarning($"{nameof(SquaresBackground)}: There are no indexes available for a new tween.");
+                    return;
+                }
+
+                TryAgain:
+                int2 squarePos = GetRandomVisibleSquarePos();
+                if (_squaresLastLightedUpIndexes.Contains(squarePos))
+                    goto TryAgain;
+
+                SpriteRenderer square = _squares[squarePos.x, squarePos.y];
+                _squaresLastLightedUpIndexes[i] = squarePos;
+                square.DOKill();
+
+                int index = _tweensFreeIndexes.Pop();
+                Tween tween = CreateSquareTween(square);
+                tween.OnComplete(() => _tweensFreeIndexes.Push(index));
+                _tweens[index] = tween;
+            }
+        }
 
         void Start()
         {
@@ -80,6 +112,7 @@ namespace Game.Backgrounds
 
             OnColorPaletteChanged();
             ColorPalette.OnPaletteChanged += OnColorPaletteChanged;
+            _initialized = true;
         }
         void Update()
         {
@@ -94,12 +127,11 @@ namespace Game.Backgrounds
             }
 
             _squareLightUpDelay -= delta;
-            if (_squareLightUpDelay > 0) return;
+            if (manualLightUp || _squareLightUpDelay > 0) return;
 
-            LightUpSquare();
+            LightUpSquares(SQUARE_LIGHT_UP_COUNT);
             _squareLightUpDelay = SQUARE_LIGHT_UP_DELAY;
         }
-
         void OnColorPaletteChanged()
         {
             _lightColor = ColorPalette.GetColor(1).WithAlpha(0.75f);
@@ -219,32 +251,6 @@ namespace Game.Backgrounds
                 }
             }
         }
-        void LightUpSquare()
-        {
-            _squaresLastLightedUpIndexes = new int2[SQUARE_LIGHT_UP_COUNT].FillBy(i => new int2(-1, -1));
-            for (int i = 0; i < SQUARE_LIGHT_UP_COUNT; i++)
-            {
-                if (_tweensFreeIndexes.Count == 0)
-                {
-                    Debug.LogWarning($"{nameof(SquaresBackground)}: There are no indexes available for a new tween.");
-                    return;
-                }
-
-                TryAgain:
-                int2 squarePos = GetRandomVisibleSquarePos();
-                if (_squaresLastLightedUpIndexes.Contains(squarePos))
-                    goto TryAgain;
-
-                SpriteRenderer square = _squares[squarePos.x, squarePos.y];
-                _squaresLastLightedUpIndexes[i] = squarePos;
-                square.DOKill();
-
-                int index = _tweensFreeIndexes.Pop();
-                Tween tween = CreateSquareTween(square);
-                tween.OnComplete(() => _tweensFreeIndexes.Push(index));
-                _tweens[index] = tween;
-            }
-        }
 
         int2 GetRandomVisibleSquarePos()
         {
@@ -263,7 +269,7 @@ namespace Game.Backgrounds
         Tween CreateSquareTween(SpriteRenderer square)
         {
             square.color = _lightColor;
-            return DOVirtual.Float(0, 1, SQUARE_LIGHT_UP_DURATION, v => square.color = Color.Lerp(_lightColor, _defaultColor, v));
+            return DOVirtual.Float(0, 1, lightUpDuration, v => square.color = Color.Lerp(_lightColor, _defaultColor, v));
             //return square.DOColor(_defaultColor, SQUARE_LIGHT_UP_DURATION).SetEase(Ease.OutQuad);
         }
     }

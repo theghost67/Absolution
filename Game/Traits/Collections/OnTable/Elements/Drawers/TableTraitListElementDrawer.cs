@@ -52,7 +52,7 @@ namespace Game.Traits
         {
             _prefab = Resources.Load<GameObject>("Prefabs/Traits/Trait list element");
             _activationPrefab = Resources.Load<GameObject>("Prefabs/Traits/Trait activation");
-            _minSizeDelta = new Vector2(0.64f, 0.12f);
+            _minSizeDelta = new Vector2(0.46f, 0.105f);
 
             _traitRarityIcon1Sprite = Resources.Load<Sprite>("Sprites/Traits/Parts/trait rarity icon 1");
             _traitRarityIcon2Sprite = Resources.Load<Sprite>("Sprites/Traits/Parts/trait rarity icon 2");
@@ -143,6 +143,16 @@ namespace Game.Traits
         public void RedrawName(string text)
         {
             _nameText.text = text;
+
+            Transform parent = transform.parent;
+            transform.SetParent(Global.Root, worldPositionStays: true); // ignore current parent active state (otherwise this method returns Vector2.zero)
+            _nameText.ForceMeshUpdate(ignoreActiveState: true);
+
+            Vector2 deltaOld = _rectTransform.sizeDelta;
+            Vector2 deltaNew = new(deltaOld.x.SelectMax(_minSizeDelta.x), deltaOld.y.SelectMax(_minSizeDelta.y));
+
+            _rectTransform.sizeDelta = deltaNew;
+            transform.SetParent(parent, worldPositionStays: true);
         }
         public void RedrawStacks(int stacks)
         {
@@ -151,17 +161,7 @@ namespace Game.Traits
             else _stacksText.text = "x" + stacks.ToString();
         }
 
-        public Vector2 GetSizeDelta()
-        {
-            Transform parent = transform.parent;
-            transform.SetParent(Global.Root, worldPositionStays: true); // ignore current parent active state (otherwise this method returns Vector2.zero)
-            _nameText.ForceMeshUpdate(ignoreActiveState: true);
-            _rectTransform.sizeDelta = _nameText.textBounds.size;
-            transform.SetParent(parent, worldPositionStays: true);
-
-            Vector2 sizeDelta = _rectTransform.sizeDelta;
-            return new Vector2(sizeDelta.x.SelectMax(_minSizeDelta.x), sizeDelta.y.SelectMax(_minSizeDelta.y));
-        }
+        public Vector2 GetSizeDelta() => _rectTransform.sizeDelta;
         public Color GetCooldownColor()
         {
             bool hasCooldown = attached.Trait.Storage.turnsDelay > 0;

@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
+using Game.Effects;
 using Game.Sleeves;
 using Game.Territories;
 using Game.Traits;
@@ -24,11 +25,12 @@ namespace Game.Menus
         const string ID = "card_upgrade";
 
         static readonly GameObject _prefab = Resources.Load<GameObject>($"Prefabs/Menus/{ID}");
-        public CardDeck Deck => _sleeve.Deck;
+        public event Action<float> OnDeckPointsChanged;
 
+        public CardDeck Deck => _sleeve.Deck;
         public float PointsLimit => _pointsLimit;
         public float PointsCurrent => _pointsCurrent;
-        public event Action<float> OnDeckPointsChanged;
+        public override string LinkedMusicMixId => "peace";
 
         readonly InfoButtonDrawer _infoButton;
         readonly ResetAllButtonDrawer _resetAllButton;
@@ -777,16 +779,16 @@ namespace Game.Menus
             UpgradeInfoHide();
         }
 
-        public override void OpenInstantly()
+        public override void Open()
         {
-            base.OpenInstantly();
+            base.Open();
             Global.OnUpdate += CardToUpgrade.OnUpdate;
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Play();
         }
-        public override void CloseInstantly()
+        public override void Close()
         {
-            base.CloseInstantly();
+            base.Close();
             Global.OnUpdate -= CardToUpgrade.OnUpdate;
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Kill();

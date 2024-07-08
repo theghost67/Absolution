@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
+using Game.Effects;
 using Game.Palette;
 using GreenOne;
 using MyBox;
@@ -20,6 +21,7 @@ namespace Game.Menus
 
         static readonly GameObject _prefab = Resources.Load<GameObject>($"Prefabs/Menus/{ID}");
         public bool CardsAreShown => _cardsAreShown;
+        public override string LinkedMusicMixId => "peace";
 
         public int CardPoints => _cardPoints;
         public int CardsCount => _cardsCount;
@@ -99,7 +101,7 @@ namespace Game.Menus
                     AnimFadeIn();
                 });
                 seq.AppendInterval(ANIM_DURATION * 2);
-                seq.OnComplete(() => Drawer.SetCollider(true));
+                seq.OnComplete(() => Drawer.SetCollider(_menu.ColliderEnabled));
 
                 return seq.Play();
             }
@@ -304,27 +306,28 @@ namespace Game.Menus
             };
         }
 
-        public override async void OnTransitEnd()
+        public override async void OnTransitEnd(bool from)
         {
-            //base.OnTransitEnd();
-            await ShowCards();
-            base.OnTransitEnd();
+            if (!from)
+                await ShowCards();
+            base.OnTransitEnd(from);
         }
 
-        public override void OpenInstantly()
+        public override void Open()
         {
-            base.OpenInstantly();
+            base.Open();
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Play();
         }
-        public override void CloseInstantly()
+        public override void Close()
         {
-            base.CloseInstantly();
+            base.Close();
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Kill();
         }
         public override void SetColliders(bool value)
         {
+            value &= !_animInProgress;
             base.SetColliders(value);
             foreach (CardToChoose card in _cards)
                 card.Drawer?.SetCollider(value);
@@ -366,7 +369,8 @@ namespace Game.Menus
                 }
                 return genCards;
             }
-            else throw new Exception("There are no card choices left to generate cards for.");
+            Debug.LogError("There are no card choices left to generate cards for.");
+            return null;
         }
 
         async UniTask ConfirmChoice(TableCard? chosenCard)
@@ -401,8 +405,8 @@ namespace Game.Menus
             }
 
             await ShowCards();
-            SetColliders(true);
             _animInProgress = false;
+            SetColliders(true);
         }
         async UniTask RerollChoice()
         {
@@ -414,8 +418,8 @@ namespace Game.Menus
             SetColliders(false);
             await HideCards();
             await ShowCards();
-            SetColliders(true);
             _animInProgress = false;
+            SetColliders(true);
         }
         async UniTask DeclineChoice() => ConfirmChoice(null);
 
@@ -429,6 +433,7 @@ namespace Game.Menus
 
             Tween lastTween = null;
             Card[] generatedCards = GenerateCardsToChoose();
+            if (generatedCards == null) return;
             _cards = new CardToChoose[generatedCards.Length];
             _cardsAreFields = generatedCards[0].isField;
 

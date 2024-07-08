@@ -1,49 +1,65 @@
-﻿using System;
-using Unity.Mathematics;
+﻿using System.Collections.Generic;
 
 namespace Game.Effects
 {
     /// <summary>
     /// Класс, представляющий одну из инструкций бит-мапа. Добавляет повторяемую очередь битов в <see cref="BeatMap"/> с указанной интенсивностью.<br/>
-    /// При указании <see cref="intensityRepeats"/>, периодически будет повышать интенсивность бита, сохраняя длину и очередь битов.
+    /// При указании <see cref="custom"/>, периодически будет повышать интенсивность бита, сохраняя длину и очередь битов.
     /// </summary>
     public class BeatInstruction_Repeat : BeatInstruction
     {
         public readonly int count;
         public readonly int length;
         public readonly int intensity;
-        public readonly int2[] intensityRepeats; // every 'x' beat, intensity will change to 'y'
-                                                 // if repeat overlaps with other repeats in array, it will take max intensity
+        public readonly BeatFlags flags;
+        public readonly CustomRepeats custom; // every 'x' beat, intensity/flags will change
 
-        public BeatInstruction_Repeat(int count, int length, int intensity) : this(count, length, intensity, null) { this.count = count; }
-        public BeatInstruction_Repeat(int count, int length, int intensity, int2[] intensityRepeats) : base() 
+        public class CustomRepeats : HashSet<CustomRepeat> { }
+        public class CustomRepeat
+        {
+            public readonly int xFrequency;
+            public readonly int intensity;
+            public readonly BeatFlags flags;
+            public CustomRepeat(int xFrequency, int intensity, BeatFlags flags)
+            {
+                this.xFrequency = xFrequency;
+                this.intensity = intensity;
+                this.flags = flags;
+            }
+        }
+
+        public BeatInstruction_Repeat(int count, int length, int intensity, BeatFlags flags = default) : base() 
         { 
             this.count = count; 
             this.length = length;
             this.intensity = intensity;
-            this.intensityRepeats = intensityRepeats ?? Array.Empty<int2>();
-
-            if (intensityRepeats == null) return;
-            foreach (int2 repeat in intensityRepeats)
-            {
-                if (repeat.x < 2)
-                    throw new ArgumentException("repeat.x min value is 2.");
-            }
+            this.flags = flags;
+            this.custom = new CustomRepeats();
         }
 
         public override void AppendTo(BeatMap map)
         {
             for (int i = 1; i < count + 1; i++)
             {
-                int maxIntensity = intensity;
-                for (int j = 0; j < intensityRepeats.Length; j++)
+                int overlapIntensity = intensity;
+                BeatFlags overlapFlags = flags;
+                foreach (CustomRepeat repeat in custom)
                 {
-                    int2 repeat = intensityRepeats[j];
-                    if (i % repeat.x == 0 && maxIntensity < repeat.y)
-                        maxIntensity = repeat.y;
+                    if (i % repeat.xFrequency == 0)
+                    {
+                        if (overlapIntensity < repeat.intensity)
+                            overlapIntensity = repeat.intensity;
+                        overlapFlags |= repeat.flags;
+                    }
                 }
-                map.Add(length, maxIntensity);
+                map.Add(new Beat(map, length, overlapIntensity, flags));
             }
+        }
+        public BeatInstruction_Repeat WithCustomRepeats(CustomRepeat[] repeats)
+        {
+            foreach (CustomRepeat repeat in repeats)
+                custom.Add(repeat);
+            return this;
         }
     }
 }

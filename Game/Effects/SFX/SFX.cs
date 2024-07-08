@@ -1,5 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Game.Palette;
+using MyBox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +15,8 @@ namespace Game.Effects
     public sealed class SFX : MonoBehaviour
     {
         const int SOUNDS_SOURCE_INDEX = 2; // other indexes are for music
-        const float MUSIC_SWITCH_DURATION = 2.0f;
-        const float MUSIC_GLOBAL_SCALE = 0.2f;
+        const float MUSIC_SWITCH_DURATION = 4.0f;
+        const float MUSIC_GLOBAL_SCALE = 0.25f;
 
         public static float MusicPitchScale
         {
@@ -64,18 +66,78 @@ namespace Game.Effects
             }
         }
 
+        public static FadeStyle musicFadeStyle;
+        public static FadeEase musicFadeEase;
+
         static float _musicPitchScale;
         static float _musicVolumeScale;
         static float _soundVolumeScale;
         static bool _musicSourceIsSwitched;
+        static string _musicMixLastId;
+        static MusicMixCollection _musicMixes;
 
         static List<MusicSource> _musicSources;
         static List<AudioSource> _soundSources;
 
+        class MusicMixCollection : HashSet<MusicMixInfo>
+        {
+            public MusicMixCollection() : base() { }
+            public MusicMixInfo this[string mixId]
+            {
+                get
+                {
+                    if (TryGetValue(mixId, out MusicMixInfo info))
+                        return info;
+                    MusicMixInfo mixInfo = new(mixId);
+                    Add(mixInfo);
+                    return mixInfo;
+                }
+            }
+            public bool Add(string mixId)
+            {
+                return Add(new MusicMixInfo(mixId));
+            }
+            public bool Remove(string mixId)
+            {
+                return Remove(this[mixId]);
+            }
+            public bool TryGetValue(string mixId, out MusicMixInfo info)
+            {
+                foreach (MusicMixInfo mixInfo in this)
+                {
+                    if (mixInfo.musicMixId == mixId)
+                    {
+                        info = mixInfo;
+                        return true;
+                    }
+                }
+                info = null;
+                return false;
+            }
+        }
+        class MusicMixInfo : IEquatable<MusicMixInfo>
+        {
+            public readonly string musicMixId;
+            public string lastMusicId;
+            public float lastMusicTime;
+            public MusicMixInfo(string musicMixId)
+            {
+                this.musicMixId = musicMixId;
+            }
+            public bool Equals(MusicMixInfo other)
+            {
+                return musicMixId.Equals(other.musicMixId);
+            }
+        }
         class MusicSource
         {
             public bool IsPlaying => _source.isPlaying;
-            public float Time => _source.time;
+            public float Length => _source.clip != null ? _source.clip.length : 0;
+            public float Time 
+            { 
+                get => _source.time;
+                set => _source.time = value;
+            }
             public float Volume
             {
                 get => _ownVolume;
@@ -94,24 +156,19 @@ namespace Game.Effects
                     UpdatePitch();
                 }
             }
-            public AudioClip Clip
-            { 
-                get => _source.clip;
-                set => _source.clip = value; 
-            }
-            public Tween Tween => _volumeTween;
 
-            public bool resetOnStop;
             readonly AudioSource _source;
-
             float _ownPitch;
             float _ownVolume;
             float _tweenVolume;
+            bool _updateBeats;
+            bool _playing;
 
             int _playingBeatIndex;
             BeatMap _playingBeatMap;
             Music _playingMusic;
             Tween _volumeTween;
+            string _musicMixId;
 
             public MusicSource(AudioSource source)
             {
@@ -119,40 +176,31 @@ namespace Game.Effects
                 _source = source; 
             }
 
-            public void Update()
-            {
-                if (_playingMusic == null) return;
-                Beat beat = _playingBeatMap[_playingBeatIndex];
-                if (Time < _playingBeatMap.Delay + beat.time) return;
-
-                OnBeat?.Invoke(new BeatInfo(beat, Volume));
-                if (++_playingBeatIndex >= _playingBeatMap.Count)
-                     _playingMusic = null;
-            }
-            public void UpdateVolume()
-            {
-                UpdateVolumeInternal(TweenVolume());
-            }
-            public void UpdatePitch()
-            {
-                _source.pitch = _ownPitch * _musicPitchScale;
-            }
-
-            public void Play(Music music)
+            public void Play(Music music, string musicMixId)
             {
                 if (music == null) return;
+                _musicMixId = musicMixId;
+
+                if (_musicMixId != null)
+                    _musicMixes[_musicMixId].lastMusicId = music.id;
+
+                _playing = true;
+                _updateBeats = true;
                 _playingMusic = music;
                 _volumeTween.Kill();
                 _playingBeatMap = music.beatMap;
-                UpdateVolume();
+                _source.clip = music.clip;
                 _source.Play();
             }
             public void Stop()
             {
-                _playingMusic = null;
+                if (_musicMixId != null && IsPlaying)
+                    _musicMixes[_musicMixId].lastMusicTime = Time;
+
+                _playing = false;
+                _updateBeats = false;
                 _volumeTween.Kill();
                 _source.Stop();
-                if (resetOnStop) Reset();
             }
             public void Reset()
             {
@@ -181,38 +229,74 @@ namespace Game.Effects
                 return _volumeTween.IsActive() && _volumeTween.IsPlaying();
             }
 
-            void UpdateVolumeInternal(float tweenVolume)
+            public void UpdatePitch()
+            {
+                _source.pitch = _ownPitch * _musicPitchScale;
+            }
+            public void UpdateVolume()
+            {
+                UpdateVolumeInternal(TweenVolume());
+            }
+
+            public void OnUpdate()
+            {
+                if (!_playing) return;
+                if (!IsPlaying)
+                {
+                    _playing = false;
+                    OnComplete();
+                }
+
+                if (!_updateBeats || _playingBeatMap.Count == 0) return;
+                Beat beat = _playingBeatMap[_playingBeatIndex];
+                if (Time < _playingBeatMap.Delay + beat.time) return;
+
+                bool isFirstBeat = _playingBeatIndex == 0;
+                bool isLastBeat = ++_playingBeatIndex >= _playingBeatMap.Count;
+
+                OnBeat?.Invoke(new BeatInfo(beat, _playingBeatMap, Volume, isFirstBeat, isLastBeat));
+                if (isLastBeat) _updateBeats = false;
+            }
+            private void OnComplete()
+            {
+                Stop();
+                if (_musicMixId == null) return;
+                Music[] mix = AudioBrowser.GetMusicMix(_musicMixId);
+                int indexOfThis = mix.IndexOfItem(_playingMusic);
+                if (indexOfThis != -1 && indexOfThis + 1 < mix.Length)
+                    PlayMusicInternal(mix[indexOfThis + 1].id, _musicMixId);
+                else
+                {
+                    _musicMixes.Remove(_musicMixId);
+                    PlayMusicMix(_musicMixId);
+                }
+            }
+
+            private void UpdateVolumeInternal(float tweenVolume)
             {
                 _source.volume = _ownVolume * _musicVolumeScale * tweenVolume * MUSIC_GLOBAL_SCALE;
             }
-            float TweenVolume()
+            private float TweenVolume()
             {
                 if (IsFading())
                      return _tweenVolume;
                 else return 1f;
             }
         }
+
         public enum FadeStyle
         {
-            Instant = 0, // stops currently playing music, starts requested one
-
-            // internal use
-            _Linear = 1,
-            _Cubic = 2,
-            _StopAndStart = 4,
-            _Simultaneously = 8,
-            _Delayed = 16,
-
-            ResetOnStop = 32,
-
-            StopAndStartLinear = _Linear | _StopAndStart, // stops currently playing music, fades requested one via linear function
-            StopAndStartCubic  = _Cubic  | _StopAndStart, // stops currently playing music, fades requested one via cubic function
-
-            SimultaneouslyLinear = _Linear | _Simultaneously,  // fades currently playing music from 1 to 0, fades requested one from 0 to 1, all via linear function
-            SimultaneouslyCubic  = _Cubic  | _Simultaneously,  // fades currently playing music from 1 to 0, fades requested one from 0 to 1, all via cubic function
-
-            DelayedLinear = _Linear | _Delayed,  // fades currently playing music from 1 to 0, waits for 1 second, fades requested one from 0 to 1, all via linear function
-            DelayedCubic  = _Cubic  | _Delayed,   // fades currently playing music from 1 to 0, waits for 1 second, fades requested one from 0 to 1, all via cubic function
+            Instant,
+            InstantStopSmoothStart,
+            SmoothStopInstantStart,
+            Simultaneously,
+        }
+        public enum FadeEase
+        {
+            Linear,
+            Sine,
+            Quad,
+            Cubic,
         }
 
         public static async UniTask AwaitMusic()
@@ -227,78 +311,109 @@ namespace Game.Effects
                 else break;
             }
         }
-        public static void StopMusic(FadeStyle style = FadeStyle.SimultaneouslyCubic)
+        public static void StopMusic()
         {
-            PlayMusic(null, style);
+            PlayMusic(null);
         }
-
-        public static void PlayMusic(string musicId, FadeStyle style = FadeStyle.SimultaneouslyCubic)
+        public static void PlayMusic(string musicId)
         {
-            Music music = musicId == null ? null : AudioBrowser.GetMusic(musicId);
-            AudioClip clip = music.clip;
-
-            MusicSource currentSource = _musicSources[_musicSourceIsSwitched ? 1 : 0];
-            MusicSource requestedSource = _musicSources[_musicSourceIsSwitched ? 0 : 1];
-
-            currentSource.resetOnStop = style.HasFlag(FadeStyle.ResetOnStop);
-            requestedSource.Stop();
-            requestedSource.Clip = clip;
-            _musicSourceIsSwitched = !_musicSourceIsSwitched;
-
-            if (style == FadeStyle.Instant)
-            {
-                currentSource.Stop();
-                requestedSource.Play(music);
-                return;
-            }
-
-            bool isLinear = style.HasFlag(FadeStyle._Linear);
-            if (style.HasFlag(FadeStyle._StopAndStart))
-            {
-                currentSource.Stop();
-                requestedSource.Play(music);
-                requestedSource.Fade(0, 1).SetEase(isLinear ? Ease.Linear : Ease.InCubic);
-            }
-            else if (style.HasFlag(FadeStyle._Simultaneously))
-            {
-                requestedSource.Play(music);
-                currentSource.Fade(0).SetEase(isLinear ? Ease.Linear : Ease.OutCubic).OnComplete(currentSource.Stop);
-                requestedSource.Fade(1).SetEase(isLinear ? Ease.Linear : Ease.InCubic);
-            }
-            else if (style.HasFlag(FadeStyle._Delayed))
-            {
-                currentSource.Fade(0).SetEase(isLinear ? Ease.Linear : Ease.OutCubic).OnComplete(() =>
-                {
-                    currentSource.Stop();
-                    requestedSource.Play(music);
-                    requestedSource.Fade(1).SetEase(isLinear ? Ease.Linear : Ease.InCubic).SetDelay(1);
-                });
-            }
-            else throw new NotSupportedException();
+            PlayMusicInternal(musicId, null);
         }
-        public static void PlaySound(string soundId, bool oneShot = true)
+        public static void PlayMusicMix(string musicMixId)
+        {
+            Music[] mix = musicMixId == null ? null : AudioBrowser.GetMusicMix(musicMixId);
+            if (mix == null) return;
+            if (musicMixId == _musicMixLastId) return;
+            if (_musicMixes.TryGetValue(musicMixId, out MusicMixInfo mixInfo))
+            {
+                PlayMusicInternal(mixInfo.lastMusicId, musicMixId);
+                GetActiveMusicSource().Time = mixInfo.lastMusicTime;
+            }
+            else PlayMusicInternal(mix.First().id, musicMixId);
+        }
+        public static void PlaySound(string soundId)
         {
             Sound sound = AudioBrowser.GetSound(soundId);
             AudioClip clip = sound.clip;
             AudioSource source = _soundSources[SOUNDS_SOURCE_INDEX];
-
-            if (oneShot)
-                source.PlayOneShot(clip);
-            else
-            {
-                source.Stop();
-                source.clip = clip;
-                source.Play();
-            }
+            source.PlayOneShot(clip);
         }
 
         private SFX() { }
-        private void Start()
+        private static MusicSource GetActiveMusicSource()
+        {
+            if (!IsAnyMusicPlaying) return null;
+            if (_musicSourceIsSwitched)
+                 return _musicSources[1];
+            else return _musicSources[0];
+        }
+        private static void PlayMusicInternal(string musicId, string musicMixId)
+        {
+            Music music = musicId == null ? null : AudioBrowser.GetMusic(musicId);
+            MusicSource currentSource = _musicSources[_musicSourceIsSwitched ? 1 : 0];
+            MusicSource requestedSource = _musicSources[_musicSourceIsSwitched ? 0 : 1];
+
+            requestedSource.Stop();
+            _musicSourceIsSwitched = !_musicSourceIsSwitched;
+            _musicMixLastId = musicMixId;
+
+            if (musicFadeStyle == FadeStyle.Instant)
+            {
+                currentSource.Stop();
+                requestedSource.Play(music, musicMixId);
+                return;
+            }
+
+            Ease inEase = musicFadeEase switch
+            {
+                FadeEase.Linear => Ease.Linear,
+                FadeEase.Sine => Ease.InSine,
+                FadeEase.Quad => Ease.InQuad,
+                FadeEase.Cubic => Ease.InCubic,
+                _ => throw new NotSupportedException(),
+            };
+            Ease outEase = musicFadeEase switch
+            {
+                FadeEase.Linear => Ease.Linear,
+                FadeEase.Sine => Ease.OutSine,
+                FadeEase.Quad => Ease.OutQuad,
+                FadeEase.Cubic => Ease.OutCubic,
+                _ => throw new NotSupportedException(),
+            };
+
+            switch (musicFadeStyle)
+            {
+                case FadeStyle.InstantStopSmoothStart:
+                    currentSource.Stop();
+                    requestedSource.Play(music, musicMixId);
+                    requestedSource.Fade(0, 1).SetEase(inEase);
+                    break;
+
+                case FadeStyle.SmoothStopInstantStart:
+                    currentSource.Fade(0).SetEase(outEase).OnComplete(currentSource.Stop);
+                    requestedSource.Play(music, musicMixId);
+                    break;
+
+                case FadeStyle.Simultaneously:
+                    currentSource.Fade(0).SetEase(outEase).OnComplete(currentSource.Stop);
+                    requestedSource.Play(music, musicMixId);
+                    requestedSource.Fade(0, 1).SetEase(inEase);
+                    break;
+
+                default: throw new NotSupportedException();
+            }
+        }
+
+        private void Awake()
         {
             _musicPitchScale = 1.0f;
             _musicVolumeScale = 1.0f;
             _soundVolumeScale = 1.0f;
 
+            musicFadeStyle = FadeStyle.Simultaneously;
+            musicFadeEase = FadeEase.Quad;
+
+            _musicMixes = new MusicMixCollection();
             _musicSources = new List<MusicSource>();
             _soundSources = new List<AudioSource>();
 
@@ -306,11 +421,44 @@ namespace Game.Effects
             _musicSources.Add(new MusicSource(gameObject.AddComponent<AudioSource>()));
             _musicSources.Add(new MusicSource(gameObject.AddComponent<AudioSource>()));
             _soundSources.Add(gameObject.AddComponent<AudioSource>());
+
+            OnBeat += OnBeatBase;
         }
         private void Update()
         {
             foreach (MusicSource source in _musicSources)
-                source.Update();
+                source.OnUpdate();
+        }
+
+        // TODO: remove?
+        static void OnBeatBase(BeatInfo info)
+        {
+            if (info.beat.flags.HasFlag(BeatFlags.PeakOne))
+            {
+                const int index = 2;
+                float ratio = 1 + 0.20f * info.volume;
+                Color defaultColor = ColorPalette.GetColorInfo(index).DefaultColor;
+                ColorPalette.SetColor(index, defaultColor * ratio);
+                ColorPalette.TweenColor(index, defaultColor, info.beatMap.BpmScale * 2);
+            }
+            else if (info.beat.flags.HasFlag(BeatFlags.PeakTwo))
+            {
+                const int index = 3;
+                float ratio = 1 - 0.20f * info.volume;
+                Color defaultColor = ColorPalette.GetColorInfo(index).DefaultColor;
+                ColorPalette.SetColor(index, defaultColor * ratio);
+                ColorPalette.TweenColor(index, defaultColor, info.beatMap.BpmScale / 2);
+            }
+            else
+            {
+                int intensity = info.beat.intensity;
+                if (intensity != 3) return;
+                const int index = 1;
+                float ratio = 1 + 0.12f * info.volume;
+                Color defaultColor = ColorPalette.GetColorInfo(index).DefaultColor;
+                ColorPalette.SetColor(index, defaultColor * ratio);
+                ColorPalette.TweenColor(index, defaultColor, info.beatMap.BpmScale);
+            }
         }
     }
 }

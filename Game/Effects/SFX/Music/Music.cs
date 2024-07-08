@@ -5,18 +5,16 @@ namespace Game.Effects
     /// <summary>
     /// Абстрактный класс, представляющий игровую мелодию.
     /// </summary>
-    public abstract class Music
+    public abstract class Music : Unique
     {
         public readonly string id;
-        public readonly string clipPath;
         public readonly AudioClip clip;
         public readonly BeatMap beatMap;
 
-        public Music(string id, string clipPath)
+        public Music(string id) : base()
         {
             this.id = id;
-            this.clipPath = clipPath;
-            this.clip = Resources.Load<AudioClip>(clipPath);
+            this.clip = Resources.Load<AudioClip>($"SFX/Music/{id}");
             this.beatMap = CreateBeatMap();
         }
         protected abstract BeatMap CreateBeatMap();

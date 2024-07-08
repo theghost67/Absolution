@@ -237,6 +237,7 @@ namespace Game.Territories
                 foreach (BattleField field in _highlightedTargets)
                     field.Drawer.AnimHideOutline();
             }
+            _highlightedTargets = null;
         }
 
         public IEnumerable<BattleField> AimedTargetSplash()

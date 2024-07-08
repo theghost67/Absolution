@@ -9,13 +9,16 @@ namespace Game.Effects
     public class BeatMap : IReadOnlyList<Beat>
     {
         public int Count => _list.Count;
-        public float AppendPos => _appendPos;
+        public int MaxIntensity => _maxIntensity;
+        public float LastPos => _appendPos;
         public float Bpm => _bpm;
+        public float BpmScale => 60 / _bpm;
         public float Delay => _delay;
 
         readonly float _bpm;
         readonly float _delay;
         readonly List<Beat> _list;
+        int _maxIntensity;
         float _appendPos;
 
         public BeatMap(float bpm, float delay) 
@@ -35,10 +38,7 @@ namespace Game.Effects
         {
             _list.Add(beat);
             _appendPos += beat.length;
-        }
-        public void Add(int beatLength, int beatIntensity)
-        {
-            Add(new Beat(_appendPos, beatLength, _bpm, beatIntensity));
+            _maxIntensity = beat.intensity > _maxIntensity ? beat.intensity : _maxIntensity;
         }
 
         public IEnumerator<Beat> GetEnumerator()

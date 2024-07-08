@@ -5,17 +5,15 @@ namespace Game.Effects
     /// <summary>
     /// Абстрактный класс, представляющий игровой звук.
     /// </summary>
-    public abstract class Sound
+    public abstract class Sound : Unique
     {
         public readonly string id;
-        public readonly string clipPath;
         public readonly AudioClip clip;
 
-        public Sound(string id, string clipPath)
+        public Sound(string id) : base()
         {
             this.id = id;
-            this.clipPath = clipPath;
-            this.clip = Resources.Load<AudioClip>(clipPath);
+            this.clip = Resources.Load<AudioClip>($"SFX/Sounds/{id}");
         }
     }
 }

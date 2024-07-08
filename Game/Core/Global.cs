@@ -87,7 +87,7 @@ namespace Game
         {
             CardChooseMenu menu = new(stage, 4, 0, 3, 4);
             menu.MenuWhenClosed = () => new BattlePlaceMenu();
-            menu.OnClosed += menu.DestroyInstantly;
+            menu.OnClosed += menu.Destroy;
             return menu;
         }
 
@@ -118,8 +118,9 @@ namespace Game
 
             Traveler.TryStartTravel(new LocationMission(EnvironmentBrowser.Locations["college"]));
 
-            //MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
-            MenuTransit.Between(null, new BattlePlaceMenu());
+            DOVirtual.DelayedCall(0.8f, () => VFX.CreateScreenBG(Color.black).DOFade(0, 10).SetEase(Ease.InQuad));
+            MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
+            // MenuTransit.Between(null, new BattlePlaceMenu());
         }
         void Update()
         {

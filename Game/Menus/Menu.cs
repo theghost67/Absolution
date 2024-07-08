@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using Game.Effects;
 using GreenOne;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,7 @@ namespace Game.Menus
         public int SortingOrder => _sortingOrder;
         public int OpenDepth => _openDepth;
         public int FullDepth => _fullDepth;
+        public virtual string LinkedMusicMixId => null; // see AudioBrowser
 
         public int Guid => 0x0111E;
         public string GuidStr => Guid.ToString();
@@ -180,10 +182,24 @@ namespace Game.Menus
             return MenuTransit.Between(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
         }
 
-        public virtual void OnTransitStart() => SetColliders(false); // invokes before transit animation on FROM menu
-        public virtual void OnTransitEnd() => SetColliders(true); // invokes after transit animation on TO menu
+        public virtual void OnTransitStart(bool from)
+        {
+            if (!from)
+                 SFX.PlayMusicMix(LinkedMusicMixId);
+            else SetColliders(false);
+        }
+        public virtual void OnTransitMiddle(bool from)
+        {
+            if (!from)
+                SetColliders(false);
+        }
+        public virtual void OnTransitEnd(bool from)
+        {
+            if (!from)
+                SetColliders(true);
+        }
 
-        public virtual void OpenInstantly()
+        public virtual void Open()
         {
             if (_isOpened) return;
 
@@ -195,7 +211,7 @@ namespace Game.Menus
             SetSortingOrder(_openDepth * 32);
             OnOpened?.Invoke();
         }
-        public virtual void CloseInstantly()
+        public virtual void Close()
         {
             if (!_isOpened) return;
             _isOpened = false;
@@ -210,7 +226,7 @@ namespace Game.Menus
             _gameObject.SetActive(false);
             OnClosed?.Invoke();
         }
-        public virtual void DestroyInstantly()
+        public virtual void Destroy()
         {
             if (_isDestroyed) return;
             _isDestroyed = true;
@@ -221,7 +237,7 @@ namespace Game.Menus
                     _fullList[i]._fullDepth--;
             }
 
-            CloseInstantly();
+            Close();
             _gameObject.Destroy();
             _fullDepth = -1;
         }

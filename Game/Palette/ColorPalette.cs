@@ -52,26 +52,30 @@ namespace Game.Palette
         }
         public interface IColorInfo
         {
-            public Color Color { get; }
+            public Color DefaultColor { get; }
+            public Color CurrentColor { get; }
             public string Hex { get; }
             public Tween Tween { get; }
             public bool TweenIsPlaying { get; }
         }
         class ColorInfo : IColorInfo
         {
-            public Color Color => color;
+            public Color DefaultColor => defaultColor;
+            public Color CurrentColor => currentColor;
             public string Hex => hex;
             public Tween Tween => tween;
             public bool TweenIsPlaying => tweenIsPlaying;
 
-            public Color color;
+            public Color defaultColor;
+            public Color currentColor;
             public string hex;
             public Tween tween;
             public bool tweenIsPlaying;
 
             public ColorInfo(Color color)
             {
-                this.color = color;
+                this.currentColor = color;
+                this.defaultColor = color;
                 this.hex = color.ToHex();
             }
         }
@@ -119,7 +123,7 @@ namespace Game.Palette
         public static void UpdateDependantMaterial(Material material)
         {
             for (int i = 0; i < COLORS; i++)
-                material.SetColor($"_PaletteColor{i}", _instanceColors[i].color);
+                material.SetColor($"_PaletteColor{i}", _instanceColors[i].currentColor);
         }
         public static void RemoveDependantMaterial(Material material)
         {
@@ -128,31 +132,46 @@ namespace Game.Palette
 
         public static Color GetColor(int index)
         {
-            return _instanceColors[index].color;
+            return _instanceColors[index].currentColor;
         }
         public static IColorInfo GetColorInfo(int index)
         {
             return _instanceColors[index];
         }
 
-        public static void SetColor(int index, Color value)
+        public static void SetColor(int index, Color value, bool asDefault = false)
         {
-            SetColorInternal(index, value);
+            SetColorInternal(index, value, asDefault);
             OnColorChanged?.Invoke(index);
             OnPaletteChanged?.Invoke();
         }
-        public static void SetPalette(Color[] values)
+        public static void SetColorAsDefault(int index)
         {
-            int length = values.Length;
-            for (int i = 0; i < COLORS && i < length; i++)
+            SetColor(index, _instanceColors[index].defaultColor, false);
+        }
+
+        public static void SetPalette(Color[] values, bool asDefault = false)
+        {
+            for (int i = 0; i < COLORS && i < values.Length; i++)
             {
-                SetColorInternal(i, values[i]);
+                SetColorInternal(i, values[i], asDefault);
                 OnColorChanged?.Invoke(i);
             }
             OnPaletteChanged?.Invoke();
         }
+        public static void SetPaletteAsDefault()
+        {
+            Color[] defaultColors = new Color[COLORS];
+            for (int i = 0; i < COLORS; i++)
+                defaultColors[i] = _instanceColors[i].defaultColor;
+            SetPalette(defaultColors, false);
+        }
 
-        public static Tween TweenColor(int index, ColorTweenInfo info)
+        public static Tween TweenColor(int index, Color value, float duration, bool asDefault = false)
+        {
+            return TweenColor(index, new ColorTweenInfo(value, duration), asDefault);
+        }
+        public static Tween TweenColor(int index, ColorTweenInfo info, bool asDefault = false)
         {
             if (info.hasStartValue)
                  SetColor(index, info.startValue);
@@ -161,9 +180,9 @@ namespace Game.Palette
             Tween tween = pair.tween;
 
             tween?.Kill();
-            tween = DOVirtual.Color(pair.color, info.endValue, info.duration, c =>
+            tween = DOVirtual.Color(pair.currentColor, info.endValue, info.duration, c =>
             {
-                SetColorInternal(index, c);
+                SetColorInternal(index, c, asDefault);
                 OnColorChanged?.Invoke(index);
             });
             tween.onComplete += () => pair.tweenIsPlaying = false;
@@ -172,20 +191,21 @@ namespace Game.Palette
             pair.tween = tween;
             return tween;
         }
-        public static Tween[] TweenPalette(ColorTweenInfo[] infos)
+        public static Tween[] TweenPalette(ColorTweenInfo[] infos, bool asDefault = false)
         {
             if (infos.Length != COLORS)
                 throw new ArgumentException("Array size must be equal to pallette size.");
 
             Tween[] tweens = new Tween[COLORS];
             for (int i = 0; i < COLORS; i++)
-                tweens[i] = TweenColor(i, infos[i]);
+                tweens[i] = TweenColor(i, infos[i], asDefault);
             return tweens;
         }
 
-        static void SetColorInternal(int index, Color value)
+        static void SetColorInternal(int index, Color value, bool asDefault)
         {
-            _instanceColors[index].color = value;
+            if (asDefault) _instanceColors[index].defaultColor = value;
+            _instanceColors[index].currentColor = value;
             _instanceColors[index].hex = value.ToHex();
             _instanceMaterial.SetColor($"_Color{index}", value);
 

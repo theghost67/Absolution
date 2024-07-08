@@ -5,8 +5,16 @@
     /// </summary>
     public class BeatInstruction_Single : BeatInstruction
     {
-        public readonly Beat beat;
-        public BeatInstruction_Single(Beat beat) : base() { this.beat = beat; }
-        public override void AppendTo(BeatMap map) => map.Add(beat);
+        public readonly float length;
+        public readonly int intensity;
+        public readonly BeatFlags flags;
+
+        public BeatInstruction_Single(float length, int intensity, BeatFlags flags = default) : base()
+        {
+            this.length = length;
+            this.intensity = intensity;
+            this.flags = flags;
+        }
+        public override void AppendTo(BeatMap map) => map.Add(new Beat(map, length, intensity, flags));
     }
 }

@@ -2,6 +2,7 @@
 
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Game.Backgrounds;
 using Game.Cards;
 using Game.Effects;
 using Game.Environment;
@@ -22,8 +23,9 @@ namespace Game.Menus
     /// </summary>
     public class BattlePlaceMenu : Menu, IMenuWithTerritory
     {
-        public TableTerritory Territory => _territory;
         static readonly GameObject _prefab = Resources.Load<GameObject>("Prefabs/Menus/Places/Battle");
+        public TableTerritory Territory => _territory;
+        public override string LinkedMusicMixId => "battle";
 
         #if DEMO
         const int DEMO_DIFFICULTY_MIN = 1;
@@ -101,6 +103,7 @@ namespace Game.Menus
         readonly TextMeshPro _logTextMesh;
         readonly TextMeshPro _descTextMesh;
         pTerritory _territory;
+        SquaresBackground _bg;
 
         protected class pFieldCard : BattleFieldCard, IBattleSleeveCard
         {
@@ -550,6 +553,8 @@ namespace Game.Menus
 
             _logTextMesh = Transform.Find<TextMeshPro>("Log window/Text");
             _descTextMesh = Transform.Find<TextMeshPro>("Desc window/Text");
+            _bg = Transform.Find<SquaresBackground>("BG");
+            _bg.manualLightUp = true;
 
             _turnButton.OnMouseClickLeft += (s, e) => TryEndTurn();
             _turnButton.SetTooltip(() => $"Завершить ход {_territory.Turn}.");
@@ -559,6 +564,7 @@ namespace Game.Menus
 
             _logTextMesh.text = Log;
             _descTextMesh.text = "";
+
 
             #if !DEMO
             _territory = new pTerritory(this, playerMovesFirst: true /*UnityEngine.Random.value > 0.5f*/, sizeX: 5);
@@ -573,14 +579,20 @@ namespace Game.Menus
             SetFleeState(false);
         }
 
-        public override void OpenInstantly()
+        public override void Open()
         {
-            base.OpenInstantly();
+            base.Open();
             #if DEMO
             demo_OnBattleStart(_demoDifficulty == 0);
+            SFX.OnBeat += OnBeat;
             #else
             _territory.NextPhase();
             #endif
+        }
+        public override void Close()
+        {
+            base.Close();
+            SFX.OnBeat -= OnBeat;
         }
         public override void SetColliders(bool value)
         {
@@ -675,14 +687,14 @@ namespace Game.Menus
         {
             CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, cFieldChoices / 2);
             menu.MenuWhenClosed = () => demo_CreateCardUpgrade(uPointsLimit);
-            menu.OnClosed += menu.DestroyInstantly;
+            menu.OnClosed += menu.Destroy;
             return menu;
         }
         Menu demo_CreateCardUpgrade(int uPointsLimit)
         {
             CardUpgradeMenu menu = new(Player.Deck, uPointsLimit);
             menu.MenuWhenClosed = () => this;
-            menu.OnClosed += menu.DestroyInstantly;
+            menu.OnClosed += menu.Destroy;
             return menu;
         }
 
@@ -713,13 +725,7 @@ namespace Game.Menus
         }
         async void demo_OnBattleStart(bool firstOpening)
         {
-            if (!SFX.IsAnyMusicPlaying)
-            {
-                SFX.PlayMusic("card_choose");
-                SFX.OnBeat += b => VFX.CreateScreenFlash(ColorPalette.GetColor(1).WithAlpha(0.35f), 60 / b.beat.bpm);
-            }
-
-            ColorPalette.SetPalette(_demoPalettes[_demoDifficulty]);
+            ColorPalette.SetPalette(_demoPalettes[_demoDifficulty], asDefault: true);
             _demoDifficulty++;
 
             int locStage = demo_DifficultyToLocStage(_demoDifficulty);
@@ -778,6 +784,13 @@ namespace Game.Menus
             5 => 128,
             _ => throw new NotSupportedException(),
         };
+
+        void OnBeat(BeatInfo info)
+        {
+            if (info.beat.intensity <= 0) return;
+            _bg.lightUpDuration = info.beatMap.BpmScale * 2;
+            _bg.LightUpSquares(info.beat.intensity);
+        }
         #endif
     }
 }
