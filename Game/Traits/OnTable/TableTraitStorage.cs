@@ -3,7 +3,7 @@
 namespace Game.Traits
 {
     /// <summary>
-    /// Представляет список с парами ключ-значение для хранения особых данных трейта стола.
+    /// Представляет список с парами ключ-значение для хранения особых данных навыка стола.
     /// </summary>
     public class TableTraitStorage : Dictionary<int, object>
     {

@@ -8,8 +8,8 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Абстрактный класс, представляющий список трейтов на столе (см. <see cref="ITableTraitListElement"/>).<br/>
-    /// Список является частью набора списков трейтов (см. <see cref="TableTraitListSet"/>).
+    /// Абстрактный класс, представляющий список навыков на столе (см. <see cref="ITableTraitListElement"/>).<br/>
+    /// Список является частью набора списков навыков (см. <see cref="TableTraitListSet"/>).
     /// </summary>
     public abstract class TableTraitList : TableObject, ITableTraitList
     {
@@ -18,10 +18,11 @@ namespace Game.Traits
         public IIdEventVoidAsync<TableTraitStacksSetArgs> OnStacksChanged => _onStacksChanged;
         public TableTraitListSet Set => _set;
 
-        readonly TableEventBool<TableTraitStacksTryArgs> _onStacksTryToChange; 
-        readonly TableEventVoid<TableTraitStacksSetArgs> _onStacksChanged;
         readonly TableTraitListSet _set;
         readonly List<ITableTraitListElement> _list;
+        readonly TableEventBool<TableTraitStacksTryArgs> _onStacksTryToChange; 
+        readonly TableEventVoid<TableTraitStacksSetArgs> _onStacksChanged;
+        readonly string _eventsGuid;
 
         public TableTraitList(TableTraitListSet set) : base()
         {
@@ -29,9 +30,10 @@ namespace Game.Traits
             _list = new List<ITableTraitListElement>();
             _onStacksTryToChange = new TableEventBool<TableTraitStacksTryArgs>();
             _onStacksChanged = new TableEventVoid<TableTraitStacksSetArgs>();
+            _eventsGuid = this.GuidStrForEvents(1);
 
-            _onStacksTryToChange.Add(OnStacksTryToChangeBase_TOP, 256);
-            _onStacksChanged.Add(OnStacksChangedBase_TOP, 256);
+            _onStacksTryToChange.Add(_eventsGuid, OnStacksTryToChangeBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onStacksChanged.Add(_eventsGuid, OnStacksChangedBase_TOP, TableEventVoid.TOP_PRIORITY);
 
             TryOnInstantiatedAction(GetType(), typeof(TableTraitList));
         }
@@ -53,8 +55,9 @@ namespace Game.Traits
         public ITableTraitListElement this[int index] => index >= 0 && index < _list.Count ? _list[index] : null;
         public IEnumerator<ITableTraitListElement> GetEnumerator() => GetElements().GetEnumerator();
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             for (int i = _list.Count - 1; i >= 0; i--)
                 this[i]?.Dispose();
 
@@ -85,7 +88,7 @@ namespace Game.Traits
             ITableTrait trait = element.Trait;
             TableEntry entry;
 
-            if (source is IBattleEntity sourceInBattle)
+            if (source is IBattleObject sourceInBattle)
                  entry = new TableEntry(stacks, source, sourceInBattle.Territory.Turn);
             else entry = new TableEntry(stacks, source);
 
@@ -157,7 +160,7 @@ namespace Game.Traits
             string ownerName = owner.TableNameDebug;
             string sourceName = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile($"{ownerName}: traits: {e.id}: OnTryToChange: delta: {e.stacks} (by: {sourceName}).");
+            TableConsole.LogToFile("card", $"{ownerName}: traits: {e.id}: OnTryToChange: delta: {e.stacks} (by: {sourceName}).");
             return UniTask.FromResult(true);
         }
         protected virtual UniTask OnStacksChangedBase_TOP(object sender, TableTraitStacksSetArgs e)
@@ -168,7 +171,7 @@ namespace Game.Traits
             string ownerName = owner.TableNameDebug;
             string sourceName = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile($"{ownerName}: traits: {e.Trait.Data.id}: OnChanged: delta: {e.delta} (by: {sourceName}).");
+            TableConsole.LogToFile("card", $"{ownerName}: traits: {e.Trait.Data.id}: OnChanged: delta: {e.delta} (by: {sourceName}).");
             return UniTask.CompletedTask;
         }
         protected override Drawer DrawerCreator(Transform parent)

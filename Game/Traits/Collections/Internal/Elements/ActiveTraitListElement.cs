@@ -1,7 +1,7 @@
 ﻿namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из элементов списка данных активных трейтов (см. <see cref="ActiveTraitList"/>).
+    /// Класс, представляющий один из элементов списка данных активных навыков (см. <see cref="ActiveTraitList"/>).
     /// </summary>
     public class ActiveTraitListElement : TraitListElement
     {

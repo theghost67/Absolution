@@ -2,6 +2,7 @@
 using Game.Cards;
 using GreenOne;
 using MyBox;
+using System;
 using System.Linq;
 using UnityEngine;
 
@@ -28,7 +29,6 @@ namespace Game.Sleeves
                 SetCollider(_canPullOut);
             }
         }
-        public bool IsInMove => _isInMove;
         public bool IsPulledOut => _isPulledOut;
         public bool IsMovedOut => _isMovedOut;
 
@@ -41,7 +41,6 @@ namespace Game.Sleeves
         float _pullOutPosY;
 
         bool _canPullOut;
-        bool _isInMove;
         bool _isPulledOut;
         bool _isMovedOut;
 
@@ -59,7 +58,7 @@ namespace Game.Sleeves
             _pullOutPosY = sleeve.isForMe ? -1.10f : 1.10f;
             transform.localPosition = Vector3.up * _normalPosY;
 
-            Global.OnUpdate += Update;
+            Global.OnUpdate += OnUpdate;
             SetCollider(true);
             AddCreatingCardDrawer_ForAll();
         }
@@ -67,7 +66,7 @@ namespace Game.Sleeves
         public void AddCardDrawer(ITableSleeveCard card)
         {
             TableCardDrawer drawer = card.Drawer;
-            if (drawer == null) return;
+            if (drawer == null || drawer.IsDestroying) return;
 
             bool colliderState = ColliderEnabled;
             if (drawer.ColliderEnabled != colliderState)
@@ -83,8 +82,9 @@ namespace Game.Sleeves
         public void RemoveCardDrawer(ITableSleeveCard card)
         {
             TableCardDrawer drawer = card.Drawer;
-            if (drawer == null) return;
+            if (drawer == null || drawer.IsDestroying) return;
 
+            drawer.transform.SetParent(transform.parent, worldPositionStays: true);
             UpdateCardsPosAndOrder();
 
             if (drawer.gameObject.TryGetComponent(out TableSleeveCardComponent component))
@@ -96,28 +96,29 @@ namespace Game.Sleeves
         {
             _isPulledOut = true;
             _isMovedOut = false;
-            _isInMove = true;
 
-            _posYTween.Kill();
-            _posYTween = transform.DOLocalMoveY(_pullOutPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnPulledOut);
+            //_posYTween.Kill();
+            //_posYTween = transform.DOLocalMoveY(_pullOutPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnPulledOut);
             gameObject.SetActive(true);
+            foreach (ITableSleeveCard card in attached)
+                card.OnPullOut(true);
         }
         public void PullIn()
         {
             _isPulledOut = false;
             _isMovedOut = false;
-            _isInMove = true;
 
-            _posYTween.Kill();
-            _posYTween = transform.DOLocalMoveY(_normalPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnPulledIn);
+            //_posYTween.Kill();
+            //_posYTween = transform.DOLocalMoveY(_normalPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnPulledIn);
             gameObject.SetActive(true);
+            foreach (ITableSleeveCard card in attached)
+                card.OnPullIn(true);
         }
 
         public void MoveIn()
         {
             _isMovedOut = false;
             _isPulledOut = false;
-            _isInMove = true;
 
             _posYTween.Kill();
             _posYTween = transform.DOLocalMoveY(_normalPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnMovedIn);
@@ -127,7 +128,6 @@ namespace Game.Sleeves
         {
             _isMovedOut = true;
             _isPulledOut = false;
-            _isInMove = true;
 
             _posYTween.Kill();
             _posYTween = transform.DOLocalMoveY(_moveOutPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnMovedOut);
@@ -161,9 +161,7 @@ namespace Game.Sleeves
         protected override void DestroyInstantly()
         {
             base.DestroyInstantly();
-            Global.OnUpdate -= Update;
-            foreach (ITableSleeveCard card in attached)
-                RemoveDestroyingCardDrawer(card, true);
+            Global.OnUpdate -= OnUpdate;
         }
         protected virtual bool UpdateUserInput() => _canPullOut;
 
@@ -190,7 +188,6 @@ namespace Game.Sleeves
         void UpdateCardsPosAndOrder()
         {
             if (IsDestroying) return;
-
             const int THRESHOLD = 3;
             const float DISTANCE = TableCardDrawer.WIDTH - TableCardDrawer.WIDTH * 0.25f;
 
@@ -201,46 +198,27 @@ namespace Game.Sleeves
                 _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
             else _alignSettings.distance.x = DISTANCE;
 
-            _alignSettings.ApplyTo(ChildSelector, cardsCount);
-            for (int i = 0; i < cardsCount; i++) // restores Y pos which can be modified by PullIn/PullOut animations
+            _alignSettings.ApplyTo(i => attached[i].Drawer.transform, cardsCount);
+            for (int i = 0; i < cardsCount; i++) 
             {
                 ITableSleeveCard card = attached[i];
+                card.Drawer.SetSortingOrder(SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD, asDefault: true);
                 if (!(card.IsInMove || card.IsPulledOut)) continue;
                 Transform transform = card.Drawer.transform;
-                transform.position = transform.position.SetY(cardsY[i]);
+                transform.position = transform.position.SetY(cardsY[i]); // restores Y pos which can be modified by PullIn/PullOut animations
             }
-        }
-        Transform ChildSelector(int index)
-        {
-            TableCardDrawer drawer = attached[index].Drawer;
-            drawer.SetSortingOrder(SORT_ORDER_START_VALUE + index * SORT_ORDER_PER_CARD, asDefault: true);
-            return drawer.transform;
-        }
-
-        void OnPulledOut()
-        {
-            _isInMove = false;
-            _isPulledOut = true;
-        }
-        void OnPulledIn()
-        {
-            _isInMove = false;
-            _isPulledOut = false;
         }
 
         void OnMovedOut()
         {
-            _isInMove = false;
             _isMovedOut = true;
             gameObject.SetActive(false);
         }
         void OnMovedIn()
         {
-            _isInMove = false;
             _isMovedOut = false;
         }
-
-        void Update()
+        void OnUpdate()
         {
             if (!UpdateUserInput()) return;
             if (Input.GetKeyDown(KeyCode.Tab))

@@ -77,7 +77,9 @@ namespace Game.Cards
             else RedrawColor(Color.red);
 
             _chunksTween.Kill();
-            _chunksTween = DOVirtual.Int(_chunksValue, value, 1f, SetChunksActive).OnComplete(() =>
+            if (value < 0 && _chunksValue < 0)
+                 _chunksTween = DOVirtual.DelayedCall(1f, RedrawColor);
+            else _chunksTween = DOVirtual.Int(_chunksValue, value, 1f, SetChunksActive).OnComplete(() =>
             {
                 RedrawColor();
                 if (value < 0)

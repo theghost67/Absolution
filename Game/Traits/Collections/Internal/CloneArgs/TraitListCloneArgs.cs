@@ -1,7 +1,7 @@
 ﻿namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий аргументы для клонирования списка данных трейтов.
+    /// Класс, представляющий аргументы для клонирования списка данных навыков.
     /// </summary>
     public class TraitListCloneArgs : CloneArgs
     {

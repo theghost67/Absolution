@@ -4,7 +4,7 @@ using Game.Territories;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий аргументы для клонирования любого трейта на столе.
+    /// Класс, представляющий аргументы для клонирования любого навыка на столе.
     /// </summary>
     public class TableTraitCloneArgs : CloneArgs
     {

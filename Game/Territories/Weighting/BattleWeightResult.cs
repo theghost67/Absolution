@@ -5,7 +5,7 @@ namespace Game.Territories
     /// <summary>
     /// Класс, представляющий результат взвешивания сущности во время боя.
     /// </summary>
-    public class BattleWeightResult<T> : IBattleWeightResult, IComparable<BattleWeightResult<T>>, IEquatable<BattleWeightResult<T>> where T : IBattleEntity
+    public class BattleWeightResult<T> : IBattleWeightResult, IComparable<BattleWeightResult<T>>, IEquatable<BattleWeightResult<T>> where T : IBattleObject
     {
         public T Entity => entity;
         public float WeightDeltaAbs => weightDeltaAbs;
@@ -14,7 +14,7 @@ namespace Game.Territories
         protected float weightDeltaAbs;
         protected float weightDeltaRel;
         protected readonly T entity;
-        IBattleEntity IBattleWeightResult.Entity => entity;
+        IBattleObject IBattleWeightResult.Entity => entity;
 
         public BattleWeightResult(T entity, float weightDeltaAbs, float weightDeltaRel)
         {

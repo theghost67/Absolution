@@ -31,7 +31,9 @@ namespace Game.Territories
         readonly TableTerritory _territory;
         readonly TableFieldFinder _finder;
         readonly TableEventVoid _onCardAttached;
-        readonly TableEventVoid _onCardDetatched; // invokes before setting card to null
+        readonly TableEventVoid _onCardDetatched;
+        readonly string _eventsGuid;
+
         TableFieldCard _card;
 
         // territory can be null
@@ -42,9 +44,10 @@ namespace Game.Territories
             _finder = new TableFieldFinder(this);
             _onCardAttached = new TableEventVoid();
             _onCardDetatched = new TableEventVoid();
+            _eventsGuid = this.GuidStrForEvents(2);
 
             health = new TableStat(nameof(health), this, 0);
-            health.OnPostSet.Add(OnHealthPostSet);
+            health.OnPostSet.Add(_eventsGuid, OnHealthPostSetBase);
 
             OnDrawerCreated += OnDrawerCreatedBase;
             OnDrawerDestroyed += OnDrawerDestroyedBase;
@@ -112,6 +115,10 @@ namespace Game.Territories
             TableFieldCardCloneArgs cardCArgs = new((FieldCard)src.Data.Clone(), this, args.terrCArgs);
             return (TableFieldCard)src.Clone(cardCArgs);
         }
+        protected virtual UniTask OnHealthPostSetBase(object sender, TableStat.PostSetArgs e)
+        {
+            return UniTask.CompletedTask;
+        }
 
         protected override void OnDrawerCreatedBase(object sender, EventArgs e)
         {
@@ -124,10 +131,6 @@ namespace Game.Territories
             field.Card?.DestroyDrawer(Drawer?.IsDestroyed ?? true);
         }
 
-        UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
-        {
-            return UniTask.CompletedTask;
-        }
         string GetTableName()
         {
             if (this == null)

@@ -3,7 +3,7 @@
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий аргументы для клонирования списка трейтов во время сражения.
+    /// Класс, представляющий аргументы для клонирования списка навыков во время сражения.
     /// </summary>
     public class BattleTraitListCloneArgs : TableTraitListCloneArgs
     {

@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tUnscheduledTest : ActiveTrait
     {

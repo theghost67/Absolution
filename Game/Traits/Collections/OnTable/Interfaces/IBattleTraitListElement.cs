@@ -1,7 +1,7 @@
 ﻿namespace Game.Traits
 {
     /// <summary>
-    /// Реализует объект как один из элементов списка трейтов во время сражения (см. <see cref="IBattleTraitList"/>).
+    /// Реализует объект как один из элементов списка навыков во время сражения (см. <see cref="IBattleTraitList"/>).
     /// </summary>
     public interface IBattleTraitListElement : ITableTraitListElement
     {

@@ -25,7 +25,7 @@ namespace Game.Environment
             _attachedData = mission.Data;
 
             _buttonDrawer = new Drawer(null, transform.Find("Left square")).WithHoverScaleEvents();
-            _buttonDrawer.OnMouseClickLeft += (s, e) => attached.TryStartTravel();
+            _buttonDrawer.OnMouseClick += (s, e) => attached.TryStartTravel();
 
             LocationEvent attachedEvent = _attachedData.@event;
             transform.Find<TextMeshPro>("Number").text = "II";

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tInevitability : PassiveTrait
     {
@@ -50,16 +50,16 @@ namespace Game.Traits
             {
                 foreach (BattleField field in trait.Territory.Fields())
                 {
-                    field.Card?.OnPostKilled.Add(OnTerritoryCardPostKilled, PRIORITY);
-                    field.OnCardAttached.Add(OnCardAttachedToAnyField, PRIORITY);
+                    field.Card?.OnPostKilled.Add(trait.GuidStrForEvents(0), OnTerritoryCardPostKilled, PRIORITY);
+                    field.OnCardAttached.Add(trait.GuidStrForEvents(0), OnCardAttachedToAnyField, PRIORITY);
                 }
             }
             else if (trait.WasRemoved(e))
             {
                 foreach (BattleField field in trait.Territory.Fields())
                 {
-                    field.Card?.OnPostKilled.Remove(OnTerritoryCardPostKilled);
-                    field.OnCardAttached.Remove(OnCardAttachedToAnyField);
+                    field.Card?.OnPostKilled.Remove(trait.GuidStrForEvents(0));
+                    field.OnCardAttached.Remove(trait.GuidStrForEvents(0));
                 }
             }
         }
@@ -67,7 +67,8 @@ namespace Game.Traits
         async UniTask OnCardAttachedToAnyField(object sender, EventArgs e)
         {
             BattleField field = (BattleField)sender;
-            field.Card.OnPostKilled.Add(OnTerritoryCardPostKilled, PRIORITY);
+            BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(field.Territory);
+            field.Card.OnPostKilled.Add(trait.GuidStrForEvents(0), OnTerritoryCardPostKilled, PRIORITY);
         }
         async UniTask OnTerritoryCardPostKilled(object sender, ITableEntrySource source)
         {

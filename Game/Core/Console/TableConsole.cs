@@ -54,15 +54,17 @@ namespace Game
             Task.Run(LogToFileQueue);
         }
 
-        public static void LogToFile(string text)
+        public static void LogToFile(string module, string text)
         {
+            text = $"[{module}] {text}";
             if (OnLogToFile?.Invoke(text) ?? !Global.writeConsoleLogs) return;
             _fileQueuedLogs.Enqueue(text);
         }
-        public static void LogToFile(IEnumerable<string> texts)
+        public static void LogToFile(string module, IReadOnlyList<string> texts)
         {
-            foreach (string text in texts) 
+            for (int i = 0; i < texts.Count; i++)
             {
+                string text = $"[{module}] {texts[i]}";
                 if (OnLogToFile?.Invoke(text) ?? !Global.writeConsoleLogs) continue;
                 _fileQueuedLogs.Enqueue(text);
             }
@@ -78,6 +80,7 @@ namespace Game
 
         static void ExecuteLine(string line)
         {
+            if (string.IsNullOrEmpty(line)) return;
             try { Command.ExecuteLine(line); }
             catch (ArgDuplicateException e) { Log($"Указан дубликат аргумента {e.argId}.", LogType.Error); }
             catch (ArgValueException e) { Log($"Указано неверное значение аргумента {e.argId}.", LogType.Error); }
@@ -136,12 +139,26 @@ namespace Game
         static void LogToFileQueue()
         {
             Start:
-            if (_fileQueuedLogs.Count == 0)
-                goto End;
-
-            while (_fileQueuedLogs.Count != 0)
-                _fileStream.WriteLine(_fileQueuedLogs.Dequeue());
-            _fileStream.Flush();
+            if (_fileQueuedLogs.Count == 0) goto End;
+            if (!_fileStream.BaseStream.CanWrite) goto End;
+            try
+            {
+                while (_fileQueuedLogs.Count != 0)
+                {
+                    string text;
+                    lock (_fileQueuedLogs) { text = _fileQueuedLogs.Dequeue(); }
+                    _fileStream.WriteLine(text);
+                }
+                _fileStream.Flush();
+            }
+            catch (Exception ex) 
+            { 
+                Debug.LogException(ex);
+                Debug.LogError("Log stream has been disposed.");
+                _fileStream.Dispose();
+                _fileStream = null;
+                return;
+            }
 
             End:
             Thread.Sleep(1000);

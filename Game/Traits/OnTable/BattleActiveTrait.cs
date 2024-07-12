@@ -1,12 +1,13 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using System;
 using UnityEngine;
 
 namespace Game.Traits
 {
     /// <summary>
-    /// Представляет активный трейт на карте стола с возможностью отслеживания целей.
+    /// Представляет активный навык на карте стола с возможностью отслеживания целей.
     /// </summary>
     public class BattleActiveTrait : TableActiveTrait, IBattleTrait
     {
@@ -21,13 +22,16 @@ namespace Game.Traits
 
         readonly BattleFieldCard _owner;
         readonly BattleArea _area;
+        readonly string _eventsGuid;
 
         public BattleActiveTrait(ActiveTrait data, BattleFieldCard owner, Transform parent) : base(data, owner, parent)
         {
             _owner = owner;
             _area = new BattleArea(this, owner);
-            _area.OnCardSeen.Add(OnCardSeen);
-            _area.OnCardUnseen.Add(OnCardUnseen);
+            _eventsGuid = this.GuidStrForEvents(3);
+
+            _area.OnCardSeen.Add(_eventsGuid, OnCardSeen);
+            _area.OnCardUnseen.Add(_eventsGuid, OnCardUnseen);
             TryOnInstantiatedAction(GetType(), typeof(BattleActiveTrait));
         }
         protected BattleActiveTrait(BattleActiveTrait src, BattleActiveTraitCloneArgs args) : base(src, args)

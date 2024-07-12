@@ -3,7 +3,7 @@
 namespace Game.Traits
 {
     /// <summary>
-    /// Реализует объект как один из элементов списка трейтов на столе (см. <see cref="ITableTraitList"/>) без возможности изменения стаков.
+    /// Реализует объект как один из элементов списка навыков на столе (см. <see cref="ITableTraitList"/>) без возможности изменения стаков.
     /// </summary>
     public interface ITableTraitListElement : ITableObject, IEquatable<ITableTraitListElement>, IEquatable<ITableTrait>, ICloneableWithArgs
     {

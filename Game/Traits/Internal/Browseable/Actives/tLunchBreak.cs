@@ -5,7 +5,7 @@ using Game.Territories;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tLunchBreak : ActiveTrait
     {

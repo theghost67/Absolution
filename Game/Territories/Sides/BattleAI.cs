@@ -21,23 +21,11 @@ namespace Game.Territories
     public sealed class BattleAI
     {
         const int TURN_DELAY = 500;
-        const int MAX_ITERATIONS = 16;
-
-        const string TERMINATOR1 = "********";
-        const string TERMINATOR8 = "****************************************************************";
 
         readonly BattleSide _side;
 
-        public PlayStyle Style
-        {
-            get => _style;
-            set
-            {
-                if (_isMakingTurn)
-                    throw new InvalidOperationException($"Cannot change BattleAI properties when AI {nameof(IsMakingTurn)}.");
-                _style = value;
-            }
-        }
+        public static bool IsAnyMakingTurn => _isAnyMakingTurn;
+        public bool IsMakingTurn => _isMakingTurn;
         public bool UsesAiming
         {
             get => _usesAiming;
@@ -48,15 +36,26 @@ namespace Game.Territories
                 _usesAiming = value;
             }
         }
-        public bool IsMakingTurn => _isMakingTurn;
+        public PlayStyle Style
+        {
+            get => _style;
+            set
+            {
+                if (_isMakingTurn)
+                    throw new InvalidOperationException($"Cannot change BattleAI properties when AI {nameof(IsMakingTurn)}.");
+                _style = value;
+            }
+        }
+        private float2 SidesWeight => new(_side.Weight, _side.Opposite.Weight);
 
         List<string> _lastTerrLogs;
         BattleTerritory _lastTerr;
         Tween _turnTween;
 
-        PlayStyle _style;
-        bool _usesAiming;
+        static bool _isAnyMakingTurn;
         bool _isMakingTurn;
+        bool _usesAiming;
+        PlayStyle _style;
 
         public enum PlayStyle
         {
@@ -64,7 +63,7 @@ namespace Game.Territories
             Defensive,
             Offensive,
         }
-        class CardsResultsListSet : IEnumerable<CardsResultsList>
+        class CardsResultsListSet : IReadOnlyList<CardsResultsList>
         {
             public int Count => _list.Count;
             readonly List<CardsResultsList> _list;
@@ -95,6 +94,10 @@ namespace Game.Territories
             {
                 _list.RemoveAt(index);
             }
+            public void Clear()
+            {
+                _list.Clear();
+            }
 
             IEnumerator<CardsResultsList> IEnumerable<CardsResultsList>.GetEnumerator()
             {
@@ -105,7 +108,7 @@ namespace Game.Territories
                 return _list.GetEnumerator();
             }
         }
-        class CardsResultsList : IEnumerable<IBattleWeightResult>, IEquatable<CardsResultsList>
+        class CardsResultsList : IReadOnlyList<IBattleWeightResult>, IEquatable<CardsResultsList>
         {
             public int Count => _list.Count;
             public readonly CardCurrency currency;
@@ -139,6 +142,10 @@ namespace Game.Territories
             {
                 _list.RemoveAt(index);
             }
+            public void Clear()
+            {
+                _list.Clear();
+            }
 
             IEnumerator<IBattleWeightResult> IEnumerable<IBattleWeightResult>.GetEnumerator()
             {
@@ -161,65 +168,65 @@ namespace Game.Territories
             await TableEventManager.WhenAll();
             if (_isMakingTurn || _side.Territory.PhaseSide != _side)
             {
-                Debug.LogError($"BattleAI: can't make a turn because it's not AI's place phase or already making turn.");
+                Debug.LogError($"can't make a turn because it's not AI's place phase or already making turn.");
                 return;
             }
 
             _isMakingTurn = true;
+            _isAnyMakingTurn = true;
             _turnTween = DOVirtual.DelayedCall(5, () =>
             {
                 _isMakingTurn = false;
                 _lastTerr?.Dispose();
             });
 
-            float2 sidesWeight = new(_side.Weight, _side.Opposite.Weight);
             await UniTask.Delay(TURN_DELAY);
-
             #if LEGACY_AI
             await MakeTurn_Legacy();
             #else
             try
             {
-                TableConsole.LogToFile($"{TERMINATOR8}\nBattleAI: TURN STARTED\n{TERMINATOR8}");
-                await MakeTurn_Cards(sidesWeight, GetNoPlacementResult(sidesWeight));
-                await MakeTurn_Traits(sidesWeight, GetNoPlacementResult(sidesWeight));
+                TableConsole.LogToFile("ai", $"TURN STARTED");
+                await MakeTurn_Cards();
+                await MakeTurn_Traits();
             }
             catch (Exception ex)
             {
+                await UniTask.SwitchToMainThread();
                 Debug.LogException(ex);
                 _lastTerr?.Dispose();
             }
             #endif
 
-            TableConsole.LogToFile($"{TERMINATOR8}\nBattleAI: TURN ENDED\n{TERMINATOR8}");
+            TableConsole.LogToFile("ai", $"TURN ENDED");
             _turnTween.Kill();
             _isMakingTurn = false;
+            _isAnyMakingTurn = false;
             _side.Territory.NextPhase();
         }
 
         // TODO[IMPORTANT]: await async queue before making turn (cards/traits)
-        async UniTask MakeTurn_Cards(float2 sidesWeight, IBattleWeightResult noPlaceResult)
+        async UniTask MakeTurn_Cards()
         {
             int iterations = 0;
             CardsResultsListSet resultsSet = new();
-
             Start:
+            if (iterations++ > 16)
+            {
+                Debug.LogError("too many iterations.");
+                return;
+            }
+            float2 sidesWeight = SidesWeight;
+            IBattleWeightResult noPlaceResult = GetNoPlacementResult(sidesWeight);
             IBattleSleeveCard[] sleeveCards = ((IEnumerable<IBattleSleeveCard>)_side.Sleeve).ToArray();
             IBattleSleeveCard[] availableCards = sleeveCards.Where(c => _side.CanAfford(c)).ToArray();
-            TableConsole.LogToFile($"{TERMINATOR1} BattleAI: ITERATION {iterations} {TERMINATOR1}");
-
+            TableConsole.LogToFile("ai", $"CARD PLACE ITERATION {iterations}");
             if (availableCards.Length == 0)
             {
-                TableConsole.LogToFile($"{TERMINATOR1} BattleAI: CANNOT AFFORD ANY CARD {TERMINATOR1}");
-                return;
-            }
-            if (!_isMakingTurn || iterations++ > MAX_ITERATIONS)
-            {
-                Debug.LogError($"BattleAI: card turn interrupted (too many iterations or timed out).");
+                TableConsole.LogToFile("ai", $"CANNOT AFFORD ANY CARD (count: {sleeveCards.Length})");
                 return;
             }
 
-            _turnTween.timeScale = 0;
             await UniTask.SwitchToThreadPool();
             BeginWriteLastTerrLogs();
 
@@ -233,37 +240,34 @@ namespace Game.Territories
                 if (card.Data.isField)
                 {
                     BattleFieldCardWeightResult fieldRes = GetBestFieldCardPlaceResult((BattleFieldCard)card, sidesWeight);
-                    TableConsole.LogToFile($"BattleAI: >> sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}\n" +
-                                           $"             result: abs: {fieldRes.WeightDeltaAbs}, rel: {fieldRes.WeightDeltaRel}, field: {fieldRes.field.TableNameDebug}");
+                    TableConsole.LogToFile("ai/vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: abs: {fieldRes.WeightDeltaAbs}, rel: {fieldRes.WeightDeltaRel}, field: {fieldRes.field.TableNameDebug}");
                     result = fieldRes;
                 }
                 else
                 {
                     BattleFloatCardWeightResult floatRes = GetBestFloatCardUseResult((BattleFloatCard)card, sidesWeight);
-                    TableConsole.LogToFile($"BattleAI: >> sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}\n" +
-                                           $"             result: abs: {floatRes.WeightDeltaAbs}, rel: {floatRes.WeightDeltaRel}");
+                    TableConsole.LogToFile("ai/vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: abs: {floatRes.WeightDeltaAbs}, rel: {floatRes.WeightDeltaRel}");
                     result = floatRes;
                 }
-                if (result != null && result.WeightDeltaAbs > noPlaceResult.WeightDeltaAbs)
+                if (result != null && result.WeightDeltaAbs != 0 && result.WeightDeltaAbs > noPlaceResult.WeightDeltaAbs)
                     resultsSet[currency].Add(result);
             };
 
             StopWriteLastTerrLogs(forCards: true);
             await UniTask.SwitchToMainThread();
-            _turnTween.timeScale = 1;
 
-            int resultsCount = 0;
             for (int i = 0; i < resultsSet.Count; i++) // iterates for each CardCurrency in the game
             {
                 CardsResultsList results = resultsSet[i];
-                resultsCount += results.Count;
-
                 PickResultAgain:
-                if (results.Count == 0) continue;
-                int index = results.GetWeightedRandomIndex(r => Mathf.Pow(r.WeightDeltaAbs, 2));
-                if (index == -1) continue; 
-                IBattleWeightResult result = results[index];
-                results.RemoveAt(index);
+                IBattleWeightResult result = GetBestResult(results, out int index);
+                if (result != null)
+                    results.RemoveAt(index);
+                else
+                {
+                    results.Clear();
+                    continue;
+                }
 
                 IBattleSleeveCard resultCard = (IBattleSleeveCard)result.Entity;
                 BattleField resultField = null;
@@ -274,7 +278,7 @@ namespace Game.Territories
                     i--; continue;
                 }
 
-                TableConsole.LogToFile($"{TERMINATOR1} BattleAI: CARD PLACEMENT BEGINS: {result.Entity.TableNameDebug} {TERMINATOR1}");
+                TableConsole.LogToFile("ai", $"CARD PLACEMENT BEGINS: {result.Entity.TableNameDebug} ");
                 if (result is BattleFieldCardWeightResult resultOfFieldCard)
                     resultField = resultOfFieldCard.field;
                 else
@@ -289,24 +293,29 @@ namespace Game.Territories
                 resultCard.TryDropOn(resultField);
                 await TableEventManager.WhenAll();
                 await UniTask.Delay(TURN_DELAY);
-                TableConsole.LogToFile($"{TERMINATOR1} BattleAI: CARD PLACEMENT ENDS: {result.Entity.TableNameDebug} {TERMINATOR1}");
+                TableConsole.LogToFile("ai", $"CARD PLACEMENT ENDS: {result.Entity.TableNameDebug}");
                 goto End;
             }
 
             End:
+            int resultsCount = 0;
+            foreach (CardsResultsList list in resultsSet)
+                resultsCount += list.Count;
             if (resultsCount != 0)
                 goto Start;
         }
-        async UniTask MakeTurn_Traits(float2 sidesWeight, IBattleWeightResult noUseResult)
+        async UniTask MakeTurn_Traits()
         {
             int iterations = 0;
-
-            UseAnotherTrait:
-            if (!_isMakingTurn || iterations++ > MAX_ITERATIONS)
+            Start:
+            if (iterations++ > 16)
             {
-                Debug.LogError($"BattleAI: trait turn interrupted (too many iterations or timed out).");
+                Debug.LogError("too many iterations.");
                 return;
             }
+            float2 sidesWeight = SidesWeight;
+            IBattleWeightResult noUseResult = GetNoPlacementResult(sidesWeight);
+            TableConsole.LogToFile("ai", $"TRAIT USE ITERATION {iterations}");
 
             // adds active traits from sleeve cards and cards placed on side's fields to list
             List<BattleActiveTraitListElement> elements = new();
@@ -314,8 +323,12 @@ namespace Game.Territories
             IEnumerable<BattleFieldCard> cards = _side.Fields().WithCard().Select(f => f.Card).Concat(sleeveCards.Where(c => c is BattleFieldCard).Cast<BattleFieldCard>());
             foreach (BattleActiveTraitListElement element in cards.SelectMany<BattleFieldCard, BattleActiveTraitListElement>(f => f.Traits.Actives))
                 elements.Add(element);
+            if (elements.Count == 0)
+            {
+                TableConsole.LogToFile("ai", $"NO TRAITS FOUND");
+                return;
+            }
 
-            _turnTween.timeScale = 0;
             await UniTask.SwitchToThreadPool();
             BeginWriteLastTerrLogs();
 
@@ -326,42 +339,31 @@ namespace Game.Territories
                 BattleActiveTraitWeightResult result = GetBestActiveTraitUseResult(element.Trait, sidesWeight);
 
                 if (result != null)
-                     TableConsole.LogToFile($"BattleAI: >> active trait: name: {element.Trait.TableNameDebug}\n" + 
-                                            $"             threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: abs: {result.WeightDeltaAbs}, rel: {result.WeightDeltaRel}");
-                else TableConsole.LogToFile($"BattleAI: >> active trait: name: {element.Trait.TableNameDebug}\n" +
-                                            $"             threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: null (impossible to use)");
+                     TableConsole.LogToFile("ai/vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: abs: {result.WeightDeltaAbs}, rel: {result.WeightDeltaRel}");
+                else TableConsole.LogToFile("ai/vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: null (impossible to use)");
 
-                if (result != null && result.WeightDeltaAbs > noUseResult.WeightDeltaAbs) 
+                if (result != null && result.WeightDeltaAbs != 0 && result.WeightDeltaAbs > noUseResult.WeightDeltaAbs) 
                     results.Add(result);
             }
 
             StopWriteLastTerrLogs(forCards: false);
             await UniTask.SwitchToMainThread();
-            _turnTween.timeScale = 1;
 
             PickResultAgain:
-            if (results.Count == 0)
-            {
-                TableConsole.LogToFile($"{TERMINATOR1} BattleAI: NO TRAITS FOUND {TERMINATOR1}");
-                return;
-            }
-
-            int resultIndex = results.GetWeightedRandomIndex(r => Mathf.Pow(r.WeightDeltaAbs, 2));
-            BattleActiveTraitWeightResult bestResult = results[resultIndex];
-            results.RemoveAt(resultIndex);
+            BattleActiveTraitWeightResult bestResult = GetBestResult(results, out int index);
+            if (bestResult == null) return;
+            results.RemoveAt(index);
 
             BattleActiveTrait activeTrait = bestResult.Entity;
             ActiveTrait activeTraitData = activeTrait.Data;
             TableActiveTraitUseArgs activeTraitUseArgs = new(activeTrait, bestResult.target);
-
             if (!activeTraitData.IsUsable(activeTraitUseArgs) || !activeTraitData.Threshold.WeightIsEnough(bestResult))
                 goto PickResultAgain;
 
             activeTrait.TryUse(bestResult.target);
             await TableEventManager.WhenAll();
             await UniTask.Delay(TURN_DELAY);
-
-            goto UseAnotherTrait;
+            goto Start;
         }
 
         #if LEGACY_AI
@@ -418,7 +420,7 @@ namespace Game.Territories
             UseVirtual(terr => terr.LastPhase(), sidesWeight, out float2 deltas);
             StopWriteLastTerrLogsForNoPlacement();
             BattleFloatCardWeightResult result = new(null, deltas[0], deltas[1]);
-            TableConsole.LogToFile($"BattleAI: >> NOP result: delta abs: {result.WeightDeltaAbs}.");
+            TableConsole.LogToFile("ai", $"NOP result: delta abs: {result.WeightDeltaAbs}.");
             return result;
         }
         BattleFieldCardWeightResult GetBestFieldCardPlaceResult(BattleFieldCard card, float2 sidesWeight)
@@ -456,7 +458,7 @@ namespace Game.Territories
                 terrClone.Dispose();
             }
 
-            BattleFieldCardWeightResult bestResult = GetBestResult(results);
+            BattleFieldCardWeightResult bestResult = GetBestResult(results, out _);
             return bestResult;
         }
         BattleFloatCardWeightResult GetBestFloatCardUseResult(BattleFloatCard card, float2 sidesWeight)
@@ -489,21 +491,27 @@ namespace Game.Territories
                 // there's no point in cloning if object is not usable
                 if (!trait.IsUsable(new TableActiveTraitUseArgs(trait, target)))
                     continue;
-
-                void UseAction(BattleTerritory terr) => ((BattleActiveTrait)trait.Finder.FindInBattle(terr)).TryUse(target);
+                void UseAction(BattleTerritory terr)
+                {
+                    BattleActiveTrait traitClone = (BattleActiveTrait)trait.Finder.FindInBattle(terr);
+                    BattleField targetClone = (BattleField)target.Finder.FindInBattle(terr);
+                    traitClone.TryUse(targetClone);
+                }
                 UseVirtual(UseAction, sidesWeight, out float2 deltas);
 
                 BattleActiveTraitWeightResult result = new(trait, target, deltas[0], deltas[1]);
                 results.Add(result);
             }
-            BattleActiveTraitWeightResult bestResult = GetBestResult(results);
+            BattleActiveTraitWeightResult bestResult = GetBestResult(results, out _);
             return bestResult;
         }
-        static T GetBestResult<T>(IReadOnlyCollection<T> results) where T : IBattleWeightResult
+        static T GetBestResult<T>(IReadOnlyCollection<T> results, out int index) where T : class, IBattleWeightResult
         {
             if (results.Count == 0)
-                return default;
-
+            {
+                index = -1;
+                return null;
+            }
             List<T> positiveResults = new();
             List<T> negativeResults = new();
             foreach (T result in results)
@@ -513,10 +521,24 @@ namespace Game.Territories
                 else positiveResults.Add(result);
             }
             if (positiveResults.Count != 0)
-                return positiveResults.GetWeightedRandom(r => Mathf.Pow(r.WeightDeltaAbs, 3));
+            {
+                index = positiveResults.GetWeightedRandomIndex(r => Mathf.Pow(r.WeightDeltaAbs, 3));
+                if (index != -1)
+                     return positiveResults[index];
+                else return null;
+            }
             else if (negativeResults.Count != 0)
-                return negativeResults.GetWeightedRandom(r => Mathf.Pow(-r.WeightDeltaAbs, 3));
-            else return default;
+            {
+                index = negativeResults.GetWeightedRandomIndex(r => Mathf.Pow(-r.WeightDeltaAbs, 3));
+                if (index != -1)
+                    return negativeResults[index];
+                else return null;
+            }
+            else
+            {
+                index = -1;
+                return null;
+            }
         }
 
         void UseVirtual(Action<BattleTerritory> useFunc, float2 sidesWeight, out float2 deltas)
@@ -571,17 +593,17 @@ namespace Game.Territories
         void StopWriteLastTerrLogs(bool forCards)
         {
             TableConsole.OnLogToFile -= OnConsoleLogToFile;
-            TableConsole.LogToFile($"{TERMINATOR1} BattleAI: LAST AI TERRITORY CLONE LOGS START ({(forCards ? "CARDS" : "TRAITS")}) {TERMINATOR1}");
-            TableConsole.LogToFile(_lastTerrLogs);
-            TableConsole.LogToFile($"{TERMINATOR1} BattleAI: LAST AI TERRITORY CLONE LOGS END ({(forCards ? "CARDS" : "TRAITS")}) {TERMINATOR1}");
+            TableConsole.LogToFile("ai", $"LAST AI TERRITORY CLONE LOGS START ({(forCards ? "CARDS" : "TRAITS")})");
+            TableConsole.LogToFile("ai", _lastTerrLogs);
+            TableConsole.LogToFile("ai", $"LAST AI TERRITORY CLONE LOGS END ({(forCards ? "CARDS" : "TRAITS")})");
             _lastTerrLogs.Clear();
         }
         void StopWriteLastTerrLogsForNoPlacement()
         {
             TableConsole.OnLogToFile -= OnConsoleLogToFile;
-            TableConsole.LogToFile($"{TERMINATOR1} BattleAI: NOP AI TERRITORY CLONE LOGS START {TERMINATOR1}");
-            TableConsole.LogToFile(_lastTerrLogs);
-            TableConsole.LogToFile($"{TERMINATOR1} BattleAI: NOP AI TERRITORY CLONE LOGS END {TERMINATOR1}");
+            TableConsole.LogToFile("ai", $"NOP AI TERRITORY CLONE LOGS START");
+            TableConsole.LogToFile("ai", _lastTerrLogs);
+            TableConsole.LogToFile("ai", $"NOP AI TERRITORY CLONE LOGS END");
             _lastTerrLogs.Clear();
         }
 

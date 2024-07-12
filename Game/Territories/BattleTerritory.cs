@@ -59,6 +59,7 @@ namespace Game.Territories
         readonly List<TableEventVoid> _phaseCycleEvents;
         readonly bool _playerMovesFirst;
         readonly int _playerPhaseCycleIndex;
+        readonly string _eventsGuid;
 
         BattleSide _player;
         BattleSide _enemy;
@@ -70,22 +71,6 @@ namespace Game.Territories
 
         public BattleTerritory(bool playerMovesFirst, int sizeX, Transform parent, bool createFields = true) : base(new int2(sizeX, 2), parent, false)
         {
-            _onStartPhase = new TableEventVoid();
-            _onEnemyPhase = new TableEventVoid();
-            _onPlayerPhase = new TableEventVoid();
-            _onEndPhase = new TableEventVoid();
-            _onNextPhase = new TableEventVoid();
-            _onPlayerWon = new TableEventVoid();
-            _onPlayerLost = new TableEventVoid();
-
-            _onStartPhase.Add(OnStartPhaseBase);
-            _onEnemyPhase.Add(OnEnemyPhaseBase);
-            _onPlayerPhase.Add(OnPlayerPhaseBase);
-            _onEndPhase.Add(OnEndPhaseBase);
-            _onNextPhase.Add(OnNextPhaseBase);
-            _onPlayerWon.Add(OnPlayerWonBase);
-            _onPlayerLost.Add(OnPlayerLostBase);
-
             _fields = new BattleField[sizeX, 2];
             _initiations = new BattleInitiationQueue(this);
             _initiations.OnStarted += OnInitiationsProcessingStartBase;
@@ -94,11 +79,28 @@ namespace Game.Territories
             _phaseCycleEvents = new List<TableEventVoid>();
             _playerMovesFirst = playerMovesFirst;
             _playerPhaseCycleIndex = _playerMovesFirst ? 1 : 2;
+            _eventsGuid = this.GuidStrForEvents(2);
 
             _phaseCycleEnabled = true;
             _phaseCyclesPassed = 0;
             _phasesPassed = 0;
             _currentPhaseCycleIndex = -1;
+
+            _onStartPhase = new TableEventVoid();
+            _onEnemyPhase = new TableEventVoid();
+            _onPlayerPhase = new TableEventVoid();
+            _onEndPhase = new TableEventVoid();
+            _onNextPhase = new TableEventVoid();
+            _onPlayerWon = new TableEventVoid();
+            _onPlayerLost = new TableEventVoid();
+
+            _onStartPhase.Add(_eventsGuid, OnStartPhaseBase);
+            _onEnemyPhase.Add(_eventsGuid, OnEnemyPhaseBase);
+            _onPlayerPhase.Add(_eventsGuid, OnPlayerPhaseBase);
+            _onEndPhase.Add(_eventsGuid, OnEndPhaseBase);
+            _onNextPhase.Add(_eventsGuid, OnNextPhaseBase);
+            _onPlayerWon.Add(_eventsGuid, OnPlayerWonBase);
+            _onPlayerLost.Add(_eventsGuid, OnPlayerLostBase);
 
             _phaseCycleEvents.Add(_onStartPhase);
             if (_playerMovesFirst)
@@ -116,10 +118,10 @@ namespace Game.Territories
             AddOnInstantiatedAction(GetType(), typeof(BattleTerritory), () =>
             {
                 _player = PlayerSideCreator();
-                _player.health.OnPostSet.Add(OnSideHealthSet);
+                _player.health.OnPostSet.Add(_eventsGuid, OnSideHealthSet);
 
                 _enemy = EnemySideCreator();
-                _enemy.health.OnPostSet.Add(OnSideHealthSet);
+                _enemy.health.OnPostSet.Add(_eventsGuid, OnSideHealthSet);
 
                 if (_player.isMe == _enemy.isMe)
                     throw new Exception($"BattleTerritory should contain only one side with {nameof(BattleSide.isMe)} set to 'true'.");
@@ -223,7 +225,6 @@ namespace Game.Territories
             if (playerWon)
                  await _onPlayerWon.Invoke(this, EventArgs.Empty);
             else await _onPlayerLost.Invoke(this, EventArgs.Empty);
-            TableConsole.LogToFile($"--------- {TableNameDebug} concluded, playerWon: {playerWon} ---------");
         }
         public BattleSide GetOppositeOf(BattleSide side)
         {
@@ -256,7 +257,7 @@ namespace Game.Territories
                 else Menu.WriteLogToCurrent($"Установка карты {card.Data.name} на поле {field.TableName}.");
             }
 
-            TableConsole.LogToFile($"{TableNameDebug}: field card placement: id: {card.Data.id}, field: {field.TableNameDebug} (by: {sourceNameDebug}).");
+            TableConsole.LogToFile("terr", $"{TableNameDebug}: field card placement: id: {card.Data.id}, field: {field.TableNameDebug} (by: {sourceNameDebug}).");
             await card.AttachToField(field, source);
             return card;
         }
@@ -276,7 +277,7 @@ namespace Game.Territories
                 else Menu.WriteLogToCurrent($"Использование карты {card.Data.name}.");
             }
 
-            TableConsole.LogToFile($"{TableNameDebug}: float card placement: id: {card.Data.id} (by: {sourceNameDebug}).");
+            TableConsole.LogToFile("terr", $"{TableNameDebug}: float card placement: id: {card.Data.id} (by: {sourceNameDebug}).");
             return card;
         }
 
@@ -404,19 +405,19 @@ namespace Game.Territories
             BattleTerritory terr = (BattleTerritory)sender;
             if (!terr.DrawersAreNull)
                 Menu.WriteLogToCurrent($"-- Ход {terr.Turn} (начало) --");
-            TableConsole.LogToFile($"--------- turn: {terr.Turn} (start) ---------");
+            TableConsole.LogToFile("terr", $"turn: {terr.Turn} (start)");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnEnemyPhaseBase(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
-            TableConsole.LogToFile($"--------- turn: {terr.Turn} (enemy) ---------");
+            TableConsole.LogToFile("terr", $"turn: {terr.Turn} (enemy)");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnPlayerPhaseBase(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
-            TableConsole.LogToFile($"--------- turn: {terr.Turn} (player) ---------");
+            TableConsole.LogToFile("terr", $"turn: {terr.Turn} (player)");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnEndPhaseBase(object sender, EventArgs e)
@@ -424,7 +425,7 @@ namespace Game.Territories
             BattleTerritory terr = (BattleTerritory)sender;
             if (!terr.DrawersAreNull)
                 Menu.WriteLogToCurrent($"-- Ход {terr.Turn} (конец) --");
-            TableConsole.LogToFile($"--------- turn: {terr.Turn} (end) ---------");
+            TableConsole.LogToFile("terr", $"turn: {terr.Turn} (end)");
             foreach (BattleField field in terr.Fields().WithCard())
                 terr.Initiations.Enqueue(field.Card.CreateInitiation());
             if (terr.Initiations.Count != 0)
@@ -440,13 +441,13 @@ namespace Game.Territories
         protected virtual UniTask OnPlayerWonBase(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
-            TableConsole.LogToFile($"--------- {terr.TableNameDebug}: _player won ---------");
+            TableConsole.LogToFile("terr", $"{terr.TableNameDebug}: player won");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnPlayerLostBase(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
-            TableConsole.LogToFile($"--------- {terr.TableNameDebug}: _player lost ---------");
+            TableConsole.LogToFile("terr", $"{terr.TableNameDebug}: player lost");
             return UniTask.CompletedTask;
         }
 
@@ -479,7 +480,7 @@ namespace Game.Territories
                     return;
                 }
 
-                terr.SetColliders(false);
+                terr.SetFieldsColliders(false);
                 terr.Conclude(terr._player.health > 0);
             };
             return UniTask.CompletedTask;

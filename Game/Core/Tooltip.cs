@@ -24,8 +24,9 @@ namespace Game
 
         public static void Show(string text)
         {
+            if (text == "") return;
             bool isNonBrText = text.StartsWith("<nobr>");
-            string nonBrText = isNonBrText ? text[(text.IndexOf("<nobr>") + 6)..text.IndexOf("</nobr>")] : string.Empty;
+            string nonBrText = isNonBrText ? text[(text.IndexOf("<nobr>") + 6)..text.IndexOf("</nobr>")] : "";
 
             Vector2 textNonBrSize;
             if (isNonBrText)

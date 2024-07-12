@@ -3,7 +3,7 @@
 namespace Game.Traits
 {
     /// <summary>
-    /// Интерфейс, реализующий список трейтов на столе как список трейтов во время сражения (см. <see cref="IBattleTraitListElement"/>).
+    /// Интерфейс, реализующий список навыков на столе как список навыков во время сражения (см. <see cref="IBattleTraitListElement"/>).
     /// </summary>
     public interface IBattleTraitList : ITableTraitList, IReadOnlyList<IBattleTraitListElement>
     {

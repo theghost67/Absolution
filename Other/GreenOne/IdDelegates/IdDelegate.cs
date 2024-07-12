@@ -39,6 +39,8 @@ namespace GreenOne
                 isSubscribed = true;
                 isIncluded = true;
             }
+            public override string ToString() => id.ToString();
+            public object Clone() => new Subscriber(id, @delegate, priority) { isSubscribed = isSubscribed, isIncluded = isIncluded };
         }
 
         public IdDelegate()
@@ -48,24 +50,18 @@ namespace GreenOne
         }
         protected IdDelegate(IdDelegate<D> other)
         {
-            _subs = new List<Subscriber>(other._subs);
+            _subs = new List<Subscriber>(other._subs.Capacity);
+            foreach (Subscriber sub in other._subs)
+                _subs.Add((Subscriber)sub.Clone());
             _id = other._id;
         }
 
-        public void Add(D @delegate, string id, int priority = 0)
+        public void Add(string id, D @delegate, int priority = 0)
         {
             if (id.StartsWith('_'))
                 throw new NotSupportedException("Action id must not start with \'_\' character.");
-
-            AddBase(id, @delegate, priority);
+            else AddBase(id, @delegate, priority);
         }
-        public string Add(D @delegate, int priority = 0)
-        {
-            string id = $"_{_idCounter++}";
-            AddBase(id, @delegate, priority);
-            return id;
-        }
-
         protected void Add(IIdSubscriber<D> sub)
         {
             AddBase(sub.Id, sub.Delegate, sub.Priority);
@@ -74,7 +70,6 @@ namespace GreenOne
         {
             if (priority > TOP_PRIORITY)
                 throw new ArgumentOutOfRangeException($"Delegate priority should not be greater than {TOP_PRIORITY}.");
-
             Subscriber subscriber = new(id, @delegate, priority);
             int iterations = _subs.Count - 1;
 
@@ -93,6 +88,10 @@ namespace GreenOne
         public override int GetHashCode()
         {
             return _id.GetHashCode();
+        }
+        public override string ToString()
+        {
+            return $"Id: {Id}, Count: {Count} ({GetType()})";
         }
 
         public void Dispose()
@@ -118,23 +117,6 @@ namespace GreenOne
 
             bool unsubscribe = subscriber != null && subscriber.isSubscribed;
             if (unsubscribe) subscriber.isSubscribed = false;
-            return unsubscribe;
-        }
-        public bool Remove(D @delegate)
-        {
-            Subscriber subscriber = null;
-            foreach (Subscriber sub in _subs)
-            {
-                if (sub.@delegate == @delegate)
-                {
-                    subscriber = sub;
-                    break;
-                }
-            }
-
-            bool unsubscribe = subscriber != null && subscriber.isSubscribed;
-            if (unsubscribe)
-                subscriber.isSubscribed = false;
             return unsubscribe;
         }
         public void Clear()
@@ -190,10 +172,8 @@ namespace GreenOne
     public interface IIdDelegate<D> : IEnumerable<IIdSubscriber<D>>, ICloneable, IDisposable where D : Delegate
     {
         public int Count { get; }
-        public void Add(D @delegate, string id, int priority = 0);
-        public string Add(D @delegate, int priority = 0);
+        public void Add(string id, D @delegate, int priority = 0);
         public bool Remove(string id);
-        public bool Remove(D @delegate);
         public void Clear();
     }
 }

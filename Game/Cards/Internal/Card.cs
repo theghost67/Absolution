@@ -9,7 +9,7 @@ namespace Game.Cards
     /// <summary>
     /// Абстрактный базовый класс для данных игровой карты.
     /// </summary>
-    public abstract class Card : Unique, ISerializable
+    public abstract class Card : Unique, ISerializable, ICloneable
     {
         public const float POINTS_MAX = 9999;
         public readonly string id;
@@ -70,6 +70,13 @@ namespace Game.Cards
         public virtual string DescRich(ITableCard card) => DescRichBase(card, "");
 
         public abstract object Clone();
+        public object CloneAsNew()
+        {
+            Card clone = (Card)Clone();
+            clone.GiveNewGuid();
+            return clone;
+        }
+
         public abstract TableCard CreateOnTable(Transform parent);
         public abstract float Points(); // 1 point = 1 hp
 

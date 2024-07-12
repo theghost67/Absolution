@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Представляет пассивный трейт на карте стола с возможностью отслеживания целей.
+    /// Представляет пассивный навык на карте стола с возможностью отслеживания целей.
     /// </summary>
     public class BattlePassiveTrait : TablePassiveTrait, IBattleTrait
     {
@@ -21,14 +21,17 @@ namespace Game.Traits
 
         readonly BattleFieldCard _owner;
         readonly BattleArea _area;
+        readonly string _eventsGuid;
         BattlePassiveTraitDrawer _drawer;
 
         public BattlePassiveTrait(PassiveTrait data, BattleFieldCard owner, Transform parent) : base(data, owner, parent)
         {
             _owner = owner;
             _area = new BattleArea(this, owner);
-            _area.OnCardSeen.Add(OnCardSeen);
-            _area.OnCardUnseen.Add(OnCardUnseen);
+            _eventsGuid = this.GuidStrForEvents(3);
+
+            _area.OnCardSeen.Add(_eventsGuid, OnCardSeen);
+            _area.OnCardUnseen.Add(_eventsGuid, OnCardUnseen);
             TryOnInstantiatedAction(GetType(), typeof(BattlePassiveTrait));
         }
         protected BattlePassiveTrait(BattlePassiveTrait src, BattlePassiveTraitCloneArgs args) : base(src, args)

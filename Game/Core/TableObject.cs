@@ -98,8 +98,8 @@ namespace Game
 
         protected virtual void OnDrawerCreatedBase(object sender, EventArgs e) { }
         protected virtual void OnDrawerDestroyedBase(object sender, EventArgs e) { }
-
         protected abstract Drawer DrawerCreator(Transform parent);
+
         void AfterInstantiated()
         {
             CreateDrawer(_parent);

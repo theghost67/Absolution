@@ -3,7 +3,7 @@
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из элементов списка активных трейтов на столе (см. <see cref="TableActiveTraitList"/>).
+    /// Класс, представляющий один из элементов списка активных навыков на столе (см. <see cref="TableActiveTraitList"/>).
     /// </summary>
     public class TableActiveTraitListElement : TableTraitListElement
     {

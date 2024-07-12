@@ -74,7 +74,7 @@ namespace Game.Traits
             ChangePointer = ChangePointerBase();
             OnMouseEnter += OnMouseEnterBase;
             OnMouseLeave += OnMouseLeaveBase;
-            OnMouseClickLeft += OnMouseClickLeftBase;
+            OnMouseClick += OnMouseClickBase;
 
             RedrawRarityIconAsDefault();
             RedrawTraitIconAsDefault();
@@ -281,6 +281,13 @@ namespace Game.Traits
 
         protected virtual bool ChangePointerBase() => false;
         protected virtual bool ShakeOnMouseClickLeft() => true;
+        protected override bool HandleMouseEventsAfterClick()
+        {
+            if (attached.Trait.Owner is ITableSleeveCard sleeveCard && (sleeveCard.Sleeve?.Contains(sleeveCard) ?? false))
+                 return sleeveCard.Sleeve.Drawer.IsPulledOut;
+            else return true;
+        }
+
         protected override void DestroyInstantly()
         {
             base.DestroyInstantly();
@@ -295,8 +302,6 @@ namespace Game.Traits
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e) 
         {
             base.OnMouseEnterBase(sender, e);
-            if (e.handled) return;
-
             ITableTrait trait = attached.Trait;
             Menu.WriteDescToCurrent(trait.DescRich());
 
@@ -310,8 +315,6 @@ namespace Game.Traits
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e) 
         {
             base.OnMouseLeaveBase(sender, e);
-            if (e.handled) return;
-
             ITableTrait trait = attached.Trait;
             if (trait.Owner.Drawer.IsSelected && !trait.Owner.Drawer.Traits.elements.IsAnySelected)
                 Menu.WriteDescToCurrent(trait.Owner.DescRich());
@@ -319,15 +322,11 @@ namespace Game.Traits
             _nameText.text = trait.Data.name;
             SetColor(GetCooldownColor());
         }
-        protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+        protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
         {
-            base.OnMouseClickLeftBase(sender, e);
-            if (e.handled) return;
+            base.OnMouseClickBase(sender, e);
+            if (!e.isLmbDown) return;
 
-            if (attached.Trait.Owner is ITableSleeveCard sleeveCard)
-                e.handled = sleeveCard.IsInMove || sleeveCard.Sleeve.Drawer.IsInMove || (sleeveCard.IsPulledOut && !sleeveCard.Sleeve.Drawer.IsPulledOut);
-
-            if (e.handled) return;
             if (ShakeOnMouseClickLeft())
                 transform.DOAShake();
         }

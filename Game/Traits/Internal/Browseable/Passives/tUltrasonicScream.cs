@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tUltrasonicScream : PassiveTrait
     {
@@ -50,8 +50,8 @@ namespace Game.Traits
         {
             await base.OnTargetStateChanged(e);
             if (e.canSeeTarget)
-                 e.target.OnPostKilled.Add(OnTargetCardKilled, PRIORITY);
-            else e.target.OnPostKilled.Remove(OnTargetCardKilled);
+                 e.target.OnPostKilled.Add(e.trait.GuidStrForEvents(0), OnTargetCardKilled, PRIORITY);
+            else e.target.OnPostKilled.Remove(e.trait.GuidStrForEvents(0));
         }
 
         async UniTask OnTargetCardKilled(object sender, ITableEntrySource source)

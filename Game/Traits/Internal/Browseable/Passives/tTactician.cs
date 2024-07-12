@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tTactician : PassiveTrait
     {
@@ -47,9 +47,9 @@ namespace Game.Traits
 
             BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
             if (trait.WasAdded(e))
-                trait.Owner.Territory.OnStartPhase.Add(OnTerritoryStartPhase, PRIORITY);
+                trait.Owner.Territory.OnStartPhase.Add(trait.GuidStrForEvents(0), OnTerritoryStartPhase, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Owner.Territory.OnStartPhase.Remove(OnTerritoryStartPhase);
+                trait.Owner.Territory.OnStartPhase.Remove(trait.GuidStrForEvents(0));
         }
 
         async UniTask OnTerritoryStartPhase(object sender, EventArgs e)

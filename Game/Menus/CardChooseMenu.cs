@@ -85,7 +85,7 @@ namespace Game.Menus
 
                 drawer.OnMouseEnter += OnCardMouseEnter;
                 drawer.OnMouseLeave += OnCardMouseLeave;
-                drawer.OnMouseClickLeft += OnCardMouseClickLeft;
+                drawer.OnMouseClick += OnCardMouseClickLeft;
 
                 drawer.SetCollider(false);
                 drawer.SetSortingOrder(0);
@@ -228,10 +228,10 @@ namespace Game.Menus
                 SetColor(value ? _paletteElement.SyncedColor : Color.gray);
             }
 
-            protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+            protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
             {
-                base.OnMouseClickLeftBase(sender, e);
-                if (e.handled) return;
+                base.OnMouseClickBase(sender, e);
+                if (!e.isLmbDown) return;
                 _menu.RerollChoice();
             }
         }
@@ -268,19 +268,17 @@ namespace Game.Menus
             protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
             {
                 base.OnMouseEnterBase(sender, e);
-                if (e.handled) return;
                 SetColor(Color.red);
             }
             protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
             {
                 base.OnMouseLeaveBase(sender, e);
-                if (e.handled) return;
                 SetColor();
             }
-            protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+            protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
             {
-                base.OnMouseClickLeftBase(sender, e);
-                if (e.handled) return;
+                base.OnMouseClickBase(sender, e);
+                if (!e.isLmbDown) return;
                 _menu.DeclineChoice();
             }
         }
@@ -384,12 +382,12 @@ namespace Game.Menus
             {
                 if (chosenCard.Drawer.Outline.GetColor().a == 0)
                     chosenCard.Drawer.Outline.SetColor(Color.white);
-                chosenCard.Drawer.HighlightOutline(chosenCard.Drawer.Outline.GetColor(), redraw: false);
+                chosenCard.Drawer.HighlightOutline(chosenCard.Drawer.Outline.GetColor(), 1.5f, false);
 
                 Card data = chosenCard.Data;
                 if (data.isField)
-                     Player.Deck.fieldCards.Add((FieldCard)data);
-                else Player.Deck.floatCards.Add((FloatCard)data);
+                     Player.Deck.fieldCards.Add((FieldCard)data, true);
+                else Player.Deck.floatCards.Add((FloatCard)data, true);
                 await UniTask.Delay(1500);
             }
 

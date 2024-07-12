@@ -3,7 +3,7 @@
 namespace Game.Territories
 {
     /// <summary>
-    /// Класс, представляющий результат взвешивания использования активного трейта во время сражения на цели.
+    /// Класс, представляющий результат взвешивания использования активного навыка во время сражения на цели.
     /// </summary>
     public class BattleActiveTraitWeightResult : BattleWeightResult<BattleActiveTrait>
     {

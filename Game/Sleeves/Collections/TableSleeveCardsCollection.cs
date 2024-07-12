@@ -18,7 +18,15 @@ namespace Game.Sleeves
         public ITableSleeveCard this[int index] => _list[index];
 
         public void Add(ITableSleeveCard card) => _list.Add(card);
+        public void Insert(ITableSleeveCard card, int index)
+        {
+            _list.Insert(index, card);
+        }
         public bool Remove(ITableSleeveCard card) => _list.Remove(card);
+        public int IndexOf(ITableSleeveCard card)
+        {
+            return _list.IndexOf(card);
+        }
         public void Clear() => _list.Clear();
 
         public IEnumerator<ITableSleeveCard> GetEnumerator() => _list.GetEnumerator();

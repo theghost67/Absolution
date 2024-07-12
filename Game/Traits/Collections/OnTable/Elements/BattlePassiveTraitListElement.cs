@@ -3,7 +3,7 @@
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из элементов списка пассивных трейтов на столе (см. <see cref="BattlePassiveTraitList"/>).
+    /// Класс, представляющий один из элементов списка пассивных навыков на столе (см. <see cref="BattlePassiveTraitList"/>).
     /// </summary>
     public class BattlePassiveTraitListElement : TablePassiveTraitListElement, IBattleTraitListElement
     {

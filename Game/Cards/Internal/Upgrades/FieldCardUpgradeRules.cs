@@ -12,59 +12,60 @@ namespace Game.Cards
     /// </summary>
     public struct FieldCardUpgradeRules
     {
-        public float statPoints;
+        public float points;
         public int traitsCount;
         public IReadOnlyDictionary<string, float> possiblePassivesFreqs;
         public IReadOnlyDictionary<string, float> possibleActivesFreqs;
         static readonly IReadOnlyDictionary<string, float> _empty = new Dictionary<string, float>(capacity: 0);
 
-        public FieldCardUpgradeRules(float statPoints, bool addTraits) : this(statPoints, addTraits ? TraitsCount(statPoints) : 0) { }
-        public FieldCardUpgradeRules(float statPoints, int traitsCount) 
+        public FieldCardUpgradeRules(float points, bool addTraits) : this(points, addTraits ? TraitsCount(points) : 0) { }
+        public FieldCardUpgradeRules(float points, int traitsCount) 
         {
-            this.statPoints = statPoints;
+            this.points = points;
             this.traitsCount = traitsCount;
 
             possiblePassivesFreqs = _empty;
             possibleActivesFreqs = _empty;
         }
 
-        public static int TraitsCount(float cardStatPoints)
+        public static int TraitsCount(float points)
         {
-            return System.Convert.ToInt32(TraitsCountRaw(cardStatPoints));
+            return System.Convert.ToInt32(TraitsCountRaw(points));
         }
-        public static float TraitsCountRaw(float cardStatPoints)
+        public static float TraitsCountRaw(float points)
         {
-            if (cardStatPoints < 16)
+            if (points < 16)
                 return 0;
-            else return Mathf.Log((cardStatPoints - 10) / 6);
+            else return Mathf.Log((points - 10) / 6);
         }
 
         public void Upgrade(FieldCard card)
         {
-            if (statPoints <= 0)
+            if (points <= 0)
                 return;
-            if (statPoints > Card.POINTS_MAX)
-                statPoints = Card.POINTS_MAX;
+            if (points > Card.POINTS_MAX)
+                points = Card.POINTS_MAX;
+
+            TableConsole.LogToFile("upsys", $"{card.id}: upgrade started: available points: {points}");
 
             #region stats/ratios initializing
             int cardTraitsCount = card.traits.Count;
             int allTraitsCount = traitsCount + cardTraitsCount;
 
-            float healthFreq = Random.Range(0.5f, 2f);
-            float strengthFreq = Random.Range(0.5f, 2f);
+            float healthFreq = Random.value;
+            float strengthFreq = Random.value * 2;
 
-            float statPointsShare = 0;
-            float statPointsShareCurrent = 0;
+            float statsPointsShare = points * Random.value;
+            float statsPointsShareCurrent = 0;
 
-            float traitPointsShare = 0;
-            float traitPointsShareCurrent = 0;
+            float traitsPointsShare = points - statsPointsShare;
+            float traitsPointsShareCurrent = 0;
 
             if (allTraitsCount == 0)
             {
-                statPointsShare = statPoints;
+                statsPointsShare = points;
                 goto SkipTraitsAll;
             }
-            UpdatePointsShares(ref statPointsShare, ref traitPointsShare, statPoints, healthFreq, strengthFreq);
             #endregion
 
             #region possible traits initializing
@@ -79,7 +80,6 @@ namespace Game.Cards
                 float traitFrequency = pair.Value;
                 Trait traitSrc = TraitBrowser.GetPassive(traitId);
 
-                AmplifyTraitFreqByMoodAndCardStats(ref traitFrequency, traitSrc.mood, card);
                 if (traitFrequency != 0) // no need to add trait that has 0 chance
                     possibleTraits.Add(traitId, traitFrequency);
             }
@@ -89,7 +89,6 @@ namespace Game.Cards
                 float traitFrequency = pair.Value;
                 Trait traitSrc = TraitBrowser.GetActive(traitId);
 
-                AmplifyTraitFreqByMoodAndCardStats(ref traitFrequency, traitSrc.mood, card);
                 if (traitFrequency != 0) // no need to add trait that has 0 chance
                     possibleTraits.Add(traitId, traitFrequency);
             }
@@ -110,12 +109,11 @@ namespace Game.Cards
                 string traitId = weightedPair.Key;
                 Trait traitSrc = TraitBrowser.GetTrait(traitId);
                 float traitFrequency = weightedPair.Value;
-                TraitMood traitMood = traitSrc.mood;
 
                 float traitAddPointsDelta = card.PointsDeltaForTrait(traitSrc, 1);
-                if (traitAddPointsDelta + traitPointsShareCurrent < traitPointsShare)
+                if (traitAddPointsDelta + traitsPointsShareCurrent < traitsPointsShare)
                 {
-                    traitPointsShareCurrent += traitAddPointsDelta;
+                    traitsPointsShareCurrent += traitAddPointsDelta;
                     if (traitSrc.isPassive)
                          card.traits.Passives.AdjustStacks(traitId, 1);
                     else card.traits.Actives.AdjustStacks(traitId, 1);
@@ -128,167 +126,92 @@ namespace Game.Cards
 
                 if (!traitSrc.tags.HasFlag(TraitTag.Static)) // if is stackable
                     cardTraitsStackable.Add(traitId, 1f - traitFrequency);
-
-                UpdateStatFreqs(ref healthFreq, ref strengthFreq, traitMood, possibleTraits, 0);
             }
             #endregion
 
-            #region traits upgrading
+            #region traits upgrading             
             // upgrades generated traits (stackable ones)
-            int traitUpgrIterations = 0;
-            while (traitPointsShareCurrent < traitPointsShare)
+            float traitsFreqSum = cardTraitsStackable.Values.Sum();
+            foreach (KeyValuePair<string, float> pair in cardTraitsStackable)
             {
-                if (cardTraitsStackable.Count == 0) break;
-                KeyValuePair<string, float> weightedPair = cardTraitsStackable.GetWeightedRandom(pair => pair.Value);
-
-                string traitId = weightedPair.Key;
+                string traitId = pair.Key;
                 Trait traitSrc = TraitBrowser.GetTrait(traitId);
-                TraitMood traitMood = traitSrc.mood;
 
-                float stackAddPointsDelta = card.PointsDeltaForTrait(traitSrc, 1);
-                if (stackAddPointsDelta + traitPointsShareCurrent < traitPointsShare)
+                float traitPointsShare = traitsPointsShare * pair.Value / traitsFreqSum;
+                float traitPointsShareCurrent = 0;
+                int traitUpStep = 1000;
+                int traitUpIterations = 0;
+                int traitStacks = traitSrc.isPassive ? card.traits.Passives[traitId].Stacks : card.traits.Actives[traitId].Stacks;
+                while (traitPointsShareCurrent < traitPointsShare)
                 {
-                    traitPointsShareCurrent += stackAddPointsDelta;
-                    if (traitSrc.isPassive)
-                        card.traits.Passives.AdjustStacks(traitId, 1);
-                    else card.traits.Actives.AdjustStacks(traitId, 1);
+                    TryAddStacks:
+                    float stacksAddPointsDelta = card.PointsDeltaForTrait(traitSrc, traitUpStep);
+                    if (stacksAddPointsDelta + traitPointsShareCurrent < traitPointsShare)
+                    {
+                        traitPointsShareCurrent += stacksAddPointsDelta;
+                        traitStacks += traitUpStep;
+                        if (traitSrc.isPassive)
+                            card.traits.Passives.AdjustStacks(traitId, traitUpStep);
+                        else card.traits.Actives.AdjustStacks(traitId, traitUpStep);
+                    }
+                    else if (traitUpStep > 1)
+                    {
+                        traitUpStep /= 2;
+                        goto TryAddStacks;
+                    }
+                    else break;
+                    if (traitUpIterations++ > 1000)
+                        throw new FieldCardTraitUpgradeException(traitId, points, statsPointsShare, traitsPointsShare);
                 }
-                else
-                {
-                    cardTraitsStackable.Remove(traitId);
-                    goto Continue; // cannot afford another stack add
-                }
-
-                UpdateStatFreqs(ref healthFreq, ref strengthFreq, traitMood, possibleTraits, 0);
-                UpdatePointsShares(ref statPointsShare, ref traitPointsShare, statPoints, healthFreq, strengthFreq);
-
-                Continue:
-                if (traitUpgrIterations++ > 1000)
-                    throw new FieldCardTraitUpgradeException(traitId, statPoints, statPointsShare, traitPointsShare);
+                traitsPointsShareCurrent += traitPointsShareCurrent;
+                TableConsole.LogToFile("upsys", $"{card.id}: upgrade: trait {traitId}: iterations: {traitUpIterations}, value: {traitStacks}, share_max: {traitPointsShare}, share_cur: {traitPointsShareCurrent}");
             }
-            statPointsShare -= traitPointsShareCurrent - traitPointsShare; // adjusts statPointsShare using traitPointsShare not spent points
+            statsPointsShare -= traitsPointsShareCurrent - traitsPointsShare; // adjusts statPointsShare using traitPointsShare not spent points
             #endregion
 
             #region stats upgrading
             SkipTraitsAll: // upgrades stats using stat frequencies
-            int statUpIterations = 0;
-            int statUpStep = (int)(statPointsShare * 0.1f).ClampedMin(1);
-            bool healthUps = true;
-            bool strengthUps = true;
-
-            strengthFreq = strengthFreq.ClampedMin(0);
-            healthFreq = healthFreq.ClampedMin(0);
-            while (statPointsShareCurrent < statPointsShare)
+            bool isHealthStat = true;
+            float healthSparePoints = 0;
+            float[] statsFrequencies = new float[] { healthFreq, strengthFreq };
+            float statsFreqSum = statsFrequencies.Sum();
+            foreach (float freq in statsFrequencies)
             {
-                bool healthUp;
-                if (!healthUps)
-                     healthUp = false;
-                else if (!strengthUps)
-                     healthUp = true;
-                else healthUp = Random.Range(0, strengthFreq + healthFreq) < healthFreq;
-
-                float statAddPointsDelta;
-                if (healthUp)
-                     statAddPointsDelta = card.PointsDeltaForHealth(statUpStep);
-                else statAddPointsDelta = card.PointsDeltaForStrength(statUpStep);
-
-                if (statAddPointsDelta + statPointsShareCurrent < statPointsShare)
+                float statPointsShare = statsPointsShare * freq / statsFreqSum;
+                float statPointsShareCurrent = 0;
+                int statUpStep = 1000;
+                int statUpIterations = 0;
+                int statValue = isHealthStat ? card.health : card.strength;
+                if (!isHealthStat) statPointsShare += healthSparePoints;
+                while (statPointsShareCurrent < statPointsShare)
                 {
-                    statPointsShareCurrent += statAddPointsDelta;
-                    if (healthUp)
-                         card.strength += statUpStep;
-                    else card.health += statUpStep;
+                    TryAddStat:
+                    float statAddPointsDelta = isHealthStat ? card.PointsDeltaForHealth(statUpStep) : card.PointsDeltaForStrength(statUpStep);
+                    if (statAddPointsDelta + statPointsShareCurrent < statPointsShare)
+                    {
+                        statPointsShareCurrent += statAddPointsDelta;
+                        statValue += statUpStep;
+                        if (isHealthStat)
+                             card.health += statUpStep;
+                        else card.strength += statUpStep;
+                    }
+                    else if (statUpStep > 1)
+                    {
+                        statUpStep /= 2;
+                        goto TryAddStat;
+                    }
+                    else break;
+                    if (statUpIterations++ > 1000)
+                        throw new FieldCardStatUpgradeException(isHealthStat ? "health" : "strength", points, statsPointsShare, traitsPointsShare);
                 }
-                else
-                {
-                    if (healthUp)
-                         healthUps = false;
-                    else strengthUps = false;
-
-                    if (!healthUps && !strengthUps)
-                         return;        // cannot afford any stat add
-                    else goto Continue; // cannot afford one of stat add
-                }
-
-                Continue:
-                if (statUpIterations++ > 1000)
-                    throw new FieldCardStatUpgradeException(healthUp ? "health" : "strength", statPoints, statPointsShare, traitPointsShare);
+                statsPointsShareCurrent += statPointsShareCurrent;
+                TableConsole.LogToFile("upsys", $"{card.id}: upgrade: stat {(isHealthStat ? "health" : "strength")}: iterations: {statUpIterations}, value: {statValue}, share_max: {statPointsShare}, share_cur: {statPointsShareCurrent}");
+                isHealthStat = false;
+                healthSparePoints = statPointsShare - statPointsShareCurrent;
             }
             #endregion
-        }
 
-        static void AmplifyTraitFreqByMoodAndCardStats(ref float traitFrequency, in TraitMood traitMood, in FieldCard card)
-        {
-            if (traitMood.moxieReq != TraitMoxieReq.Any)
-                traitFrequency *= GetFreqMod(card.moxie, traitMood.moxieReq);
-        }
-        static float GetFreqMod(int aspectValue, TraitMoxieReq aspectReq)
-        {
-            // aspect should be from 1 to 5
-            float aspectValueAbs = Mathf.Abs(aspectValue - 3);
-            switch (aspectReq)
-            {
-                case TraitMoxieReq.Low: return 2f / Mathf.Pow(2, aspectValue - 1);
-
-                case TraitMoxieReq.Medium:
-                    if (aspectValueAbs >= 2)
-                        return 0.5f;
-                    else if (aspectValueAbs >= 1)
-                        return 1f;
-                    else return 2f;
-
-                case TraitMoxieReq.High: return 2f / Mathf.Pow(2, 5 - aspectValue);
-
-                case TraitMoxieReq.HigherIsBetter: return (0.75f + 0.25f * Mathf.Pow(2, aspectValue - 1)).ClampedMax(3f);
-                case TraitMoxieReq.LowerIsBetter: return (0.75f + 0.25f * Mathf.Pow(2, 5 - aspectValue)).ClampedMax(3f);
-                default: throw new System.ArgumentOutOfRangeException();
-            }
-        }
-        static float ModifyValue(in float oldValue, in TraitMoodMod mod, in int stacks)
-        {
-            if (stacks <= 0)
-                return (oldValue + mod.staticAbs) * mod.staticRel;
-            else return (oldValue + mod.stackAbs) * mod.stackRel;
-            // old version for stacks: (oldValue + mod.stackAbs / stack) * (1 + (mod.stackRel - 1) / stack)
-        }
-
-        static void UpdatePointsShares(ref float statPointsShare, ref float traitPointsShare, in float statPoints, in float healthFreq, in float strengthFreq)
-        {
-            /* 
-             * avg 0.25  = 0  % from total share
-             * avg 0.50  = 25 % from total share
-             * avg 1.00x = 50 % from total share
-             * avg 2.00x = 75 % from total share
-             * avg 4.00x = 100% from total share
-             */
-
-            float avgStatMood = (healthFreq.ClampedMin(0) + strengthFreq.ClampedMin(0)) / 2;
-            float statsShareAmplifier = avgStatMood switch
-            {
-                < 0.25f => 0,
-                < 1.00f => Mathf.Log(avgStatMood + 1, 3) - 0.13093f,
-                < 4.00f => Mathf.Sqrt(avgStatMood) / 2,
-                _ => 1,
-            };
-
-            statPointsShare = statPoints * statsShareAmplifier;
-            traitPointsShare = statPoints - statPointsShare;
-        }
-        static void UpdateStatFreqs(ref float healthFreq, ref float strengthFreq, in TraitMood tMood, Dictionary<string, float> tDict, in int stacks)
-        {
-            healthFreq = ModifyValue(healthFreq, tMood.healthMod, stacks);
-            strengthFreq = ModifyValue(strengthFreq, tMood.strengthMod, stacks);
-
-            foreach (KeyValuePair<string, TraitMoodMod> moodPair in tMood.traitsMods)
-            {
-                if (!tDict.ContainsKey(moodPair.Key)) continue;
-                float oldPossibleTraitFreq = tDict[moodPair.Key];
-                float newPossibleTraitFreq = ModifyValue(oldPossibleTraitFreq, moodPair.Value, stacks);
-
-                if (newPossibleTraitFreq != 0)
-                     tDict[moodPair.Key] = newPossibleTraitFreq;
-                else tDict.Remove(moodPair.Key);
-            }
+            TableConsole.LogToFile("upsys", $"{card.id}: upgrade finished: spare points: {points - statsPointsShareCurrent - traitsPointsShareCurrent}");
         }
     }
 }

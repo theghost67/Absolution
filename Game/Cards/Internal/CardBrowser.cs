@@ -176,9 +176,9 @@ namespace Game.Cards
         {
             throw new System.NotSupportedException($"Card currency creation is not supported.\nUse {nameof(GetCurrency)} instead.");
         }
-        public static FieldCard NewField(string id) => (FieldCard)GetField(id).Clone();
-        public static FloatCard NewFloat(string id) => (FloatCard)GetFloat(id).Clone();
-        public static Card NewCard(string id) => (Card)GetCard(id).Clone();
+        public static FieldCard NewField(string id) => (FieldCard)GetField(id).CloneAsNew();
+        public static FloatCard NewFloat(string id) => (FloatCard)GetFloat(id).CloneAsNew();
+        public static Card NewCard(string id) => (Card)GetCard(id).CloneAsNew();
 
         public static CardCurrency GetCurrency(string id)
         {
@@ -242,21 +242,21 @@ namespace Game.Cards
             return card;
         }
 
-        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float statPoints, in int traitsCount)
+        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float points, in int traitsCount)
         {
-            FieldCardUpgradeRules rules = new(statPoints - card.Points(), traitsCount);
+            FieldCardUpgradeRules rules = new(points - card.Points(), traitsCount);
             rules.Upgrade(card);
             return card;
         }
-        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float statPoints)
+        public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float points)
         {
-            FieldCardUpgradeRules rules = new(statPoints - card.Points(), true);
+            FieldCardUpgradeRules rules = new(points - card.Points(), true);
             rules.Upgrade(card);
             return card;
         }
-        public static FieldCard UpgradeWithoutTraitAdd(this FieldCard card, in float statPoints)
+        public static FieldCard UpgradeWithoutTraitAdd(this FieldCard card, in float points)
         {
-            FieldCardUpgradeRules rules = new(statPoints - card.Points(), false);
+            FieldCardUpgradeRules rules = new(points - card.Points(), false);
             rules.Upgrade(card);
             return card;
         }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Game.Territories
 {
@@ -6,7 +7,7 @@ namespace Game.Territories
     /// Структура, представляющая [дополнительный] вес сущности во время сражения (см. <see cref="IBattleWeighty"/>).<br/> 
     /// Этот вес прибавляется к стороне, к которой принадлежит эта сущность.
     /// </summary>
-    public readonly struct BattleWeight
+    public readonly struct BattleWeight : IEquatable<BattleWeight>
     {
         public static readonly BattleWeight none = new(0, 0);
 
@@ -39,6 +40,11 @@ namespace Game.Territories
             else relMod = 1 / (1 - relDelta);
 
             return startAbsValue * relMod;
+        }
+
+        public bool Equals(BattleWeight other)
+        {
+            return absolute == other.absolute && relative == other.relative;
         }
     }
 }

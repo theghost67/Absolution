@@ -29,13 +29,16 @@ namespace Game.Menus
 
         #if DEMO
         const int DEMO_DIFFICULTY_MIN = 1;
-        const int DEMO_DIFFICULTY_MAX = 5;
+        const int DEMO_DIFFICULTY_MID = 5;
+        const int DEMO_DIFFICULTY_MAX = 7;
 
         static int _demoLocStageForPlayer;
         static int _demoLocStageForEnemy;
         static int _demoDifficulty = 0;
+        static float _demoDifficultyScale;
         static int _demoPrevFieldsCount;
         static int _demoPrevFloatsCount;
+        static DateTime _demoStartTime;
 
         static readonly Color[][] _demoPalettes = new Color[][]
         {
@@ -63,11 +66,33 @@ namespace Game.Menus
             },
             new Color[]
             {
-                Utils.HexToColor("#eff6e0"),
-                Utils.HexToColor("#aec3b0"),
-                Utils.HexToColor("#598392"),
-                Utils.HexToColor("#124559"),
-                Utils.HexToColor("#01161e"),
+                Utils.HexToColor("#fff5e0"),
+                Utils.HexToColor("#8decB4"),
+                Utils.HexToColor("#41b06e"),
+                Utils.HexToColor("#141e46"),
+                Utils.HexToColor("#000000"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+            new Color[]
+            {
+                Utils.HexToColor("#f5e6e8"),
+                Utils.HexToColor("#c8acd6"),
+                Utils.HexToColor("#433d8b"),
+                Utils.HexToColor("#2e236c"),
+                Utils.HexToColor("#17153b"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+            new Color[]
+            {
+                Utils.HexToColor("#f5e6e8"),
+                Utils.HexToColor("#c8acd6"),
+                Utils.HexToColor("#433d8b"),
+                Utils.HexToColor("#2e236c"),
+                Utils.HexToColor("#17153b"),
 
                 Utils.HexToColor("#00ffff"),
                 Utils.HexToColor("#ffff00"),
@@ -120,7 +145,6 @@ namespace Game.Menus
             public pFieldCard(BattlePlaceMenu menu, FieldCard data, BattleSide side) : base(data, side)
             {
                 _menu = menu;
-                OnPostKilled.Add(OnPostKilledBase);
                 TryOnInstantiatedAction(GetType(), typeof(pFieldCard));
             }
             protected pFieldCard(pFieldCard src, BattleFieldCardCloneArgs args) : base(src, args) 
@@ -139,11 +163,17 @@ namespace Game.Menus
                 Drawer drawer = base.DrawerCreator(parent);
                 drawer.OnMouseEnter += OnDrawerMouseEnter;
                 drawer.OnMouseLeave += OnDrawerMouseLeave;
-                drawer.OnMouseClickLeft += OnDrawerMouseClickLeft;
+                drawer.OnMouseClick += OnDrawerMouseClickLeft;
                 return drawer;
             }
+            protected override async UniTask OnPostKilledBase_TOP(object sender, ITableEntrySource source)
+            {
+                await base.OnPostKilledBase_TOP(sender, source);
+                pFieldCard card = (pFieldCard)sender;
+                await card.Side.ether.AdjustValue(1, _menu);
+            }
 
-            bool ITableSleeveCard.CanTake()
+            public bool CanTake()
             {
                 bool result = false;
                 if (Side.isMe && _menu._territory.PhaseAwaitsPlayer)
@@ -153,69 +183,75 @@ namespace Game.Menus
                     Drawer.transform.DOAShake();
                 return result;
             }
-            bool ITableSleeveCard.CanReturn()
+            public bool CanReturn()
             {
                 return true;
             }
-            bool ITableSleeveCard.CanDropOn(TableField field)
+            public bool CanDropOn(TableField field)
             {
                 if (field is BattleField bField)
                      return field.Card == null && bField.Side == Side;
                 else return false;
             }
 
-            bool ITableSleeveCard.CanPullOut()
+            public bool CanPullOut()
             {
                 return Side.CanAfford(this);
             }
-            bool ITableSleeveCard.CanPullIn()
+            public bool CanPullIn()
             {
                 return true;
             }
 
-            void ITableSleeveCard.Take()
+            public void OnTake()
             {
                 AsInSleeve.TakeBase();
-                if (Side.isMe) _menu.SetPlayerControls(false, andCardsColliders: true);
+                _menu.SetPlayerControls(false);
+                _menu._territory.SetCardsColliders(false);
                 SetFieldsHighlight(true);
             }
-            void ITableSleeveCard.Return()
+            public void OnReturn()
             {
                 AsInSleeve.ReturnBase();
-                if (Side.isMe) _menu.SetPlayerControls(true);
+                _menu.SetPlayerControls(true);
+                _menu._territory.SetFieldsColliders(true);
                 SetFieldsHighlight(false);
             }
-            void ITableSleeveCard.DropOn(TableField field)
+            public void OnDropOn(TableField field)
             {
-                AsInSleeve.DropOnBase();
+                AsInSleeve.DropOnBase(field);
                 if (Side.isMe)
                 {
-                    _menu.SetPlayerControls(true, andCardsColliders: true);
+                    _menu.SetPlayerControls(true);
+                    _menu._territory.SetFieldsColliders(true);
+                    Drawer.IsSelected = false;
                     Drawer.IgnoreFirstMouseEnter = true;
+                    SetFieldsHighlight(false);
                 }
-                SetFieldsHighlight(false);
-
                 Side.Purchase(this);
                 Drawer.SetSortingOrder(0);
                 Drawer.ChangePointer = false;
-
                 Territory.PlaceFieldCard(this, (BattleField)field, Side);
+            }
+            public void OnPullOut(bool sleevePull)
+            {
+                AsInSleeve.PullOutBase(sleevePull);
+            }
+            public void OnPullIn(bool sleevePull)
+            {
+                AsInSleeve.PullInBase(sleevePull);
             }
 
             void SetFieldsHighlight(bool value)
             {
                 foreach (BattleField field in Side.Fields().WithoutCard())
+                {
+                    if (value) field.Drawer.SetCollider(true);
                     field.Drawer.SetHighlight(value);
+                }
             }
-            UniTask OnPostKilledBase(object sender, ITableEntrySource source)
-            {
-                pFieldCard card = (pFieldCard)sender;
-                return card.Side.ether.AdjustValue(1, _menu);
-            }
-
             void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)
             {
-                if (e.handled) return;
                 BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
 
                 if (Sleeve.Contains(this) && !Side.CanAfford(this))
@@ -223,13 +259,11 @@ namespace Game.Menus
             }
             void OnDrawerMouseLeave(object sender, DrawerMouseEventArgs e)
             {
-                if (e.handled) return;
                 BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
                 drawer.priceIcon.RedrawColor();
             }
             void OnDrawerMouseClickLeft(object sender, DrawerMouseEventArgs e)
             {
-                if (e.handled) return;
                 BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
 
                 if (drawer.attached.Field != null)
@@ -274,11 +308,12 @@ namespace Game.Menus
             protected override async UniTask OnUsed(TableFloatCardUseArgs e)
             {
                 await base.OnUsed(e);
-                if (Side.isMe)
-                    _menu.SetPlayerControls(true, andCardsColliders: true);
+                if (!Side.isMe) return;
+                _menu.SetPlayerControls(true);
+                _menu._territory.SetFieldsColliders(true);
             }
 
-            bool ITableSleeveCard.CanTake()
+            public bool CanTake()
             {
                 bool result = false;
                 if (Side.isMe && _menu._territory.PhaseAwaitsPlayer)
@@ -288,52 +323,59 @@ namespace Game.Menus
                     Drawer.transform.DOAShake();
                 return result;
             }
-            bool ITableSleeveCard.CanReturn()
+            public bool CanReturn()
             {
                 return true;
             }
-            bool ITableSleeveCard.CanDropOn(TableField field)
+            public bool CanDropOn(TableField field)
             {
                 return Data.IsUsable(new TableFloatCardUseArgs(this, Territory));
             }
 
-            bool ITableSleeveCard.CanPullOut()
+            public bool CanPullOut()
             {
                 return Side.CanAfford(this);
             }
-            bool ITableSleeveCard.CanPullIn()
+            public bool CanPullIn()
             {
                 return true;
             }
 
-            void ITableSleeveCard.Take()
+            public void OnTake()
             {
                 AsInSleeve.TakeBase();
-                if (Side.isMe) _menu.SetPlayerControls(false, andCardsColliders: true);
+                _menu.SetPlayerControls(false);
+                _menu._territory.SetCardsColliders(false);
             }
-            void ITableSleeveCard.Return()
+            public void OnReturn()
             {
                 AsInSleeve.ReturnBase();
-                if (Side.isMe) _menu.SetPlayerControls(true);
+                _menu.SetPlayerControls(true);
+                _menu._territory.SetFieldsColliders(true);
             }
-            void ITableSleeveCard.DropOn(TableField field)
+            public void OnDropOn(TableField field)
             {
-                AsInSleeve.DropOnBase();
+                AsInSleeve.DropOnBase(field);
                 Side.Purchase(this);
                 Territory.PlaceFloatCard(this, Side);
+            }
+            public void OnPullOut(bool sleevePull)
+            {
+                AsInSleeve.PullOutBase(sleevePull);
+            }
+            public void OnPullIn(bool sleevePull)
+            {
+                AsInSleeve.PullInBase(sleevePull);
             }
 
             void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)
             {
-                if (e.handled) return;
                 BattleFloatCardDrawer drawer = (BattleFloatCardDrawer)sender;
-
                 if (Sleeve.Contains(this) && !Side.CanAfford(this))
                     drawer.priceIcon.RedrawColor(Color.red);
             }
             void OnDrawerMouseLeave(object sender, DrawerMouseEventArgs e)
             {
-                if (e.handled) return;
                 BattleFloatCardDrawer drawer = (BattleFloatCardDrawer)sender;
                 drawer.priceIcon.RedrawColor();
             }
@@ -388,7 +430,7 @@ namespace Game.Menus
         }
         protected class pSide : BattleSide
         {
-            public override int HealthAtStart => (isMe ? _demoLocStageForPlayer : _demoLocStageForEnemy) * 2;
+            public override int HealthAtStart => GetHealthAtStart();
             readonly BattlePlaceMenu _menu;
 
             public pSide(BattlePlaceMenu menu, BattleTerritory territory, bool isMe) : base(territory, isMe)
@@ -417,6 +459,13 @@ namespace Game.Menus
             protected override BattleSleeve SleeveCreator(Transform parent)
             {
                 return new pSleeve(_menu, this, parent);
+            }
+
+            int GetHealthAtStart()
+            {
+                if (isMe)
+                     return _demoLocStageForPlayer * 2;
+                else return (_demoLocStageForEnemy * 2 * 1 + ((_demoDifficultyScale - 1) * 2)).Ceiling();
             }
         }
         protected class pTerritory : BattleTerritory
@@ -556,10 +605,10 @@ namespace Game.Menus
             _bg = Transform.Find<SquaresBackground>("BG");
             _bg.manualLightUp = true;
 
-            _turnButton.OnMouseClickLeft += (s, e) => TryEndTurn();
+            _turnButton.OnMouseClick += (s, e) => TryEndTurn();
             _turnButton.SetTooltip(() => $"Завершить ход {_territory.Turn}.");
 
-            _fleeButton.OnMouseClickLeft += (s, e) => TryFlee();
+            _fleeButton.OnMouseClick += (s, e) => TryFlee();
             _fleeButton.SetTooltip(() => "Шанс побега: 100%.");
 
             _logTextMesh.text = Log;
@@ -598,7 +647,7 @@ namespace Game.Menus
         {
             base.SetColliders(value);
             SetPlayerControls(value && (_territory?.BattleStarted ?? false));
-            _territory?.SetColliders(value);
+            _territory?.SetFieldsColliders(value);
         }
 
         public override void WriteLog(string text)
@@ -615,8 +664,9 @@ namespace Game.Menus
         // TODO: rewrite
         async void TryFlee()
         {
+            if (!_territory?.PhaseSide?.isMe ?? true) return;
             #if DEMO
-            if (_demoDifficulty != DEMO_DIFFICULTY_MAX)
+            if (_demoDifficulty < DEMO_DIFFICULTY_MID)
             #endif
                 OnPlayerWon(null, null);
             //SetPlayerControls(false);
@@ -629,6 +679,7 @@ namespace Game.Menus
         }
         async void TryEndTurn()
         {
+            if (!_territory?.PhaseSide?.isMe ?? true) return;
             SetPlayerControls(false);
             _territory.NextPhase();
         }
@@ -648,23 +699,19 @@ namespace Game.Menus
             SetColliders(false);
             Traveler.TryStopTravel(complete: false);
             await VFX.CreateScreenBG(Color.clear, Transform).DOFade(1, 0.5f).AsyncWaitForCompletion();
-            VFX.CreateText("КОНЕЦ", Color.red, Transform).transform.DOAShake();
+            TextMeshPro text = VFX.CreateText("КОНЕЦ", Color.red, Transform);
+            text.transform.DOAShake();
+            text.sortingOrder = 600;
             await UniTask.Delay(2000);
-            await TransitFromThis();
+            Application.Quit();
         }
 
-        void SetPlayerControls(bool value, bool andCardsColliders = false)
+        void SetPlayerControls(bool value)
         {
             SetBellState(value);
             SetFleeState(value);
 
             if (_territory == null) return;
-            if (andCardsColliders)
-            {
-                foreach (BattleField field in _territory.Fields().WithCard())
-                    field.Drawer.SetCollider(value);
-            }
-
             BattleSleeveDrawer playerSleeve = _territory.Player.Sleeve.Drawer;
             if (playerSleeve != null) playerSleeve.CanPullOut = value;
             BattleSleeveDrawer enemySleeve = _territory.Enemy.Sleeve.Drawer;
@@ -685,6 +732,8 @@ namespace Game.Menus
         #if DEMO
         Menu demo_CreateCardChooseAndUpgrade(int cPointsPerCard, int cFieldChoices, int cFloatChoices, int cCardsPerChoice, int uPointsLimit)
         {
+            if (cFieldChoices == 0 && cFloatChoices == 0)
+                return demo_CreateCardUpgrade(uPointsLimit);
             CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, cFieldChoices / 2);
             menu.MenuWhenClosed = () => demo_CreateCardUpgrade(uPointsLimit);
             menu.OnClosed += menu.Destroy;
@@ -700,21 +749,42 @@ namespace Game.Menus
 
         async void demo_OnBattleEnd()
         {
-            if (_demoDifficulty == DEMO_DIFFICULTY_MAX)
+            if (_demoDifficulty == DEMO_DIFFICULTY_MID)
             {
-                await VFX.CreateScreenBG(Color.clear, Transform).DOFade(1, 0.5f).AsyncWaitForCompletion();
-                VFX.CreateText("ФИНАЛ", Color.white, Transform).transform.DOAShake();
-                await UniTask.Delay(2000);
-                Application.Quit();
-                return;
+                SpriteRenderer bg = VFX.CreateScreenBG(Color.clear, Transform);
+                bg.name = "Black bg";
+                await bg.DOFade(1, 0.5f).AsyncWaitForCompletion();
+                TextMeshPro text = VFX.CreateText($"КОНЕЦ?\n<size=50%>[ENTER] начать хардкор\n[ESC]: сбежать", Color.white, Transform);
+                text.sortingOrder = 410;
+                text.transform.DOAShake();
+                text.name = "Black text";
+                Global.OnUpdate += demo_choice_OnUpdate;
             }
-
+            else if (_demoDifficulty == DEMO_DIFFICULTY_MAX)
+            {
+                SpriteRenderer bg = VFX.CreateScreenBG(Color.clear, Transform);
+                bg.name = "Black bg";
+                await bg.DOFade(1, 0.5f).AsyncWaitForCompletion();
+                TimeSpan span = DateTime.Now - _demoStartTime;
+                int minutes = span.Minutes;
+                int seconds = span.Seconds;
+                string minutesStr = minutes < 10 ? "0" + minutes : minutes.ToString();
+                string secondsStr = seconds < 10 ? "0" + seconds : seconds.ToString();
+                TextMeshPro text = VFX.CreateText($"ФИНАЛ\n<size=50%>время: {minutesStr}:{secondsStr}", Color.white, Transform);
+                text.sortingOrder = 410;
+                text.transform.DOAShake();
+                text.name = "Black text";
+            }
+            else demo_OnBattleEndBase();
+        }
+        void demo_OnBattleEndBase()
+        {
             int pointsPerCard = demo_DifficultyToLocStage(_demoDifficulty + 1);
             Traveler.DeckCardsCount(pointsPerCard, out int fieldCards, out int floatCards);
             int pointsLimit = fieldCards * pointsPerCard;
 
             int fieldsChoices = (fieldCards - _demoPrevFieldsCount).ClampedMin(1);
-            int floatsChoices = (floatCards - _demoPrevFloatsCount).ClampedMin(0);
+            int floatsChoices = _demoDifficulty >= 2 && _demoDifficulty < DEMO_DIFFICULTY_MID ? 1 : 0;
             int cardsPerChoice = (_demoDifficulty + 2).ClampedMax(5);
 
             _demoPrevFieldsCount = fieldCards;
@@ -727,12 +797,13 @@ namespace Game.Menus
         {
             ColorPalette.SetPalette(_demoPalettes[_demoDifficulty], asDefault: true);
             _demoDifficulty++;
+            if (_demoDifficulty == DEMO_DIFFICULTY_MIN)
+                _demoStartTime = DateTime.Now;
 
             int locStage = demo_DifficultyToLocStage(_demoDifficulty);
-            float locStageDifficultyScale = demo_DifficultyToLocStageScale(_demoDifficulty);
-
+            _demoDifficultyScale = demo_DifficultyToLocStageScale(_demoDifficulty);
             _demoLocStageForPlayer = locStage;
-            _demoLocStageForEnemy = (locStage * locStageDifficultyScale).Ceiling();
+            _demoLocStageForEnemy = (locStage * _demoDifficultyScale).Ceiling();
 
             _territory?.Dispose();
             _territory = new pTerritory(this, playerMovesFirst: true /*UnityEngine.Random.value > 0.5f*/, sizeX: 5);
@@ -740,11 +811,11 @@ namespace Game.Menus
 
             SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
             await UniTask.Delay(500);
-            string text1 = $"ЭТАП {_demoDifficulty}/{DEMO_DIFFICULTY_MAX}";
+            string text1 = $"ЭТАП {_demoDifficulty}/{DEMO_DIFFICULTY_MID}";
             string text2Hex = ColorPalette.GetColorInfo(1).Hex;
-            string text2 = $"\n<size=50%><color={text2Hex}>угроза: {_demoLocStageForPlayer}    сложность: {locStageDifficultyScale * 100}%";
+            string text2 = $"\n<size=50%><color={text2Hex}>угроза: {_demoLocStageForPlayer}    сложность: {_demoDifficultyScale * 100}%";
 
-            if (_demoDifficulty == DEMO_DIFFICULTY_MAX)
+            if (_demoDifficulty >= DEMO_DIFFICULTY_MID)
                 _fleeButton.SetTooltip("<color=red>ТЕБЕ НЕ СБЕЖАТЬ.");
 
             TextMeshPro bgText = VFX.CreateText(text1, Color.white, bg.transform);
@@ -768,23 +839,42 @@ namespace Game.Menus
 
         static float demo_DifficultyToLocStageScale(int difficulty) => difficulty switch
         {
-            1 => 0.88f,
+            1 => 0.80f,
             2 => 1.00f,
-            3 => 1.12f,
-            4 => 1.24f,
-            5 => 1.36f,
+            3 => 1.20f,
+            4 => 1.40f,
+            5 => 1.60f,
+            6 => 1.80f,
+            7 => 2.00f,
             _ => throw new NotSupportedException(),
         };
         static int demo_DifficultyToLocStage(int difficulty) => difficulty switch
         {
             1 => 8,
             2 => 16,
-            3 => 32,
-            4 => 64,
-            5 => 128,
+            3 => 24,
+            4 => 32,
+            5 => 40,
+            6 => 48,
+            7 => 56,
             _ => throw new NotSupportedException(),
         };
 
+        void demo_choice_OnUpdate()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+                Application.Quit();
+            if (!Input.GetKeyDown(KeyCode.Return))
+                return;
+
+            Global.OnUpdate -= demo_choice_OnUpdate;
+            demo_OnBattleEndBase();
+            DOVirtual.DelayedCall(1, () =>
+            {
+                Transform.Find("Black text").gameObject.Destroy();
+                Transform.Find("Black bg").gameObject.Destroy();
+            });
+        }
         void OnBeat(BeatInfo info)
         {
             if (info.beat.intensity <= 0) return;

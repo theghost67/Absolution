@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий набор списков пассивных и активных трейтов на столе (см. <see cref="ITableTraitList"/>).
+    /// Класс, представляющий набор списков пассивных и активных навыков на столе (см. <see cref="ITableTraitList"/>).
     /// </summary>
     public class TableTraitListSet : TableObject, IEnumerable<ITableTraitListElement>, ICloneableWithArgs
     {

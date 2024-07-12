@@ -4,8 +4,8 @@ using System.Linq;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий список пассивных трейтов на столе (см. <see cref="TablePassiveTrait"/>).<br/>
-    /// Список является частью набора списков трейтов (см. <see cref="TableTraitListSet"/>).
+    /// Класс, представляющий список пассивных навыков на столе (см. <see cref="TablePassiveTrait"/>).<br/>
+    /// Список является частью набора списков навыков (см. <see cref="TableTraitListSet"/>).
     /// </summary>
     public class TablePassiveTraitList : TableTraitList, IReadOnlyList<TablePassiveTraitListElement>
     {

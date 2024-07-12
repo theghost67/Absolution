@@ -4,7 +4,7 @@ using Game.Territories;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий аргументы для клонирования пассивного трейта во время сражения.
+    /// Класс, представляющий аргументы для клонирования пассивного навыка во время сражения.
     /// </summary>
     public class BattlePassiveTraitCloneArgs : TablePassiveTraitCloneArgs
     {

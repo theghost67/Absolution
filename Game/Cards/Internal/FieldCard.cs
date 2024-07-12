@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Game.Cards
 {
     /// <summary>
-    /// Абстрактный класс для данных карт полей. Эти карты имеют собственные характеристики и трейты (которые могут изменяться в бою).
+    /// Абстрактный класс для данных карт полей. Эти карты имеют собственные характеристики и навыкы (которые могут изменяться в бою).
     /// </summary>
     public abstract class FieldCard : Card
     {
@@ -110,21 +110,21 @@ namespace Game.Cards
 
         static float MoxiePointsScale(in int moxie) => moxie switch
         {
-            <= 0 => 0.70f,
-               1 => 0.85f,
-               2 => 1.00f,
-               3 => 1.15f,
-               4 => 1.30f,
-            >= 5 => 1.45f,
+            <= 0 => 0.700f,
+               1 => 0.850f,
+               2 => 1.000f,
+               3 => 1.150f,
+               4 => 1.300f,
+            >= 5 => 1.450f,
         };
         static float PricePointsScale(in CardPrice price) => price.value switch
         {
-            <= 0 => 4.00f,
-               1 => 2.00f,
-               2 => 1.00f,
-               3 => 0.85f,
-               4 => 0.70f,
-            >= 5 => 0.55f,
+            <= 0 => 2.000f,
+               1 => 1.500f,
+               2 => 1.000f,
+               3 => 0.833f,
+               4 => 0.666f,
+            >= 5 => 0.500f,
         };
         void FillTraitListSet(string[] traitsStrArray)
         {

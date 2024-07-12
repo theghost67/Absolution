@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tBloodthirstiness : PassiveTrait
     {
@@ -47,9 +47,9 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
 
             if (trait.WasAdded(e))
-                trait.Owner.OnKill.Add(OnOwnerKill, PRIORITY);
+                trait.Owner.OnKill.Add(trait.GuidStrForEvents(0), OnOwnerKill, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Owner.OnKill.Remove(OnOwnerKill);
+                trait.Owner.OnKill.Remove(trait.GuidStrForEvents(0));
         }
 
         static async UniTask OnOwnerKill(object sender, BattleFieldCard victim)

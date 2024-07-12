@@ -54,19 +54,16 @@ namespace Game
 
         void SetAsNormal()
         {
-            _type = PointerType.Normal;
             _typeSprite = _spriteNormal;
             _renderer.sprite = _typeSprite;
         }
         void SetAsHand()
         {
-            _type = PointerType.Hand;
             _typeSprite = _spriteHand;
             _renderer.sprite = _typeSprite;
         }
         void SetAsAiming()
         {
-            _type = PointerType.Aiming;
             _typeSprite = _spriteAiming;
             _renderer.sprite = _typeSprite;
         }
@@ -83,12 +80,6 @@ namespace Game
             SetVisibility(true);
             SetType(PointerType.Normal);
         }
-        void OnApplicationFocus(bool focus)
-        {
-            _update = focus;
-            Cursor.visible = !focus;
-        }
-
         void Update()
         {
             if (!_update) return;
@@ -101,9 +92,11 @@ namespace Game
             bool changePointer = false;
             foreach (Drawer drawer in Drawer.SelectedDrawers)
             {
-                if (!drawer.ChangePointer) continue;
-                changePointer = true;
-                break;
+                if (drawer.ChangePointer)
+                {
+                    changePointer = true;
+                    break;
+                }
             }
 
             if (_type == default && changePointer)

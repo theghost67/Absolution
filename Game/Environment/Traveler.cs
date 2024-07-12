@@ -151,9 +151,8 @@ namespace Game.Environment
         }
         public static void DeckCardsCountRandom(int pointsPerCard, out int fieldCardsCount, out int floatCardsCount)
         {
-            fieldCardsCount = pointsPerCard < 6 ? 3 : Convert.ToInt32(3 + 2 * Mathf.Log(pointsPerCard - 5));
-            floatCardsCount = pointsPerCard < 28 ? 0 : Convert.ToInt32(Mathf.Log((pointsPerCard - 12) / 16f));
-            fieldCardsCount = UnityEngine.Random.Range(fieldCardsCount / 2, fieldCardsCount);
+            DeckCardsCount(pointsPerCard, out fieldCardsCount, out floatCardsCount);
+            fieldCardsCount = UnityEngine.Random.Range(1, fieldCardsCount);
         }
 
         public static CardDeck NewDeck(EntityType type = default, int statPointsPerCard = -1)
@@ -190,13 +189,31 @@ namespace Game.Environment
             OnDeckPreCreated?.Invoke(preArgs);
             if (preArgs.handled) return deck;
 
-            // generate cards using ratios (to make more diversed deck)
+            // generate cards using ratios (to make more diverse deck)
+            Dictionary<string, float> notGoldFieldCards = null;
             for (int i = 0; i < fieldCardsCount; i++)
             {
                 if (deck.LimitReached) break;
                 int points = Convert.ToInt32(statPointsRatios[i] * pointsSum);
                 int traitsCount = Convert.ToInt32(traitsCountRatios[i] * traitsCountSum);
-                deck.fieldCards.Add(NewField(type, points, traitsCount));
+                FieldCard card;
+                if (fieldCardsCount > 2)
+                {
+                    card = NewField(type, points, traitsCount);
+                    deck.fieldCards.Add(card);
+                    continue;
+                }
+                if (notGoldFieldCards == null)
+                {
+                    notGoldFieldCards = new Dictionary<string, float>(fieldsFrequencies);
+                    foreach (string id in fieldsFrequencies.Keys)
+                    {
+                        if (CardBrowser.GetCard(id).price.currency.id != "gold")
+                            notGoldFieldCards.Remove(id);
+                    }
+                }
+                card = NewField(type, points, traitsCount, notGoldFieldCards.GetWeightedRandom(p => p.Value).Key);
+                deck.fieldCards.Add(card);
             }
 
             for (int i = 0; i < floatCardsCount; i++)
@@ -212,7 +229,7 @@ namespace Game.Environment
         {
             return NewField(type);
         }
-        public static FieldCard NewField(EntityType type = default, int statPoints = -1, int traitsCount = -1)
+        public static FieldCard NewField(EntityType type = default, int statPoints = -1, int traitsCount = -1, string id = null)
         {
             if (!_isTraveling)
                 throw new InvalidOperationException("Travel is not in progress.");
@@ -224,14 +241,14 @@ namespace Game.Environment
             TravelerCardPreEventArgs preArgs = new(type, statPoints, traitsCount);
             OnCardPreCreated?.Invoke(preArgs);
 
-            string randomId = fieldsFrequencies.GetWeightedRandom(pair => pair.Value).Key;
+            id ??= fieldsFrequencies.GetWeightedRandom(pair => pair.Value).Key;
             FieldCardUpgradeRules rules = new(statPoints, traitsCount)
             {
                 possiblePassivesFreqs = passivesFrequencies,
                 possibleActivesFreqs = activesFrequencies
             };
 
-            FieldCard card = CardBrowser.NewField(randomId).ShuffleMainStats();
+            FieldCard card = CardBrowser.NewField(id).ShuffleMainStats();
             rules.Upgrade(card);
             OnCardPostCreated?.Invoke(new TravelerCardPostEventArgs(card, preArgs));
             return card;

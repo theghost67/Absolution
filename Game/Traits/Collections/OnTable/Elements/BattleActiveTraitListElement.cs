@@ -3,7 +3,7 @@
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из элементов списка активных трейтов во время сражения (см. <see cref="BattleActiveTraitList"/>).
+    /// Класс, представляющий один из элементов списка активных навыков во время сражения (см. <see cref="BattleActiveTraitList"/>).
     /// </summary>
     public class BattleActiveTraitListElement : TableActiveTraitListElement, IBattleTraitListElement
     {

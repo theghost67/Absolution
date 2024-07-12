@@ -19,12 +19,12 @@ namespace Game.Traits
             ChangePointer = _attachedTrait.Side.isMe;
         }
 
+        protected override bool ChangePointerBase() => false;
         protected override bool ShakeOnMouseClickLeft() => false;
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseEnterBase(sender, e);
-            if (e.handled) return;
             _attachedTrait.Area.CreateTargetsHighlight();
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
@@ -33,10 +33,10 @@ namespace Game.Traits
             if (e.handled) return;
             _attachedTrait.Area.DestroyTargetsHighlight();
         }
-        protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+        protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
         {
-            base.OnMouseClickLeftBase(sender, e);
-            if (e.handled) return;
+            base.OnMouseClickBase(sender, e);
+            if (!e.isLmbDown) return;
 
             bool used = _attachedTrait.TryUseWithAim(attached.Trait.Territory.Player);
             if (!used)

@@ -4,7 +4,7 @@ using System.Linq;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий список данных активных трейтов (см. <see cref="ActiveTraitListElement"/>).
+    /// Класс, представляющий список данных активных навыков (см. <see cref="ActiveTraitListElement"/>).
     /// </summary>
     public class ActiveTraitList : TraitList, IReadOnlyList<ActiveTraitListElement>
     {

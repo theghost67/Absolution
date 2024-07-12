@@ -15,14 +15,11 @@ namespace Game.Traits
         {
             attached = element;
             _attachedTrait = attached.Trait;
-            ChangePointer = _attachedTrait.Side.isMe;
         }
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseEnterBase(sender, e);
-            if (e.handled) return;
-
             BattleFieldCard owner = _attachedTrait.Owner;
             if (owner == null) return;
             if (owner.Field != null)
@@ -31,8 +28,6 @@ namespace Game.Traits
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseLeaveBase(sender, e);
-            if (e.handled) return;
-
             BattleFieldCard owner = _attachedTrait.Owner;
             if (owner == null) return;
             if (owner.Field != null)

@@ -40,7 +40,7 @@ namespace Game.Traits
             ChangePointer = ChangePointerBase();
             OnMouseEnter += OnMouseEnterBase;
             OnMouseLeave += OnMouseLeaveBase;
-            OnMouseClickLeft += OnMouseClickLeftBase;
+            OnMouseClick += OnMouseClickBase;
         }
 
         public void RedrawSprite()

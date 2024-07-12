@@ -1,19 +1,18 @@
 ﻿namespace Game.Traits
 {
     /// <summary>
-    /// Абстрактный класс, представляющий один из элементов списка трейтов на столе (см. <see cref="ITableTraitList"/>).
+    /// Абстрактный класс, представляющий один из элементов списка навыков на столе (см. <see cref="ITableTraitList"/>).
     /// </summary>
     public abstract class TableTraitListElement : TableObject, ITableTraitListElement
     {
-        public int Stacks { get => _stacks; }
         public new TableTraitListElementDrawer Drawer => ((TableObject)this).Drawer as TableTraitListElementDrawer;
-
         public override string TableName => _trait.TableName;
         public override string TableNameDebug => _trait.TableNameDebug;
 
         public ITableTraitList List => _list;
         public ITableTrait Trait => _trait;
         public ITableEntryDict StacksEntries => _stacksEntries;
+        public int Stacks => _stacks;
 
         readonly ITableTraitList _list;
         readonly ITableTrait _trait;
@@ -24,6 +23,7 @@
         {
             _list = list;
             _trait = trait;
+            _stacks = 0;
             _stacksEntries = new TableEntryDict();
             TryOnInstantiatedAction(GetType(), typeof(TableTraitListElement));
         }
@@ -31,9 +31,8 @@
         {
             _list = args.srcListClone;
             _trait = TraitCloner(src._trait, args);
-
-            TableEntryDictCloneArgs entriesCArgs = new(args.terrCArgs);
-            _stacksEntries = (TableEntryDict)src._stacksEntries.Clone(entriesCArgs);
+            _stacks = src._stacks;
+            _stacksEntries = (TableEntryDict)src._stacksEntries.Clone(new TableEntryDictCloneArgs(args.terrCArgs));
             TryOnInstantiatedAction(GetType(), typeof(TableTraitListElement));
         }
 
@@ -46,8 +45,9 @@
             return (_trait.Guid == trait.Guid) && (_trait.Owner.Guid == trait.Owner.Guid);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             _stacksEntries.Clear();
             _trait.Dispose();
             Drawer?.Dispose();

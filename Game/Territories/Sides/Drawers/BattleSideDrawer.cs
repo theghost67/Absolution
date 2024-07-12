@@ -61,6 +61,8 @@ namespace Game.Territories
         readonly TextMeshPro _goldText;
         readonly TextMeshPro _etherText;
 
+        readonly string _eventsGuid;
+
         int _gold;
         int _ether;
 
@@ -87,6 +89,7 @@ namespace Game.Territories
         public BattleSideDrawer(BattleSide side, Transform parent) : base(side, side.isMe ? _playerPrefab : _enemyPrefab, parent)
         {
             attached = side;
+            _eventsGuid = this.GuidStrForEvents(1);
 
             _healthPanel = transform.Find<SpriteRenderer>("Hp");
             _goldPanel = transform.Find<SpriteRenderer>("Gold");
@@ -96,9 +99,9 @@ namespace Game.Territories
             _goldText = _goldPanel.transform.Find<TextMeshPro>("Text");
             _etherText = _etherPanel.transform.Find<TextMeshPro>("Text");
 
-            side.health.OnPostSet.Add(OnHealthPostSet);
-            side.gold.OnPostSet.Add(OnGoldPostSet);
-            side.ether.OnPostSet.Add(OnEtherPostSet);
+            side.health.OnPostSet.Add(_eventsGuid, OnHealthPostSet);
+            side.gold.OnPostSet.Add(_eventsGuid, OnGoldPostSet);
+            side.ether.OnPostSet.Add(_eventsGuid, OnEtherPostSet);
 
             if (!side.isMe)
             {
@@ -144,9 +147,9 @@ namespace Game.Territories
         protected override void DestroyInstantly()
         {
             base.DestroyInstantly();
-            attached.health.OnPostSet.Remove(OnHealthPostSet);
-            attached.gold.OnPostSet.Remove(OnGoldPostSet);
-            attached.ether.OnPostSet.Remove(OnEtherPostSet);
+            attached.health.OnPostSet.Remove(_eventsGuid);
+            attached.gold.OnPostSet.Remove(_eventsGuid);
+            attached.ether.OnPostSet.Remove(_eventsGuid);
         }
 
         UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)

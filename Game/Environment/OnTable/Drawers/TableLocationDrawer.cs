@@ -36,7 +36,7 @@ namespace Game.Environment
 
             OnMouseEnter += OnLocationMouseEnter;
             OnMouseLeave += OnLocationMouseLeave;
-            OnMouseClickLeft += OnLocationMouseClick;
+            OnMouseClick += OnLocationMouseClick;
         }
 
         public void UpdateByUnlockState()

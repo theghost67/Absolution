@@ -9,7 +9,7 @@ namespace Game.Territories
     /// <summary>
     /// Класс, представляющий отправляемую инициацию. Позволяет изменять общие данные инициации перед её действием.
     /// </summary>
-    public class BattleInitiationSendArgs : IComparable<BattleInitiationSendArgs>
+    public sealed class BattleInitiationSendArgs : IComparable<BattleInitiationSendArgs>
     {
         public event EventHandler<BattleField> OnReceiverAdded;
         public event EventHandler<BattleField> OnReceiverRemoved;
@@ -39,7 +39,7 @@ namespace Game.Territories
             _receivers = new List<BattleField>(receivers);
 
             this.strength = new TableStat(nameof(this.strength), this, strength);
-            this.strength.OnPostSet.Add(OnStrengthPostSet);
+            this.strength.OnPostSet.Add("base", OnStrengthPostSet);
 
             this.manualAim = manualAim;
             this.topPriority = topPriority;

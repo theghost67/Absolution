@@ -4,7 +4,7 @@ using Game.Cards;
 namespace Game.Traits
 {
     /// <summary>
-    /// Реализует объект как трейт на столе.
+    /// Реализует объект как навык на столе.
     /// </summary>
     public interface ITableTrait : ITableObject, ITableEntrySource, ICloneableWithArgs
     {

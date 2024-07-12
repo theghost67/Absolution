@@ -39,7 +39,7 @@ namespace Game.Territories
             _light = transform.Find<Light2D>("Light");
             _light.color = ColorPalette.GetColor(0);
 
-            OnMouseClickLeft += OnMouseClickLeftBase;
+            OnMouseClick += OnMouseClickBase;
             ColorPalette.OnColorChanged += OnColorPaletteChanged;
         }
 
@@ -91,8 +91,11 @@ namespace Game.Territories
             if (index == 1)
                 _light.color = ColorPalette.GetColor(index);
         }
-        protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+        protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
         {
+            base.OnMouseClickBase(sender, e);
+            if (!e.isLmbDown) return;
+
             TableFieldDrawer drawer = (TableFieldDrawer)sender;
             drawer.transform.DOAShake();
         }

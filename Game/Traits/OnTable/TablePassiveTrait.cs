@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий любой пассивный трейт на столе (см. <see cref="PassiveTrait"/>).
+    /// Класс, представляющий любой пассивный навык на столе (см. <see cref="PassiveTrait"/>).
     /// </summary>
     public class TablePassiveTrait : TableTrait
     {

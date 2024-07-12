@@ -7,7 +7,7 @@ namespace Game.Territories
     /// </summary>
     public interface IBattleWeightResult : IComparable
     {
-        public IBattleEntity Entity { get; }
+        public IBattleObject Entity { get; }
         public float WeightDeltaAbs { get; }
         public float WeightDeltaRel { get; }
     }

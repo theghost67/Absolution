@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tFoodPoisoning : PassiveTrait
     {
@@ -47,9 +47,9 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
 
             if (trait.WasAdded(e))
-                trait.Owner.OnPostKilled.Add(OnOwnerPostKilled, PRIORITY);
+                trait.Owner.OnPostKilled.Add(trait.GuidStrForEvents(0), OnOwnerPostKilled, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Owner.OnPostKilled.Remove(OnOwnerPostKilled);
+                trait.Owner.OnPostKilled.Remove(trait.GuidStrForEvents(0));
         }
 
         async UniTask OnOwnerPostKilled(object sender, ITableEntrySource source)

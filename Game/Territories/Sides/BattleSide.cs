@@ -40,6 +40,8 @@ namespace Game.Territories
         readonly BattleSideFinder _finder;
         readonly BattleTerritory _territory;
         readonly int _fieldsYIndex;
+        readonly string _eventsGuid;
+
         CardDeck _deck;
         BattleSleeve _sleeve;
 
@@ -51,19 +53,20 @@ namespace Game.Territories
             _finder = new BattleSideFinder(this);
             _territory = territory;
             _fieldsYIndex = isMe ? BattleTerritory.PLAYER_FIELDS_Y : BattleTerritory.ENEMY_FIELDS_Y;
+            _eventsGuid = this.GuidStrForEvents(1);
             _deck = DeckCreator();
 
             health = new TableStat(nameof(health), this, HealthAtStart);
-            health.OnPreSet.Add(OnStatPreSetBase_TOP);
-            health.OnPostSet.Add(OnStatPostSetBase_TOP);
+            health.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);
+            health.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP);
 
             gold = new TableStat(nameof(gold), this, GoldAtStart);
-            gold.OnPreSet.Add(OnStatPreSetBase_TOP);
-            gold.OnPostSet.Add(OnStatPostSetBase_TOP);
+            gold.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);
+            gold.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP);
 
             ether = new TableStat(nameof(ether), this, EtherAtStart);
-            ether.OnPreSet.Add(OnStatPreSetBase_TOP);
-            ether.OnPostSet.Add(OnStatPostSetBase_TOP);
+            ether.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);
+            ether.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP);
 
             AddOnInstantiatedAction(GetType(), typeof(BattleSide), () => CreateSleeve(Drawer?.transform));
         }
@@ -204,7 +207,7 @@ namespace Game.Territories
             string statName = stat.TableNameDebug;
             string sourceName = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile($"{sideName}: {statName}: OnPreSet: delta: {e.deltaValue} (by: {sourceName}).");
+            TableConsole.LogToFile("terr", $"{sideName}: {statName}: OnPreSet: delta: {e.deltaValue} (by: {sourceName}).");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnStatPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
@@ -216,7 +219,7 @@ namespace Game.Territories
             string statName = stat.TableNameDebug;
             string sourceName = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile($"{sideName}: {statName}: OnPostSet: delta: {e.totalDeltaValue} (by: {sourceName}).");
+            TableConsole.LogToFile("terr", $"{sideName}: {statName}: OnPostSet: delta: {e.totalDeltaValue} (by: {sourceName}).");
             return UniTask.CompletedTask;
         }
         // ----

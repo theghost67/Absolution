@@ -3,7 +3,7 @@
 namespace Game.Traits
 {
     /// <summary>
-    /// Статический класс, содержащий коллекции всех существующих данных трейтов в исходном состоянии.
+    /// Статический класс, содержащий коллекции всех существующих данных навыков в исходном состоянии.
     /// </summary>
     public static class TraitBrowser
     {
@@ -57,9 +57,9 @@ namespace Game.Traits
             // -----------------------------------
         }
 
-        public static PassiveTrait NewPassive(string id) => (PassiveTrait)GetPassive(id).Clone();
-        public static ActiveTrait NewActive(string id) => (ActiveTrait)GetActive(id).Clone();
-        public static Trait NewTrait(string id) => (Trait)GetTrait(id).Clone();
+        public static PassiveTrait NewPassive(string id) => (PassiveTrait)GetPassive(id).CloneAsNew();
+        public static ActiveTrait NewActive(string id) => (ActiveTrait)GetActive(id).CloneAsNew();
+        public static Trait NewTrait(string id) => (Trait)GetTrait(id).CloneAsNew();
 
         public static PassiveTrait GetPassive(string id)
         {

@@ -5,7 +5,7 @@ using Game.Territories;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tOldAuthority : PassiveTrait
     {
@@ -29,7 +29,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"Перед любой инициацией владельца (П{PRIORITY})",
-                    $"отменяет инициацию на цель, если у неё есть трейт <i>{name}</i>."),
+                    $"отменяет инициацию на цель, если у неё есть навык <i>{name}</i>."),
             });
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -40,9 +40,9 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
 
             if (trait.WasAdded(e))
-                trait.Owner.OnInitiationPreSent.Add(OnOwnerInitiationPreSent, PRIORITY);
+                trait.Owner.OnInitiationPreSent.Add(trait.GuidStrForEvents(0), OnOwnerInitiationPreSent, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Owner.OnInitiationPreSent.Remove(OnOwnerInitiationPreSent);
+                trait.Owner.OnInitiationPreSent.Remove(trait.GuidStrForEvents(0));
         }
 
         static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs sArgs)

@@ -11,9 +11,9 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Абстрактный базовый класс для данных игровых трейтов.
+    /// Абстрактный базовый класс для данных игровых навыков.
     /// </summary>
-    public abstract class Trait : Unique, ISerializable
+    public abstract class Trait : Unique, ISerializable, ICloneable
     {
         public readonly string id;
         public readonly bool isPassive; // used to remove 'is' type checks as there are only two derived types (PassiveTrait and ActiveTrait)
@@ -25,7 +25,6 @@ namespace Game.Traits
         public TraitTag tags;
         public BattleRange range;
         public float frequency; // 0-1
-        public TraitMood mood;
         public readonly TraitStorage storage;
 
         protected TableFinder TraitFinder => _traitFinder; // use to find attached ITableTrait on TableTerritory/BattleTerritory
@@ -38,7 +37,6 @@ namespace Game.Traits
             this.spritePath = $"Sprites/Traits/Icons/{id}";
 
             range = BattleRange.none;
-            mood = TraitMood.normal;
             storage = new TraitStorage(this);
         }
         protected Trait(Trait other) : base(other.Guid)
@@ -53,7 +51,6 @@ namespace Game.Traits
             tags = other.tags;
             range = other.range;
             frequency = other.frequency;
-            mood = other.mood;
             storage = new TraitStorage(this);
             foreach (KeyValuePair<int, object> pair in other.storage)
                 storage.Add(pair.Key, pair.Value);
@@ -99,6 +96,12 @@ namespace Game.Traits
 
         public abstract TableTrait CreateOnTable(Transform parent);
         public abstract object Clone();
+        public object CloneAsNew()
+        {
+            Trait clone = (Trait)Clone();
+            clone.GiveNewGuid();
+            return clone;
+        }
 
         protected static string DescRichBase(ITableTrait trait, TraitDescChunk[] descChunks)
         {

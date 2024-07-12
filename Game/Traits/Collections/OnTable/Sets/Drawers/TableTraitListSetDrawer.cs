@@ -41,26 +41,26 @@ namespace Game.Traits
         {
             base.SetCollider(value);
             foreach (TableTraitListElementDrawer drawer in elements)
-                drawer.SetCollider(value);
+                drawer?.SetCollider(value);
         }
         public override void SetSortingOrder(int value, bool asDefault = false)
         {
             base.SetSortingOrder(value, asDefault);
             foreach (TableTraitListElementDrawer drawer in elements)
-                drawer.SetSortingOrder(value);
+                drawer?.SetSortingOrder(value);
         }
         public override void SetAlpha(float value)
         {
             base.SetAlpha(value);
             _animAlpha = value;
             foreach (TableTraitListElementDrawer drawer in elements)
-                drawer.SetAlpha(value);
+                drawer?.SetAlpha(value);
         }
         public override void SetColor(Color value)
         {
             base.SetColor(value);
             foreach (TableTraitListElementDrawer drawer in elements)
-                drawer.SetColor(value);
+                drawer?.SetColor(value);
         }
 
         public Tween ShowStoredElements()
@@ -117,7 +117,7 @@ namespace Game.Traits
             base.DestroyInstantly();
             AnimKill();
             foreach (TableTraitListElementDrawer drawer in elements)
-                drawer.TryDestroyInstantly();
+                drawer?.TryDestroyInstantly();
         }
         protected override UniTask DestroyAnimated()
         {

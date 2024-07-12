@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий любой активный трейт на столе (см. <see cref="ActiveTrait"/>).
+    /// Класс, представляющий любой активный навык на столе (см. <see cref="ActiveTrait"/>).
     /// </summary>
     public class TableActiveTrait : TableTrait
     {

@@ -7,8 +7,8 @@ namespace Game.Cards
 	/// </summary>
     public class FieldCardStatUpgradeException : Exception
 	{
-		public FieldCardStatUpgradeException(string statName, float upgradePoints, float statPointsShare, float traitPointsShare)
+		public FieldCardStatUpgradeException(string statName, float upgradePoints, float statsPointsShare, float traitsPointsShare)
 			: base($"Stat \'{statName}\' caused thread block during card upgrade.\n" +
-				   $"upgradePoints: {upgradePoints}, statPointsShare: {statPointsShare}, traitPointsShare: {traitPointsShare}") { }
+				   $"upgradePoints: {upgradePoints}, statsPointsShare: {statsPointsShare}, traitsPointsShare: {traitsPointsShare}") { }
 	}
 }

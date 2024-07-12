@@ -1,7 +1,7 @@
 ﻿namespace Game.Traits
 {
     /// <summary>
-    /// Перечисление, представляющее тэги трейта.
+    /// Перечисление, представляющее тэги навыка.
     /// </summary>
     public enum TraitTag
     {

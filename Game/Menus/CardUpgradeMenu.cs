@@ -26,6 +26,9 @@ namespace Game.Menus
 
         static readonly GameObject _prefab = Resources.Load<GameObject>($"Prefabs/Menus/{ID}");
         public event Action<float> OnDeckPointsChanged;
+        public event Action<float> OnAnyStatGraded; // float = delta
+        public event Action<float> OnAnyCardReset;
+        public event Action OnSelectedChanged;
 
         public CardDeck Deck => _sleeve.Deck;
         public float PointsLimit => _pointsLimit;
@@ -57,9 +60,6 @@ namespace Game.Menus
         {
             const float ANIM_DURATION = 0.50f;
             public static CardToUpgrade Selected => _selected;
-            public static event Action OnSelectedChanged;
-            public static event Action<float> OnAnyStatGraded; // float = delta
-            public static event Action<float> OnAnyCardReset; 
 
             public TableSleeve Sleeve => _sleeve;
             public ITableSleeveCard AsInSleeve => this;
@@ -85,6 +85,7 @@ namespace Game.Menus
 
             Vector3 _defaultPos;
             float _defaultPoints;
+            int _defaultSorting;
 
             bool _isPulling;
             bool _isPulledOut;
@@ -102,22 +103,32 @@ namespace Game.Menus
                     _selected.Deselect(false);
             }
 
-            bool ITableSleeveCard.CanTake() => false;
-            bool ITableSleeveCard.CanReturn() => false;
-            bool ITableSleeveCard.CanDropOn(TableField field) => false;
+            public bool CanTake() => false;
+            public bool CanReturn() => false;
+            public bool CanDropOn(TableField field) => false;
+            public bool CanPullOut() => _selected != this && Drawer.ColliderEnabled;
+            public bool CanPullIn() => _selected != this && Drawer.ColliderEnabled;
 
-            bool ITableSleeveCard.CanPullOut() => _selected != this && Drawer.ColliderEnabled;
-            bool ITableSleeveCard.CanPullIn() => _selected != this && Drawer.ColliderEnabled;
-
-            void ITableSleeveCard.Take() => AsInSleeve.TakeBase();
-            void ITableSleeveCard.Return() => AsInSleeve.ReturnBase();
-            void ITableSleeveCard.DropOn(TableField field) => AsInSleeve.DropOnBase();
+            public void OnTake() => AsInSleeve.TakeBase();
+            public void OnReturn() => AsInSleeve.ReturnBase();
+            public void OnDropOn(TableField field) => AsInSleeve.DropOnBase(field);
+            public void OnPullOut(bool sleevePull)
+            {
+                if (_selected != this)
+                    AsInSleeve.PullOutBase(sleevePull);
+            }
+            public void OnPullIn(bool sleevePull)
+            {
+                if (_selected != this)
+                    AsInSleeve.PullInBase(sleevePull);
+            }
 
             // set once sleeve drawer created
-            public void SetDefaults(Vector3 pos, float points)
+            public void SetDefaults(Vector3 pos, float points, int sortingOrder)
             {
                 _defaultPos = pos;
                 _defaultPoints = points;
+                _defaultSorting = sortingOrder;
             }
             public async UniTask TryReset()
             {
@@ -128,7 +139,7 @@ namespace Game.Menus
                     await stat.Reset();
 
                 float pointsDelta = CurrentPoints - startPoints;
-                OnAnyCardReset?.Invoke(pointsDelta);
+                _menu.OnAnyCardReset?.Invoke(pointsDelta);
             }
             public bool ResetAvailable()
             {
@@ -138,33 +149,6 @@ namespace Game.Menus
                         return true;
                 }
                 return false;
-            }
-
-            public Tween AnimCardSelect()
-            {
-                Sequence seq = DOTween.Sequence(Drawer);
-                seq.AppendCallback(() =>
-                {
-                    AnimScaleUp();
-                    AnimPosUp();
-                });
-                seq.AppendInterval(ANIM_DURATION);
-                seq.OnComplete(() => Drawer.SetCollider(true));
-
-                return seq.Play();
-            }
-            public Tween AnimCardDeselect()
-            {
-                Sequence seq = DOTween.Sequence(Drawer);
-                seq.AppendCallback(() =>
-                {
-                    AnimScaleDown();
-                    AnimPosDown();
-                });
-                seq.AppendInterval(ANIM_DURATION);
-                seq.OnComplete(() => Drawer.SetCollider(true));
-
-                return seq.Play();
             }
 
             public void AnimHighlightAsUpgrade()
@@ -191,15 +175,44 @@ namespace Game.Menus
                 foreach (Trait trait in Data.traits.Select(e => e.Trait))
                     _stats[index++] = new TraitStatToUpgrade(_menu, this, Drawer.Traits.elements[trait.id]);
                 foreach (StatToUpgrade stat in _stats)
-                    stat.OnGraded += delta => OnAnyStatGraded(delta);
+                    stat.OnGraded += delta => _menu.OnAnyStatGraded(delta);
 
                 Drawer.ChangePointer = true;
-                Drawer.OnMouseClickLeft += (s, e) => { if (_selected != this) Select(); };
+                Drawer.OnMouseClick += (s, e) => { if (_selected != this) Select(); };
             }
             protected override void OnDrawerDestroyedBase(object sender, EventArgs e)
             {
                 base.OnDrawerDestroyedBase(sender, e);
                 Dispose();
+            }
+
+            Tween AnimCardSelect(Vector3 from, Vector3 to)
+            {
+                Drawer.transform.position = from;
+                Sequence seq = DOTween.Sequence(Drawer);
+                seq.AppendCallback(() =>
+                {
+                    AnimScaleUp();
+                    AnimPosUp(to);
+                });
+                seq.AppendInterval(ANIM_DURATION);
+                seq.OnComplete(() => Drawer.SetCollider(true));
+
+                return seq.Play();
+            }
+            Tween AnimCardDeselect(Vector3 from, Vector3 to)
+            {
+                Drawer.transform.position = from;
+                Sequence seq = DOTween.Sequence(Drawer);
+                seq.AppendCallback(() =>
+                {
+                    AnimScaleDown();
+                    AnimPosDown(to);
+                });
+                seq.AppendInterval(ANIM_DURATION);
+                seq.OnComplete(() => Drawer.SetCollider(true));
+
+                return seq.Play();
             }
 
             Tween AnimScaleUp()
@@ -214,32 +227,38 @@ namespace Game.Menus
                 _scaleTween = Drawer.transform.DOScale(minScale, ANIM_DURATION).SetEase(Ease.OutCubic);
                 return _scaleTween;
             }
-
-            Tween AnimPosUp()
+            Tween AnimPosUp(Vector3 to)
             {
                 _posTween.Kill();
-                _posTween = Drawer.transform.DOMove(Vector3.zero, ANIM_DURATION).SetEase(Ease.OutQuad);
+                _posTween = Drawer.transform.DOMove(to, ANIM_DURATION).SetEase(Ease.OutQuad);
                 return _posTween;
             }
-            Tween AnimPosDown()
+            Tween AnimPosDown(Vector3 to)
             {
                 _posTween.Kill();
-                _posTween = Drawer.transform.DOMove(_defaultPos, ANIM_DURATION).SetEase(Ease.InQuad);
+                _posTween = Drawer.transform.DOMove(to, ANIM_DURATION).SetEase(Ease.InQuad);
                 return _posTween;
             }
 
             async UniTask Select()
             {
+                if (Drawer == null || Drawer.IsDestroying) return;
+
+                Vector3 prevPos = Drawer.transform.position;
                 Sleeve.Drawer.CanPullOut = false;
+                //Sleeve.Remove(this);
 
                 foreach (ITableSleeveCard sleeveCard in _sleeve)
                     sleeveCard.Drawer.SetCollider(false);
 
                 _selected?.Deselect(true);
                 _selected = this;
-                OnSelectedChanged?.Invoke();
+                _selected.Drawer.SetSortingOrder(10, asDefault: true);
+                _menu.OnSelectedChanged?.Invoke();
 
-                await AnimCardSelect().AsyncWaitForCompletion();
+                Vector3 from = prevPos;
+                Vector3 to = Vector3.zero;
+                await AnimCardSelect(from, to).AsyncWaitForCompletion();
 
                 foreach (ITableSleeveCard sleeveCard in _sleeve)
                     sleeveCard.Drawer.SetCollider(true);
@@ -248,16 +267,23 @@ namespace Game.Menus
             }
             async UniTask Deselect(bool insideOfSelect)
             {
+                if (Drawer == null || Drawer.IsDestroying) return;
+
+                Drawer.SetSortingOrder(_defaultSorting, asDefault: true);
                 _selected = null;
+                //Sleeve.Add(this); // moves Drawer.transform
+
                 if (!insideOfSelect)
                 {
-                    OnSelectedChanged?.Invoke();
+                    _menu.OnSelectedChanged?.Invoke();
                     Sleeve.Drawer.CanPullOut = false;
                     foreach (ITableSleeveCard sleeveCard in _sleeve)
                         sleeveCard.Drawer.SetCollider(false);
                 }
 
-                await AnimCardDeselect().AsyncWaitForCompletion();
+                Vector3 from = Vector3.zero;
+                Vector3 to = _defaultPos;
+                await AnimCardDeselect(from, to).AsyncWaitForCompletion();
 
                 if (!insideOfSelect)
                 {
@@ -332,8 +358,7 @@ namespace Game.Menus
 
                 statDrawer.OnMouseEnter += OnMouseEnter;
                 statDrawer.OnMouseLeave += OnMouseLeave;
-                statDrawer.OnMouseClickLeft += OnMouseClickLeft;
-                statDrawer.OnMouseClickRight += OnMouseClickRight;
+                statDrawer.OnMouseClick += OnMouseClick;
             }
             public abstract UniTask Reset();
 
@@ -345,6 +370,13 @@ namespace Game.Menus
             protected abstract void OnMouseEnter(object sender, DrawerMouseEventArgs e);
             protected abstract void OnMouseLeave(object sender, DrawerMouseEventArgs e);
 
+            void OnMouseClick(object sender, DrawerMouseEventArgs e)
+            {
+                if (e.handled) return;
+                if (e.isLmbDown)
+                     OnMouseClickLeft(sender, e);
+                else OnMouseClickRight(sender, e);
+            }
             async void OnMouseClickLeft(object sender, DrawerMouseEventArgs e)
             {
                 if (CardToUpgrade.Selected != card) return;
@@ -352,13 +384,11 @@ namespace Game.Menus
                 if (!UpgradeIsPossible()) return;
 
                 card.AnimHighlightAsUpgrade();
-                statDrawer.IsSelected = false; // force mouse enter invoke
-
                 menu.SetColliders(false);
                 await Upgrade();
-                menu.SetColliders(true);
-
                 OnGraded?.Invoke(upgradePointsDelta);
+                menu.SetColliders(true);
+                statDrawer.IsSelected = true; // force mouse enter invoke
             }
             async void OnMouseClickRight(object sender, DrawerMouseEventArgs e)
             {
@@ -367,13 +397,11 @@ namespace Game.Menus
                 if (upgradedTimes <= 0) return;
 
                 card.AnimHighlightAsDowngrade();
-                statDrawer.IsSelected = false; // force mouse enter invoke
-
                 menu.SetColliders(false);
                 await Downgrade();
-                menu.SetColliders(true);
-
                 OnGraded?.Invoke(downgradePointsDelta);
+                menu.SetColliders(true);
+                statDrawer.IsSelected = true; // force mouse enter invoke
             }
         }
         abstract class ButtonDrawer : Drawer
@@ -605,7 +633,6 @@ namespace Game.Menus
 
                 TableTraitListElement element = (TableTraitListElement)statDrawer.attached;
                 Trait trait = element.Trait.Data;
-
                 upgradePointsDelta = card.Data.PointsDeltaForTrait(trait, 1);
                 if (upgradedTimes == 0)
                      downgradePointsDelta = 0;
@@ -653,7 +680,7 @@ namespace Game.Menus
             {
                 textMesh.text = _normalText;
             }
-            protected override async void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+            protected override async void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
             {
                 foreach (CardToUpgrade card in menu._sleeve.Cast<CardToUpgrade>())
                     await card.TryReset();
@@ -678,7 +705,7 @@ namespace Game.Menus
             public ResetThisButtonDrawer(CardUpgradeMenu menu) : base(menu, menu.Transform.Find("Center button")) 
             {
                 gameObject.SetActive(false);
-                CardToUpgrade.OnSelectedChanged += UpdateTexts;
+                menu.OnSelectedChanged += UpdateTexts;
                 menu.OnDeckPointsChanged += delta => UpdateTexts();
             }
 
@@ -692,9 +719,9 @@ namespace Game.Menus
                 if (CardToUpgrade.Selected == null) return;
                 textMesh.text = _normalText;
             }
-            protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+            protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
             {
-                if (CardToUpgrade.Selected == null) return;
+                if (CardToUpgrade.Selected == null || !e.isLmbDown) return;
                 CardToUpgrade.Selected.TryReset();
                 textMesh.text = _normalText;
             }
@@ -732,9 +759,9 @@ namespace Game.Menus
             {
                 textMesh.text = NORMAL_TEXT;
             }
-            protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+            protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
             {
-                if (menu.CanLeave())
+                if (menu.CanLeave() || !e.isLmbDown)
                     menu.TransitFromThis();
             }
         }
@@ -747,7 +774,7 @@ namespace Game.Menus
             _sleeve.TakeMissingCards(true);
 
             foreach (CardToUpgrade card in _sleeve.Cast<CardToUpgrade>())
-                card.SetDefaults(card.Drawer.transform.position, card.CurrentPoints);
+                card.SetDefaults(card.Drawer.transform.position, card.CurrentPoints, card.Drawer.GetSortingOrder());
 
             _resetAllButton = new ResetAllButtonDrawer(this);
             _resetThisButton = new ResetThisButtonDrawer(this);
@@ -770,9 +797,9 @@ namespace Game.Menus
             };
 
             OnDeckPointsChanged += OnDeckPointsChangedBase;
-            CardToUpgrade.OnSelectedChanged += UpgradeInfoHide;
-            CardToUpgrade.OnAnyCardReset += delta => OnDeckPointsChanged(delta);
-            CardToUpgrade.OnAnyStatGraded += delta => OnDeckPointsChanged(delta);
+            OnSelectedChanged += UpgradeInfoHide;
+            OnAnyCardReset += delta => OnDeckPointsChanged(delta);
+            OnAnyStatGraded += delta => OnDeckPointsChanged(delta);
 
             OnDeckPointsChangedBase(0);
             _pointsAvailableAtStart = _pointsAvailable;
@@ -848,7 +875,7 @@ namespace Game.Menus
         }
         bool CanLeave()
         {
-            return _pointsAvailable >= 0 || _pointsAvailable == _pointsAvailableAtStart;
+            return _pointsAvailable >= 0 || _pointsAvailable.Rounded(1) == _pointsAvailableAtStart.Rounded(1);
         }
         void RedrawHeader()
         {

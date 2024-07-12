@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Game.Traits
 {
     /// <summary>
-    /// Интерфейс, реализующий объект как список трейтов на столе (см. <see cref="ITableTraitListElement"/>).
+    /// Интерфейс, реализующий объект как список навыков на столе (см. <see cref="ITableTraitListElement"/>).
     /// </summary>
     public interface ITableTraitList : ITableObject, IReadOnlyList<ITableTraitListElement>, ICloneableWithArgs
     {

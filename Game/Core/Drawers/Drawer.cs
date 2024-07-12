@@ -18,13 +18,12 @@ namespace Game
     public class Drawer : IEquatable<Drawer>, IDisposable
     {
         public static IEnumerable<Drawer> SelectedDrawers => Behaviour.SelectedDrawers;
-        public static bool UpdateMouseEvents { get => Behaviour.update; set => Behaviour.update = value; }
         public static bool InAnySelected => Behaviour.IsAnySelected;
 
         public bool IsSelected 
         {
             get => _behaviour.IsSelected;
-            set => _behaviour.Deselect();
+            set => _behaviour.IsSelected = value;
         }
         public bool BlocksSelection 
         {
@@ -53,10 +52,8 @@ namespace Game
         public event DrawerMouseEventHandler OnMouseEnter;
         public event DrawerMouseEventHandler OnMouseHover;
         public event DrawerMouseEventHandler OnMouseLeave;
-        public event DrawerMouseEventHandler OnMouseClickLeft;
-        public event DrawerMouseEventHandler OnMouseClickRight;
-        public event DrawerMouseEventHandler OnMouseScrollUp;
-        public event DrawerMouseEventHandler OnMouseScrollDown;
+        public event DrawerMouseEventHandler OnMouseClick;
+        public event DrawerMouseEventHandler OnMouseScroll;
 
         public event EventHandler OnEnable;
         public event EventHandler OnDisable;
@@ -87,25 +84,31 @@ namespace Game
         {
             //const float ALIVE_TIME_REQUIRED = 1f;
 
-            public static bool update;
             public static IEnumerable<Behaviour> SelectedBehaviours => _selectedBehaviours;
             public static IEnumerable<Drawer> SelectedDrawers => _selectedBehaviours.Select(b => b._drawer);
 
             public static bool IsAnySelected => _selectedBehaviours.Count != 0;
-            public bool IsSelected => _selected;
+            public bool IsSelected
+            {
+                get => _selected;
+                set
+                {
+                    if (value)
+                         Reselect();
+                    else Deselect();
+                }
+            }
 
             static readonly HashSet<Behaviour> _aliveBehaviours;
             static readonly HashSet<Behaviour> _overlappedBehaviours;
             static readonly HashSet<Behaviour> _overlappingBehaviours;
             static readonly List<Behaviour> _selectedBehaviours; // sorted by sortingOrder
 
-            static Vector2 _ptrLastPos;
             static bool _isQuitting;
-            static bool _isLmbDown;
-            static bool _isRmbDown;
-            static bool _isScrollingUp;
-            static bool _isScrollingDown;
-            static bool _blockProcessed;
+            static Vector2 _ptrLastPos;
+            static bool _mouseClickHandled;
+            static bool _mouseScrollHandled;
+            static DrawerMouseEventArgs _argsLast;
 
             Drawer _drawer;
             //float _aliveTime; // used to disable selection on first frames (note: this field's value changes only if it's less than ALIVE_TIME_REQUIRED)
@@ -124,16 +127,15 @@ namespace Game
 
             static Behaviour()
             {
-                update = true;
                 _aliveBehaviours = new HashSet<Behaviour>(32);
                 _overlappedBehaviours = new HashSet<Behaviour>(16);
                 _overlappingBehaviours = new HashSet<Behaviour>(16);
                 _selectedBehaviours = new List<Behaviour>(8);
             }
-            public static void Init()
+            public static void Initialize()
             {
                 Global.OnUpdate += OnUpdate;
-                Application.wantsToQuit += OnWantToQuit;
+                Global.OnWantToQuit += OnWantToQuit;
             }
 
             public int CompareTo(Behaviour other)
@@ -145,37 +147,26 @@ namespace Game
                 _drawer = drawer;
                 _aliveBehaviours.Add(this);
             }
-            public void Deselect()
-            {
-                _selected = false;
-                _selectedBehaviours.Remove(this);
-                _overlappingBehaviours.Remove(this);
-            }
 
             static void OnUpdate()
             {
-                _isLmbDown = Input.GetMouseButtonDown(0);
-                _isRmbDown = Input.GetMouseButtonDown(1);
-                _isScrollingUp = Input.mouseScrollDelta.y > 0;
-                _isScrollingDown = Input.mouseScrollDelta.y < 0;
-                _blockProcessed = false;
+                if (_isQuitting) return;
 
-                UpdateSelections();
-            }
-            static bool OnWantToQuit()
-            {
-                update = false;
-                _isQuitting = true;
-                return true;
-            }
-
-            static void UpdateSelections()
-            {
-                if (!update) return;
+                _mouseClickHandled = false;
+                _mouseScrollHandled = false;
 
                 Vector2 pos = Pointer.Position;
+                _argsLast = new(pos, pos - _ptrLastPos, Input.GetMouseButtonDown(0), Input.GetMouseButtonDown(1), Input.mouseScrollDelta.y);
+                UpdateSelections(_argsLast);
+            }
+            static void OnWantToQuit()
+            {
+                _isQuitting = true;
+            }
+
+            static void UpdateSelections(DrawerMouseEventArgs e)
+            {
                 int blockingSorting = int.MinValue;
-                DrawerMouseEventArgs e = new(pos, pos - _ptrLastPos);
 
                 _overlappedBehaviours.Clear();
                 foreach (Behaviour b in _overlappingBehaviours)
@@ -191,7 +182,7 @@ namespace Game
                     bool colliderEnabled = b._active && drawer._colliderEnabled;
                     if (!colliderEnabled && !b._overlappedBefore) continue;
 
-                    bool overlapsNow = colliderEnabled && drawer._collider.OverlapPoint(pos);
+                    bool overlapsNow = colliderEnabled && drawer._collider.OverlapPoint(e.position);
                     bool overlappedBefore = _overlappedBehaviours.Contains(b);
 
                     b._overlapsNow = overlapsNow;
@@ -204,6 +195,7 @@ namespace Game
                         b._mouseHovered = false;
                         b._mouseLeft = true;
                         b.RemoveFromSelected(e);
+                        b.HandleMouseEvents(e);
                         continue;
                     }
 
@@ -236,8 +228,11 @@ namespace Game
 
                     if (mEntered)
                         b.AddToSelected();
-                    else if (mLeft) 
+                    else if (mLeft)
+                    {
                         b.RemoveFromSelected(e);
+                        b.HandleMouseEvents(e);
+                    }
                 }
 
                 _selectedBehaviours.Sort(BehaviourComparer);
@@ -247,7 +242,7 @@ namespace Game
                     b.HandleMouseEvents(e);
                     if (!b._selected) i--;
                 }
-                _ptrLastPos = pos;
+                _ptrLastPos = e.position;
             }
             static int BehaviourComparer(Behaviour x, Behaviour y) => x.CompareTo(y);
 
@@ -261,30 +256,46 @@ namespace Game
             {
                 _selected = false;
                 _selectedBehaviours.Remove(this);
-                HandleMouseEvents(e);
             }
             void HandleMouseEvents(DrawerMouseEventArgs e)
             {
                 if (_drawer == null || _destroyed || _drawer._isDestroyed) return;
-                //if (_aliveTime < ALIVE_TIME_REQUIRED)
-                //{
-                //    _aliveTime += Time.deltaTime;
-                //    return;
-                //}
+                if (_mouseEntered)
+                    _drawer.OnMouseEnter.Invoke(_drawer, e);
+                if (_mouseHovered)
+                    _drawer.OnMouseHover.Invoke(_drawer, e);
+                if (_mouseLeft)
+                    _drawer.OnMouseLeave.Invoke(_drawer, e);
+                if (!_mouseClickHandled && e.isAnyDown)
+                {
+                    e.handled = false;
+                    _drawer.OnMouseClick.Invoke(_drawer, e);
+                    _mouseClickHandled |= e.handled;
+                    _mouseClickHandled |= _drawer.HandleMouseEventsAfterClick();
+                }
+                if (!_mouseScrollHandled && e.scrollDeltaY != 0)
+                {
+                    e.handled = false;
+                    _drawer.OnMouseScroll.Invoke(_drawer, e);
+                    _mouseScrollHandled |= e.handled;
+                }
+            }
 
-                if (_mouseEntered) _drawer.OnMouseEnter.Invoke(_drawer, e);
-                if (_mouseHovered) _drawer.OnMouseHover.Invoke(_drawer, e);
-                if (_mouseLeft) _drawer.OnMouseLeave.Invoke(_drawer, e);
-
-                if (_blockProcessed) return;
-                if (_isLmbDown)
-                    _drawer.OnMouseClickLeft.Invoke(_drawer, e);
-                if (_isRmbDown) _drawer.OnMouseClickRight.Invoke(_drawer, e);
-                if (_isScrollingUp) _drawer.OnMouseScrollUp.Invoke(_drawer, e);
-                if (_isScrollingDown) _drawer.OnMouseScrollDown.Invoke(_drawer, e);
-
-                if (_drawer._blocksSelection)
-                    _blockProcessed = true;
+            // can be used to force mouse leave & mouse enter invoke
+            void Reselect()
+            {
+                bool selectedBefore = _selected;
+                if (!selectedBefore) return;
+                _drawer.OnMouseLeave.Invoke(_drawer, _argsLast);
+                _drawer.OnMouseEnter.Invoke(_drawer, _argsLast);
+            }
+            void Deselect()
+            {
+                bool selectedBefore = _selected;
+                if (!selectedBefore) return;
+                _drawer.OnMouseLeave.Invoke(_drawer, _argsLast);
+                _overlappedBehaviours.Remove(this);
+                RemoveFromSelected(_argsLast);
             }
 
             void Start()
@@ -317,7 +328,7 @@ namespace Game
         }
         static Drawer()
         {
-            Behaviour.Init();
+            Behaviour.Initialize();
         }
 
         // if attached set to null, it will be set to gameObject
@@ -338,13 +349,11 @@ namespace Game
             _blocksSelection = true;
             _color = Color.white;
 
-            OnMouseScrollUp += OnMouseScrollUpBase;
-            OnMouseScrollDown += OnMouseScrollDownBase;
+            OnMouseScroll += OnMouseScrollBase;
             OnMouseEnter += OnMouseEnterBase;
             OnMouseHover += OnMouseHoverBase;
             OnMouseLeave += OnMouseLeaveBase;
-            OnMouseClickLeft += OnMouseClickLeftBase;
-            OnMouseClickRight += OnMouseClickRightBase;
+            OnMouseClick += OnMouseClickBase;
 
             OnEnable += OnEnableBase;
             OnDisable += OnDisableBase;
@@ -435,42 +444,40 @@ namespace Game
         // TODO[QoL]: add custom DestroyAnimated methods for cards, traits, fields etc.
         protected virtual void DestroyInstantly()
         {
-            gameObject.Destroy();
+            IsSelected = false;
             OnDestroy?.Invoke(this, EventArgs.Empty);
+            gameObject.Destroy();
 
             OnMouseEnter = null;
             OnMouseLeave = null;
-            OnMouseClickLeft = null;
-            OnMouseClickRight = null;
-            OnMouseScrollUp = null;
-            OnMouseScrollDown = null;
+            OnMouseClick = null;
+            OnMouseScroll = null;
             OnDestroy = null;
         }
         protected virtual UniTask DestroyAnimated()
         {
             SetCollider(false);
-            Tweener lastTween = this.DOColor(Color.clear, 0.5f).OnComplete(DestroyInstantly);
-            return lastTween.AsyncWaitForCompletion();
+            Tweener tween = this.DOColor(Color.clear, 0.5f).OnComplete(DestroyInstantly);
+            return tween.AsyncWaitForCompletion();
         }
-        protected virtual bool SetActiveStateOnAlphaSet() => true;
 
-        protected virtual void OnMouseScrollUpBase(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnMouseScrollDownBase(object sender, DrawerMouseEventArgs e) { }
+        protected virtual bool SetActiveStateOnAlphaSet() => true;
+        protected virtual bool HandleMouseEventsAfterClick() => _blocksSelection;
+        // after event handled, noone will get mouse event calls of this type (mouse click & scroll for now)
+
+        protected virtual void OnMouseScrollBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseEnterBase(object sender, DrawerMouseEventArgs e) 
         {
-            if (e.handled) return;
             if (_tooltipFunc != null)
                 Tooltip.Show(_tooltipFunc());
         }
         protected virtual void OnMouseHoverBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e) 
         {
-            if (e.handled) return;
             if (_tooltipFunc != null)
                 Tooltip.Hide();
         }
-        protected virtual void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnMouseClickRightBase(object sender, DrawerMouseEventArgs e) { }
+        protected virtual void OnMouseClickBase(object sender, DrawerMouseEventArgs e) { }
 
         protected virtual void OnEnableBase(object sender, EventArgs e) { }
         protected virtual void OnDisableBase(object sender, EventArgs e) { }

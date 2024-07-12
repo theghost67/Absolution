@@ -5,7 +5,7 @@ using Game.Territories;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tZenSchool : ActiveTrait
     {
@@ -31,6 +31,10 @@ namespace Game.Traits
                     $"перенаправляет всю силу карты в её здоровье. Так же восстанавливает своё здоровье на то же значение."),
             });
         }
+        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        {
+            return BattleWeight.none;
+        }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -45,6 +49,7 @@ namespace Game.Traits
 
             await card.strength.AdjustValue(-strength, e.trait);
             await card.health.AdjustValue(strength, e.trait);
+            await e.trait.Owner.health.AdjustValue(strength, e.trait);
         }
     }
 }

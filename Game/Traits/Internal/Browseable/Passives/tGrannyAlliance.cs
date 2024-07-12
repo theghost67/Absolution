@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tGrannyAlliance : PassiveTrait
     {
@@ -57,13 +57,13 @@ namespace Game.Traits
             if (e.target.Data.id != "granny") return;
             if (e.canSeeTarget)
             {
-                e.target.OnPostKilled.Add(OnTargetCardKilled, PRIORITY);
+                e.target.OnPostKilled.Add(trait.GuidStrForEvents(0), OnTargetCardKilled, PRIORITY);
                 await trait.AnimActivation();
                 await trait.Owner.strength.AdjustValueScale(STRENGTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
             }
             else
             {
-                e.target.OnPostKilled.Remove(OnTargetCardKilled);
+                e.target.OnPostKilled.Remove(trait.GuidStrForEvents(0));
                 await trait.AnimDeactivation();
                 await trait.Owner.strength.RevertValueScale(entryId);
             }

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tPigeonFright : PassiveTrait
     {
@@ -49,8 +49,8 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
             BattleFieldCard owner = trait.Owner;
 
-            if (trait.WasAdded(e)) owner.OnInitiationPreReceived.Add(OnInitiationPreReceived, PRIORITY);
-            if (trait.WasRemoved(e)) owner.OnInitiationPreReceived.Remove(OnInitiationPreReceived);
+            if (trait.WasAdded(e)) owner.OnInitiationPreReceived.Add(trait.GuidStrForEvents(0), OnInitiationPreReceived, PRIORITY);
+            if (trait.WasRemoved(e)) owner.OnInitiationPreReceived.Remove(trait.GuidStrForEvents(0));
 
             return UniTask.CompletedTask;
         }

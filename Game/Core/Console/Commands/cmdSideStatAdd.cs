@@ -45,7 +45,7 @@ namespace Game
             const string ID = "side";
             const string DESC = "сторона, которой будет прибавлена характеристика (p/e)";
 
-            public SideArg(Command command) : base(command, ValueType.Fixed, ID, DESC) { }
+            public SideArg(Command command) : base(command, ValueType.Required | ValueType.Fixed, ID, DESC) { }
             protected override FixedValue[] FixedValuesCreator() => new FixedValue[]
             {
                 new("p", "сторона игрока"),

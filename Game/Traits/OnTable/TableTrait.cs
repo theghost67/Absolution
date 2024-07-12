@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Абстрактный класс для любого трейта, находящегося на столе.
+    /// Абстрактный класс для любого навыка, находящегося на столе.
     /// </summary>
     public abstract class TableTrait : TableObject, ITableTrait
     {

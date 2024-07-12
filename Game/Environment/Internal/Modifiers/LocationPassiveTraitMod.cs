@@ -3,7 +3,7 @@
 namespace Game.Environment
 {
     /// <summary>
-    /// Класс, представляющий модификатор появления пассивного трейта в локации.
+    /// Класс, представляющий модификатор появления пассивного навыка в локации.
     /// </summary>
     public class LocationPassiveTraitMod : LocationEntityMod
     {

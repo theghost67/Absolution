@@ -29,6 +29,24 @@ namespace Game
         }
         #endregion
 
+        #region guids
+        // you can use level of inheritance as index to separate events base subs from derived subs
+        public static string GuidStrForEvents(this ITableObject obj, int index = 0)
+        {
+            return $"{obj.GuidStr}:{index}";
+        }
+        public static string GuidStrForEvents(this Drawer drawer, int index = 0)
+        {
+            if (drawer.attached is TableObject obj)
+                return $"{obj.GuidStr}.drawer:{index}";
+            else return $"def.drawer:{index}";
+        }
+        public static string GuidStrForEvents(this BattleArea area, int index = 0)
+        {
+            return $"{area.observer.GuidStr}.area:{index}";
+        }
+        #endregion
+
         #region traits
         public static PassiveTrait Passive(this TraitListSet traits, string id)
         {
@@ -109,40 +127,40 @@ namespace Game
             if (trait.Owner == null)
                 return UniTask.CompletedTask;
 
-            TableConsole.LogToFile($"{trait.TableNameDebug}: activation.");
-            if (trait.Drawer != null)
-                Menu.WriteLogToCurrent($"{trait.TableName}: навык активируется!");
+            TableConsole.LogToFile("card", $"{trait.TableNameDebug}: activation.");
 
             ITableTraitListElement element;
             if (trait.Data.isPassive)
                  element = trait.Owner.Traits.Passives[trait.Data.id];
             else element = trait.Owner.Traits.Actives[trait.Data.id];
 
-            if (element != null && element.Drawer != null)
-                 return element.Drawer.AnimActivation().AsyncWaitForCompletion();
-            else return UniTask.CompletedTask;
+            if (element == null || element.Drawer == null)
+                return UniTask.CompletedTask;
+
+            Menu.WriteLogToCurrent($"{trait.TableName}: навык активируется!");
+            return element.Drawer.AnimActivation().AsyncWaitForCompletion();
         }
         public static UniTask AnimDeactivation(this ITableTrait trait)
         {
             if (trait.Owner == null)
                 return UniTask.CompletedTask;
 
-            TableConsole.LogToFile($"{trait.TableNameDebug}: deactivation.");
-            if (trait.Drawer != null)
-                Menu.WriteLogToCurrent($"{trait.TableName}: навык деактивируется.");
+            TableConsole.LogToFile("card", $"{trait.TableNameDebug}: deactivation.");
+            //if (trait.Drawer != null)
+            //    Menu.WriteLogToCurrent($"{trait.TableName}: навык деактивируется.");
 
             return UniTask.CompletedTask;
         }
 
         // show WHO detected the card (arrow + icon), and eye (clear/crossed) depending on seen/unseen status
-        public static UniTask AnimCardSeen(this IBattleEntity observer, IBattleCard card)
+        public static UniTask AnimCardSeen(this IBattleObject observer, IBattleCard card)
         {
-            TableConsole.LogToFile($"{observer.TableNameDebug}: area: {card.TableNameDebug} found.");
+            TableConsole.LogToFile("card", $"{observer.TableNameDebug}: area: {card.TableNameDebug} found.");
             return UniTask.CompletedTask;
         }
-        public static UniTask AnimCardUnseen(this IBattleEntity observer, IBattleCard card)
+        public static UniTask AnimCardUnseen(this IBattleObject observer, IBattleCard card)
         {
-            TableConsole.LogToFile($"{observer.TableNameDebug}: area: {card.TableNameDebug} lost.");
+            TableConsole.LogToFile("card", $"{observer.TableNameDebug}: area: {card.TableNameDebug} lost.");
             return UniTask.CompletedTask;
         }
         #endregion

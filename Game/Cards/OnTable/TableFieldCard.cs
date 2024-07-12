@@ -27,6 +27,7 @@ namespace Game.Cards
 
         readonly FieldCard _data;
         readonly TableFieldCardFinder _finder;
+        readonly string _eventsGuid;
         TableField _field;
         TableTraitListSet _traits;
 
@@ -34,18 +35,19 @@ namespace Game.Cards
         {
             _data = data;
             _finder = new TableFieldCardFinder(this);
+            _eventsGuid = this.GuidStrForEvents(2);
 
             health = new TableStat(nameof(health), this, data.health);
-            health.OnPreSet.Add(OnStatPreSetBase_TOP, 256);
-            health.OnPostSet.Add(OnStatPostSetBase_TOP, 256);
+            health.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            health.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
 
             strength = new TableStat(nameof(strength), this, data.strength);
-            strength.OnPreSet.Add(OnStatPreSetBase_TOP, 256);
-            strength.OnPostSet.Add(OnStatPostSetBase_TOP, 256);
+            strength.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            strength.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
 
             moxie = new TableStat(nameof(moxie), this, data.moxie);
-            moxie.OnPreSet.Add(OnStatPreSetBase_TOP, 256);
-            moxie.OnPostSet.Add(OnStatPostSetBase_TOP, 256);
+            moxie.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            moxie.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
 
             AddOnInstantiatedAction(GetType(), typeof(TableFieldCard), () =>
             {

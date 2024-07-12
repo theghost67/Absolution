@@ -29,7 +29,6 @@ namespace Game.Environment
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseEnterBase(sender, e);
-            if (e.handled) return;
             TableLocationPlaceDrawer drawer = (TableLocationPlaceDrawer)sender;
             drawer.transform.StartShake(-1, 1f);
             //Tooltip.Show(drawer._spriteRenderer, drawer.attached.Data.name);
@@ -37,15 +36,14 @@ namespace Game.Environment
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseLeaveBase(sender, e);
-            if (e.handled) return;
             TableLocationPlaceDrawer drawer = (TableLocationPlaceDrawer)sender;
             drawer.transform.StopShake();
             //Tooltip.Hide();
         }
-        protected override void OnMouseClickLeftBase(object sender, DrawerMouseEventArgs e)
+        protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
         {
-            base.OnMouseClickLeftBase(sender, e);
-            if (e.handled) return;
+            base.OnMouseClickBase(sender, e);
+            if (!e.isLmbDown) return;
             TableLocationPlaceDrawer drawer = (TableLocationPlaceDrawer)sender;
             drawer.attached.Data.menuCreator().TransitToThis();
         }

@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static Unity.VisualScripting.Member;
 
 namespace Game.Cards
 {
@@ -25,7 +26,7 @@ namespace Game.Cards
 
         public IIdEventVoidAsync<ITableEntrySource> OnPreKilled => _onPreKilled;   // on health dropped to 0 or instant kill attempt [not ignoring events]
         public IIdEventVoidAsync<ITableEntrySource> OnPostKilled => _onPostKilled; // after the card was detatched from a field and before it's destroyed
-        public IIdEventVoidAsync<BattleFieldCard> OnKill => _onKill;               // after 'PostKilled' event, raised in initiator (if not dead)
+        public IIdEventVoidAsync<BattleFieldCard> OnKill => _onKillConfirmed;               // after 'PostKilled' event, raised in initiator (if not dead)
 
         public IIdEventVoidAsync<BattleInitiationSendArgs> OnInitiationPreSent => _onInitiationPreSent;     // before checking strength && InitiationIsPossible (can increase Str or set 'CanInitiate' to false)
         public IIdEventVoidAsync<BattleInitiationSendArgs> OnInitiationPostSent => _onInitiationPostSent;   // after checked strength && InitiationIsPossible
@@ -94,15 +95,17 @@ namespace Game.Cards
         readonly TableEventVoid<TableFieldAttachArgs> _onFieldPostAttached; 
 
         readonly TableEventVoid<ITableEntrySource> _onPreKilled; 
-        readonly TableEventVoid<ITableEntrySource> _onPostKilled;  
-        readonly TableEventVoid<BattleFieldCard> _onKill;         
+        readonly TableEventVoid<ITableEntrySource> _onPostKilled;
+        readonly TableEventVoid<ITableEntrySource> _onEvadedBeingKilled;
+        readonly TableEventVoid<BattleFieldCard> _onKillConfirmed;         
 
         readonly TableEventVoid<BattleInitiationSendArgs> _onInitiationPreSent;  
         readonly TableEventVoid<BattleInitiationSendArgs> _onInitiationPostSent;     
         readonly TableEventVoid<BattleInitiationRecvArgs> _onInitiationConfirmed;
 
         readonly TableEventVoid<BattleInitiationRecvArgs> _onInitiationPreReceived; 
-        readonly TableEventVoid<BattleInitiationRecvArgs> _onInitiationPostReceived; 
+        readonly TableEventVoid<BattleInitiationRecvArgs> _onInitiationPostReceived;
+        readonly string _eventsGuid;
 
         BattleSide _side;
         BattleArea _area;
@@ -124,28 +127,35 @@ namespace Game.Cards
             _onFieldPostAttached = new TableEventVoid<TableFieldAttachArgs>();
             _onPreKilled = new TableEventVoid<ITableEntrySource>();
             _onPostKilled = new TableEventVoid<ITableEntrySource>();
-            _onKill = new TableEventVoid<BattleFieldCard>();
+            _onEvadedBeingKilled = new TableEventVoid<ITableEntrySource>();
+            _onKillConfirmed = new TableEventVoid<BattleFieldCard>();
             _onInitiationPreSent = new TableEventVoid<BattleInitiationSendArgs>();
             _onInitiationPostSent = new TableEventVoid<BattleInitiationSendArgs>();
             _onInitiationConfirmed = new TableEventVoid<BattleInitiationRecvArgs>();
             _onInitiationPreReceived = new TableEventVoid<BattleInitiationRecvArgs>();
             _onInitiationPostReceived = new TableEventVoid<BattleInitiationRecvArgs>();
+            _eventsGuid = this.GuidStrForEvents(3);
 
-            _onFieldTryToAttach.Add(OnFieldTryToAttachBase_TOP, 256);
-            _onFieldPreAttached.Add(OnFieldPreAttachedBase_TOP, 256);
-            _onFieldPostAttached.Add(OnFieldPostAttachedBase_TOP, 256);
-            _onInitiationPreSent.Add(OnInitiationPreSentBase_TOP, 256);
-            _onInitiationPostSent.Add(OnInitiationPostSentBase_TOP, 256);
-            _onInitiationConfirmed.Add(OnInitiationConfirmedBase_TOP, 256);
-            _onInitiationPreReceived.Add(OnInitiationPreReceivedBase_TOP, 256);
-            _onInitiationPostReceived.Add(OnInitiationPostReceivedBase_TOP, 256);
+            _onPreKilled.Add(_eventsGuid, OnPreKilledBase_TOP);
+            _onPostKilled.Add(_eventsGuid, OnPostKilledBase_TOP);
+            _onEvadedBeingKilled.Add(_eventsGuid, OnEvadedBeingKilledBase_TOP);
+            _onKillConfirmed.Add(_eventsGuid, OnKillConfirmedBase_TOP);
+
+            _onFieldTryToAttach.Add(_eventsGuid, OnFieldTryToAttachBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onFieldPreAttached.Add(_eventsGuid, OnFieldPreAttachedBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onFieldPostAttached.Add(_eventsGuid, OnFieldPostAttachedBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onInitiationPreSent.Add(_eventsGuid, OnInitiationPreSentBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onInitiationPostSent.Add(_eventsGuid, OnInitiationPostSentBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onInitiationConfirmed.Add(_eventsGuid, OnInitiationConfirmedBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onInitiationPreReceived.Add(_eventsGuid, OnInitiationPreReceivedBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onInitiationPostReceived.Add(_eventsGuid, OnInitiationPostReceivedBase_TOP, TableEventVoid.TOP_PRIORITY);
 
             _side = side;
             _area = new BattleArea(this, this);
 
-            Territory.OnStartPhase.Add(OnStartPhase);
-            Territory.OnNextPhase.Add(OnNextPhase);
-            health.OnPostSet.Add(OnHealthPostSet);
+            Territory.OnStartPhase.Add(_eventsGuid, OnStartPhase);
+            Territory.OnNextPhase.Add(_eventsGuid, OnNextPhase);
+            health.OnPostSet.Add(_eventsGuid, OnHealthPostSet);
             TryOnInstantiatedAction(GetType(), typeof(BattleFieldCard));
         }
         protected BattleFieldCard(BattleFieldCard src, BattleFieldCardCloneArgs args) : base(src, args)
@@ -153,14 +163,18 @@ namespace Game.Cards
             _onFieldTryToAttach = (TableEventBool<TableFieldAttachArgs>)src._onFieldTryToAttach.Clone();
             _onFieldPreAttached = (TableEventVoid<TableFieldAttachArgs>)src._onFieldPreAttached.Clone();
             _onFieldPostAttached = (TableEventVoid<TableFieldAttachArgs>)src._onFieldPostAttached.Clone();
+
             _onPreKilled = (TableEventVoid<ITableEntrySource>)src._onPreKilled.Clone();
             _onPostKilled = (TableEventVoid<ITableEntrySource>)src._onPostKilled.Clone();
-            _onKill = (TableEventVoid<BattleFieldCard>)src._onKill.Clone();
+            _onEvadedBeingKilled = (TableEventVoid<ITableEntrySource>) src._onEvadedBeingKilled.Clone();
+            _onKillConfirmed = (TableEventVoid<BattleFieldCard>)src._onKillConfirmed.Clone();
+
             _onInitiationPreSent = (TableEventVoid<BattleInitiationSendArgs>)src._onInitiationPreSent.Clone();
             _onInitiationPostSent = (TableEventVoid<BattleInitiationSendArgs>)src._onInitiationPostSent.Clone();
             _onInitiationConfirmed = (TableEventVoid<BattleInitiationRecvArgs>)src._onInitiationConfirmed.Clone();
             _onInitiationPreReceived = (TableEventVoid<BattleInitiationRecvArgs>)src._onInitiationPreReceived.Clone();
             _onInitiationPostReceived = (TableEventVoid<BattleInitiationRecvArgs>)src._onInitiationPostReceived.Clone();
+            _eventsGuid = (string)src._eventsGuid.Clone();
 
             _phaseAge = src._phaseAge;
             _isKilled = src._isKilled;
@@ -190,8 +204,8 @@ namespace Game.Cards
             OnInitiationPreReceived.Dispose();
             OnInitiationPostReceived.Dispose();
 
-            Territory.OnStartPhase.Remove(OnStartPhase);
-            Territory.OnNextPhase.Remove(OnNextPhase);
+            Territory.OnStartPhase.Remove(_eventsGuid);
+            Territory.OnNextPhase.Remove(_eventsGuid);
             Field?.DetatchCard(null);
         }
         public override object Clone(CloneArgs args)
@@ -209,7 +223,6 @@ namespace Game.Cards
             _isBeingKilled = true;
             TableEventManager.Add();
 
-            WritePreDeathLog(source);
             if (health > 0)
                 await health.SetValue(0, source);
 
@@ -219,20 +232,19 @@ namespace Game.Cards
             if ((!mode.HasFlag(BattleKillMode.IgnoreCanBeKilled) && !CanBeKilled) ||
                 (!mode.HasFlag(BattleKillMode.IgnoreHealthRestore) && health > 0))
             {
-                WriteEvadedDeathLog(source);
-                return;
+                _onEvadedBeingKilled.Invoke(this, source);
+                goto End;
             }
 
-            WritePostDeathLog(source);
             _isKilled = true;
-
             await _onPostKilled.Invoke(this, source);
             if (source is BattleFieldCard bfCard && !bfCard.IsKilled)
-                await bfCard._onKill.Invoke(bfCard, this);
+                await bfCard._onKillConfirmed.Invoke(bfCard, this);
 
             DestroyDrawer(false);
             Dispose();
 
+            End:
             _isBeingKilled = false;
             TableEventManager.Remove();
         }
@@ -298,7 +310,7 @@ namespace Game.Cards
             string statName = stat.TableNameDebug;
             string sourceName = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile($"{cardName}: stats: {statName}: OnPreSet: delta: {e.deltaValue} (by: {sourceName}).");
+            TableConsole.LogToFile("card", $"{cardName}: stats: {statName}: OnPreSet: delta: {e.deltaValue} (by: {sourceName}).");
         }
         protected override async UniTask OnStatPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
         {
@@ -306,31 +318,31 @@ namespace Game.Cards
 
             TableStat stat = (TableStat)sender;
             BattleFieldCard card = (BattleFieldCard)stat.Owner;
-            string cardName = card.TableNameDebug;
-            string statName = stat.TableNameDebug;
-            string sourceName = e.source?.TableNameDebug;
+            string cardNameDebug = card.TableNameDebug;
+            string statNameDebug = stat.TableNameDebug;
+            string sourceNameDebug = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile($"{cardName}: stats: {statName}: OnPostSet: delta: {e.totalDeltaValue} (by: {sourceName}).");
+            TableConsole.LogToFile("card", $"{cardNameDebug}: stats: {statNameDebug}: OnPostSet: delta: {e.totalDeltaValue} (by: {sourceNameDebug}).");
         }
 
         protected virtual UniTask<bool> OnFieldTryToAttachBase_TOP(object sender, TableFieldAttachArgs e)
         {
             BattleFieldCard card = (BattleFieldCard)sender;
-            string cardName = card.TableNameDebug;
-            string fieldName = e.field?.TableNameDebug;
-            string sourceName = e.source?.TableNameDebug;
+            string cardNameDebug = card.TableNameDebug;
+            string fieldNameDebug = e.field?.TableNameDebug;
+            string sourceNameDebug = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile($"{cardName}: field: TryToAttach: field: {fieldName} (by: {sourceName}).");
+            TableConsole.LogToFile("card", $"{cardNameDebug}: field: TryToAttach: field: {fieldNameDebug} (by: {sourceNameDebug}).");
             return UniTask.FromResult(true);
         }
         protected virtual UniTask OnFieldPreAttachedBase_TOP(object sender, TableFieldAttachArgs e)
         {
             BattleFieldCard card = (BattleFieldCard)sender;
-            string cardName = card.TableNameDebug;
-            string fieldName = e.field?.TableNameDebug;
-            string sourceName = e.source?.TableNameDebug;
+            string cardNameDebug = card.TableNameDebug;
+            string fieldNameDebug = e.field?.TableNameDebug;
+            string sourceNameDebug = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile($"{cardName}: field: PreAttached: field: {fieldName} (by: {sourceName}).");
+            TableConsole.LogToFile("card", $"{cardNameDebug}: field: PreAttached: field: {fieldNameDebug} (by: {sourceNameDebug}).");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnFieldPostAttachedBase_TOP(object sender, TableFieldAttachArgs e)
@@ -338,11 +350,72 @@ namespace Game.Cards
             BattleFieldCard card = (BattleFieldCard)sender;
             BattleTerritory terr = card.Territory;
 
-            string cardName = card.TableNameDebug;
-            string fieldName = e.field.TableNameDebug;
-            string sourceName = e.source?.TableNameDebug;
+            string cardNameDebug = card.TableNameDebug;
+            string fieldNameDebug = e.field.TableNameDebug;
+            string sourceNameDebug = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile($"{cardName}: field: PostAttached: field: {fieldName} (by: {sourceName}).");
+            TableConsole.LogToFile("card", $"{cardNameDebug}: field: PostAttached: field: {fieldNameDebug} (by: {sourceNameDebug}).");
+            return UniTask.CompletedTask;
+        }
+
+        protected virtual UniTask OnPreKilledBase_TOP(object sender, ITableEntrySource source)
+        {
+            BattleFieldCard card = (BattleFieldCard)sender;
+            string cardName = card.TableName;
+            string cardNameDebug = card.TableNameDebug;
+            string sourceName = source?.TableName;
+            string sourceNameDebug = source?.TableNameDebug;
+
+            if (card.Drawer != null)
+            {
+                if (sourceName != null)
+                    Menu.WriteLogToCurrent($"{cardName}: смертельное ранение от {sourceName}.");
+                else Menu.WriteLogToCurrent($"{cardName}: смертельное ранение.");
+            }
+            TableConsole.LogToFile("card", $"{cardNameDebug}: OnPreKilled (by: {sourceNameDebug}).");
+            return UniTask.FromResult(true);
+        }
+        protected virtual UniTask OnPostKilledBase_TOP(object sender, ITableEntrySource source)
+        {
+            BattleFieldCard card = (BattleFieldCard)sender;
+            string cardName = card.TableName;
+            string cardNameDebug = card.TableNameDebug;
+            string sourceName = source?.TableName;
+            string sourceNameDebug = source?.TableNameDebug;
+
+            if (card.Drawer != null)
+            {
+                if (sourceName != null)
+                    Menu.WriteLogToCurrent($"{cardName}: смерть от {sourceName}.");
+                else Menu.WriteLogToCurrent($"{cardName}: смерть.");
+            }
+            TableConsole.LogToFile("card", $"{cardNameDebug}: OnPostKilled (by: {sourceNameDebug})");
+            return UniTask.CompletedTask;
+        }
+        protected virtual UniTask OnEvadedBeingKilledBase_TOP(object sender, ITableEntrySource source)
+        {
+            BattleFieldCard card = (BattleFieldCard)sender;
+            string cardName = card.TableNameDebug;
+            string cardNameDebug = card.TableNameDebug;
+            string sourceName = source?.TableName;
+            string sourceNameDebug = source?.TableNameDebug;
+
+            if (card.Drawer != null)
+            {
+                if (sourceName != null)
+                    Menu.WriteLogToCurrent($"{cardName}: смерть от {sourceName} предотвращена.");
+                else Menu.WriteLogToCurrent($"{cardName}: смерть предотвращена.");
+            }
+            TableConsole.LogToFile("card", $"{cardNameDebug}: evaded being killed (by: {sourceNameDebug})");
+            return UniTask.CompletedTask;
+        }
+        protected virtual UniTask OnKillConfirmedBase_TOP(object sender, BattleFieldCard victim)
+        {
+            BattleFieldCard card = (BattleFieldCard)sender;
+            string cardNameDebug = card.TableNameDebug;
+            string victimNameDebug = victim.TableNameDebug;
+
+            TableConsole.LogToFile("card", $"{cardNameDebug}: kill confirmed: victim: {victimNameDebug}");
             return UniTask.CompletedTask;
         }
 
@@ -358,7 +431,7 @@ namespace Game.Cards
                 else receiversNames += $", {receiver.TableNameDebug}";
             }
 
-            TableConsole.LogToFile($"{senderName}: initiation: OnPreSent: strength: {sArgs.strength}{manualStr}, targets: {receiversNames}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPreSent: strength: {sArgs.strength}{manualStr}, targets: {receiversNames}.");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnInitiationPostSentBase_TOP(object sender, BattleInitiationSendArgs sArgs)
@@ -373,7 +446,7 @@ namespace Game.Cards
                 else receiversNames += $", {receiver.TableNameDebug}";
             }
 
-            TableConsole.LogToFile($"{senderName}: initiation: OnPostSent: strength: {sArgs.strength}{manualStr}, targets: {receiversNames}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPostSent: strength: {sArgs.strength}{manualStr}, targets: {receiversNames}.");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnInitiationConfirmedBase_TOP(object sender, BattleInitiationRecvArgs rArgs)
@@ -381,7 +454,7 @@ namespace Game.Cards
             string senderName = rArgs.Sender.TableNameDebug;
             string receiverName = rArgs.Receiver.TableNameDebug;
 
-            TableConsole.LogToFile($"{senderName}: initiation: OnConfirmed: strength: {rArgs.strength}, target: {receiverName}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnConfirmed: strength: {rArgs.strength}, target: {receiverName}.");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnInitiationPreReceivedBase_TOP(object sender, BattleInitiationRecvArgs rArgs)
@@ -389,7 +462,7 @@ namespace Game.Cards
             string senderName = rArgs.Sender.TableNameDebug;
             string receiverName = rArgs.Receiver.TableNameDebug;
 
-            TableConsole.LogToFile($"{senderName}: initiation: OnPreReceived: strength: {rArgs.strength}, target: {receiverName}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPreReceived: strength: {rArgs.strength}, target: {receiverName}.");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnInitiationPostReceivedBase_TOP(object sender, BattleInitiationRecvArgs rArgs)
@@ -397,7 +470,7 @@ namespace Game.Cards
             string senderName = rArgs.Sender.TableNameDebug;
             string receiverName = rArgs.Receiver.TableNameDebug;
 
-            TableConsole.LogToFile($"{senderName}: initiation: OnPostReceived: strength: {rArgs.strength}, target: {receiverName}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPostReceived: strength: {rArgs.strength}, target: {receiverName}.");
             return UniTask.CompletedTask;
         }
         // ----
@@ -466,46 +539,6 @@ namespace Game.Cards
                 relWeight += weight.relative;
             }
             return new BattleWeight(absWeight, relWeight);
-        }
-
-        void WritePreDeathLog(ITableEntrySource source)
-        {
-            string sourceName = source?.TableName;
-            string sourceNameDebug = source?.TableNameDebug;
-
-            if (Drawer != null)
-            {
-                if (sourceName != null)
-                    Menu.WriteLogToCurrent($"{TableName}: смертельное ранение от {sourceName}.");
-                else Menu.WriteLogToCurrent($"{TableName}: смертельное ранение.");
-            }
-            TableConsole.LogToFile($"{TableNameDebug}: OnPreKilled (by: {sourceNameDebug}).");
-        }
-        void WriteEvadedDeathLog(ITableEntrySource source)
-        {
-            string sourceName = source?.TableName;
-            string sourceNameDebug = source?.TableNameDebug;
-
-            if (Drawer != null)
-            {
-                if (sourceName != null)
-                    Menu.WriteLogToCurrent($"{TableName}: смерть от {sourceName} предотвращена.");
-                else Menu.WriteLogToCurrent($"{TableName}: смерть предотвращена.");
-            }
-            TableConsole.LogToFile($"{TableNameDebug}: evaded being killed (by: {sourceNameDebug})");
-        }
-        void WritePostDeathLog(ITableEntrySource source)
-        {
-            string sourceName = source?.TableName;
-            string sourceNameDebug = source?.TableNameDebug;
-
-            if (Drawer != null)
-            {
-                if (sourceName != null)
-                    Menu.WriteLogToCurrent($"{TableName}: смерть от {sourceName}.");
-                else Menu.WriteLogToCurrent($"{TableName}: смерть.");
-            }
-            TableConsole.LogToFile($"{TableNameDebug}: OnPostKilled (by: {sourceNameDebug})");
         }
     }
 }

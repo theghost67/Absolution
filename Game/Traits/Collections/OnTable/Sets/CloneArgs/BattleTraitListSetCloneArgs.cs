@@ -4,7 +4,7 @@ using Game.Territories;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий аргументы для клонирования набора списков трейтов во время сражения.
+    /// Класс, представляющий аргументы для клонирования набора списков навыков во время сражения.
     /// </summary>
     public class BattleTraitListSetCloneArgs : TableTraitListSetCloneArgs
     {

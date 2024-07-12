@@ -16,7 +16,7 @@ namespace Game.Effects
     {
         const int SOUNDS_SOURCE_INDEX = 2; // other indexes are for music
         const float MUSIC_SWITCH_DURATION = 4.0f;
-        const float MUSIC_GLOBAL_SCALE = 0.25f;
+        const float MUSIC_GLOBAL_SCALE = 0.25f / 2f; // TODO: remove '/ 2f' when volume scrollbar will be implemented
 
         public static float MusicPitchScale
         {
@@ -163,6 +163,7 @@ namespace Game.Effects
             float _tweenVolume;
             bool _updateBeats;
             bool _playing;
+            bool _stopping;
 
             int _playingBeatIndex;
             BeatMap _playingBeatMap;
@@ -185,6 +186,7 @@ namespace Game.Effects
                     _musicMixes[_musicMixId].lastMusicId = music.id;
 
                 _playing = true;
+                _stopping = false;
                 _updateBeats = true;
                 _playingMusic = music;
                 _volumeTween.Kill();
@@ -198,6 +200,7 @@ namespace Game.Effects
                     _musicMixes[_musicMixId].lastMusicTime = Time;
 
                 _playing = false;
+                _stopping = false;
                 _updateBeats = false;
                 _volumeTween.Kill();
                 _source.Stop();
@@ -214,6 +217,9 @@ namespace Game.Effects
             public Tween Fade(float from, float to)
             {
                 if (!IsPlaying) return null;
+                if (to == 0) _stopping = true;
+                if (from > 1 || from < 0 || to > 1 || to < 0)
+                    throw new ArgumentOutOfRangeException();
 
                 _volumeTween.Kill();
                 _tweenVolume = from;
@@ -222,7 +228,7 @@ namespace Game.Effects
                     _tweenVolume = v;
                     UpdateVolumeInternal(v);
                 });
-                return _volumeTween;
+                return _volumeTween.OnComplete(() => { if (to == 0) Stop(); });
             }
             public bool IsFading()
             {
@@ -259,17 +265,17 @@ namespace Game.Effects
             }
             private void OnComplete()
             {
+                if (_stopping) return;
                 Stop();
                 if (_musicMixId == null) return;
+                _musicMixLastId = null;
+                _musicMixes.Remove(_musicMixId);
+
                 Music[] mix = AudioBrowser.GetMusicMix(_musicMixId);
                 int indexOfThis = mix.IndexOfItem(_playingMusic);
                 if (indexOfThis != -1 && indexOfThis + 1 < mix.Length)
-                    PlayMusicInternal(mix[indexOfThis + 1].id, _musicMixId);
-                else
-                {
-                    _musicMixes.Remove(_musicMixId);
-                    PlayMusicMix(_musicMixId);
-                }
+                     PlayMusicInternal(mix[indexOfThis + 1].id, _musicMixId);
+                else PlayMusicInternal(mix.First().id, _musicMixId);
             }
 
             private void UpdateVolumeInternal(float tweenVolume)
@@ -390,12 +396,12 @@ namespace Game.Effects
                     break;
 
                 case FadeStyle.SmoothStopInstantStart:
-                    currentSource.Fade(0).SetEase(outEase).OnComplete(currentSource.Stop);
+                    currentSource.Fade(0).SetEase(outEase);
                     requestedSource.Play(music, musicMixId);
                     break;
 
                 case FadeStyle.Simultaneously:
-                    currentSource.Fade(0).SetEase(outEase).OnComplete(currentSource.Stop);
+                    currentSource.Fade(0).SetEase(outEase);
                     requestedSource.Play(music, musicMixId);
                     requestedSource.Fade(0, 1).SetEase(inEase);
                     break;
@@ -421,44 +427,11 @@ namespace Game.Effects
             _musicSources.Add(new MusicSource(gameObject.AddComponent<AudioSource>()));
             _musicSources.Add(new MusicSource(gameObject.AddComponent<AudioSource>()));
             _soundSources.Add(gameObject.AddComponent<AudioSource>());
-
-            OnBeat += OnBeatBase;
         }
         private void Update()
         {
             foreach (MusicSource source in _musicSources)
                 source.OnUpdate();
-        }
-
-        // TODO: remove?
-        static void OnBeatBase(BeatInfo info)
-        {
-            if (info.beat.flags.HasFlag(BeatFlags.PeakOne))
-            {
-                const int index = 2;
-                float ratio = 1 + 0.20f * info.volume;
-                Color defaultColor = ColorPalette.GetColorInfo(index).DefaultColor;
-                ColorPalette.SetColor(index, defaultColor * ratio);
-                ColorPalette.TweenColor(index, defaultColor, info.beatMap.BpmScale * 2);
-            }
-            else if (info.beat.flags.HasFlag(BeatFlags.PeakTwo))
-            {
-                const int index = 3;
-                float ratio = 1 - 0.20f * info.volume;
-                Color defaultColor = ColorPalette.GetColorInfo(index).DefaultColor;
-                ColorPalette.SetColor(index, defaultColor * ratio);
-                ColorPalette.TweenColor(index, defaultColor, info.beatMap.BpmScale / 2);
-            }
-            else
-            {
-                int intensity = info.beat.intensity;
-                if (intensity != 3) return;
-                const int index = 1;
-                float ratio = 1 + 0.12f * info.volume;
-                Color defaultColor = ColorPalette.GetColorInfo(index).DefaultColor;
-                ColorPalette.SetColor(index, defaultColor * ratio);
-                ColorPalette.TweenColor(index, defaultColor, info.beatMap.BpmScale);
-            }
         }
     }
 }

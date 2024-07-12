@@ -8,7 +8,7 @@ namespace Game.Territories
     /// <summary>
     /// Класс, представляющий игровое поле во время сражения, принадлежащее одной из сторон, с возможностью хранения карты типа <see cref="BattleFieldCard"/>.
     /// </summary>
-    public class BattleField : TableField, IBattleEntity
+    public class BattleField : TableField, IBattleObject
     {
         public new BattleFieldCard Card => base.Card as BattleFieldCard;
         public new BattleFieldDrawer Drawer => ((TableObject)this).Drawer as BattleFieldDrawer;
@@ -19,7 +19,6 @@ namespace Game.Territories
         public BattleField(BattleSide side, int2 position, Transform parent) : base(side.Territory, position, parent)
         {
             _side = side;
-            health.OnPostSet.Add(OnHealthPostSet);
             TryOnInstantiatedAction(GetType(), typeof(BattleField));
         }
         public BattleField(BattleField src, BattleFieldCloneArgs args) : base(src, args) 
@@ -46,12 +45,11 @@ namespace Game.Territories
             BattleFieldCardCloneArgs cardCArgs = new((FieldCard)src.Data.Clone(), this, _side, argsCast.terrCArgs);
             return (BattleFieldCard)src.Clone(cardCArgs);
         }
-
-        UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
+        protected override async UniTask OnHealthPostSetBase(object sender, TableStat.PostSetArgs e)
         {
             TableStat stat = (TableStat)sender;
             BattleField field = (BattleField)stat.Owner;
-            return field._side.health.AdjustValue(e.totalDeltaValue, e.source);
+            await field._side.health.AdjustValue(e.totalDeltaValue, e.source);
         }
 
         // TODO: add GetObservingEntities?

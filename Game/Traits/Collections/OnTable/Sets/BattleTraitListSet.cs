@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий набор списков пассивных и активных трейтов во время сражения (см. <see cref="IBattleTraitListElement"/>).
+    /// Класс, представляющий набор списков пассивных и активных навыков во время сражения (см. <see cref="IBattleTraitListElement"/>).
     /// </summary>
     public class BattleTraitListSet : TableTraitListSet, IEnumerable<IBattleTraitListElement>
     {

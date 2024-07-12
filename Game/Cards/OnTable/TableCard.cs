@@ -16,14 +16,17 @@ namespace Game.Cards
         public override string TableNameDebug => $"{Data.id}[?]+{GuidStr}";
 
         public readonly TableStat price;
+        readonly string _eventsGuid;
         readonly Card _data;
 
         public TableCard(Card data, Transform parent) : base(parent)
         {
             _data = data;
+            _eventsGuid = this.GuidStrForEvents(1);
+
             price = new TableStat(nameof(price), this, data.price.value);
-            price.OnPreSet.Add(OnPricePreSetBase_TOP, 256);
-            price.OnPostSet.Add(OnPricePostSetBase_TOP, 256);
+            price.OnPreSet.Add(_eventsGuid, OnPricePreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            price.OnPostSet.Add(_eventsGuid, OnPricePostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
 
             // class is abstract
             //TryOnInstantiatedAction(GetType(), typeof(TableCard));

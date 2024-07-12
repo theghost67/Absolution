@@ -88,7 +88,7 @@ namespace Game
         }
         private TableStat(TableStat src, TableStatCloneArgs args)
         {
-            _id = string.Copy(src._id);
+            _id = (string)src._id.Clone();
             _owner = args.ownerClone;
 
             _onPreSet = (TableEventVoid<PreSetArgs>)src._onPreSet.Clone();

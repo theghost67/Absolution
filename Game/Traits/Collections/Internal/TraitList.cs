@@ -5,8 +5,8 @@ using System.Linq;
 namespace Game.Traits
 {
     /// <summary>
-    /// Абстрактный класс, представляющий список данных трейтов (см. <see cref="TraitListElement"/>).<br/>
-    /// Список является частью набора списков трейтов (см. <see cref="TraitListSet"/>).
+    /// Абстрактный класс, представляющий список данных навыков (см. <see cref="TraitListElement"/>).<br/>
+    /// Список является частью набора списков навыков (см. <see cref="TraitListSet"/>).
     /// </summary>
     public abstract class TraitList : ITraitList
     {

@@ -2,6 +2,7 @@
 using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
+using Game.Menus;
 using GreenOne;
 using MyBox;
 using System;
@@ -165,11 +166,11 @@ namespace Game.Territories
         const string RECEIVER_TAG = "Initiation receiver";
 
         // also invokes initiation receive
-        async UniTask AnimInitiationToField(BattleField field, BattleInitiationSendArgs sArgs, bool redirection = false)
+        async UniTask AnimInitiationToField(BattleField field, BattleInitiationSendArgs sArgs)
         {
             if (field.Card != null)
             {
-                await AnimInitiationToCard(field.Card, sArgs, redirection);
+                await AnimInitiationToCard(field.Card, sArgs);
                 return;
             }
 
@@ -184,7 +185,7 @@ namespace Game.Territories
             BattleFieldCard sender = sArgs.Sender;
             await InvokeRecvArgsEvent(sender.OnInitiationConfirmed, sender, rArgs);
         }
-        async UniTask AnimInitiationToCard(BattleFieldCard card, BattleInitiationSendArgs sArgs, bool redirection = false)
+        async UniTask AnimInitiationToCard(BattleFieldCard card, BattleInitiationSendArgs sArgs)
         {
             if (card.IsKilled) return;
 
@@ -197,9 +198,9 @@ namespace Game.Territories
                 await AnimInitiationBlank(card.Field);
                 return;
             }
-            if (!redirection && rArgs.ReceiverChanged) // initiation can be redirected in OnInitiationPreReceived method
+            if (rArgs.Receiver.Card != card) // initiation can be redirected in OnInitiationPreReceived method
             {
-                await AnimInitiationToField(rArgs.Receiver, sArgs, redirection: true); 
+                await AnimInitiationToField(rArgs.Receiver, sArgs); 
                 return;
             }
 

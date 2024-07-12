@@ -10,8 +10,8 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий коллекцию элементов списка трейтов (см. <see cref="TableTraitListElement"/>) у отрисовщика.<br/>
-    /// Существует для удобства пользователя (добавляет изменение стаков трейтов в очередь).
+    /// Класс, представляющий коллекцию элементов списка навыков (см. <see cref="TableTraitListElement"/>) у отрисовщика.<br/>
+    /// Существует для удобства пользователя (добавляет изменение стаков навыков в очередь).
     /// </summary>
     public class TableTraitListSetDrawerElementsCollection : IEnumerable<TableTraitListElementDrawer>
     {
@@ -28,7 +28,7 @@ namespace Game.Traits
         readonly Queue<QueueQuery> _queue;
 
         bool _isRunning;
-        float _animPosY;
+        float _currentY;
 
         class QueueQuery : IEquatable<QueueQuery>
         {
@@ -56,7 +56,7 @@ namespace Game.Traits
         public TableTraitListSetDrawerElementsCollection(TableTraitListSetDrawer drawer)
         {
             _drawer = drawer;
-            _animPosY = 0.25f; // start pos
+            _currentY = 0.25f; // start pos
             _storage = new List<ITableTraitListElement>();
             _queue = new Queue<QueueQuery>();
         }
@@ -72,9 +72,9 @@ namespace Game.Traits
 
             TableTraitListElementDrawer drawer = element.Drawer;
             float posYDelta = drawer.GetSizeDelta().y;
-            drawer.transform.localPosition = Vector3.up * _animPosY;
+            drawer.transform.localPosition = Vector3.up * _currentY;
             _storage.Add(element);
-            _animPosY -= posYDelta;
+            _currentY -= posYDelta;
         }
         public void Enqueue(ITableTraitListElement element)
         {
@@ -178,13 +178,13 @@ namespace Game.Traits
 
                 bool addToStorage = query.operation == QueueOperation.Add;
                 float posYDelta = elementDrawer.GetSizeDelta().y;
-                float elementUpperPoint = _animPosY;
+                float elementUpperPoint = _currentY;
 
                 if (addToStorage)
                 {
-                    elementDrawer.transform.localPosition = Vector3.up * _animPosY;
+                    elementDrawer.transform.localPosition = Vector3.up * _currentY;
                     _storage.Add(element);
-                    _animPosY -= posYDelta;
+                    _currentY -= posYDelta;
                     await elementDrawer.AnimAppear().AsyncWaitForCompletion();
                 }
                 else
@@ -197,12 +197,12 @@ namespace Game.Traits
                     }
 
                     _storage.Remove(element);
-                    _animPosY += posYDelta;
+                    _currentY += posYDelta;
                     await elementDrawer.AnimDisappear().AsyncWaitForCompletion();
                     element.DestroyDrawer(false);
                 }
 
-                float elementLowerPoint = _animPosY;
+                float elementLowerPoint = _currentY;
                 // TODO: implement scrolling (elementUpperPoint && elementLowerPoint must be visible)
                 // use _drawer.ScrollStoredElements
 

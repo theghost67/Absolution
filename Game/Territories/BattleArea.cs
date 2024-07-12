@@ -1,13 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
-using GreenOne;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 namespace Game.Territories
 {
@@ -34,6 +31,7 @@ namespace Game.Territories
 
         readonly TableEventVoid<BattleFieldCard> _onCardSeen;
         readonly TableEventVoid<BattleFieldCard> _onCardUnseen;
+        readonly string _eventsGuid;
 
         bool _isAiming;
         bool _observeTargets;
@@ -56,6 +54,7 @@ namespace Game.Territories
 
             _onCardSeen = new TableEventVoid<BattleFieldCard>();
             _onCardUnseen = new TableEventVoid<BattleFieldCard>();
+            _eventsGuid = this.GuidStrForEvents();
 
             _observingCards = new List<BattleFieldCard>(TableTerritory.MAX_SIZE);
             _aimedTargetSplash = Array.Empty<BattleField>();
@@ -69,6 +68,7 @@ namespace Game.Territories
 
             _onCardSeen = (TableEventVoid<BattleFieldCard>)src._onCardSeen.Clone();
             _onCardUnseen = (TableEventVoid<BattleFieldCard>)src._onCardUnseen.Clone();
+            _eventsGuid = (string)src._eventsGuid.Clone();
 
             _observingCards = new List<BattleFieldCard>(TableTerritory.MAX_SIZE);
             _aimedTargetSplash = Array.Empty<BattleField>();
@@ -111,12 +111,12 @@ namespace Game.Territories
                     throw new Exception($"{nameof(BattleArea)}: SetObserveTargets(true) can be used only when observingPoint is attached to a field.");
 
                 await EnableContiniousObserving();
-                observingPoint.OnFieldPostAttached.Add(OnObservingPointAttachedToField);
+                observingPoint.OnFieldPostAttached.Add(_eventsGuid, OnObservingPointAttachedToField);
             }
             else
             {
                 await DisableContiniousObserving();
-                observingPoint.OnFieldPostAttached.Remove(OnObservingPointAttachedToField);
+                observingPoint.OnFieldPostAttached.Remove(_eventsGuid);
             }
         }
         public void SelectTargetsByWeight()
@@ -291,7 +291,7 @@ namespace Game.Territories
             {
                 if (field.Card != null)
                     await CheckObserveStateFor(field.Card);
-                field.OnCardAttached.Add(OnCardAttachedToAnyField, Range.priority);
+                field.OnCardAttached.Add(_eventsGuid, OnCardAttachedToAnyField, Range.priority);
             }
         }
         async UniTask DisableContiniousObserving()
@@ -299,7 +299,7 @@ namespace Game.Territories
             foreach (BattleFieldCard target in _observingCards)
                 await _onCardUnseen.Invoke(this, target);
             foreach (BattleField field in observingPoint.Territory.Fields())
-                field.OnCardAttached.Remove(OnCardAttachedToAnyField);
+                field.OnCardAttached.Remove(_eventsGuid);
 
             _observingCards = new List<BattleFieldCard>(TableTerritory.MAX_SIZE);
             _aimedTargetSplash = Array.Empty<BattleField>();
@@ -350,6 +350,7 @@ namespace Game.Territories
             }
             void OnMouseClick(object sender, DrawerMouseEventArgs e)
             {
+                if (!e.isLmbDown) return;
                 if (!_aimFilter(field))
                 {
                     fieldDrawer.CreateTextAsSpeech("НЕВЕРНАЯ ЦЕЛЬ", Color.red);
@@ -362,7 +363,7 @@ namespace Game.Territories
             fieldDrawer.AnimShowOutline();
             fieldDrawer.OnMouseEnter += OnMouseEnter;
             fieldDrawer.OnMouseLeave += OnMouseLeave;
-            fieldDrawer.OnMouseClickLeft += OnMouseClick;
+            fieldDrawer.OnMouseClick += OnMouseClick;
 
             _onAimCancel += () =>
             {
@@ -372,7 +373,7 @@ namespace Game.Territories
 
                 fieldDrawer.OnMouseEnter -= OnMouseEnter;
                 fieldDrawer.OnMouseLeave -= OnMouseLeave;
-                fieldDrawer.OnMouseClickLeft -= OnMouseClick;
+                fieldDrawer.OnMouseClick -= OnMouseClick;
             };
         }
         void FinishAim(BattleField target)

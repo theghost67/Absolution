@@ -44,7 +44,7 @@ namespace Game.Cards
                 await fieldCard.moxie.AdjustValue(-fieldCard.moxie, card, guid);
                 float moxieDelta = fieldCard.moxie.EntryValue(guid);
                 float strengthRel = -moxieDelta * MOXIE_TO_STRENGTH_REL;
-                await fieldCard.strength.AdjustValue(strengthRel, card);
+                await fieldCard.strength.AdjustValueScale(strengthRel, card);
             }
         }
     }

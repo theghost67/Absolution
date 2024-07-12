@@ -4,8 +4,8 @@ using System.Linq;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий список пассивных трейтов во время сражения (см. <see cref="BattlePassiveTrait"/>).<br/>
-    /// Список является частью набора списков трейтов (см. <see cref="BattleTraitListSet"/>).
+    /// Класс, представляющий список пассивных навыков во время сражения (см. <see cref="BattlePassiveTrait"/>).<br/>
+    /// Список является частью набора списков навыков (см. <see cref="BattleTraitListSet"/>).
     /// </summary>
     public class BattlePassiveTraitList : TablePassiveTraitList, IBattleTraitList, IReadOnlyList<BattlePassiveTraitListElement>
     {

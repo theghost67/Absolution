@@ -1,7 +1,7 @@
 ﻿namespace Game.Traits
 {
     /// <summary>
-    /// Абстрактный класс, представляющий один из элементов списка данных трейтов (см. <see cref="TraitList"/>).
+    /// Абстрактный класс, представляющий один из элементов списка данных навыков (см. <see cref="TraitList"/>).
     /// </summary>
     public abstract class TraitListElement : ITraitListElement
     {

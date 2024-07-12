@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Абстрактный класс для всех активных трейтов. Эти трейты имеют цели и (возможно) условия активации.
+    /// Абстрактный класс для всех активных навыков. Эти навыкы имеют цели и (возможно) условия активации.
     /// </summary>
     public abstract class ActiveTrait : Trait, IBattleActiveTraitThresholdUsable
     {

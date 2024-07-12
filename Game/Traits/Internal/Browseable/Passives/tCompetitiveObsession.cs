@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tCompetitiveObsession : PassiveTrait
     {
@@ -60,15 +60,15 @@ namespace Game.Traits
 
             if (trait.WasAdded(e))
             {
-                trait.Owner.OnFieldPostAttached.Add(OnOwnerFieldPostAttached, PRIORITY);
-                trait.Owner.Territory.OnPlayerWon.Add(OnPlayerWon, PRIORITY);
-                trait.Owner.Territory.OnPlayerLost.Add(OnPlayerLost, PRIORITY);
+                trait.Owner.OnFieldPostAttached.Add(trait.GuidStrForEvents(0), OnOwnerFieldPostAttached, PRIORITY);
+                trait.Owner.Territory.OnPlayerWon.Add(trait.GuidStrForEvents(0), OnPlayerWon, PRIORITY);
+                trait.Owner.Territory.OnPlayerLost.Add(trait.GuidStrForEvents(0), OnPlayerLost, PRIORITY);
             }
             else if (trait.WasRemoved(e))
             {
-                trait.Owner.OnFieldPostAttached.Remove(OnOwnerFieldPostAttached);
-                trait.Owner.Territory.OnPlayerWon.Remove(OnPlayerWon);
-                trait.Owner.Territory.OnPlayerLost.Remove(OnPlayerLost);
+                trait.Owner.OnFieldPostAttached.Remove(trait.GuidStrForEvents(0));
+                trait.Owner.Territory.OnPlayerWon.Remove(trait.GuidStrForEvents(0));
+                trait.Owner.Territory.OnPlayerLost.Remove(trait.GuidStrForEvents(0));
             }
         }
 

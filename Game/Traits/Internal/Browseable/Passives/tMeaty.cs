@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tMeaty : PassiveTrait
     {
@@ -31,7 +31,7 @@ namespace Game.Traits
             float effect = HEALTH_REL_INCREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"При появлении карты с трейтом <i>Мясистый</i> рядом с владельцем (П{PRIORITY})",
+                new($"При появлении карты с навыком <i>Мясистый</i> рядом с владельцем (П{PRIORITY})",
                     $"увеличивает здоровье владельца на <u>{effect}%</u>."),
             });
         }

@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace Game.Sleeves
 {
+    // TODO: implement holding cards "history"? (if just added card was the last one removed, insert it to it's previous index)
     /// <summary>
     /// Класс, представляющий возможность подбирания игроком карт рукава типа <see cref="ITableSleeveCard"/> (из привязанной колоды карт).
     /// </summary>
@@ -20,7 +21,9 @@ namespace Game.Sleeves
         public readonly bool isForMe;
         readonly CardDeck _deck;
         readonly HashSet<int> _takenCardsGuids;
-        ITableSleeveCardsCollection _cards;
+        readonly ITableSleeveCardsCollection _cards;
+        ITableSleeveCard _latestRemovedCard;
+        int _latestRemovedCardIndex;
 
         // NOTE: pass player deck clone to separate sleeve.Deck and Player.Deck card add/remove 
         public TableSleeve(CardDeck deck, bool forMe, Transform parent) : base(parent)
@@ -71,11 +74,17 @@ namespace Game.Sleeves
         }
         public void Add(ITableSleeveCard card)
         {
-            _cards.Add(card);
+            if (card == null) return;
+            if (card == _latestRemovedCard)
+                 _cards.Insert(card, _latestRemovedCardIndex);
+            else _cards.Add(card);
             Drawer?.AddCardDrawer(card);
         }
         public void Remove(ITableSleeveCard card)
         {
+            if (card == null) return;
+            _latestRemovedCard = card;
+            _latestRemovedCardIndex = _cards.IndexOf(card);
             _cards.Remove(card);
             Drawer?.RemoveCardDrawer(card);
         }
@@ -140,7 +149,7 @@ namespace Game.Sleeves
                 if (sCard == null) continue;
                 
                 Add(sCard);
-                sCard.PullOutBase();
+                sCard.OnPullOut(false);
                 cards.Add(sCard);
 
                 await UniTask.Delay(delay);
@@ -150,7 +159,7 @@ namespace Game.Sleeves
 
             await UniTask.Delay(500);
             foreach (ITableSleeveCard card in cards)
-                card.PullInBase();
+                card.OnPullIn(false);
             Drawer.SetCollider(true);
         }
 

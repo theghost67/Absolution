@@ -42,8 +42,6 @@ namespace Game.Territories
             _grid = grid;
             _alignSettings = new AlignSettings(Vector2.zero, AlignAnchor.MiddleCenter, alignDistance, true, grid.x);
             _fields = new TableField[grid.x, grid.y];
-
-            TableConsole.LogToFile($"--------- {TableNameDebug} CREATED ---------");
             AddOnInstantiatedAction(GetType(), typeof(TableTerritory), () =>
             {
                 if (createFields)
@@ -56,8 +54,6 @@ namespace Game.Territories
             _fields = new TableField[Grid.x, Grid.y];
             _fieldsDrawersAreNull = true;
             _alignSettings = src._alignSettings;
-
-            TableConsole.LogToFile($"--------- {TableNameDebug} CLONED ---------");
             AddOnInstantiatedAction(GetType(), typeof(TableTerritory), () =>
             {
                 CloneFields(src, args);
@@ -68,8 +64,6 @@ namespace Game.Territories
         public override void Dispose()
         {
             base.Dispose();
-            if (_fieldsDrawersAreNull)
-                TableConsole.LogToFile($"--------- {TableNameDebug} DISPOSED ---------");
             _fieldsDrawersAreNull = true;
             foreach (TableField field in _fields)
                 field?.Dispose();
@@ -83,14 +77,6 @@ namespace Game.Territories
             else return null;
         }
 
-        public void SetColliders(bool value)
-        {
-            foreach (TableField field in Fields())
-            {
-                field.Drawer?.SetCollider(value);
-                field.Card?.Drawer?.SetCollider(value);
-            }
-        }
         public void SetFieldsColliders(bool value)
         {
             foreach (TableField field in Fields())

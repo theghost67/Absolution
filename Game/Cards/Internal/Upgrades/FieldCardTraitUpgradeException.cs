@@ -3,12 +3,12 @@
 namespace Game.Cards
 {
 	/// <summary>
-	/// Класс, представляющий исключение во время улучшения одного из трейтов карты (см. <see cref="FieldCardUpgradeRules"/>).
+	/// Класс, представляющий исключение во время улучшения одного из навыков карты (см. <see cref="FieldCardUpgradeRules"/>).
 	/// </summary>
     public class FieldCardTraitUpgradeException : Exception
 	{
-		public FieldCardTraitUpgradeException(string traitId, float upgradePoints, float statPointsShare, float traitPointsShare)
+		public FieldCardTraitUpgradeException(string traitId, float upgradePoints, float statsPointsShare, float traitsPointsShare)
 			: base($"Trait \'{traitId}\' caused thread block during card upgrade.\n" +
-				   $"upgradePoints: {upgradePoints}, statPointsShare: {statPointsShare}, traitPointsShare: {traitPointsShare}") { }
+				   $"upgradePoints: {upgradePoints}, statsPointsShare: {statsPointsShare}, traitsPointsShare: {traitsPointsShare}") { }
 	}
 }

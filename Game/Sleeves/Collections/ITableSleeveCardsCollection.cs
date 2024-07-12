@@ -8,7 +8,9 @@ namespace Game.Sleeves
     public interface ITableSleeveCardsCollection : IReadOnlyList<ITableSleeveCard> 
     {
         public void Add(ITableSleeveCard card);
+        public void Insert(ITableSleeveCard card, int index);
         public bool Remove(ITableSleeveCard card);
+        public int IndexOf(ITableSleeveCard card);
         public void Clear();
     }
 }

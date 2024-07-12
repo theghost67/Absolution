@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, содержащий списки данных активных и пассивных трейтов (см. <see cref="Trait"/>).
+    /// Класс, содержащий списки данных активных и пассивных навыков (см. <see cref="Trait"/>).
     /// </summary>
     public class TraitListSet : ICloneableWithArgs, ISerializable, IEnumerable<TraitListElement>
     {

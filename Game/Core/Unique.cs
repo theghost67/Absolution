@@ -58,5 +58,7 @@ namespace Game
         {
             return _guid.GetHashCode();
         }
+
+        protected void GiveNewGuid() { _guid = NewGuid; }
     }
 }

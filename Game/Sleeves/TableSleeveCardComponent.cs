@@ -30,7 +30,7 @@ namespace Game.Sleeves
 
             _drawer.OnMouseEnter += OnDrawerMouseEnter;
             _drawer.OnMouseLeave += OnDrawerMouseLeave;
-            _drawer.OnMouseClickLeft += OnDrawerMouseClick;
+            _drawer.OnMouseClick += OnDrawerMouseClick;
         }
         public void Disable() 
         {
@@ -39,26 +39,23 @@ namespace Game.Sleeves
 
             _drawer.OnMouseEnter -= OnDrawerMouseEnter;
             _drawer.OnMouseLeave -= OnDrawerMouseLeave;
-            _drawer.OnMouseClickLeft -= OnDrawerMouseClick;
+            _drawer.OnMouseClick -= OnDrawerMouseClick;
         }
 
         void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return;
             TableCardDrawer drawer = (TableCardDrawer)sender;
             ITableSleeveCard drawerCard = (ITableSleeveCard)drawer.attached;
-            drawerCard.TryPullOut();
+            drawerCard.TryPullOut(false);
         }
         void OnDrawerMouseLeave(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return;
             TableCardDrawer drawer = (TableCardDrawer)sender;
             ITableSleeveCard drawerCard = (ITableSleeveCard)drawer.attached;
-            drawerCard.TryPullIn();
+            drawerCard.TryPullIn(false);
         }
         void OnDrawerMouseClick(object sender, DrawerMouseEventArgs e)
         {
-            if (e.handled) return;
             TableCardDrawer drawer = (TableCardDrawer)sender;
             ITableSleeveCard drawerCard = (ITableSleeveCard)drawer.attached;
             PlayerHand.TryTakeCard(drawerCard);

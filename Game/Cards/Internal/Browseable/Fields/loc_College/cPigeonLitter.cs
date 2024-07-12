@@ -2,7 +2,7 @@
 {
     public class cPigeonLitter : FieldCard
     {
-        public cPigeonLitter() : base("pigeon_litter", "p unpleasant_scent")
+        public cPigeonLitter() : base("pigeon_litter")
         {
             name = "Голубиный помёт";
             desc = "Мерзко. Больше нечего сказать.";

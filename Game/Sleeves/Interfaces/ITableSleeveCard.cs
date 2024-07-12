@@ -5,7 +5,7 @@ using GreenOne;
 
 namespace Game.Sleeves
 {
-    // TODO: move some implementation to ITableSleeveCardDrawer?
+    // TODO: recreate as ITableSleeveCardDrawer?
     /// <summary>
     /// Реализует карту стола как карту рукава, добавляя возможность подбирать, возвращать и бросать карту на поле из рукава.<br/>
     /// Примечание: карта должна иметь отрисовщик, а также, методы этого интерфейса должны вызываться только от лица пользователя (не от противника). 
@@ -15,11 +15,10 @@ namespace Game.Sleeves
         public const float PULL_DURATION = 0.33f;
         public TableSleeve Sleeve { get; }
 
-        // should be set only in ITableSleeveCard
+        // should be set only in ITableSleeveCard (here)
         public bool IsInMove { get; protected set; }
         public bool IsPulledOut { get; protected set; }
-
-        static readonly System.Exception _ex = new($"{nameof(ITableSleeveCard)} methods should be invoked only by player (user) interaction and when the card has it's own {nameof(Drawer)} ({nameof(Sleeve)} must have drawer too).");
+        private static readonly System.Exception _ex = new($"{nameof(ITableSleeveCard)} methods should be invoked only by player (user) interaction and when the card has it's own {nameof(Drawer)} ({nameof(Sleeve)} must have drawer too).");
 
         public bool TryTake()
         {
@@ -28,7 +27,7 @@ namespace Game.Sleeves
 
             if (CanTake())
             {
-                Take();
+                OnTake();
                 return true;
             }
             else return false;
@@ -40,7 +39,7 @@ namespace Game.Sleeves
 
             if (CanReturn())
             {
-                Return();
+                OnReturn();
                 return true;
             }
             else return false;
@@ -52,50 +51,51 @@ namespace Game.Sleeves
 
             if (CanDropOn(field))
             {
-                DropOn(field);
+                OnDropOn(field);
                 return true;
             }
             else return false;
         }
-
-        public bool TryPullOut()
+        public bool TryPullOut(bool sleevePull)
         {
             if (Drawer == null)
                 throw _ex;
-
-            if (Sleeve.Drawer.IsInMove) return false;
-            if (Sleeve.Drawer.IsPulledOut)
+            Drawer.SetSortingAsTop();
+            if (!sleevePull && Sleeve.Drawer.IsPulledOut)
+                return false;
+            if (sleevePull || CanPullOut())
             {
-                Drawer.SetSortingAsTop();
-                return true;
-            }
-
-            if (CanPullOut())
-            {
-                PullOutBase();
+                OnPullOut(sleevePull);
                 return true;
             }
             return false;
         }
-        public bool TryPullIn()
+        public bool TryPullIn(bool sleevePull)
         {
             if (Drawer == null)
                 throw _ex;
-
-            if (Sleeve.Drawer.IsInMove) return false;
-            if (Sleeve.Drawer.IsPulledOut)
+            Drawer.SetSortingAsDefault();
+            if (!sleevePull && Sleeve.Drawer.IsPulledOut)
+                return false;
+            if (sleevePull || CanPullIn())
             {
-                Drawer.SetSortingAsDefault();
-                return true;
-            }
-
-            if (CanPullIn())
-            {
-                PullInBase();
+                OnPullIn(sleevePull);
                 return true;
             }
             return false;
         }
+
+        public bool CanTake();
+        public bool CanReturn();
+        public bool CanDropOn(TableField field);
+        public bool CanPullOut();
+        public bool CanPullIn();
+
+        public void OnTake();
+        public void OnReturn();
+        public void OnDropOn(TableField field);
+        public void OnPullOut(bool sleevePull);
+        public void OnPullIn(bool sleevePull);
 
         // --- use only in implementing class ---
         public void TakeBase()
@@ -118,7 +118,7 @@ namespace Game.Sleeves
             Sleeve.Add(this);
             Sleeve.Drawer.CanPullOut = true;
         }
-        public void DropOnBase()
+        public void DropOnBase(TableField field)
         {
             Drawer.SetCollider(true);
 
@@ -128,38 +128,27 @@ namespace Game.Sleeves
             Drawer.transform.SetParent(Global.Root);
             Drawer.SetSortingAsDefault();
         }
-        // ---       
-
-        protected abstract bool CanTake();
-        protected abstract bool CanReturn();
-        protected abstract bool CanDropOn(TableField field);
-
-        protected abstract bool CanPullOut();
-        protected abstract bool CanPullIn();
-
-        protected abstract void Take();
-        protected abstract void Return();
-        protected abstract void DropOn(TableField field);
-
-        void PullOutBase()
+        public void PullOutBase(bool sleevePull)
         {
-            float endY = -0.22f.InversedIf(Sleeve.isForMe);
+            float endY = sleevePull ? -1.25f : -0.22f;
+            if (Sleeve.isForMe) endY = -endY;
+
             IsInMove = true;
             Drawer.transform.DOLocalMoveY(endY, PULL_DURATION).SetEase(Ease.OutQuad).OnComplete(OnPulledOut);
         }
-        void PullInBase()
+        public void PullInBase(bool sleevePull)
         {
-            const float END_Y = 0;
             IsInMove = true;
-            Drawer.transform.DOLocalMoveY(END_Y, PULL_DURATION).SetEase(Ease.OutQuad).OnComplete(OnPulledIn);
+            Drawer.transform.DOLocalMoveY(0, PULL_DURATION).SetEase(Ease.OutQuad).OnComplete(OnPulledIn);
         }
+        // ---       
 
-        void OnPulledOut()
+        private void OnPulledOut()
         {
             IsInMove = false;
             IsPulledOut = true;
         }
-        void OnPulledIn()
+        private void OnPulledIn()
         {
             IsInMove = false;
             IsPulledOut = false;

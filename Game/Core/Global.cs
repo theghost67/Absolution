@@ -3,9 +3,9 @@ using Game.Cards;
 using Game.Effects;
 using Game.Environment;
 using Game.Menus;
+using Game.Palette;
 using Game.Traits;
 using GreenOne;
-using PimDeWitte.UnityMainThreadDispatcher;
 using System;
 using TMPro;
 using UnityEngine;
@@ -26,9 +26,12 @@ namespace Game
         public static event Action OnUpdate;      // hz/s
         public static event Action OnFixedUpdate; // 50/s
         public static event Action OnSlowUpdate;  // 10/s
+        public static event Action OnWantToQuit;
+        public static event Action<bool> OnFocus;
 
         public static Transform Root => _root;
         public static Camera Camera => _camera;
+        public static bool IsQuitting => _isQuitting;
 
         public static bool writeConsoleLogs = true;
         public static bool shufflePrice = false;
@@ -37,8 +40,19 @@ namespace Game
 
         static Transform _root;
         static Camera _camera;
-        static bool _quitting;
+        static bool _isQuitting;
         static int _slowCounter;
+        static readonly Color[] _palette = new Color[]
+        {
+            Utils.HexToColor("#eeeeee"),
+            Utils.HexToColor("#76abae"),
+            Utils.HexToColor("#39414f"),
+            Utils.HexToColor("#222831"),
+            Utils.HexToColor("#000000"),
+
+            Utils.HexToColor("#00ffff"),
+            Utils.HexToColor("#ffff00"),
+        };
 
         static int _errorsCount;
         static Tween _errorTween;
@@ -49,22 +63,22 @@ namespace Game
 
         static void LogReceived(string condition, string stackTrace, LogType type)
         {
-            if (_quitting) return;
+            if (_isQuitting) return;
             if (type != LogType.Exception && type != LogType.Error) return;
 
             _errorsCount++;
             _errorTween.Restart();
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadDispatcher.Enqueue(() =>
             {
                 ShowErrors();
-                const string TERMINATOR = "////////////////////////";
-                TableConsole.LogToFile($"{TERMINATOR} {condition} {TERMINATOR}");
+                TableConsole.LogToFile("global", condition);
                 TableConsole.Log($"{condition}\nСм. лог отладки для подробностей.", type);
             });
         }
-        static bool OnWantToQuit()
+        static bool OnWantToQuitBase()
         {
-            _quitting = true;
+            OnWantToQuit?.Invoke();
+            _isQuitting = true;
             return true;
         }
         static bool OnTweenLog(LogType type, object log)
@@ -103,7 +117,7 @@ namespace Game
             Application.targetFrameRate = (int)Screen.currentResolution.refreshRateRatio.value;
             Application.logMessageReceivedThreaded += LogReceived;
             Application.logMessageReceived += LogReceived;
-            Application.wantsToQuit += OnWantToQuit;
+            Application.wantsToQuit += OnWantToQuitBase;
             DOTween.onWillLog = OnTweenLog;
             //Time.fixedDeltaTime = 1 / 20f;
 
@@ -115,12 +129,14 @@ namespace Game
 
             Player.Load();
             SaveSystem.LoadAll();
+            ColorPalette.SetPalette(_palette);
 
+            // --------- TODO: remove ---------
             Traveler.TryStartTravel(new LocationMission(EnvironmentBrowser.Locations["college"]));
-
             DOVirtual.DelayedCall(0.8f, () => VFX.CreateScreenBG(Color.black).DOFade(0, 10).SetEase(Ease.InQuad));
             MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
-            // MenuTransit.Between(null, new BattlePlaceMenu());
+            //MenuTransit.Between(null, new BattlePlaceMenu());
+            // --------------------------------
         }
         void Update()
         {
@@ -137,6 +153,10 @@ namespace Game
                 _slowCounter = 0;
                 OnSlowUpdate?.Invoke();
             }
+        }
+        void OnApplicationFocus(bool focus)
+        {
+            OnFocus?.Invoke(focus);
         }
     }
 }

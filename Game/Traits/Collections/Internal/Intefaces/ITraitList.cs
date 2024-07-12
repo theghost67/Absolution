@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace Game.Traits
 {
     /// <summary>
-    /// Реализует объект как список данных трейтов (см. <see cref="TraitListElement"/>).<br/>
-    /// Список является частью набора списков трейтов (см. <see cref="TraitListSet"/>).
+    /// Реализует объект как список данных навыков (см. <see cref="TraitListElement"/>).<br/>
+    /// Список является частью набора списков навыков (см. <see cref="TraitListSet"/>).
     /// </summary>
     public interface ITraitList : IReadOnlyList<TraitListElement>, ICloneableWithArgs
     {

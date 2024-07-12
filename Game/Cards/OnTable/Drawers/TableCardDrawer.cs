@@ -21,7 +21,7 @@ namespace Game.Cards
         const float BG_ALPHA_MAX = 0.8f;
 
         public bool IgnoreFirstMouseEnter { get; set; }
-        public bool BgIsVisible => _bgRenderer.color.a != 0;
+        public bool BgIsVisible => _bgIsVisible;
 
         public SpriteRendererOutline Outline => _outline;
         protected override SpriteRenderer SelectableRenderer => _spriteRenderer;
@@ -56,6 +56,7 @@ namespace Game.Cards
         readonly SpriteRenderer _bgRenderer;
         readonly SpriteRendererOutline _outline;
 
+        bool _bgIsVisible;
         Tween _bgTween;
         Tween _headerTween;
 
@@ -97,20 +98,16 @@ namespace Game.Cards
             _outline = new SpriteRendererOutline(_spriteRenderer, paletteSupport: true);
 
             priceIcon = new TableCardUpperIconDrawer(this, () => UpperLeftIconDisplayValue(), transform.Find("Upper left icon"));
-            priceIcon.OnMouseEnter += OnUpperLeftIconMouseEnter;
-            priceIcon.OnMouseLeave += OnUpperLeftIconMouseLeave;
+            priceIcon.SetTooltip(UpperLeftIconTooltip);
 
             moxieIcon = new TableCardUpperIconDrawer(this, () => UpperRightIconDisplayValue(), transform.Find("Upper right icon"));
-            moxieIcon.OnMouseEnter += OnUpperRightIconMouseEnter;
-            moxieIcon.OnMouseLeave += OnUpperRightIconMouseLeave;
+            moxieIcon.SetTooltip(UpperRightIconTooltip);
 
             healthIcon = new TableCardLowerIconDrawer(this, () => LowerLeftIconDisplayValue(), transform.Find("Lower left icon"));
-            healthIcon.OnMouseEnter += OnLowerLeftIconMouseEnter;
-            healthIcon.OnMouseLeave += OnLowerLeftIconMouseLeave;
+            healthIcon.SetTooltip(LowerLeftIconTooltip);
 
             strengthIcon = new TableCardLowerIconDrawer(this, () => LowerRightIconDisplayValue(), transform.Find("Lower right icon"));
-            strengthIcon.OnMouseEnter += OnLowerRightIconMouseEnter;
-            strengthIcon.OnMouseLeave += OnLowerRightIconMouseLeave;
+            strengthIcon.SetTooltip(LowerRightIconTooltip);
 
             ColorPalette.OnColorChanged += OnPaletteColorChanged;
             RedrawSpriteAsDefault();
@@ -230,22 +227,30 @@ namespace Game.Cards
 
         public void ShowBg()
         {
+            if (_bgIsVisible) return;
+            _bgIsVisible = true;
             _bgTween.Kill();
             _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(BG_ALPHA_MAX), 0.25f);
         }
         public void HideBg()
         {
+            if (!_bgIsVisible) return;
+            _bgIsVisible = false;
             _bgTween.Kill();
             _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(0f), 0.25f);
         }
 
         public void ShowBgInstantly()
         {
+            if (_bgIsVisible) return;
+            _bgIsVisible = true;
             _bgTween.Kill();
             _bgRenderer.color = Color.white.WithAlpha(BG_ALPHA_MAX);
         }
         public void HideBgInstantly()
         {
+            if (!_bgIsVisible) return;
+            _bgIsVisible = false;
             _bgTween.Kill();
             _bgRenderer.color = Color.white.WithAlpha(0f);
         }
@@ -361,35 +366,25 @@ namespace Game.Cards
             return 0;
         }
 
-        protected virtual void OnUpperLeftIconMouseEnter(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnUpperRightIconMouseEnter(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnLowerLeftIconMouseEnter(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnLowerRightIconMouseEnter(object sender, DrawerMouseEventArgs e) { }
-
-        protected virtual void OnUpperLeftIconMouseLeave(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnUpperRightIconMouseLeave(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnLowerLeftIconMouseLeave(object sender, DrawerMouseEventArgs e) { }
-        protected virtual void OnLowerRightIconMouseLeave(object sender, DrawerMouseEventArgs e) { }
+        protected virtual string UpperLeftIconTooltip() => "";
+        protected virtual string UpperRightIconTooltip() => "";
+        protected virtual string LowerLeftIconTooltip() => "";
+        protected virtual string LowerRightIconTooltip() => "";
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseEnterBase(sender, e);
-            if (e.handled) return;
-
             if (IgnoreFirstMouseEnter)
             {
                 IgnoreFirstMouseEnter = false;
                 e.handled = true;
                 return;
             }
-
             Menu.WriteDescToCurrent(attached.DescRich());
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseLeaveBase(sender, e);
-            if (e.handled) return;
-
             Menu.WriteDescToCurrent("");
         }
 

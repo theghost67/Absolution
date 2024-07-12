@@ -7,14 +7,13 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tWhiteBombing : ActiveTrait
     {
         const string ID = "white_bombing";
         const string SPAWN_CARD_ID = "pigeon_litter";
         const string SPAWN_TRAIT_ID = "unpleasant_scent";
-        const int SPAWN_TRAIT_STACKS = 1;
 
         public tWhiteBombing() : base(ID)
         {
@@ -31,13 +30,13 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             string traitName = TraitBrowser.GetTrait(SPAWN_TRAIT_ID).name;
-            int effect = SPAWN_TRAIT_STACKS * trait.GetStacks();
+            int effect = trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При активации на союзном поле (Т)",
-                    $"тратит все заряды, создаёт на всех пустых полях своей территории карты <i>Голубиный помёт</i>. Карты будут иметь <u>{effect}</u> зарядов трейта <i>{traitName}</i>."),
+                    $"тратит все заряды, создаёт на всех пустых полях своей территории карты <i>Голубиный помёт</i>. Карты будут иметь <u>{effect}</u> зарядов навыка <i>{traitName}</i>."),
                 new($"При активации на вражеском поле (Т)",
-                    $"тратит все заряды, все карты на территории напротив получат <u>{effect}</u> зарядов трейта <i>{traitName}</i>."),
+                    $"тратит все заряды, инициатива всех карт на территории напротив будет уменьшена на <u>{effect}</u> ед."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
@@ -61,13 +60,17 @@ namespace Game.Traits
             {
                 IEnumerable<BattleField> fields = trait.Side.Fields().WithoutCard();
                 foreach (BattleField field in fields)
-                    await trait.Side.Territory.PlaceFieldCard(CardBrowser.NewField(SPAWN_CARD_ID), field, trait.Side);
+                {
+                    FieldCard card = CardBrowser.NewField(SPAWN_CARD_ID);
+                    card.traits.Passives.AdjustStacks(SPAWN_TRAIT_ID, trait.GetStacks());
+                    await trait.Side.Territory.PlaceFieldCard(card, field, trait.Side);
+                }
             }
             else
             {
                 IEnumerable<BattleField> fields = trait.Side.Opposite.Fields().WithCard();
                 foreach (BattleField field in fields)
-                    await field.Card.Traits.Passives.AdjustStacks(SPAWN_TRAIT_ID, SPAWN_TRAIT_STACKS * trait.GetStacks(), trait);
+                    await field.Card.moxie.AdjustValue(trait.GetStacks(), trait);
             }
 
             await trait.SetStacks(0, trait.Side);

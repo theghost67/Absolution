@@ -4,7 +4,7 @@ using Game.Territories;
 namespace Game.Traits
 {
     /// <summary>
-    /// Реализует трейт на столе как трейт во время сражения с возможностью применения на целях.
+    /// Реализует навык на столе как навык во время сражения с возможностью применения на целях.
     /// </summary>
     public interface IBattleTrait : ITableTrait, IBattleWeighty
     {

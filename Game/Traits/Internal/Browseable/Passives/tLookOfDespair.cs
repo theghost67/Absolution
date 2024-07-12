@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий один из игровых трейтов.
+    /// Класс, представляющий один из игровых навыков.
     /// </summary>
     public class tLookOfDespair : PassiveTrait
     {
@@ -48,8 +48,11 @@ namespace Game.Traits
             string entryId = $"{trait.Guid}/{e.target.Guid}";
 
             if (e.canSeeTarget)
-                 await trait.Owner.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait, entryId);
-            else await trait.Owner.moxie.RevertValue(entryId);
+			{
+				await trait.AnimActivation();
+                await e.target.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait, entryId);
+			}
+            else await e.target.moxie.RevertValue(entryId);
         }
     }
 }
