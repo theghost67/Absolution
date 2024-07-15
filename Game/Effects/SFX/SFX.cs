@@ -216,11 +216,10 @@ namespace Game.Effects
             }
             public Tween Fade(float from, float to)
             {
-                if (!IsPlaying) return null;
-                if (to == 0) _stopping = true;
                 if (from > 1 || from < 0 || to > 1 || to < 0)
                     throw new ArgumentOutOfRangeException();
 
+                _stopping = to == 0;
                 _volumeTween.Kill();
                 _tweenVolume = from;
                 _volumeTween = DOVirtual.Float(_tweenVolume, to, MUSIC_SWITCH_DURATION, v =>

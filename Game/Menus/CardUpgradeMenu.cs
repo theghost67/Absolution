@@ -136,7 +136,7 @@ namespace Game.Menus
                 float startPoints = CurrentPoints;
 
                 foreach (StatToUpgrade stat in _stats)
-                    await stat.Reset();
+                    await stat.TryReset();
 
                 float pointsDelta = CurrentPoints - startPoints;
                 _menu.OnAnyCardReset?.Invoke(pointsDelta);
@@ -338,17 +338,11 @@ namespace Game.Menus
         abstract class StatToUpgrade
         {
             public event Action<float> OnGraded;
-            public int UpgradedTimes => upgradedTimes;
-            public float UpgradePointsDelta => upgradePointsDelta;
-            public float DowngradePointsDelta => downgradePointsDelta;
-
+            public int UpgradedTimes => _upgradedTimes;
             public readonly CardToUpgrade card;
             protected readonly CardUpgradeMenu menu;
             protected readonly Drawer statDrawer;
-
-            protected int upgradedTimes;
-            protected float upgradePointsDelta;
-            protected float downgradePointsDelta;
+            int _upgradedTimes;
 
             public StatToUpgrade(CardUpgradeMenu menu, CardToUpgrade card, Drawer statDrawer)
             {
@@ -360,16 +354,55 @@ namespace Game.Menus
                 statDrawer.OnMouseLeave += OnMouseLeave;
                 statDrawer.OnMouseClick += OnMouseClick;
             }
-            public abstract UniTask Reset();
+            public UniTask TryReset()
+            {
+                if (_upgradedTimes != 0)
+                     return Reset();
+                else return UniTask.CompletedTask;
+            }
 
-            protected abstract UniTask Upgrade();
-            protected abstract UniTask Downgrade();
+            protected virtual UniTask Reset()
+            {
+                _upgradedTimes = 0;
+                return UniTask.CompletedTask;
+            }
+            protected virtual UniTask Upgrade(int times)
+            {
+                _upgradedTimes += times;
+                return UniTask.CompletedTask;
+            }
+            protected virtual UniTask Downgrade(int times)
+            {
+                _upgradedTimes -= times;
+                return UniTask.CompletedTask;
+            }
 
+            protected abstract float GetGradePointsDelta(int times, bool downgrade);
             protected virtual bool UpgradeIsPossible() => true;
+            protected static int GetUserGradeTimes()
+            {
+                int times = 1;
+                return times; // TODO: remove
+                if (Input.GetKey(KeyCode.LeftShift))
+                    times *= 5;
+                if (Input.GetKey(KeyCode.LeftControl))
+                    times *= 5;
+                return times;
+            }
 
-            protected abstract void OnMouseEnter(object sender, DrawerMouseEventArgs e);
-            protected abstract void OnMouseLeave(object sender, DrawerMouseEventArgs e);
-
+            void OnMouseEnter(object sender, DrawerMouseEventArgs e)
+            {
+                if (CardToUpgrade.Selected != card) return;
+                int times = GetUserGradeTimes();
+                float upgradePointsDelta = GetGradePointsDelta(times, false);
+                float downgradePointsDelta = GetGradePointsDelta(times, true);
+                menu.UpgradeInfoShow(upgradePointsDelta, downgradePointsDelta);
+            }
+            void OnMouseLeave(object sender, DrawerMouseEventArgs e)
+            {
+                if (CardToUpgrade.Selected != card) return;
+                menu.UpgradeInfoHide();
+            }
             void OnMouseClick(object sender, DrawerMouseEventArgs e)
             {
                 if (e.handled) return;
@@ -377,15 +410,20 @@ namespace Game.Menus
                      OnMouseClickLeft(sender, e);
                 else OnMouseClickRight(sender, e);
             }
+
             async void OnMouseClickLeft(object sender, DrawerMouseEventArgs e)
             {
                 if (CardToUpgrade.Selected != card) return;
-                if (menu._pointsAvailable - upgradePointsDelta < -9999) return;
                 if (!UpgradeIsPossible()) return;
+
+                int upgradeTimes = GetUserGradeTimes();
+                float upgradePointsDelta = GetGradePointsDelta(upgradeTimes, false);
+                if (menu._pointsAvailable + upgradePointsDelta < -9999) 
+                    return;
 
                 card.AnimHighlightAsUpgrade();
                 menu.SetColliders(false);
-                await Upgrade();
+                await Upgrade(upgradeTimes);
                 OnGraded?.Invoke(upgradePointsDelta);
                 menu.SetColliders(true);
                 statDrawer.IsSelected = true; // force mouse enter invoke
@@ -393,12 +431,16 @@ namespace Game.Menus
             async void OnMouseClickRight(object sender, DrawerMouseEventArgs e)
             {
                 if (CardToUpgrade.Selected != card) return;
-                if (menu._pointsAvailable - downgradePointsDelta < -9999) return;
-                if (upgradedTimes <= 0) return;
+                if (_upgradedTimes <= 0) return;
+
+                int downgradeTimes = GetUserGradeTimes();
+                if (downgradeTimes > _upgradedTimes) return;
+                float downgradePointsDelta = GetGradePointsDelta(downgradeTimes, true);
+                if (menu._pointsAvailable + downgradePointsDelta < -9999) return;
 
                 card.AnimHighlightAsDowngrade();
                 menu.SetColliders(false);
-                await Downgrade();
+                await Downgrade(downgradeTimes);
                 OnGraded?.Invoke(downgradePointsDelta);
                 menu.SetColliders(true);
                 statDrawer.IsSelected = true; // force mouse enter invoke
@@ -420,233 +462,181 @@ namespace Game.Menus
         class PriceStatToUpgrade : StatToUpgrade
         {
             public PriceStatToUpgrade(CardUpgradeMenu menu, CardToUpgrade card, Drawer statDrawer) : base(menu, card, statDrawer) { }
-            public override UniTask Reset()
+            protected override async UniTask Reset()
             {
-                int times = upgradedTimes;
-                if (times == 0) return UniTask.CompletedTask;
+                int times = UpgradedTimes;
+                await base.Reset();
                 card.Data.price.value -= times;
-                upgradedTimes = 0;
-                return card.price.AdjustValue(card.Data.price.value - card.price, null);
+                await card.price.AdjustValue(card.Data.price.value - card.price, null);
             }
-
-            protected override UniTask Upgrade()
+            protected override async UniTask Upgrade(int times)
             {
-                card.Data.price.value++;
-                upgradedTimes++;
-                return card.price.AdjustValue(card.Data.price.value - card.price, null);
+                await base.Upgrade(times);
+                card.Data.price.value += times;
+                await card.price.AdjustValue(card.Data.price.value - card.price, null);
             }
-            protected override UniTask Downgrade()
+            protected override async UniTask Downgrade(int times)
             {
-                card.Data.price.value--;
-                upgradedTimes--;
-                return card.price.AdjustValue(card.Data.price.value - card.price, null);
+                await base.Downgrade(times);
+                card.Data.price.value -= times;
+                await card.price.AdjustValue(card.Data.price.value - card.price, null);
             }
-
-            protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
+            protected override float GetGradePointsDelta(int times, bool downgrade)
             {
-                if (CardToUpgrade.Selected != card) return;
-                upgradePointsDelta = card.Data.PointsDeltaForPrice(1);
-                if (upgradedTimes == 0)
-                    downgradePointsDelta = 0;
-                else downgradePointsDelta = card.Data.PointsDeltaForPrice(-1);
-                menu.UpgradeInfoShow(upgradePointsDelta, downgradePointsDelta);
-            }
-            protected override void OnMouseLeave(object sender, DrawerMouseEventArgs e)
-            {
-                if (CardToUpgrade.Selected != card) return;
-                menu.UpgradeInfoHide();
+                if (downgrade)
+                    return card.Data.PointsDeltaForPrice(-times);
+                else return card.Data.PointsDeltaForPrice(times);
             }
         }
         class MoxieStatToUpgrade : StatToUpgrade
         {
             public MoxieStatToUpgrade(CardUpgradeMenu menu, CardToUpgrade card, Drawer statDrawer) : base(menu, card, statDrawer) { }
-            public override UniTask Reset()
+            protected override async UniTask Reset()
             {
-                int times = upgradedTimes;
-                if (times == 0) return UniTask.CompletedTask;
+                int times = UpgradedTimes;
+                await base.Reset();
                 card.Data.moxie -= times;
-                upgradedTimes = 0;
-                return card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
+                await card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
             }
-
-            protected override UniTask Upgrade()
+            protected override async UniTask Upgrade(int times)
             {
-                card.Data.moxie++;
-                upgradedTimes++;
-                return card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
+                await base.Upgrade(times);
+                card.Data.moxie += times;
+                await card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
             }
-            protected override UniTask Downgrade()
+            protected override async UniTask Downgrade(int times)
             {
-                card.Data.moxie--;
-                upgradedTimes--;
-                return card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
+                await base.Downgrade(times);
+                card.Data.moxie -= times;
+                await card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
             }
-
-            protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
+            protected override float GetGradePointsDelta(int times, bool downgrade)
             {
-                if (CardToUpgrade.Selected != card) return;
-                upgradePointsDelta = card.Data.PointsDeltaForMoxie(1);
-                if (upgradedTimes == 0)
-                     downgradePointsDelta = 0;
-                else downgradePointsDelta = card.Data.PointsDeltaForMoxie(-1);
-                menu.UpgradeInfoShow(upgradePointsDelta, downgradePointsDelta);
-            }
-            protected override void OnMouseLeave(object sender, DrawerMouseEventArgs e)
-            {
-                if (CardToUpgrade.Selected != card) return;
-                menu.UpgradeInfoHide();
+                if (downgrade)
+                    return card.Data.PointsDeltaForMoxie(-times);
+                else return card.Data.PointsDeltaForMoxie(times);
             }
         }
         class HealthStatToUpgrade : StatToUpgrade
         {
             public HealthStatToUpgrade(CardUpgradeMenu menu, CardToUpgrade card, Drawer statDrawer) : base(menu, card, statDrawer) { }
-            public override UniTask Reset()
+            protected override async UniTask Reset()
             {
-                int times = upgradedTimes;
-                if (times == 0) return UniTask.CompletedTask;
+                int times = UpgradedTimes;
+                await base.Reset();
                 card.Data.health -= times;
-                upgradedTimes = 0;
-                return card.health.AdjustValue(card.Data.health - card.health, null);
+                await card.health.AdjustValue(card.Data.health - card.health, null);
             }
-
-            protected override UniTask Upgrade()
+            protected override async UniTask Upgrade(int times)
             {
-                card.Data.health++;
-                upgradedTimes++;
-                return card.health.AdjustValue(card.Data.health - card.health, null);
+                await base.Upgrade(times);
+                card.Data.health += times;
+                await card.health.AdjustValue(card.Data.health - card.health, null);
             }
-            protected override UniTask Downgrade()
+            protected override async UniTask Downgrade(int times)
             {
-                card.Data.health--;
-                upgradedTimes--;
-                return card.health.AdjustValue(card.Data.health - card.health, null);
+                await base.Downgrade(times);
+                card.Data.health -= times;
+                await card.health.AdjustValue(card.Data.health - card.health, null);
             }
-
-            protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
+            protected override float GetGradePointsDelta(int times, bool downgrade)
             {
-                if (CardToUpgrade.Selected != card) return;
-                upgradePointsDelta = card.Data.PointsDeltaForHealth(1);
-                if (upgradedTimes == 0)
-                    downgradePointsDelta = 0;
-                else downgradePointsDelta = card.Data.PointsDeltaForHealth(-1);
-                menu.UpgradeInfoShow(upgradePointsDelta, downgradePointsDelta);
-            }
-            protected override void OnMouseLeave(object sender, DrawerMouseEventArgs e)
-            {
-                if (CardToUpgrade.Selected != card) return;
-                menu.UpgradeInfoHide();
+                if (downgrade)
+                    return card.Data.PointsDeltaForHealth(-times);
+                else return card.Data.PointsDeltaForHealth(times);
             }
         }
         class StrengthStatToUpgrade : StatToUpgrade
         {
             public StrengthStatToUpgrade(CardUpgradeMenu menu, CardToUpgrade card, Drawer statDrawer) : base(menu, card, statDrawer) {  }
-            public override UniTask Reset()
+            protected override async UniTask Reset()
             {
-                int times = upgradedTimes;
-                if (times == 0) return UniTask.CompletedTask;
+                int times = UpgradedTimes;
+                await base.Reset();
                 card.Data.strength -= times;
-                upgradedTimes = 0;
-                return card.strength.AdjustValue(card.Data.strength - card.strength, null);
+                await card.strength.AdjustValue(card.Data.strength - card.strength, null);
             }
-
-            protected override UniTask Upgrade()
+            protected override async UniTask Upgrade(int times)
             {
-                card.Data.strength++;
-                upgradedTimes++;
-                return card.strength.AdjustValue(card.Data.strength - card.strength, null);
+                await base.Upgrade(times);
+                card.Data.strength += times;
+                await card.strength.AdjustValue(card.Data.strength - card.strength, null);
             }
-            protected override UniTask Downgrade()
+            protected override async UniTask Downgrade(int times)
             {
-                card.Data.strength--;
-                upgradedTimes--;
-                return card.strength.AdjustValue(card.Data.strength - card.strength, null);
+                await base.Downgrade(times);
+                card.Data.strength -= times;
+                await card.strength.AdjustValue(card.Data.strength - card.strength, null);
             }
-
-            protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
+            protected override float GetGradePointsDelta(int times, bool downgrade)
             {
-                if (CardToUpgrade.Selected != card) return;
-                upgradePointsDelta = card.Data.PointsDeltaForStrength(1);
-                if (upgradedTimes == 0)
-                    downgradePointsDelta = 0;
-                else downgradePointsDelta = card.Data.PointsDeltaForStrength(-1);
-                menu.UpgradeInfoShow(upgradePointsDelta, downgradePointsDelta);
-            }
-            protected override void OnMouseLeave(object sender, DrawerMouseEventArgs e)
-            {
-                if (CardToUpgrade.Selected != card) return;
-                menu.UpgradeInfoHide();
+                if (downgrade)
+                    return card.Data.PointsDeltaForStrength(-times);
+                else return card.Data.PointsDeltaForStrength(times);
             }
         }
         class TraitStatToUpgrade : StatToUpgrade
         {
+            readonly TableTraitListElement _element;
+            readonly Trait _trait;
+            readonly string _traitId;
+
             public TraitStatToUpgrade(CardUpgradeMenu menu, CardToUpgrade card, TableTraitListElementDrawer statDrawer) : base(menu, card, statDrawer)
             {
                 statDrawer.enqueueAnims = false;
+                _element = statDrawer.attached;
+                _element.Drawer.OnMouseEnter += OnMouseEnter;
+                _element.Drawer.OnMouseLeave += OnMouseLeave;
+                _trait = _element.Trait.Data;
+                _traitId = _trait.id;
             }
-            public override UniTask Reset()
+
+            protected override async UniTask Reset()
             {
                 int times = UpgradedTimes;
-                if (times == 0) return UniTask.CompletedTask;
+                await base.Reset();
 
-                TableTraitListElement element = (TableTraitListElement)statDrawer.attached;
-                Trait trait = element.Trait.Data;
-                int stacks = card.Data.traits[trait.id].Stacks - times;
+                int stacks = card.Data.traits[_traitId].Stacks - times;
+                card.Data.traits.SetStacks(_trait, stacks);
 
-                card.Data.traits.SetStacks(trait, stacks);
-                upgradedTimes = 0;
-
-                element.Drawer.AnimAdjust(stacks);
-                return element.List.SetStacks(trait.id, stacks, null, null);
+                _element.Drawer.AnimAdjust(stacks);
+                await _element.List.SetStacks(_traitId, stacks, null, null);
             }
-
-            protected override UniTask Upgrade()
+            protected override async UniTask Upgrade(int times)
             {
-                TableTraitListElement element = (TableTraitListElement)statDrawer.attached;
-                Trait trait = element.Trait.Data;
-                int stacks = card.Data.traits[trait.id].Stacks + 1;
-
-                card.Data.traits.SetStacks(trait, stacks);
-                upgradedTimes++;
-                return element.List.SetStacks(trait.id, stacks, null, null);
+                await base.Upgrade(times);
+                int stacks = card.Data.traits[_traitId].Stacks + times;
+                card.Data.traits.SetStacks(_trait, stacks);
+                await _element.List.SetStacks(_traitId, stacks, null, null);
             }
-            protected override UniTask Downgrade()
+            protected override async UniTask Downgrade(int times)
             {
-                TableTraitListElement element = (TableTraitListElement)statDrawer.attached;
-                Trait trait = element.Trait.Data;
-                int stacks = card.Data.traits[trait.id].Stacks - 1;
-
-                card.Data.traits.SetStacks(trait, stacks);
-                upgradedTimes--;
-                return element.List.SetStacks(trait.id, stacks, null, null);
+                await base.Downgrade(times);
+                int stacks = card.Data.traits[_traitId].Stacks - times;
+                card.Data.traits.SetStacks(_trait, stacks);
+                await _element.List.SetStacks(_traitId, stacks, null, null);
             }
 
+            protected override float GetGradePointsDelta(int times, bool downgrade)
+            {
+                if (downgrade)
+                     return card.Data.PointsDeltaForTrait(_trait, -times);
+                else return card.Data.PointsDeltaForTrait(_trait, times);
+            }
             protected override bool UpgradeIsPossible()
             {
-                TableTraitListElement element = (TableTraitListElement)statDrawer.attached;
-                Trait trait = element.Trait.Data;
-                return !trait.tags.HasFlag(TraitTag.Static);
+                return !_trait.tags.HasFlag(TraitTag.Static);
             }
 
-            protected override void OnMouseEnter(object sender, DrawerMouseEventArgs e)
+            void OnMouseEnter(object sender, DrawerMouseEventArgs e)
             {
-                if (CardToUpgrade.Selected != card) return;
-
-                TableTraitListElement element = (TableTraitListElement)statDrawer.attached;
-                Trait trait = element.Trait.Data;
-                upgradePointsDelta = card.Data.PointsDeltaForTrait(trait, 1);
-                if (upgradedTimes == 0)
-                     downgradePointsDelta = 0;
-                else downgradePointsDelta = card.Data.PointsDeltaForTrait(trait, -1);
-                menu.UpgradeInfoShow(upgradePointsDelta, downgradePointsDelta);
-
-                element.AdjustStacksInternal(1);
-                menu.WriteUpgradedState(element.Trait.DescRich());
-                element.AdjustStacksInternal(-1);
+                int times = GetUserGradeTimes();
+                _element.AdjustStacksInternal(times);
+                menu.WriteUpgradedState(_element.Trait.DescRich());
+                _element.AdjustStacksInternal(-times);
             }
-            protected override void OnMouseLeave(object sender, DrawerMouseEventArgs e)
+            void OnMouseLeave(object sender, DrawerMouseEventArgs e)
             {
-                if (CardToUpgrade.Selected != card) return;
-                menu.UpgradeInfoHide();
                 menu.WriteUpgradedState("");
             }
         }
@@ -852,8 +842,8 @@ namespace Game.Menus
             _infoLeftTextMesh.gameObject.SetActive(true);
             _infoRightTextMesh.gameObject.SetActive(true);
 
-            string upgradePriceStr = (-upgradedPointsDelta.Rounded(0)).ToSignedNumberString();
-            string downgradePriceStr = (-downgradedPointsDelta.Rounded(0)).ToSignedNumberString();
+            string upgradePriceStr = (-upgradedPointsDelta.Clamped(-9999, 9999).Rounded(0)).ToSignedNumberString();
+            string downgradePriceStr = (-downgradedPointsDelta.Clamped(-9999, 9999).Rounded(0)).ToSignedNumberString();
 
             _infoLeftTextMesh.text = $"УЛУЧШИТЬ:\n{upgradePriceStr} ОП";
             _infoLeftTextMesh.color = upgradedPointsDelta == 0 ? Color.gray : Color.white;

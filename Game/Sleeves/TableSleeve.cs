@@ -142,6 +142,7 @@ namespace Game.Sleeves
             int delay = 500;
             for (int i = 0; i < count; i++)
             {
+                if (Drawer?.IsDestroyed ?? true) return;
                 Card takenCard = TakeCardFromDeck();
                 if (takenCard == null) break;
 

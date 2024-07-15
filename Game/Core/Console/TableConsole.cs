@@ -39,6 +39,7 @@ namespace Game
             Commands.Add(new cmdSideCardAdd());
             Commands.Add(new cmdSideCardPlace());
             Commands.Add(new cmdSideStatAdd());
+            Commands.Add(new cmdSkip());
 
             _filePath = Application.persistentDataPath + "/console.log";
             _fileStream = new(_filePath);

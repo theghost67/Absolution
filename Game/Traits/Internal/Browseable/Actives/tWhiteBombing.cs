@@ -70,7 +70,7 @@ namespace Game.Traits
             {
                 IEnumerable<BattleField> fields = trait.Side.Opposite.Fields().WithCard();
                 foreach (BattleField field in fields)
-                    await field.Card.moxie.AdjustValue(trait.GetStacks(), trait);
+                    await field.Card.moxie.AdjustValue(-trait.GetStacks(), trait);
             }
 
             await trait.SetStacks(0, trait.Side);

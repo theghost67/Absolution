@@ -129,6 +129,7 @@ namespace Game.Menus
         readonly TextMeshPro _descTextMesh;
         pTerritory _territory;
         SquaresBackground _bg;
+        bool _fleed;
 
         protected class pFieldCard : BattleFieldCard, IBattleSleeveCard
         {
@@ -662,16 +663,18 @@ namespace Game.Menus
         }
 
         // TODO: rewrite
-        async void TryFlee()
+        public void TryFlee()
         {
             if (!_territory?.PhaseSide?.isMe ?? true) return;
+            if (_fleed) return;
+            _fleed = true;
             SetPlayerControls(false);
             #if DEMO
             if (_demoDifficulty < DEMO_DIFFICULTY_MID)
             #endif
             OnPlayerWon(null, null);
         }
-        async void TryEndTurn()
+        public void TryEndTurn()
         {
             if (!_territory?.PhaseSide?.isMe ?? true) return;
             SetPlayerControls(false);
@@ -711,7 +714,6 @@ namespace Game.Menus
             BattleSleeveDrawer enemySleeve = _territory.Enemy.Sleeve.Drawer;
             if (enemySleeve != null) enemySleeve.CanPullOut = value;
         }
-
         void SetBellState(bool value)
         {
             _turnButton.SetCollider(value);
@@ -719,6 +721,7 @@ namespace Game.Menus
         }
         void SetFleeState(bool value)
         {
+            value = false; // TODO: remove
             _fleeButton.SetCollider(value);
             _fleeButton.gameObject.GetComponent<SpriteRenderer>().color = value ? Color.white : Color.white.WithAlpha(0.5f);
         }
