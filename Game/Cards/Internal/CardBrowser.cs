@@ -20,54 +20,6 @@ namespace Game.Cards
 
         public static void Initialize()
         {
-            #region (remove) NOTES
-            //new FloatCard("work")
-            //{
-            //    name   = "Работаем, работаем",
-            //    alias  = "Мотивационная речь",
-            //    advice = "Прибавляет к текущему здоровью союзных карт их здоровье по умолчанию.",
-            //    desc   = "Эта пламенная речь, придуманная самим Гавенко, может замотивировать даже мёртвого воскреснуть на некоторое время, не говоря уже о живых. " +
-            //             "Он произносит её ежедневно в своём офисе, чтобы сотрудники не забывали, что нужно работать, работать усерднее и эффективнее. " +
-            //             "Не произношение этой фразы может вызвать смерть сотрудников, так как им уже давным давно было пора отправиться на тот свет."
-
-            //    threat = 0,
-            //    price = new CardPrice(CardPriceType.Gold, 2),
-
-            //    onUsed = card =>
-            //    {
-            //        if (card is not IBattleSideCard sideCard)
-            //            throw new InvalidOperationException();
-
-            //        foreach (var field in sideCard.Side.fields.Where(f => f.Card != null))
-            //            field.Card.HealthCurrent += field.Card.Health;
-            //    }
-            //};
-
-            //new FloatCard("allah_akbar")
-            //{
-            //    name = "Аллах акбар",
-            //    origin = new CardOrigin
-            //    (
-            //        alias: "Исповедь разрушения",
-            //        advice: "Убивает все карты на территории. Обращаться с осторожностью.",
-            //        desc: "Имя Ибрагим вам о чём-нибудь говорит? " +
-            //        "Если нет, то лучше не подходите к этой женщине, иначе рискуйте полностью дезинтригрироваться в пространстве за считанные секунды. " +
-            //        "Одной своей фразой Кандибобер может взрывать целые города, что позволяет перевернуть ход множества войн, не говоря уже о простых поединках..."
-            //    ),
-
-            //    price = new CardPrice(CardPriceType.Gold, 0),
-            //    canBeUsed = card => true,
-            //    onUsed = card =>
-            //    {
-            //        if (card is not IBattleSideCard sideCard)
-            //            throw new InvalidOperationException();
-
-            //        foreach (var field in sideCard.Side.territory.GetAllFields().Where(f => f.Card != null))
-            //            ((BattleCard)field.Card).Kill(null);
-            //    }
-            //};
-            #endregion
-
             // > --------- CURRENCIES --------- <
             AddCurrency(new ccGold());
             AddCurrency(new ccEther());
@@ -101,7 +53,7 @@ namespace Game.Cards
             AddFloat(new cKalenskiyProtocol());
             AddFloat(new cKotovsSyndrome());
             AddFloat(new cVavulization());
-            return;
+			return;
 
             /* --------------------------------- //
             ||            LOC: BUREAU            ||
@@ -124,6 +76,7 @@ namespace Game.Cards
             AddField(new cCarl());
             AddField(new cArchivist());
             AddField(new cGeneral());
+            return;
 
             /* --------------------------------- //
             ||           LOC: MEGAPOLIS          ||

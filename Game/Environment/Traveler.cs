@@ -197,13 +197,14 @@ namespace Game.Environment
                 int points = Convert.ToInt32(statPointsRatios[i] * pointsSum);
                 int traitsCount = Convert.ToInt32(traitsCountRatios[i] * traitsCountSum);
                 FieldCard card;
+                // TODO: move conditions below to other function?
                 if (fieldCardsCount > 2)
                 {
                     card = NewField(type, points, traitsCount);
                     deck.fieldCards.Add(card);
                     continue;
                 }
-                if (notGoldFieldCards == null)
+                if (notGoldFieldCards == null) // do not add cards with gold currency if deck count <= 2
                 {
                     notGoldFieldCards = new Dictionary<string, float>(fieldsFrequencies);
                     foreach (string id in fieldsFrequencies.Keys)

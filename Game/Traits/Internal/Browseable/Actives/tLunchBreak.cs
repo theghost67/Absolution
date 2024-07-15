@@ -37,7 +37,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 2 * stacks;
+            return base.Points(owner, stacks) + 6 * (stacks - 1);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
         {

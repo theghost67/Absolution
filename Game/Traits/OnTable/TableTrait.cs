@@ -41,9 +41,9 @@ namespace Game.Traits
             //TryOnInstantiatedAction(GetType(), typeof(TableTrait));
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
-            Drawer?.Dispose();
+            base.Dispose();
             _storage.Clear();
         }
         public abstract object Clone(CloneArgs args);

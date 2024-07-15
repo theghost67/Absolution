@@ -88,14 +88,14 @@ namespace Game.Menus
             },
             new Color[]
             {
-                Utils.HexToColor("#f5e6e8"),
-                Utils.HexToColor("#c8acd6"),
-                Utils.HexToColor("#433d8b"),
-                Utils.HexToColor("#2e236c"),
-                Utils.HexToColor("#17153b"),
+                Utils.HexToColor("#ffedd8"),
+                Utils.HexToColor("#eabe6c"),
+                Utils.HexToColor("#891652"),
+                Utils.HexToColor("#240a34"),
+                Utils.HexToColor("#000000"),
 
                 Utils.HexToColor("#00ffff"),
-                Utils.HexToColor("#ffff00"),
+                Utils.HexToColor("#eabe6c"),
             },
             new Color[]
             {
@@ -665,17 +665,11 @@ namespace Game.Menus
         async void TryFlee()
         {
             if (!_territory?.PhaseSide?.isMe ?? true) return;
+            SetPlayerControls(false);
             #if DEMO
             if (_demoDifficulty < DEMO_DIFFICULTY_MID)
             #endif
-                OnPlayerWon(null, null);
-            //SetPlayerControls(false);
-            //SetFleeState(false);
-
-            //await VFX.CreateScreenBG(Color.clear, Transform).DOFade(1, 0.5f).AsyncWaitForCompletion();
-            //VFX.CreateText("СБЕЖАЛ...", Color.gray, Transform).transform.DOAShake();
-            //await UniTask.Delay(2000);
-            //Application.Quit();
+            OnPlayerWon(null, null);
         }
         async void TryEndTurn()
         {

@@ -260,12 +260,15 @@ namespace Game
             void HandleMouseEvents(DrawerMouseEventArgs e)
             {
                 if (_drawer == null || _destroyed || _drawer._isDestroyed) return;
+
                 if (_mouseEntered)
                     _drawer.OnMouseEnter.Invoke(_drawer, e);
                 if (_mouseHovered)
                     _drawer.OnMouseHover.Invoke(_drawer, e);
                 if (_mouseLeft)
                     _drawer.OnMouseLeave.Invoke(_drawer, e);
+
+                if (!_drawer._colliderEnabled) return;
                 if (!_mouseClickHandled && e.isAnyDown)
                 {
                     e.handled = false;
@@ -444,7 +447,6 @@ namespace Game
         // TODO[QoL]: add custom DestroyAnimated methods for cards, traits, fields etc.
         protected virtual void DestroyInstantly()
         {
-            IsSelected = false;
             OnDestroy?.Invoke(this, EventArgs.Empty);
             gameObject.Destroy();
 
