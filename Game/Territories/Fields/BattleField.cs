@@ -10,9 +10,10 @@ namespace Game.Territories
     /// </summary>
     public class BattleField : TableField, IBattleObject
     {
+        public new BattleTerritory Territory => _side.Territory;
+        public new BattleField Opposite => _side.Territory?.FieldOpposite(pos);
         public new BattleFieldCard Card => base.Card as BattleFieldCard;
         public new BattleFieldDrawer Drawer => ((TableObject)this).Drawer as BattleFieldDrawer;
-        public new BattleTerritory Territory => _side.Territory;
         public BattleSide Side => _side;
         readonly BattleSide _side;
 

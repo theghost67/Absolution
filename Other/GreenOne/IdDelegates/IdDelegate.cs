@@ -68,6 +68,8 @@ namespace GreenOne
         }
         void AddBase(string id, D @delegate, int priority = 0)
         {
+            if (@delegate == null)
+                throw new NullReferenceException("Impossible to add delegate with null reference.");
             if (priority > TOP_PRIORITY)
                 throw new ArgumentOutOfRangeException($"Delegate priority should not be greater than {TOP_PRIORITY}.");
             Subscriber subscriber = new(id, @delegate, priority);

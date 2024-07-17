@@ -142,20 +142,28 @@ namespace Game
 
         public UniTask SetValue(float value, ITableEntrySource source, string entryId = null)
         {
-            return AdjustValue(value - _posValue - _negValue, source, entryId, false);
+            return AdjustValue(value - _posValue - _negValue, source, entryId, false, false);
         }
         public UniTask SetValueScale(float value, ITableEntrySource source, string entryId = null)
         {
-            return AdjustValue(value - _posScale, source, entryId, true);
+            return AdjustValue(value - _posScale, source, entryId, true, false);
+        }
+        public UniTask SetValueDefault(float value, ITableEntrySource source, string entryId = null)
+        {
+            return AdjustValue(value - _posValue, source, entryId, false, true);
         }
 
         public UniTask AdjustValue(float value, ITableEntrySource source, string entryId = null)
         {
-            return AdjustValue(value, source, entryId, false);
+            return AdjustValue(value, source, entryId, false, false);
         }
         public UniTask AdjustValueScale(float value, ITableEntrySource source, string entryId = null)
         {
-            return AdjustValue(value, source, entryId, true);
+            return AdjustValue(value, source, entryId, true, false);
+        }
+        public UniTask AdjustValueDefault(float value, ITableEntrySource source, string entryId = null)
+        {
+            return AdjustValue(value, source, entryId, false, true);
         }
 
         public UniTask RevertValue(string entryId)
@@ -167,7 +175,7 @@ namespace Game
             return RevertValue(entryId, true);
         }
 
-        async UniTask AdjustValue(float value, ITableEntrySource source, string entryId, bool isRelative)
+        async UniTask AdjustValue(float value, ITableEntrySource source, string entryId, bool isRelative, bool asDefault)
         {
             PreSetArgs preArgs = new(_value, value, isRelative, source);
             foreach (var preSetSub in _onPreSet)
@@ -182,7 +190,9 @@ namespace Game
 
             if (!isRelative)
             {
-                if (preArgsDelta < 0)
+                if (asDefault)
+                    _posValue += preArgsDelta;
+                else if (preArgsDelta < 0)
                      _negValue -= preArgsDelta;
                 else _posValue += preArgsDelta;
                 _valueEntries.Add(entryId, entry);

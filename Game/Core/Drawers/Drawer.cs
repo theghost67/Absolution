@@ -187,20 +187,15 @@ namespace Game
 
                     b._overlapsNow = overlapsNow;
                     b._overlappedBefore = overlappedBefore;
-
                     if (!overlapsNow)
                     {
                         if (!b._selected) continue;
-                        b._mouseEntered = false;
-                        b._mouseHovered = false;
-                        b._mouseLeft = true;
-                        b.RemoveFromSelected(e);
+                        b.RemoveFromSelected();
                         b.HandleMouseEvents(e);
                         continue;
                     }
 
                     _overlappingBehaviours.Add(b);
-
                     if (!drawer._blocksSelection) continue;
                     int sorting = drawer._sortingOrder;
                     if (blockingSorting < sorting)
@@ -209,9 +204,7 @@ namespace Game
 
                 foreach (Behaviour b in _overlappingBehaviours)
                 {
-                    Drawer drawer = b._drawer;
-                    bool blocked = drawer._sortingOrder < blockingSorting;
-
+                    bool blocked = b._drawer._sortingOrder < blockingSorting;
                     bool overlapsNow = b._overlapsNow && !blocked;
                     bool overlappedBefore = b._overlappedBefore && !b._blockedBefore;
 
@@ -230,7 +223,7 @@ namespace Game
                         b.AddToSelected();
                     else if (mLeft)
                     {
-                        b.RemoveFromSelected(e);
+                        b.RemoveFromSelected();
                         b.HandleMouseEvents(e);
                     }
                 }
@@ -240,7 +233,7 @@ namespace Game
                 {
                     Behaviour b = _selectedBehaviours[i];
                     b.HandleMouseEvents(e);
-                    if (!b._selected) i--;
+                    if (!b._selected) i--; // has been removed from the list
                 }
                 _ptrLastPos = e.position;
             }
@@ -252,14 +245,22 @@ namespace Game
                 _selectedBehaviours.Add(this);
                 // events handled in foreach loop (for _selectedBehaviours)
             }
-            void RemoveFromSelected(DrawerMouseEventArgs e)
+            void RemoveFromSelected()
             {
+                if (_selected)
+                {
+                    _mouseEntered = false;
+                    _mouseHovered = false;
+                    _mouseLeft = true;
+                }
                 _selected = false;
                 _selectedBehaviours.Remove(this);
             }
             void HandleMouseEvents(DrawerMouseEventArgs e)
             {
                 if (_drawer == null || _destroyed || _drawer._isDestroyed) return;
+                if (_selected && !_drawer._collider.OverlapPoint(e.position)) // will sometimes occur (why?)
+                    RemoveFromSelected();
 
                 if (_mouseEntered)
                     _drawer.OnMouseEnter.Invoke(_drawer, e);
@@ -268,7 +269,7 @@ namespace Game
                 if (_mouseLeft)
                     _drawer.OnMouseLeave.Invoke(_drawer, e);
 
-                if (!_drawer._colliderEnabled) return;
+                if (!_selected || !_drawer._colliderEnabled) return;
                 if (!_mouseClickHandled && e.isAnyDown)
                 {
                     e.handled = false;
@@ -287,18 +288,16 @@ namespace Game
             // can be used to force mouse leave & mouse enter invoke
             void Reselect()
             {
-                bool selectedBefore = _selected;
-                if (!selectedBefore) return;
+                if (!_selected) return;
                 _drawer.OnMouseLeave.Invoke(_drawer, _argsLast);
                 _drawer.OnMouseEnter.Invoke(_drawer, _argsLast);
             }
             void Deselect()
             {
-                bool selectedBefore = _selected;
-                if (!selectedBefore) return;
+                if (!_selected) return;
                 _drawer.OnMouseLeave.Invoke(_drawer, _argsLast);
                 _overlappedBehaviours.Remove(this);
-                RemoveFromSelected(_argsLast);
+                RemoveFromSelected();
             }
 
             void Start()

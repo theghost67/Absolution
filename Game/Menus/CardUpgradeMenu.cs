@@ -130,6 +130,16 @@ namespace Game.Menus
                 _defaultPoints = points;
                 _defaultSorting = sortingOrder;
             }
+            public bool ResetAvailable()
+            {
+                foreach (StatToUpgrade stat in _stats)
+                {
+                    if (stat.UpgradedTimes != 0)
+                        return true;
+                }
+                return false;
+            }
+
             public async UniTask TryReset()
             {
                 if (!ResetAvailable()) return;
@@ -141,14 +151,10 @@ namespace Game.Menus
                 float pointsDelta = CurrentPoints - startPoints;
                 _menu.OnAnyCardReset?.Invoke(pointsDelta);
             }
-            public bool ResetAvailable()
+            public void TryReselect()
             {
                 foreach (StatToUpgrade stat in _stats)
-                {
-                    if (stat.UpgradedTimes != 0)
-                        return true;
-                }
-                return false;
+                    stat.TryReselect();
             }
 
             public void AnimHighlightAsUpgrade()
@@ -360,6 +366,11 @@ namespace Game.Menus
                      return Reset();
                 else return UniTask.CompletedTask;
             }
+            public void TryReselect()
+            {
+                if (statDrawer.IsSelected)
+                    statDrawer.IsSelected = true;
+            }
 
             protected virtual UniTask Reset()
             {
@@ -382,7 +393,6 @@ namespace Game.Menus
             protected static int GetUserGradeTimes()
             {
                 int times = 1;
-                return times; // TODO: remove
                 if (Input.GetKey(KeyCode.LeftShift))
                     times *= 5;
                 if (Input.GetKey(KeyCode.LeftControl))
@@ -395,7 +405,7 @@ namespace Game.Menus
                 if (CardToUpgrade.Selected != card) return;
                 int times = GetUserGradeTimes();
                 float upgradePointsDelta = GetGradePointsDelta(times, false);
-                float downgradePointsDelta = GetGradePointsDelta(times, true);
+                float downgradePointsDelta = times > _upgradedTimes ? 0 : GetGradePointsDelta(times, true);
                 menu.UpgradeInfoShow(upgradePointsDelta, downgradePointsDelta);
             }
             void OnMouseLeave(object sender, DrawerMouseEventArgs e)
@@ -418,7 +428,7 @@ namespace Game.Menus
 
                 int upgradeTimes = GetUserGradeTimes();
                 float upgradePointsDelta = GetGradePointsDelta(upgradeTimes, false);
-                if (menu._pointsAvailable + upgradePointsDelta < -9999) 
+                if (upgradePointsDelta > 0 && menu._pointsAvailable + upgradePointsDelta < -9999) 
                     return;
 
                 card.AnimHighlightAsUpgrade();
@@ -436,7 +446,7 @@ namespace Game.Menus
                 int downgradeTimes = GetUserGradeTimes();
                 if (downgradeTimes > _upgradedTimes) return;
                 float downgradePointsDelta = GetGradePointsDelta(downgradeTimes, true);
-                if (menu._pointsAvailable + downgradePointsDelta < -9999) return;
+                if (downgradePointsDelta > 0 && menu._pointsAvailable - downgradePointsDelta < -9999) return;
 
                 card.AnimHighlightAsDowngrade();
                 menu.SetColliders(false);
@@ -467,19 +477,19 @@ namespace Game.Menus
                 int times = UpgradedTimes;
                 await base.Reset();
                 card.Data.price.value -= times;
-                await card.price.AdjustValue(card.Data.price.value - card.price, null);
+                await card.price.SetValueDefault(card.Data.price.value, null);
             }
             protected override async UniTask Upgrade(int times)
             {
                 await base.Upgrade(times);
                 card.Data.price.value += times;
-                await card.price.AdjustValue(card.Data.price.value - card.price, null);
+                await card.price.SetValueDefault(card.Data.price.value, null);
             }
             protected override async UniTask Downgrade(int times)
             {
                 await base.Downgrade(times);
                 card.Data.price.value -= times;
-                await card.price.AdjustValue(card.Data.price.value - card.price, null);
+                await card.price.SetValueDefault(card.Data.price.value, null);
             }
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {
@@ -496,19 +506,19 @@ namespace Game.Menus
                 int times = UpgradedTimes;
                 await base.Reset();
                 card.Data.moxie -= times;
-                await card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
+                await card.moxie.SetValueDefault(card.Data.moxie, null);
             }
             protected override async UniTask Upgrade(int times)
             {
                 await base.Upgrade(times);
                 card.Data.moxie += times;
-                await card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
+                await card.moxie.SetValueDefault(card.Data.moxie, null);
             }
             protected override async UniTask Downgrade(int times)
             {
                 await base.Downgrade(times);
                 card.Data.moxie -= times;
-                await card.moxie.AdjustValue(card.Data.moxie - card.moxie, null);
+                await card.moxie.SetValueDefault(card.Data.moxie, null);
             }
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {
@@ -525,19 +535,19 @@ namespace Game.Menus
                 int times = UpgradedTimes;
                 await base.Reset();
                 card.Data.health -= times;
-                await card.health.AdjustValue(card.Data.health - card.health, null);
+                await card.health.SetValueDefault(card.Data.health, null);
             }
             protected override async UniTask Upgrade(int times)
             {
                 await base.Upgrade(times);
                 card.Data.health += times;
-                await card.health.AdjustValue(card.Data.health - card.health, null);
+                await card.health.SetValueDefault(card.Data.health, null);
             }
             protected override async UniTask Downgrade(int times)
             {
                 await base.Downgrade(times);
                 card.Data.health -= times;
-                await card.health.AdjustValue(card.Data.health - card.health, null);
+                await card.health.SetValueDefault(card.Data.health, null);
             }
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {
@@ -554,19 +564,19 @@ namespace Game.Menus
                 int times = UpgradedTimes;
                 await base.Reset();
                 card.Data.strength -= times;
-                await card.strength.AdjustValue(card.Data.strength - card.strength, null);
+                await card.strength.SetValueDefault(card.Data.strength, null);
             }
             protected override async UniTask Upgrade(int times)
             {
                 await base.Upgrade(times);
                 card.Data.strength += times;
-                await card.strength.AdjustValue(card.Data.strength - card.strength, null);
+                await card.strength.SetValueDefault(card.Data.strength, null);
             }
             protected override async UniTask Downgrade(int times)
             {
                 await base.Downgrade(times);
                 card.Data.strength -= times;
-                await card.strength.AdjustValue(card.Data.strength - card.strength, null);
+                await card.strength.SetValueDefault(card.Data.strength, null);
             }
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {
@@ -645,8 +655,9 @@ namespace Game.Menus
         {
             public InfoButtonDrawer(CardUpgradeMenu menu) : base(menu, menu.Transform.Find("Info button"))
             {
-                const string TEXT = "Нажмите ЛКМ или ПКМ по иконке характеристики, чтобы увеличить или уменьшить её значение.\n\n" +
-                                    "Нажатие мышью на навык изменит изначальное количество его зарядов.\n\n" +
+                const string TEXT = "Нажмите ЛКМ или ПКМ по иконке характеристики, чтобы увеличить или уменьшить её значение. " +
+                                    "Нажатие мышью на навык изменит изначальное количество его зарядов. " +
+                                    "Зажатие клавиш Ctrl/Shift увеличит количество совершаемых улучшений за раз. " +
                                     "Доступные характеристики для изменения:\n- Стоимость\n- Инициатива\n- Здоровье\n- Сила\n- Заряды навыков";
                 SetTooltip(TEXT);
             }
@@ -799,14 +810,14 @@ namespace Game.Menus
         public override void Open()
         {
             base.Open();
-            Global.OnUpdate += CardToUpgrade.OnUpdate;
+            Global.OnUpdate += OnUpdate;
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Play();
         }
         public override void Close()
         {
             base.Close();
-            Global.OnUpdate -= CardToUpgrade.OnUpdate;
+            Global.OnUpdate -= OnUpdate;
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Kill();
         }
@@ -863,6 +874,15 @@ namespace Game.Menus
             _pointsAvailable = _pointsLimit - _pointsCurrent;
             RedrawHeader();
         }
+        void OnUpdate()
+        {
+            CardToUpgrade.OnUpdate();
+            if (CardToUpgrade.Selected == null) return;
+            if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.LeftControl) ||
+                Input.GetKeyUp(KeyCode.LeftShift)   || Input.GetKeyUp(KeyCode.LeftControl))
+                CardToUpgrade.Selected.TryReselect();
+        }
+
         bool CanLeave()
         {
             return _pointsAvailable >= 0 || _pointsAvailable.Rounded(1) == _pointsAvailableAtStart.Rounded(1);

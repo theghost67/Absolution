@@ -12,7 +12,7 @@ namespace Game.Traits
     {
         const string ID = "armored_tank";
         const int PRIORITY = 8;
-        const float DAMAGE_REL_DECREASE = 1.00f;
+        const float DAMAGE_REL_DECREASE = 0.50f;
 
         public tArmoredTank() : base(ID)
         {

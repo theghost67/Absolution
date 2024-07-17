@@ -210,6 +210,7 @@ namespace Game.Territories
         {
             int iterations = 0;
             CardsResultsListSet resultsSet = new();
+
             Start:
             if (iterations++ > 16)
             {
@@ -228,7 +229,7 @@ namespace Game.Territories
             }
 
             await UniTask.SwitchToThreadPool();
-            BeginWriteLastTerrLogs();
+            BeginWritingLastTerrLogs();
 
             for (int i = 0; i < sleeveCards.Length; i++)
             {
@@ -253,7 +254,7 @@ namespace Game.Territories
                     resultsSet[currency].Add(result);
             };
 
-            StopWriteLastTerrLogs(forCards: true);
+            StopWritingLastTerrLogs(forCards: true);
             await UniTask.SwitchToMainThread();
 
             for (int i = 0; i < resultsSet.Count; i++) // iterates for each CardCurrency in the game
@@ -271,7 +272,6 @@ namespace Game.Territories
 
                 IBattleSleeveCard resultCard = (IBattleSleeveCard)result.Entity;
                 BattleField resultField = null;
-
                 if (!_side.CanAfford(resultCard))
                 {
                     resultsSet.Remove(results); // skips all cards with the same price type (waits for next turn)
@@ -301,6 +301,7 @@ namespace Game.Territories
             int resultsCount = 0;
             foreach (CardsResultsList list in resultsSet)
                 resultsCount += list.Count;
+            resultsSet.Clear();
             if (resultsCount != 0)
                 goto Start;
         }
@@ -330,7 +331,7 @@ namespace Game.Territories
             }
 
             await UniTask.SwitchToThreadPool();
-            BeginWriteLastTerrLogs();
+            BeginWritingLastTerrLogs();
 
             List<BattleActiveTraitWeightResult> results = new();
             foreach (BattleActiveTraitListElement element in elements)
@@ -346,7 +347,7 @@ namespace Game.Territories
                     results.Add(result);
             }
 
-            StopWriteLastTerrLogs(forCards: false);
+            StopWritingLastTerrLogs(forCards: false);
             await UniTask.SwitchToMainThread();
 
             PickResultAgain:
@@ -416,7 +417,7 @@ namespace Game.Territories
 
         IBattleWeightResult GetNoPlacementResult(float2 sidesWeight)
         {
-            BeginWriteLastTerrLogs();
+            BeginWritingLastTerrLogs();
             UseVirtual(terr => terr.LastPhase(), sidesWeight, out float2 deltas);
             StopWriteLastTerrLogsForNoPlacement();
             BattleFloatCardWeightResult result = new(null, deltas[0], deltas[1]);
@@ -586,11 +587,11 @@ namespace Game.Territories
             else return weight;
         }
 
-        void BeginWriteLastTerrLogs()
+        void BeginWritingLastTerrLogs()
         {
             TableConsole.OnLogToFile += OnConsoleLogToFile;
         }
-        void StopWriteLastTerrLogs(bool forCards)
+        void StopWritingLastTerrLogs(bool forCards)
         {
             TableConsole.OnLogToFile -= OnConsoleLogToFile;
             TableConsole.LogToFile("ai", $"LAST AI TERRITORY CLONE LOGS START ({(forCards ? "CARDS" : "TRAITS")})");

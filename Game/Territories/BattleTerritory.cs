@@ -27,6 +27,7 @@ namespace Game.Territories
         public IIdEventVoidAsync OnPlayerWon => _onPlayerWon;
         public IIdEventVoidAsync OnPlayerLost => _onPlayerLost;
 
+        public bool Concluded => _concluded;
         public bool PhaseCycleEnabled
         {
             get => _phaseCycleEnabled;
@@ -488,13 +489,13 @@ namespace Game.Territories
 
         BattleSide GetPhaseSide()
         {
-            if (_currentPhaseCycleIndex == START_PHASE_INDEX || _currentPhaseCycleIndex == END_PHASE_INDEX)
+            if (_concluded || _currentPhaseCycleIndex == START_PHASE_INDEX || _currentPhaseCycleIndex == END_PHASE_INDEX)
                 return null;
             return _currentPhaseCycleIndex == _playerPhaseCycleIndex ? _player : _enemy;
         }
         BattleSide GetWaitingSide()
         {
-            if (_currentPhaseCycleIndex == START_PHASE_INDEX || _currentPhaseCycleIndex == END_PHASE_INDEX)
+            if (_concluded || _currentPhaseCycleIndex == START_PHASE_INDEX || _currentPhaseCycleIndex == END_PHASE_INDEX)
                 return null;
             return _currentPhaseCycleIndex == _playerPhaseCycleIndex ? _enemy : _player;
         }

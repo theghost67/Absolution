@@ -166,7 +166,6 @@ namespace Game.Effects
             bool _stopping;
 
             int _playingBeatIndex;
-            BeatMap _playingBeatMap;
             Music _playingMusic;
             Tween _volumeTween;
             string _musicMixId;
@@ -190,7 +189,6 @@ namespace Game.Effects
                 _updateBeats = true;
                 _playingMusic = music;
                 _volumeTween.Kill();
-                _playingBeatMap = music.beatMap;
                 _source.clip = music.clip;
                 _source.Play();
             }
@@ -252,14 +250,15 @@ namespace Game.Effects
                     OnComplete();
                 }
 
-                if (!_updateBeats || _playingBeatMap.Count == 0) return;
-                Beat beat = _playingBeatMap[_playingBeatIndex];
-                if (Time < _playingBeatMap.Delay + beat.time) return;
+                BeatMap beatMap = _playingMusic?.beatMap;
+                if (!_updateBeats || beatMap == null || beatMap.Count == 0) return;
+                Beat beat = beatMap[_playingBeatIndex];
+                if (Time < beatMap.Delay + beat.time) return;
 
                 bool isFirstBeat = _playingBeatIndex == 0;
-                bool isLastBeat = ++_playingBeatIndex >= _playingBeatMap.Count;
+                bool isLastBeat = ++_playingBeatIndex >= beatMap.Count;
 
-                OnBeat?.Invoke(new BeatInfo(beat, _playingBeatMap, Volume, isFirstBeat, isLastBeat));
+                OnBeat?.Invoke(new BeatInfo(beat, beatMap, Volume, isFirstBeat, isLastBeat));
                 if (isLastBeat) _updateBeats = false;
             }
             private void OnComplete()

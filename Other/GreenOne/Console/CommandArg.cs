@@ -71,7 +71,7 @@ namespace GreenOne.Console
         /// <summary>
         /// Содержит флаги, определяющие тип значения аргумента.
         /// </summary>
-        public enum ValueType : byte
+        public enum ValueType
         {
             Optional = 0, // argument can be passed  
             Required = 1, // argument must be passed

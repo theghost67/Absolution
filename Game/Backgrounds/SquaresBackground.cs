@@ -1,6 +1,7 @@
 using DG.Tweening;
 using Game.Palette;
 using MyBox;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
@@ -16,7 +17,7 @@ namespace Game.Backgrounds
     /// </summary>
     public class SquaresBackground : MonoBehaviour
     {
-        const int TWEENS_MAX = 32;
+        const int TWEENS_MAX = 16;
 
         const float START_POS_X = -3.185f;
         const float START_POS_Y = 1.82f;
@@ -53,8 +54,8 @@ namespace Game.Backgrounds
         Color _defaultColor;
 
         bool _initialized;
-        SpriteRenderer[,] _squares;
-        int2[] _squaresLastLightedUpIndexes;
+        Square[,] _squares;
+        Square[] _squaresVisible;
 
         Tween[] _tweens;
         Stack<int> _tweensFreeIndexes;
@@ -63,36 +64,59 @@ namespace Game.Backgrounds
         int2 _visibleSquareRangeY; // equal to half of the grid height
         float _squareLightUpDelay;
 
+        struct Square
+        {
+            public readonly SpriteRenderer renderer;
+            public readonly Transform transform;
+            public readonly int2 pos;
+            bool _isLightedUp;
+
+            public Square(SpriteRenderer renderer, int2 pos)
+            {
+                this.transform = renderer.transform;
+                this.renderer = renderer;
+                this.pos = pos;
+                _isLightedUp = false;
+            }
+            public void SwitchLightUp()
+            {
+                _isLightedUp = !_isLightedUp;
+            }
+            public bool IsLightedUp()
+            {
+                return _isLightedUp;
+            }
+        }
+
         public void LightUpSquares(int count)
         {
             if (!_initialized) return;
-            _squaresLastLightedUpIndexes = new int2[count].FillBy(i => new int2(-1, -1));
+            if (_tweensFreeIndexes.Count == 0)
+            {
+                Debug.LogWarning($"{nameof(SquaresBackground)}: There are no indexes available for a new tween.");
+                return;
+            }
+
+            Square[] squares = new Square[count];
+            List<int2> squaresAvailable = new(_squaresVisible.Length);
+            foreach (Square square in _squaresVisible)
+            {
+                if (!square.IsLightedUp())
+                    squaresAvailable.Add(square.pos);
+            }
             for (int i = 0; i < count; i++)
             {
-                if (_tweensFreeIndexes.Count == 0)
-                {
-                    Debug.LogWarning($"{nameof(SquaresBackground)}: There are no indexes available for a new tween.");
-                    return;
-                }
-
-                TryAgain:
-                int2 squarePos = GetRandomVisibleSquarePos();
-                if (_squaresLastLightedUpIndexes.Contains(squarePos))
-                    goto TryAgain;
-
-                SpriteRenderer square = _squares[squarePos.x, squarePos.y];
-                _squaresLastLightedUpIndexes[i] = squarePos;
-                square.DOKill();
-
-                int index = _tweensFreeIndexes.Pop();
-                Tween tween = CreateSquareTween(square);
-                tween.OnComplete(() => _tweensFreeIndexes.Push(index));
-                _tweens[index] = tween;
+                int index = squaresAvailable.GetRandomIndex();
+                int2 squarePos = squaresAvailable[index];
+                squaresAvailable.RemoveAt(index);
+                squares[i] = _squares[squarePos.x, squarePos.y];
             }
+            SquaresLightTween(squares);
         }
 
         void Start()
         {
+            // TODO: remove speed vector, tween as TrianglesBackground
             _startPosScaled = new Vector3(START_POS_X, START_POS_Y) * Global.PIXEL_SCALE;
             _speed = new Vector2(15.75f, -9f); // grid size is imperfect, so it's not 16
 
@@ -132,30 +156,7 @@ namespace Game.Backgrounds
             LightUpSquares(SQUARE_LIGHT_UP_COUNT);
             _squareLightUpDelay = SQUARE_LIGHT_UP_DELAY;
         }
-        void OnColorPaletteChanged()
-        {
-            _lightColor = ColorPalette.GetColor(1).WithAlpha(0.75f);
-            _defaultColor = ColorPalette.GetColor(3).WithAlpha(0.75f);
 
-            for (int y = 0; y < GRID_SIZE_Y; y++)
-            {
-                for (int x = 0; x < GRID_SIZE_X; x++)
-                    _squares[x, y].color = _defaultColor;
-            }
-
-            for (int i = 0; i < TWEENS_MAX; i++)
-            {
-                Tween tween = _tweens[i];
-                if (tween.IsActive())
-                    _tweens[i].onUpdate();
-            }
-        }
-
-        void UpdateVisibleSquares()
-        {
-            _visibleSquareRangeX = GetVisibleSquaresRangeX();
-            _visibleSquareRangeY = GetVisibleSquaresRangeY();
-        }
         int2 GetVisibleSquaresRangeX()
         {
             const float SQUARE_ENTRY_X_MIN = -3.565f;
@@ -194,10 +195,47 @@ namespace Game.Backgrounds
             }
             return new int2(squareYMinIndex, squareYMaxIndex);
         }
+        Vector3 GetSquarePos(int x, int y)
+        {
+            return new Vector3(SQUARE_START_X + SQUARES_DISTANCE * x, SQUARE_START_Y + SQUARES_DISTANCE * y);
+        }
 
+        void OnColorPaletteChanged()
+        {
+            _lightColor = ColorPalette.GetColor(1).WithAlpha(0.75f);
+            _defaultColor = ColorPalette.GetColor(3).WithAlpha(0.75f);
+
+            for (int y = 0; y < GRID_SIZE_Y; y++)
+            {
+                for (int x = 0; x < GRID_SIZE_X; x++)
+                    _squares[x, y].renderer.color = _defaultColor;
+            }
+
+            for (int i = 0; i < TWEENS_MAX; i++)
+            {
+                Tween tween = _tweens[i];
+                if (tween.IsActive())
+                    _tweens[i].onUpdate();
+            }
+        }
+        void UpdateVisibleSquares()
+        {
+            _visibleSquareRangeX = GetVisibleSquaresRangeX();
+            _visibleSquareRangeY = GetVisibleSquaresRangeY();
+            int visibleLengthX = _visibleSquareRangeX.y - _visibleSquareRangeX.x;
+            int visibleLengthY = _visibleSquareRangeY.y - _visibleSquareRangeY.x;
+            int i = 0;
+
+            _squaresVisible = new Square[visibleLengthX * visibleLengthY];
+            for (int x = _visibleSquareRangeX.x; x < _visibleSquareRangeX.y; x++)
+            {
+                for (int y = _visibleSquareRangeY.x; y < _visibleSquareRangeY.y; y++)
+                    _squaresVisible[i++] = _squares[x, y];
+            }
+        }
         void CreateSquares()
         {
-            _squares = new SpriteRenderer[GRID_SIZE_X, GRID_SIZE_Y];
+            _squares = new Square[GRID_SIZE_X, GRID_SIZE_Y];
             for (int y = 0; y < GRID_SIZE_Y; y++)
             {
                 for (int x = 0; x < GRID_SIZE_X; x++)
@@ -207,7 +245,7 @@ namespace Game.Backgrounds
 
                     instance.name = $"Square [{x + 1}, {y + 1}]";
                     instance.transform.localPosition = GetSquarePos(x, y);
-                    _squares[x, y] = renderer;
+                    _squares[x, y] = new Square(renderer, new int2(x, y));
                 }
             }
         }
@@ -218,7 +256,7 @@ namespace Game.Backgrounds
             const int HALF_SIZE_X = GRID_SIZE_X / 2;
             const int HALF_SIZE_Y = GRID_SIZE_Y / 2;
 
-            SpriteRenderer[,] invisibles = new SpriteRenderer[HALF_SIZE_X, HALF_SIZE_Y];
+            Square[,] invisibles = new Square[HALF_SIZE_X, HALF_SIZE_Y];
             for (int y = 0; y < HALF_SIZE_Y; y++) // fill with invisible squares to use later (_squares will be overwritten)
             {
                 for (int x = 0; x < HALF_SIZE_X; x++)
@@ -232,7 +270,7 @@ namespace Game.Backgrounds
                 {
                     int newX = x + HALF_SIZE_X;
                     int newY = y - HALF_SIZE_Y;
-                    SpriteRenderer square = _squares[x, y];
+                    Square square = _squares[x, y];
                     square.transform.localPosition = GetSquarePos(newX, newY);
                     _squares[newX, newY] = square;
                 }
@@ -245,32 +283,35 @@ namespace Game.Backgrounds
                 {
                     int newX = x;
                     int newY = y + HALF_SIZE_Y;
-                    SpriteRenderer square = invisibles[x, y];
+                    Square square = invisibles[x, y];
                     square.transform.localPosition = GetSquarePos(newX, newY);
                     _squares[newX, newY] = square;
                 }
             }
         }
 
-        int2 GetRandomVisibleSquarePos()
+        void SquaresLightTween(IEnumerable<Square> squares)
         {
-            int2 pos = int2.zero;
-            if (_visibleSquareRangeX.y == 0) // not initialized
-                return pos;
-
-            pos.x = UnityEngine.Random.Range(_visibleSquareRangeX.x, _visibleSquareRangeX.y);
-            pos.y = UnityEngine.Random.Range(_visibleSquareRangeY.x, _visibleSquareRangeY.y);
-            return pos;
+            int index = _tweensFreeIndexes.Pop();
+            foreach (Square square in squares)
+            {
+                square.SwitchLightUp();
+                square.renderer.color = _lightColor;
+            }
+            Tween tween = DOVirtual.Float(0, 1, lightUpDuration, v => OnSquareTweenUpdate(squares, v)).OnComplete(() => OnSquareTweenComplete(squares, index));
+            _tweens[index] = tween;
         }
-        Vector3 GetSquarePos(int x, int y)
+        void OnSquareTweenComplete(IEnumerable<Square> squares, int tweenIndex)
         {
-            return new Vector3(SQUARE_START_X + SQUARES_DISTANCE * x, SQUARE_START_Y + SQUARES_DISTANCE * y);
+            _tweensFreeIndexes.Push(tweenIndex);
+            foreach (Square square in squares)
+                square.SwitchLightUp();
         }
-        Tween CreateSquareTween(SpriteRenderer square)
+        void OnSquareTweenUpdate(IEnumerable<Square> squares, float value)
         {
-            square.color = _lightColor;
-            return DOVirtual.Float(0, 1, lightUpDuration, v => square.color = Color.Lerp(_lightColor, _defaultColor, v));
-            //return square.DOColor(_defaultColor, SQUARE_LIGHT_UP_DURATION).SetEase(Ease.OutQuad);
+            Color color = Color.Lerp(_lightColor, _defaultColor, value);
+            foreach (Square square in squares)
+                square.renderer.color = color;
         }
     }
 }

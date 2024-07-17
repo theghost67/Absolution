@@ -18,7 +18,6 @@ namespace Game
         public async UniTask Invoke(object sender, EventArgs e)
         {
             if (Count == 0) return;
-
             TableEventManager.Add();
             List<string> unsubbedIds = new(Count);
 
@@ -65,7 +64,6 @@ namespace Game
         public async UniTask Invoke(object sender, T e)
         {
             if (Count == 0) return;
-
             TableEventManager.Add();
             List<string> unsubbedIds = new(Count);
 

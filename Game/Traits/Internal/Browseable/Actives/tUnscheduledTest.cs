@@ -17,7 +17,7 @@ namespace Game.Traits
     {
         const string ID = "unscheduled_test";
         const int MOXIE_THRESHOLD = 2;
-        const float OWNER_STRENGTH_SCALE = 0.5f;
+        const float STRENGTH_PER_STACK = 4f;
         const string IGNORED_TRAIT_ID = "scholar";
 
         public tUnscheduledTest() : base(ID)
@@ -35,16 +35,16 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             string traitName = TraitBrowser.GetTrait(IGNORED_TRAIT_ID).name;
-            float effect = OWNER_STRENGTH_SCALE * 100 * trait.GetStacks();
+            float effect = STRENGTH_PER_STACK * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При активации (Т)",
-                    $"тратит все заряды и испытывает каждую карту на территории напротив - если её инициатива < {MOXIE_THRESHOLD}. она получит урон, равный <u>{effect}%</u> от силы этой карты. Карты с навыком <i>{traitName}</i> не получают урона."),
+                    $"тратит все заряды и испытывает каждую карту на территории напротив - если её инициатива < {MOXIE_THRESHOLD}. она получит <u>{effect}</u> ед. урона. Карты с навыком <i>{traitName}</i> не получают урона."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 10 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + (12 * (stacks - 1));
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -57,7 +57,7 @@ namespace Game.Traits
 
             BattleActiveTrait trait = (BattleActiveTrait)e.trait;
             IEnumerable<BattleField> fields = trait.Owner.Territory.Fields(trait.Owner.Field.pos, range.splash).WithCard();
-            int strength = (OWNER_STRENGTH_SCALE * trait.GetStacks() * trait.Owner.strength).Ceiling();
+            int strength = (STRENGTH_PER_STACK * trait.GetStacks()).Ceiling();
 
             foreach (BattleField field in fields)
             {
@@ -68,8 +68,7 @@ namespace Game.Traits
                     card.Drawer.CreateTextAsSpeech("Ученик", ColorPalette.GetColor(5));
                     continue;
                 }
-
-                card.Drawer.CreateTextAsSpeech("Кол", Color.red);
+                card.Drawer.CreateTextAsSpeech($"Кол\n<size=50%>-{strength}", Color.red);
                 await card.health.AdjustValue(-strength, trait);
             }
             await trait.SetStacks(0, trait.Side);

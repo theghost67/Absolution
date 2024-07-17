@@ -72,7 +72,6 @@ namespace Game
             {
                 ShowErrors();
                 TableConsole.LogToFile("global", condition);
-                TableConsole.Log($"{condition}\nСм. лог отладки для подробностей.", type);
             });
         }
         static bool OnWantToQuitBase()

@@ -27,6 +27,9 @@ namespace Game.Menus
         public TableTerritory Territory => _territory;
         public override string LinkedMusicMixId => "battle";
 
+        public int DemoDifficulty { get => _demoDifficulty; set => _demoDifficulty = value; }
+        public bool PlayerControlsEnabled { get; private set; }
+
         #if DEMO
         const int DEMO_DIFFICULTY_MIN = 1;
         const int DEMO_DIFFICULTY_MID = 5;
@@ -666,13 +669,7 @@ namespace Game.Menus
         public void TryFlee()
         {
             if (!_territory?.PhaseSide?.isMe ?? true) return;
-            if (_fleed) return;
-            _fleed = true;
-            SetPlayerControls(false);
-            #if DEMO
-            if (_demoDifficulty < DEMO_DIFFICULTY_MID)
-            #endif
-            OnPlayerWon(null, null);
+            _territory.Conclude(true);
         }
         public void TryEndTurn()
         {
@@ -705,6 +702,7 @@ namespace Game.Menus
 
         void SetPlayerControls(bool value)
         {
+            PlayerControlsEnabled = value;
             SetBellState(value);
             SetFleeState(value);
 

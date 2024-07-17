@@ -18,6 +18,7 @@ namespace Game.Territories
         public IIdEventVoidAsync OnCardDetatched => _onCardDetatched;
 
         public TableTerritory Territory => _territory;
+        public TableField Opposite => _territory?.FieldOpposite(pos);
         public TableFieldCard Card => _card;
         public new TableFieldDrawer Drawer => ((TableObject)this).Drawer as TableFieldDrawer;
         public TableFinder Finder => _finder;

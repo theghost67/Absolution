@@ -35,6 +35,7 @@ namespace Game
             Commands.Add(new cmdCardStatAdd());
             Commands.Add(new cmdCardTraitAdd());
             Commands.Add(new cmdData());
+            Commands.Add(new cmdDeckCardAdd());
             Commands.Add(new cmdHelp());
             Commands.Add(new cmdSideCardAdd());
             Commands.Add(new cmdSideCardPlace());
