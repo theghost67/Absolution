@@ -59,6 +59,11 @@ namespace Game.Territories
             _receivers.Remove(field);
             OnReceiverRemoved?.Invoke(this, field);
         }
+        public void ClearReceivers()
+        {
+            foreach (BattleField receiver in _receivers)
+                RemoveReceiver(receiver);
+        }
         public async UniTask SelectReceivers()
         {
             if (_receivers.Count != 0) return;

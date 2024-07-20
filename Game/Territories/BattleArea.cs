@@ -54,7 +54,7 @@ namespace Game.Territories
 
             _onCardSeen = new TableEventVoid<BattleFieldCard>();
             _onCardUnseen = new TableEventVoid<BattleFieldCard>();
-            _eventsGuid = this.GuidStrForEvents();
+            _eventsGuid = this.GuidGen(0);
 
             _observingCards = new List<BattleFieldCard>(TableTerritory.MAX_SIZE);
             _aimedTargetSplash = Array.Empty<BattleField>();

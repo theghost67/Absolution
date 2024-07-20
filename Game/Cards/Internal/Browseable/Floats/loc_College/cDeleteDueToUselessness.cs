@@ -14,8 +14,8 @@ namespace Game.Cards
             desc = "Описание удалили из-за ненадобности.";
 
             rarity = Rarity.None;
-            price = new CardPrice(CardBrowser.GetCurrency("ether"), 3);
-            frequency = 1f;
+            price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
+            frequency = 1.00f;
         }
         protected cDeleteDueToUselessness(cDeleteDueToUselessness other) : base(other) { }
         public override object Clone() => new cDeleteDueToUselessness(this);

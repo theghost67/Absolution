@@ -35,7 +35,7 @@ namespace Game.Cards
         {
             _data = data;
             _finder = new TableFieldCardFinder(this);
-            _eventsGuid = this.GuidStrForEvents(2);
+            _eventsGuid = this.GuidGen(2);
 
             health = new TableStat(nameof(health), this, data.health);
             health.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);

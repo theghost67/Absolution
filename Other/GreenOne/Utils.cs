@@ -66,11 +66,11 @@ namespace GreenOne
         #endregion
 
         #region Extensions
-        public static void InsertionSort<T>(this List<T> list, T value) where T : IComparable<T>
+        public static void InsertionSort<T>(this IList<T> list, T value) where T : IComparable<T>
         {
-            for (int i = 0; i < list.Count; i++)
+            for (int i = 0; i < list.Count - 1; i++)
             {
-                if (value.CompareTo(list[i]) <= 0)
+                if (value.CompareTo(list[i]) > 0)
                 {
                     list.Insert(i, value);
                     return;
@@ -78,6 +78,19 @@ namespace GreenOne
             }
             list.Add(value);
         }
+        public static void InsertionSortReversed<T>(this IList<T> list, T value) where T : IComparable<T>
+        {
+            for (int i = 0; i < list.Count - 1; i++)
+            {
+                if (value.CompareTo(list[i]) < 0)
+                {
+                    list.Insert(i, value);
+                    return;
+                }
+            }
+            list.Add(value);
+        }
+
         public static void SetVisibleByScale(this GameObject gameObject, bool value)
         {
             if (value)

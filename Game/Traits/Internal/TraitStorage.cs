@@ -5,7 +5,7 @@ namespace Game.Traits
     /// <summary>
     /// Представляет список с парами ключ-значение для хранения особых данных навыка.
     /// </summary>
-    public class TraitStorage : Dictionary<int, object>
+    public class TraitStorage : Dictionary<string, object>
     {
         public const int TURNS_DELAY = -1;
         public const int TURNS_PASSED = -2;
@@ -16,7 +16,7 @@ namespace Game.Traits
 
         public TraitStorage(Trait trait, TraitStorage otherStorage) : this(trait, otherStorage.turnsDelay, otherStorage.turnsPassed)
         {
-            foreach (KeyValuePair<int, object> pair in otherStorage)
+            foreach (KeyValuePair<string, object> pair in otherStorage)
                 Add(pair.Key, pair.Value);
         }
         public TraitStorage(Trait trait, int turnsDelay = 0, int turnsPassed = 0) : base()

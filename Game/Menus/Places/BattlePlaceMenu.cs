@@ -434,9 +434,7 @@ namespace Game.Menus
         }
         protected class pSide : BattleSide
         {
-            public override int HealthAtStart => GetHealthAtStart();
             readonly BattlePlaceMenu _menu;
-
             public pSide(BattlePlaceMenu menu, BattleTerritory territory, bool isMe) : base(territory, isMe)
             {
                 _menu = menu;
@@ -465,7 +463,7 @@ namespace Game.Menus
                 return new pSleeve(_menu, this, parent);
             }
 
-            int GetHealthAtStart()
+            protected override int HealthAtStartFunc()
             {
                 if (isMe)
                      return _demoLocStageForPlayer * 2;
@@ -801,7 +799,7 @@ namespace Game.Menus
             _demoLocStageForEnemy = (locStage * _demoDifficultyScale).Ceiling();
 
             _territory?.Dispose();
-            _territory = new pTerritory(this, playerMovesFirst: true /*UnityEngine.Random.value > 0.5f*/, sizeX: 5);
+            _territory = new pTerritory(this, playerMovesFirst: UnityEngine.Random.value > 0.5f, sizeX: 5);
             _territory.Enemy.ai.Style = (BattleAI.PlayStyle)UnityEngine.Random.Range(0, 3);
 
             SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
@@ -809,6 +807,7 @@ namespace Game.Menus
             string text1 = $"ЭТАП {_demoDifficulty}/{DEMO_DIFFICULTY_MID}";
             string text2Hex = ColorPalette.GetColorInfo(1).Hex;
             string text2 = $"\n<size=50%><color={text2Hex}>угроза: {_demoLocStageForPlayer}    сложность: {_demoDifficultyScale * 100}%";
+            string text3 = _territory.PlayerMovesFirst ? $"\nвы ходите первым" : "\nвы ходите последним";
 
             if (_demoDifficulty >= DEMO_DIFFICULTY_MID)
                 _fleeButton.SetTooltip("<color=red>ТЕБЕ НЕ СБЕЖАТЬ.");
@@ -823,6 +822,10 @@ namespace Game.Menus
             await UniTask.Delay(500);
             bgText.transform.DOAShake();
             bgText.text += text2;
+
+            await UniTask.Delay(500);
+            bgText.transform.DOAShake();
+            bgText.text += text3;
 
             await UniTask.Delay(2000);
             bg.DOFade(0, 0.5f);

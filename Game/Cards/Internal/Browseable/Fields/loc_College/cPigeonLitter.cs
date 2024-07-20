@@ -9,7 +9,7 @@
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 0);
-            frequency = 0f;
+            frequency = 0;
         }
         protected cPigeonLitter(cPigeonLitter other) : base(other) { }
         public override object Clone() => new cPigeonLitter(this);

@@ -21,7 +21,7 @@ namespace Game.Cards
         public TableFieldCardDrawer(TableFieldCard card, Transform parent) : base(card, parent, redrawIcons: false)
         {
             attached = card;
-            _eventsGuid = this.GuidStrForEvents(2);
+            _eventsGuid = this.GuidGen(2);
 
             attached.price.OnPostSet.Add(_eventsGuid, OnPriceStatPostSet);
             attached.moxie.OnPostSet.Add(_eventsGuid, OnMoxieStatPostSet);

@@ -27,9 +27,9 @@ namespace Game.Territories
         public CardDeck Deck => _deck;
         public float Weight => CalculateWeight();
 
-        public virtual int HealthAtStart => (_deck.Points / 4).Ceiling();
-        public virtual int GoldAtStart => 0;
-        public virtual int EtherAtStart => 0;
+        public int HealthAtStart => _healthAtStart;
+        public int GoldAtStart => _goldAtStart;
+        public int EtherAtStart => _etherAtStart;
 
         public readonly bool isMe;
         public readonly BattleAI ai;
@@ -42,6 +42,10 @@ namespace Game.Territories
         readonly int _fieldsYIndex;
         readonly string _eventsGuid;
 
+        readonly int _healthAtStart;
+        readonly int _goldAtStart;
+        readonly int _etherAtStart;
+
         CardDeck _deck;
         BattleSleeve _sleeve;
 
@@ -53,18 +57,22 @@ namespace Game.Territories
             _finder = new BattleSideFinder(this);
             _territory = territory;
             _fieldsYIndex = isMe ? BattleTerritory.PLAYER_FIELDS_Y : BattleTerritory.ENEMY_FIELDS_Y;
-            _eventsGuid = this.GuidStrForEvents(1);
+            _eventsGuid = this.GuidGen(1);
             _deck = DeckCreator();
 
-            health = new TableStat(nameof(health), this, HealthAtStart);
+            _healthAtStart = HealthAtStartFunc();
+            _goldAtStart = HealthAtStartFunc();
+            _etherAtStart = HealthAtStartFunc();
+
+            health = new TableStat(nameof(health), this, _healthAtStart);
             health.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);
             health.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP);
 
-            gold = new TableStat(nameof(gold), this, GoldAtStart);
+            gold = new TableStat(nameof(gold), this, _goldAtStart);
             gold.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);
             gold.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP);
 
-            ether = new TableStat(nameof(ether), this, EtherAtStart);
+            ether = new TableStat(nameof(ether), this, _etherAtStart);
             ether.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);
             ether.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP);
 
@@ -80,6 +88,10 @@ namespace Game.Territories
             _fieldsYIndex = src._fieldsYIndex;
             _deck = DeckCloner(src._deck);
             _sleeve = SleeveCloner(src._sleeve, args);
+
+            _healthAtStart = src._healthAtStart;
+            _goldAtStart = src._goldAtStart;
+            _etherAtStart = src._etherAtStart;
 
             TableStatCloneArgs statCArgs = new(this, args.terrCArgs);
             health = (TableStat)src.health.Clone(statCArgs);
@@ -177,11 +189,14 @@ namespace Game.Territories
             else ether.AdjustValue(-card.price.value, this);
         }
 
+        protected virtual int HealthAtStartFunc() => (_deck.Points / 4).Ceiling();
+        protected virtual int GoldAtStartFunc() => 0;
+        protected virtual int EtherAtStartFunc() => 0;
+
         protected override Drawer DrawerCreator(Transform parent)
         {
             return new BattleSideDrawer(this, parent);
         }
-
         protected virtual BattleSleeve SleeveCreator(Transform parent)
         {
             return new BattleSleeve(this, parent);

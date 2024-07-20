@@ -30,7 +30,7 @@ namespace Game.Traits
             _list = new List<ITableTraitListElement>();
             _onStacksTryToChange = new TableEventBool<TableTraitStacksTryArgs>();
             _onStacksChanged = new TableEventVoid<TableTraitStacksSetArgs>();
-            _eventsGuid = this.GuidStrForEvents(1);
+            _eventsGuid = this.GuidGen(1);
 
             _onStacksTryToChange.Add(_eventsGuid, OnStacksTryToChangeBase_TOP, TableEventVoid.TOP_PRIORITY);
             _onStacksChanged.Add(_eventsGuid, OnStacksChangedBase_TOP, TableEventVoid.TOP_PRIORITY);

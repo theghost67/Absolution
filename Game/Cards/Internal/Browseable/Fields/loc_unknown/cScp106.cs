@@ -10,7 +10,7 @@
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
-            frequency = 0.75f;
+            frequency = 1.00f;
         }
         protected cScp106(cScp106 other) : base(other) { }
         public override object Clone() => new cScp106(this);

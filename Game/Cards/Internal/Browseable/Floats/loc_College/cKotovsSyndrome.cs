@@ -14,9 +14,9 @@ namespace Game.Cards
             name = "Синдром Котова";
             desc = "Психологическое расстройство, при котором появляется желание оскорблять и непристойно шутить тогда, когда это совсем не к месту.";
 
-            rarity = Rarity.None;
+            rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
-            frequency = 1f;
+            frequency = 1.00f;
         }
         protected cKotovsSyndrome(cKotovsSyndrome other) : base(other) { }
         public override object Clone() => new cKotovsSyndrome(this);

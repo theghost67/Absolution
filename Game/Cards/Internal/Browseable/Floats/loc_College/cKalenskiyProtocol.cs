@@ -6,7 +6,7 @@ namespace Game.Cards
 {
     public class cKalenskiyProtocol : FloatCard
     {
-        const float MOXIE_TO_STRENGTH_REL = 0.2f;
+        const float MOXIE_TO_STRENGTH_REL = 0.25f;
 
         public cKalenskiyProtocol() : base("kalenskiy_protocol")
         {
@@ -15,7 +15,7 @@ namespace Game.Cards
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
-            frequency = 1f;
+            frequency = 1.00f;
         }
         protected cKalenskiyProtocol(cKalenskiyProtocol other) : base(other) { }
         public override object Clone() => new cKalenskiyProtocol(this);

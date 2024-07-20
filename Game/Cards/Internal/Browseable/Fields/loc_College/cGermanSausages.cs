@@ -11,7 +11,7 @@
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 0);
-            frequency = 0.90f;
+            frequency = 1.00f;
         }
         protected cGermanSausages(cGermanSausages other) : base(other) { }
         public override object Clone() => new cGermanSausages(this);

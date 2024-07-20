@@ -10,7 +10,7 @@
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
-            frequency = 0.5f;
+            frequency = 1.00f;
         }
         protected cMyersMirror(cMyersMirror other) : base(other) { }
         public override object Clone() => new cMyersMirror(this);

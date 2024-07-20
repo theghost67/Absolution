@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using System;
 using UnityEngine;
 
 namespace Game.Traits
@@ -11,10 +10,12 @@ namespace Game.Traits
     /// </summary>
     public class BattleActiveTrait : TableActiveTrait, IBattleTrait
     {
-        public new BattleActiveTraitDrawer Drawer => ((TableObject)this).Drawer as BattleActiveTraitDrawer;
         public new BattleFieldCard Owner => _owner;
-        public BattleTerritory Territory => _owner.Territory;
+        public new BattleTerritory Territory => _owner.Field.Territory;
+        public new BattleField Field => _owner.Field;
         public BattleSide Side => _owner.Side;
+
+        public new BattleActiveTraitDrawer Drawer => ((TableObject)this).Drawer as BattleActiveTraitDrawer;
 
         public BattleArea Area => _area;
         public BattleRange Range => Data.range;
@@ -28,7 +29,7 @@ namespace Game.Traits
         {
             _owner = owner;
             _area = new BattleArea(this, owner);
-            _eventsGuid = this.GuidStrForEvents(3);
+            _eventsGuid = this.GuidGen(3);
 
             _area.OnCardSeen.Add(_eventsGuid, OnCardSeen);
             _area.OnCardUnseen.Add(_eventsGuid, OnCardUnseen);

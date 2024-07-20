@@ -18,7 +18,19 @@ namespace Game.Traits
         public static void Initialize()
         {
             /* --------------------------------- //
-            ||          PASSIVE TRAITS           ||
+            ||            ANY LOCATION           ||
+            // --------------------------------- */
+
+            AddPassive(new tEvasion());
+            AddPassive(new tBlock());
+
+            AddActive(new tScope());
+            AddActive(new tScopePlus());
+
+            // -----------------------------------
+
+            /* --------------------------------- //
+            ||            LOC: COLLEGE           ||
             // --------------------------------- */
 
             AddPassive(new tArmoredTank());
@@ -38,21 +50,47 @@ namespace Game.Traits
             AddPassive(new tScholar());
             AddPassive(new tTactician());
             AddPassive(new tUltrasonicScream());
-
             AddPassive(new tUnpleasantScent());
-
-            // -----------------------------------
-
-
-            /* --------------------------------- //
-            ||           ACTIVE TRAITS           ||
-            // --------------------------------- */
 
             AddActive(new tLunchBreak());
             AddActive(new tTesting());
             AddActive(new tUnscheduledTest());
             AddActive(new tWhiteBombing());
             AddActive(new tZenSchool());
+
+            // -----------------------------------
+
+            /* --------------------------------- //
+            ||             LOC: BUREAU           ||
+            // --------------------------------- */
+
+            AddPassive(new tAlcoRage());
+            AddPassive(new tAriRecord());
+            AddPassive(new tBecomeHuman());
+            AddPassive(new tCrosseyedShooter());
+            AddPassive(new tMinistryRat());
+
+            AddPassive(new tOrderOfAttackWait());
+            AddPassive(new tOrderOfDefenceWait());
+            AddPassive(new tOrigamiKiller());
+            AddPassive(new tOrigamiMark());
+            AddPassive(new tPrediction());
+
+            AddPassive(new tStealth());
+            AddPassive(new tTimeToDecideMachine());
+
+            AddActive(new tAlcoHeal());
+            AddActive(new tOrderOfAttack());
+            AddActive(new tOrderOfDefence());
+            AddActive(new tOrigamiVictim());
+            AddActive(new tRecruitment());
+
+            AddActive(new tReporting());
+            AddActive(new tSearchInArchive());
+            AddActive(new tSummarizing());
+            AddActive(new tTimeToDecide());
+            AddActive(new tTriptocainum());
+            AddActive(new tWayOut());
 
             // -----------------------------------
         }

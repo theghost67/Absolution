@@ -53,29 +53,29 @@ namespace Game.Cards
             AddFloat(new cKalenskiyProtocol());
             AddFloat(new cKotovsSyndrome());
             AddFloat(new cVavulization());
-			return;
 
             /* --------------------------------- //
             ||            LOC: BUREAU            ||
             // --------------------------------- */
 
-            AddField(new cHitman());
-            AddField(new cVanga());
+            AddField(new cAgent007());
+            AddField(new cAgentOfBeholder());
             AddField(new cAnderson());
+            AddField(new cArchivist());
+            AddField(new cCarl());
+
+            AddField(new cClues());
             AddField(new cConnor());
+            AddField(new cGeneralP());
+            AddField(new cHarry());
+            AddField(new cHitman());
+
+            AddField(new cNorman());
+            AddField(new cOrigami());
+            AddField(new cShelbi());
+            AddField(new cVanga());
             AddField(new cVinsent());
 
-            AddField(new c007());
-            AddField(new cBeholder());
-            AddField(new cNorman());
-            AddField(new cShelbi());
-            AddField(new cOrigami());
-
-            AddField(new cHarry());
-            AddField(new cClues());
-            AddField(new cCarl());
-            AddField(new cArchivist());
-            AddField(new cGeneral());
             return;
 
             /* --------------------------------- //

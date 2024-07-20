@@ -18,7 +18,7 @@ namespace GreenOne
         readonly List<Subscriber> _subs;
         readonly int _id;
 
-        protected class Subscriber : IIdSubscriber<D>
+        protected class Subscriber : IIdSubscriber<D>, IComparable<Subscriber>
         {
             public readonly string id;
             public readonly D @delegate;
@@ -41,6 +41,10 @@ namespace GreenOne
             }
             public override string ToString() => id.ToString();
             public object Clone() => new Subscriber(id, @delegate, priority) { isSubscribed = isSubscribed, isIncluded = isIncluded };
+            public int CompareTo(Subscriber other)
+            {
+                return priority.CompareTo(other.priority);
+            }
         }
 
         public IdDelegate()
@@ -56,34 +60,29 @@ namespace GreenOne
             _id = other._id;
         }
 
-        public void Add(string id, D @delegate, int priority = 0)
+        public bool Add(string id, D @delegate, int priority = 0)
         {
             if (id.StartsWith('_'))
                 throw new NotSupportedException("Action id must not start with \'_\' character.");
-            else AddBase(id, @delegate, priority);
+            return AddBase(id, @delegate, priority);
         }
-        protected void Add(IIdSubscriber<D> sub)
+        protected bool Add(IIdSubscriber<D> sub)
         {
-            AddBase(sub.Id, sub.Delegate, sub.Priority);
+            return AddBase(sub.Id, sub.Delegate, sub.Priority);
         }
-        void AddBase(string id, D @delegate, int priority = 0)
+        bool AddBase(string id, D @delegate, int priority = 0)
         {
-            if (@delegate == null)
-                throw new NullReferenceException("Impossible to add delegate with null reference.");
+            if (@delegate == null) // Impossible to add delegate with null reference.
+                return false;
             if (priority > TOP_PRIORITY)
-                throw new ArgumentOutOfRangeException($"Delegate priority should not be greater than {TOP_PRIORITY}.");
-            Subscriber subscriber = new(id, @delegate, priority);
-            int iterations = _subs.Count - 1;
-
-            for (int i = 0; i < iterations; i++)
+                return false; // Delegate priority should not be greater than {TOP_PRIORITY}.
+            foreach (Subscriber sub in _subs)
             {
-                if (_subs[i].priority > priority)
-                {
-                    _subs.Insert(i, subscriber);
-                    return;
-                }
+                if (sub.id == id)
+                    return false;
             }
-            _subs.Add(subscriber);
+            _subs.InsertionSort(new Subscriber(id, @delegate, priority));
+            return true;
         }
 
         public abstract object Clone();
@@ -174,7 +173,7 @@ namespace GreenOne
     public interface IIdDelegate<D> : IEnumerable<IIdSubscriber<D>>, ICloneable, IDisposable where D : Delegate
     {
         public int Count { get; }
-        public void Add(string id, D @delegate, int priority = 0);
+        public bool Add(string id, D @delegate, int priority = 0);
         public bool Remove(string id);
         public void Clear();
     }

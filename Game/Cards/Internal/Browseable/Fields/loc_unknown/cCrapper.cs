@@ -11,7 +11,7 @@
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);
-            frequency = 0.80f;
+            frequency = 1.00f;
         }
         protected cCrapper(cCrapper other) : base(other) { }
         public override object Clone() => new cCrapper(this);

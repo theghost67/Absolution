@@ -28,6 +28,7 @@ namespace Game.Territories
         public IIdEventVoidAsync OnPlayerLost => _onPlayerLost;
 
         public bool Concluded => _concluded;
+        public bool PlayerMovesFirst => _playerMovesFirst;
         public bool PhaseCycleEnabled
         {
             get => _phaseCycleEnabled;
@@ -80,7 +81,7 @@ namespace Game.Territories
             _phaseCycleEvents = new List<TableEventVoid>();
             _playerMovesFirst = playerMovesFirst;
             _playerPhaseCycleIndex = _playerMovesFirst ? 1 : 2;
-            _eventsGuid = this.GuidStrForEvents(2);
+            _eventsGuid = this.GuidGen(2);
 
             _phaseCycleEnabled = true;
             _phaseCyclesPassed = 0;

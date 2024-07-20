@@ -89,7 +89,7 @@ namespace Game.Territories
         public BattleSideDrawer(BattleSide side, Transform parent) : base(side, side.isMe ? _playerPrefab : _enemyPrefab, parent)
         {
             attached = side;
-            _eventsGuid = this.GuidStrForEvents(1);
+            _eventsGuid = this.GuidGen(1);
 
             _healthPanel = transform.Find<SpriteRenderer>("Hp");
             _goldPanel = transform.Find<SpriteRenderer>("Gold");

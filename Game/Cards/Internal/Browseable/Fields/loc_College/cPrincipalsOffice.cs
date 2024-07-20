@@ -10,7 +10,7 @@
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
-            frequency = 0.80f;
+            frequency = 1.00f;
         }
         protected cPrincipalsOffice(cPrincipalsOffice other) : base(other) { }
         public override object Clone() => new cPrincipalsOffice(this);

@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+п»їusing Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Palette;
 using Game.Territories;
@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Абстрактный базовый класс для данных игровых навыков.
+    /// РђР±СЃС‚СЂР°РєС‚РЅС‹Р№ Р±Р°Р·РѕРІС‹Р№ РєР»Р°СЃСЃ РґР»СЏ РґР°РЅРЅС‹С… РёРіСЂРѕРІС‹С… РЅР°РІС‹РєРѕРІ.
     /// </summary>
     public abstract class Trait : Unique, ISerializable, ICloneable
     {
@@ -52,19 +52,20 @@ namespace Game.Traits
             range = other.range;
             frequency = other.frequency;
             storage = new TraitStorage(this);
-            foreach (KeyValuePair<int, object> pair in other.storage)
+            foreach (KeyValuePair<string, object> pair in other.storage)
                 storage.Add(pair.Key, pair.Value);
 
             _traitFinder = other._traitFinder;
         }
 
+        // special characters: в‰¤ в‰Ґ В« В»
         public virtual string DescRich(ITableTrait trait)
         {
             return DescRichBase(trait, Array.Empty<TraitDescChunk>());
         }
         public virtual BattleWeight Weight(IBattleTrait trait)   // used to increase weight in battle above default value, 1 absolute weight = 1 hp
         {
-            return tags.HasFlag(TraitTag.Static) ? default : new(trait.GetStacks());
+            return default;
         }
         public virtual float Points(FieldCard owner, int stacks) // used to increase trait points required to add another stack of this trait to a card
         {
@@ -112,14 +113,14 @@ namespace Game.Traits
             sb.Append($"<size=150%>{data.name} x{trait.GetStacks()}</size>\n<i>");
             switch (data.rarity)
             {
-                case Rarity.None: sb.Append("Обычный"); break;
-                case Rarity.Rare: sb.Append("Редкий"); break;
-                case Rarity.Epic: sb.Append("Особый"); break;
+                case Rarity.None: sb.Append("РћР±С‹С‡РЅС‹Р№"); break;
+                case Rarity.Rare: sb.Append("Р РµРґРєРёР№"); break;
+                case Rarity.Epic: sb.Append("РћСЃРѕР±С‹Р№"); break;
                 default: throw new NotSupportedException();
             }
             if (data.isPassive)
-                 sb.Append(" пассивный навык</i>\n\n");
-            else sb.Append(" активный навык</i>\n\n");
+                 sb.Append(" РїР°СЃСЃРёРІРЅС‹Р№ РЅР°РІС‹Рє</i>\n\n");
+            else sb.Append(" Р°РєС‚РёРІРЅС‹Р№ РЅР°РІС‹Рє</i>\n\n");
 
             for (int i = 0; i < descChunks.Length; i++)
             {
@@ -138,20 +139,23 @@ namespace Game.Traits
             int turnsPassed = trait.Storage.turnsPassed;
             if (turnsPassed > 0)
             {
-                sb.Append($"Наложен: {turnsPassed} х. назад\n");
+                sb.Append($"РќР°РІС‹Рє РЅР°Р»РѕР¶РµРЅ: {turnsPassed} С…. РЅР°Р·Р°Рґ\n");
                 hasTurnText = true;
             }
 
             int turnsDelay = trait.Storage.turnsDelay;
             if (turnsDelay > 0)
             {
-                sb.Append($"Перезарядка: {turnsDelay} х.\n");
+                sb.Append($"РќР°РІС‹Рє РїРµСЂРµР·Р°СЂСЏР¶Р°РµС‚СЃСЏ: {turnsDelay} С….\n");
                 hasTurnText = true;
             }
 
+            if (string.IsNullOrEmpty(data.desc))
+                return sb.ToString();
+
             if (hasTurnText)
-                 sb.Append($"\n<i>«{data.desc}»");
-            else sb.Append($"<i>«{data.desc}»");
+                 sb.Append($"\n<i>В«{data.desc}В»");
+            else sb.Append($"<i>В«{data.desc}В»");
             return sb.ToString();
         }
         protected static float TurnDelayToWeightMod(float delay)

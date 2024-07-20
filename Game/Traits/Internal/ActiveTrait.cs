@@ -19,7 +19,7 @@ namespace Game.Traits
         }
 
         // see how weight threshold is used in BattleAI.CalculateWeightDeltas()
-        public virtual BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait) => new(0, 0.12f);
+        public virtual BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait) => BattleWeight.none;
 
         public virtual bool IsUsableInSleeve() => false;
         public virtual bool IsUsable(TableActiveTraitUseArgs e)

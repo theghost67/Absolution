@@ -22,7 +22,7 @@ namespace Game.Cards
         public TableCard(Card data, Transform parent) : base(parent)
         {
             _data = data;
-            _eventsGuid = this.GuidStrForEvents(1);
+            _eventsGuid = this.GuidGen(1);
 
             price = new TableStat(nameof(price), this, data.price.value);
             price.OnPreSet.Add(_eventsGuid, OnPricePreSetBase_TOP, TableEventVoid.TOP_PRIORITY);

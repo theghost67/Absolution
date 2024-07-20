@@ -13,7 +13,6 @@ namespace Game.Sleeves
     /// </summary>
     public class TableSleeveDrawer : Drawer
     {
-        public const float MOVE_DURATION = 0.33f;
         const int SORT_ORDER_START_VALUE = 32;
         const int SORT_ORDER_PER_CARD = 8;
 
@@ -121,7 +120,7 @@ namespace Game.Sleeves
             _isPulledOut = false;
 
             _posYTween.Kill();
-            _posYTween = transform.DOLocalMoveY(_normalPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnMovedIn);
+            _posYTween = transform.DOLocalMoveY(_normalPosY, ITableSleeveCard.PULL_DURATION).SetEase(Ease.OutQuad).OnComplete(OnMovedIn);
             gameObject.SetActive(true);
         }
         public void MoveOut()
@@ -130,7 +129,7 @@ namespace Game.Sleeves
             _isPulledOut = false;
 
             _posYTween.Kill();
-            _posYTween = transform.DOLocalMoveY(_moveOutPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnMovedOut);
+            _posYTween = transform.DOLocalMoveY(_moveOutPosY, ITableSleeveCard.PULL_DURATION).SetEase(Ease.OutQuad).OnComplete(OnMovedOut);
         }
 
         public void MoveInInstantly()
@@ -188,11 +187,13 @@ namespace Game.Sleeves
         void UpdateCardsPosAndOrder()
         {
             if (IsDestroying) return;
+            SetCollider(false);
+
             const int THRESHOLD = 3;
             const float DISTANCE = TableCardDrawer.WIDTH - TableCardDrawer.WIDTH * 0.25f;
 
             int cardsCount = attached.Count;
-            float[] cardsY = new float[cardsCount].FillBy(i => attached[i].Drawer.transform.position.y);
+            Vector3[] cardsOldPos = new Vector3[cardsCount].FillBy(i => attached[i].Drawer.transform.position);
 
             if (transform.childCount > THRESHOLD)
                 _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
@@ -202,10 +203,14 @@ namespace Game.Sleeves
             for (int i = 0; i < cardsCount; i++) 
             {
                 ITableSleeveCard card = attached[i];
-                card.Drawer.SetSortingOrder(SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD, asDefault: true);
-                if (!(card.IsInMove || card.IsPulledOut)) continue;
-                Transform transform = card.Drawer.transform;
-                transform.position = transform.position.SetY(cardsY[i]); // restores Y pos which can be modified by PullIn/PullOut animations
+                TableCardDrawer drawer = card.Drawer;
+                drawer.SetSortingOrder(SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD, asDefault: true);
+                Vector3 newPos = drawer.transform.position;
+                DOVirtual.Float(0, 1, ITableSleeveCard.PULL_DURATION, v =>
+                {
+                    newPos.y = transform.position.y;
+                    drawer.transform.position = Vector3.Lerp(cardsOldPos[i], newPos, v);
+                });
             }
         }
 

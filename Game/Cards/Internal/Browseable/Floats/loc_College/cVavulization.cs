@@ -12,9 +12,9 @@ namespace Game.Cards
             desc = "Глобальная Вавулизация населения, которую однажды желал инициировать Мошев для поддержания " +
                    "умеренно-деградантского интеллектуального уровня населения и его последующего порабощения.";
 
-            rarity = Rarity.None;
+            rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 4);
-            frequency = 1f;
+            frequency = 1.00f;
         }
         protected cVavulization(cVavulization other) : base(other) { }
         public override object Clone() => new cVavulization(this);

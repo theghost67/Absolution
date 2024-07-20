@@ -24,9 +24,10 @@ namespace Game.Cards
         public IIdEventVoidAsync<TableFieldAttachArgs> OnFieldPreAttached => _onFieldPreAttached;   // before prev card deleted (field = prev field)
         public IIdEventVoidAsync<TableFieldAttachArgs> OnFieldPostAttached => _onFieldPostAttached; // after prev card deleted (field = new field)
 
-        public IIdEventVoidAsync<ITableEntrySource> OnPreKilled => _onPreKilled;   // on health dropped to 0 or instant kill attempt [not ignoring events]
-        public IIdEventVoidAsync<ITableEntrySource> OnPostKilled => _onPostKilled; // after the card was detatched from a field and before it's destroyed
-        public IIdEventVoidAsync<BattleFieldCard> OnKill => _onKillConfirmed;               // after 'PostKilled' event, raised in initiator (if not dead)
+        public IIdEventVoidAsync<ITableEntrySource> OnPreKilled => _onPreKilled;                 // on health dropped to 0 or instant kill attempt [not ignoring events]
+        public IIdEventVoidAsync<ITableEntrySource> OnPostKilled => _onPostKilled;               // after the card was detatched from a field and before it's destroyed
+        public IIdEventVoidAsync<ITableEntrySource> OnEvadedBeingKilled => _onEvadedBeingKilled; // if card restored health or became unkillable
+        public IIdEventVoidAsync<BattleFieldCard> OnKillConfirmed => _onKillConfirmed;           // after 'PostKilled' event, raised in initiator (if not dead)
 
         public IIdEventVoidAsync<BattleInitiationSendArgs> OnInitiationPreSent => _onInitiationPreSent;     // before checking strength && InitiationIsPossible (can increase Str or set 'CanInitiate' to false)
         public IIdEventVoidAsync<BattleInitiationSendArgs> OnInitiationPostSent => _onInitiationPostSent;   // after checked strength && InitiationIsPossible
@@ -134,7 +135,7 @@ namespace Game.Cards
             _onInitiationConfirmed = new TableEventVoid<BattleInitiationRecvArgs>();
             _onInitiationPreReceived = new TableEventVoid<BattleInitiationRecvArgs>();
             _onInitiationPostReceived = new TableEventVoid<BattleInitiationRecvArgs>();
-            _eventsGuid = this.GuidStrForEvents(3);
+            _eventsGuid = this.GuidGen(3);
 
             _onPreKilled.Add(_eventsGuid, OnPreKilledBase_TOP);
             _onPostKilled.Add(_eventsGuid, OnPostKilledBase_TOP);
@@ -197,7 +198,7 @@ namespace Game.Cards
             OnFieldPostAttached.Dispose();
             OnPreKilled.Dispose();
             OnPostKilled.Dispose();
-            OnKill.Dispose();
+            OnKillConfirmed.Dispose();
             OnInitiationPreSent.Dispose();
             OnInitiationPostSent.Dispose();
             OnInitiationConfirmed.Dispose();

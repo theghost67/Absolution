@@ -7,9 +7,9 @@
             name = "Варварка";
             desc = "Когда ученики приходят на очередной урок, который ведёт Варвара, они понимают - сейчас они будут страдать.";
 
-            rarity = Rarity.Rare;
+            rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
-            frequency = 0.75f;
+            frequency = 1.00f;
         }
         protected cBarbarian(cBarbarian other) : base(other) { }
         public override object Clone() => new cBarbarian(this);

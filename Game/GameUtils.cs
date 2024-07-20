@@ -1,13 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
-using Game.Effects;
 using Game.Menus;
 using Game.Territories;
 using Game.Traits;
 using GreenOne;
 using MyBox;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -30,20 +28,22 @@ namespace Game
         #endregion
 
         #region guids
-        // you can use level of inheritance as index to separate events base subs from derived subs
-        public static string GuidStrForEvents(this ITableObject obj, int index = 0)
+        // these methods generate guids for object's event handlers and collections
+        // you can use num as you like (separate events base subs from derived subs or if you subscribe multiple handlers from one object to one event)
+
+        public static string GuidGen(this ITableObject obj, int num)
         {
-            return $"{obj.GuidStr}:{index}";
+            return $"{obj.GuidStr}:{num}";
         }
-        public static string GuidStrForEvents(this Drawer drawer, int index = 0)
+        public static string GuidGen(this Drawer drawer, int num)
         {
             if (drawer.attached is TableObject obj)
-                return $"{obj.GuidStr}.drawer:{index}";
-            else return $"def.drawer:{index}";
+                return $"{obj.GuidStr}.drawer:{num}";
+            else return $"def.drawer:{num}";
         }
-        public static string GuidStrForEvents(this BattleArea area, int index = 0)
+        public static string GuidGen(this BattleArea area, int num)
         {
-            return $"{area.observer.GuidStr}.area:{index}";
+            return $"{area.observer.GuidStr}.area:{num}";
         }
         #endregion
 
@@ -180,6 +180,17 @@ namespace Game
                 if (field.Card == null)
                     yield return field;
             }
+        }
+
+        public static bool IsMine(this TableField field)
+        {
+            if ((field.Territory?.Grid.y ?? 1) == 1)
+                return true;
+            return field.pos.y == BattleTerritory.PLAYER_FIELDS_Y;
+        }
+        public static bool IsMine(this IBattleObject obj)
+        {
+            return obj.Side.isMe;
         }
 
         public static string StatToStringRich(this TableStat stat, int defaultValue)

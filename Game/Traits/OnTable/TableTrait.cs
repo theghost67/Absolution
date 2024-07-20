@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
+using Game.Territories;
 using UnityEngine;
 
 namespace Game.Traits
@@ -9,9 +10,13 @@ namespace Game.Traits
     /// </summary>
     public abstract class TableTrait : TableObject, ITableTrait
     {
-        public Trait Data => _data;
         public TableFieldCard Owner => _owner;
+        public TableTerritory Territory => _owner.Field.Territory;
+        public TableField Field => _owner.Field;
+
+        public Trait Data => _data;
         public TableTraitStorage Storage => _storage;
+
         public new TableTraitDrawer Drawer => ((TableObject)this).Drawer as TableTraitDrawer;
         public virtual TableFinder Finder => null;
 

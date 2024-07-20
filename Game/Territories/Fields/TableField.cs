@@ -45,7 +45,7 @@ namespace Game.Territories
             _finder = new TableFieldFinder(this);
             _onCardAttached = new TableEventVoid();
             _onCardDetatched = new TableEventVoid();
-            _eventsGuid = this.GuidStrForEvents(2);
+            _eventsGuid = this.GuidGen(2);
 
             health = new TableStat(nameof(health), this, 0);
             health.OnPostSet.Add(_eventsGuid, OnHealthPostSetBase);

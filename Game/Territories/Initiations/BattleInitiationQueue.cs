@@ -101,6 +101,11 @@ namespace Game.Territories
                 _list.Add(sArgs);
         }
 
+        public async UniTask Await()
+        {
+            while (_isRunning)
+                await UniTask.Yield();
+        }
         async UniTask QueueLoop()
         {
             _isRunning = true;

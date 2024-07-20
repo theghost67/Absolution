@@ -48,6 +48,27 @@ namespace Game.Environment
                     "michael",
                     "principals_office",
                     "canteen",
+
+                    // NEXT CARDS DO NOT BELONG TO THIS LOCATION
+                    // TODO: move to other locations
+
+                    "hitman",
+                    "vanga",
+                    "anderson",
+                    "connor",
+                    "vinsent",
+
+                    "agent_007",
+                    "agent_of_beholder",
+                    "norman",
+                    "shelbi",
+                    //"origami",
+
+                    "harry",
+                    "clues",
+                    "carl",
+                    "archivist",
+                    "general_p",
                 },
                 floatCards = new string[]
                 {
@@ -55,6 +76,9 @@ namespace Game.Environment
                     "kalenskiy_protocol",
                     "vavulization",
                     "delete_due_to_uselessness",
+
+                    // NEXT CARDS DO NOT BELONG TO THIS LOCATION
+                    // TODO: move to other locations
                 },
                 places = new string[]
                 {
@@ -64,7 +88,6 @@ namespace Game.Environment
                     //"writer",
                 }
             });
-
             AddLocPlace(new LocationPlace("battle")
             {
                 name = "Бой",

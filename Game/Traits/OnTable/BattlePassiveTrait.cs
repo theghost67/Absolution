@@ -10,10 +10,12 @@ namespace Game.Traits
     /// </summary>
     public class BattlePassiveTrait : TablePassiveTrait, IBattleTrait
     {
-        public new BattlePassiveTraitDrawer Drawer => ((TableObject)this).Drawer as BattlePassiveTraitDrawer;
         public new BattleFieldCard Owner => _owner;
-        public BattleTerritory Territory => _owner.Territory;
+        public new BattleTerritory Territory => _owner.Field.Territory;
+        public new BattleField Field => _owner.Field;
         public BattleSide Side => _owner.Side;
+
+        public new BattlePassiveTraitDrawer Drawer => ((TableObject)this).Drawer as BattlePassiveTraitDrawer;
 
         public BattleArea Area => _area;
         public BattleRange Range => Data.range;
@@ -22,13 +24,12 @@ namespace Game.Traits
         readonly BattleFieldCard _owner;
         readonly BattleArea _area;
         readonly string _eventsGuid;
-        BattlePassiveTraitDrawer _drawer;
 
         public BattlePassiveTrait(PassiveTrait data, BattleFieldCard owner, Transform parent) : base(data, owner, parent)
         {
             _owner = owner;
             _area = new BattleArea(this, owner);
-            _eventsGuid = this.GuidStrForEvents(3);
+            _eventsGuid = this.GuidGen(3);
 
             _area.OnCardSeen.Add(_eventsGuid, OnCardSeen);
             _area.OnCardUnseen.Add(_eventsGuid, OnCardUnseen);

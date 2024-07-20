@@ -9,6 +9,11 @@ namespace Game.Traits
     public interface IBattleTrait : ITableTrait, IBattleWeighty
     {
         public new BattleFieldCard Owner { get; }
+        public new BattleTerritory Territory { get; }
+        public new BattleField Field { get; }
+
         TableFieldCard ITableTrait.Owner => Owner;
+        TableTerritory ITableTrait.Territory => Territory;
+        TableField ITableTrait.Field => Field;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
+using Game.Territories;
 
 namespace Game.Traits
 {
@@ -9,6 +10,9 @@ namespace Game.Traits
     public interface ITableTrait : ITableObject, ITableEntrySource, ICloneableWithArgs
     {
         public TableFieldCard Owner { get; }
+        public TableTerritory Territory { get; }
+        public TableField Field { get; }
+
         public Trait Data { get; }
         public TableTraitStorage Storage { get; }
 
