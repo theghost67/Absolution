@@ -60,6 +60,15 @@ namespace Game.Traits
             _actives.Clear();
         }
 
+        public bool SetStacks(string id, int stacks)
+        {
+            return SetStacks(TraitBrowser.GetTrait(id), stacks);
+        }
+        public bool AdjustStacks(string id, int stacks)
+        {
+            return AdjustStacks(TraitBrowser.GetTrait(id), stacks);
+        }
+
         public bool SetStacks(Trait trait, int stacks)
         {
             if (trait.isPassive)
@@ -72,6 +81,7 @@ namespace Game.Traits
                  return _passives.AdjustStacks(trait.id, stacks);
             else return _actives.AdjustStacks(trait.id, stacks);
         }
+
         public void AdjustStacksInRange(IEnumerable<Trait> traits, int stacks)
         {
             foreach (Trait trait in traits)

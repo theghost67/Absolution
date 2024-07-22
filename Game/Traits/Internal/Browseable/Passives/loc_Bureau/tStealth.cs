@@ -33,7 +33,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После убийства любой карты владельцем с одной атаки (П{PRIORITY})",
-                    $"накладывает на владельца навык <i>{traitName}</i> с <u>{stacks}%</u> зарядами."),
+                    $"накладывает на владельца навык <i>{traitName}</i> с <u>{stacks}</u> зарядами."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
@@ -59,23 +59,23 @@ namespace Game.Traits
             }
         }
 
-        static async UniTask OnOwnerInitiationConfirmed(object sender, BattleInitiationRecvArgs rArgs)
+        static async UniTask OnOwnerInitiationConfirmed(object sender, BattleInitiationRecvArgs e)
         {
-            BattleFieldCard receiver = rArgs.Receiver.Card;
+            BattleFieldCard receiver = e.Receiver.Card;
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
             if (receiver == null) return;
             trait.Storage.Add(receiver.GuidStr, null);
         }
-        static async UniTask OnOwnerKillConfirmed(object sender, BattleFieldCard victim)
+        static async UniTask OnOwnerKillConfirmed(object sender, BattleKillConfirmArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
-            if (trait.Storage.ContainsKey(victim.GuidStr)) return;
+            if (trait.Storage.ContainsKey(e.victim.GuidStr)) return;
             await trait.AnimActivation();
-            await owner.Traits.Passives.AdjustStacks(TRAIT_ID, trait.GetStacks(), trait);
+            await owner.Traits.AdjustStacks(TRAIT_ID, trait.GetStacks(), trait);
         }
     }
 }

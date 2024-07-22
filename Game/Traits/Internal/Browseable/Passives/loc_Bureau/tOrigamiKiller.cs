@@ -23,7 +23,7 @@ namespace Game.Traits
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
-            range = BattleRange.none;
+            range = new BattleRange(TerritoryRange.oppositeAll);
         }
         protected tOrigamiKiller(tOrigamiKiller other) : base(other) { }
         public override object Clone() => new tOrigamiKiller(this);
@@ -34,7 +34,7 @@ namespace Game.Traits
             float effect = DAMAGE_REL_INCREASE_PER_STACK * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"После убийства карты <i>{cardName}</i> (П{PRIORITY})",
+                new($"После смерти вражеской карты <i>{cardName}</i> от любого источника (П{PRIORITY})",
                     $"увеличивает силу владельца на <u>{effect}%</u>."),
             });
         }
@@ -42,25 +42,21 @@ namespace Game.Traits
         {
             return base.Points(owner, stacks) + 32 * Mathf.Pow(stacks - 1, 2);
         }
-        public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
-        { 
-            await base.OnStacksChanged(e);
-            if (!e.isInBattle) return;
-
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
-
-            if (trait.WasAdded(e))
-                trait.Owner.OnKillConfirmed.Add(trait.GuidStr, OnOwnerKillConfirmed, PRIORITY);
-            else if (trait.WasRemoved(e))
-                trait.Owner.OnKillConfirmed.Remove(trait.GuidStr);
+        public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
+        {
+            await base.OnTargetStateChanged(e);
+            if (e.canSeeTarget)
+                 e.target.OnPostKilled.Add(e.trait.GuidStr, OnTargetPostKilled, PRIORITY);
+            else e.target.OnPostKilled.Remove(e.trait.GuidStr);
         }
 
-        static async UniTask OnOwnerKillConfirmed(object sender, BattleFieldCard victim)
+        async UniTask OnTargetPostKilled(object sender, BattleKillAttemptArgs e)
         {
-            BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            BattleFieldCard target = (BattleFieldCard)sender;
+            if (target.Data.id != CARD_ID) return;
+            IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(target.Territory);
             if (trait == null) return;
-            if (victim.Data.id != CARD_ID) return;
+            BattleFieldCard owner = trait.Owner;
 
             await trait.AnimActivation();
             await owner.strength.AdjustValueScale(DAMAGE_REL_INCREASE_PER_STACK * trait.GetStacks(), trait);

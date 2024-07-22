@@ -64,7 +64,7 @@ namespace Game
             Vector3 cameraHalfSize = new(Global.Camera.orthographicSize * Global.ASPECT_RATIO, Global.Camera.orthographicSize);
             Vector3 tooltipHalfSize = _renderer.size * Global.PIXEL_SCALE / 2;
 
-            Vector3 pointerPos = Pointer.Position;
+            Vector2 pointerPos = Pointer.Position;
             Vector3 cameraPos = Global.Camera.transform.position;
             Vector3 tooltipPos = new(_posOffset.x < 0 ? pointerPos.x - tooltipHalfSize.x + _posOffset.x : pointerPos.x + tooltipHalfSize.x + _posOffset.x,
                                      _posOffset.y < 0 ? pointerPos.y - tooltipHalfSize.y + _posOffset.y : pointerPos.y + tooltipHalfSize.y + _posOffset.y);

@@ -46,7 +46,7 @@ namespace Game.Traits
             BattleFieldCard target = (BattleFieldCard)e.target.Card;
 
             trait.Storage.turnsDelay += COOLDOWN;
-            await target.Traits.Passives.AdjustStacks(TRAIT_ID, 1, trait);
+            await target.Traits.AdjustStacks(TRAIT_ID, 1, trait);
         }
     }
 }

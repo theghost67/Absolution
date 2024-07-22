@@ -41,7 +41,6 @@ namespace Game
             End:
             PostInvokeCleanUp(unsubbedIds);
             TableEventManager.Remove();
-
             return result;
         }
         public async UniTask<bool> InvokeANDIncluding(object sender, EventArgs e, params string[] ids)

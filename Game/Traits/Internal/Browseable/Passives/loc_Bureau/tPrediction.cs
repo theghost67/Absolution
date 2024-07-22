@@ -67,12 +67,12 @@ namespace Game.Traits
 
             if (e.canSeeTarget)
             {
-                await trait.AnimActivation();
+                await trait.AnimActivation(e.target);
                 await e.target.moxie.AdjustValue(moxie, trait, guid);
             }
             else
             {
-                await trait.AnimDeactivation();
+                await trait.AnimDeactivation(e.target);
                 await e.target.moxie.RevertValue(guid);
             }
         }

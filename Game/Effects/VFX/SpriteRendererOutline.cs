@@ -1,6 +1,5 @@
 ﻿using DG.Tweening;
 using Game.Palette;
-using GreenOne;
 using UnityEngine;
 
 namespace Game.Effects

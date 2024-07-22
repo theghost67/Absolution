@@ -116,7 +116,7 @@ namespace Game.Territories
 
         public void RedrawHealth()
         {
-            RedrawHealth(attached.health);
+            RedrawHealth(attached.health, attached.HealthAtStart);
         }
         public void RedrawGold()
         {
@@ -127,9 +127,9 @@ namespace Game.Territories
             RedrawEther(attached.ether);
         }
 
-        public void RedrawHealth(int value)
+        public void RedrawHealth(int current, int max)
         {
-            _healthText.text = value.ToString();
+            _healthText.text = $"{current}/{max}";
         }
         public void RedrawGold(int value)
         {

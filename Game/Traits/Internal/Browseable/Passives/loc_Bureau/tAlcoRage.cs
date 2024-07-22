@@ -13,7 +13,7 @@ namespace Game.Traits
         const string ID = "alco_rage";
         const int PRIORITY = 5;
         const float HEALTH_ABS_RESTORE = 0.50f;
-        const int MOXIE_ABS_DECREASE = 1;
+        const int MOXIE_ABS_DECREASE = 2;
 
         public tAlcoRage() : base(ID)
         {
@@ -54,12 +54,12 @@ namespace Game.Traits
                 trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnKillConfirmed(object sender, BattleFieldCard victim)
+        static async UniTask OnKillConfirmed(object sender, BattleKillConfirmArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
-            if (victim.Side == owner.Side) return;
+            if (e.victim.Side == owner.Side) return;
 
             int stacks = trait.GetStacks();
             float health = owner.Data.health * HEALTH_ABS_RESTORE * stacks;

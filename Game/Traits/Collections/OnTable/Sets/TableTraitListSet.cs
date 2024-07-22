@@ -42,7 +42,7 @@ namespace Game.Traits
             });
         }
 
-        public ITableTraitListElement this[string id] => (ITableTraitListElement)_passives[id] ?? _actives[id];
+        public ITableTraitListElement this[string id] => (ITableTraitListElement)Passives[id] ?? Actives[id];
         public ITableTraitListElement this[int index] => throw new NotSupportedException($"Trait list set indexing is not supported. Use {nameof(ITableTraitList)} indexing instead.");
 
         public override void Dispose()
@@ -63,6 +63,15 @@ namespace Game.Traits
             _actives.Clear(source);
         }
 
+        public UniTask SetStacks(string id, int stacks, ITableEntrySource source, string entryId = null)
+        {
+            return SetStacks(TraitBrowser.GetTrait(id), stacks, source, entryId);
+        }
+        public UniTask AdjustStacks(string id, int stacks, ITableEntrySource source, string entryId = null)
+        {
+            return AdjustStacks(TraitBrowser.GetTrait(id), stacks, source, entryId);
+        }
+
         public UniTask SetStacks(Trait trait, int stacks, ITableEntrySource source, string entryId = null)
         {
             if (trait.isPassive)
@@ -75,6 +84,7 @@ namespace Game.Traits
                  return _passives.AdjustStacks(trait.id, stacks, source, entryId);
             else return _actives.AdjustStacks(trait.id, stacks, source, entryId);
         }
+
         public void AdjustStacksInRange(IEnumerable<Trait> traits, int stacks, ITableEntrySource source, string entryId = null)
         {
             foreach (Trait trait in traits)

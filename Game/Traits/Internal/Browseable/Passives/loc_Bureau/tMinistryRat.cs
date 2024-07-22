@@ -19,7 +19,7 @@ namespace Game.Traits
             desc = "Вы все одинаковые.";
 
             rarity = Rarity.None;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = BattleRange.none;
         }
         protected tMinistryRat(tMinistryRat other) : base(other) { }
@@ -29,7 +29,7 @@ namespace Game.Traits
         {
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"В конце хода, когда остаётся один на своей стороне территории (П{PRIORITY})",
+                new($"В начале хода, когда остаётся один на своей стороне территории (П{PRIORITY})",
                     $"переходит на вражеское поле напротив, если оно не занято. Тратит все заряды."),
             });
         }
@@ -41,9 +41,9 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
 
             if (trait.WasAdded(e))
-                trait.Territory.OnEndPhase.Add(trait.GuidStr, OnTerritoryEndPhase, PRIORITY);
+                trait.Territory.OnStartPhase.Add(trait.GuidStr, OnTerritoryEndPhase, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Territory.OnEndPhase.Remove(trait.GuidStr);
+                trait.Territory.OnStartPhase.Remove(trait.GuidStr);
         }
 
         async UniTask OnTerritoryEndPhase(object sender, EventArgs e)
@@ -56,7 +56,7 @@ namespace Game.Traits
             if (trait.Side.Fields().WithCard().ToArray().Length != 1) return;
 
             await trait.AnimActivation();
-            await trait.Owner.AttachToField(trait.Owner.Field.Opposite, trait);
+            await trait.Owner.TryAttachToField(trait.Owner.Field.Opposite, trait);
             await trait.SetStacks(0, trait);
         }
     }

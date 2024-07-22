@@ -21,7 +21,7 @@ namespace Game.Traits
 
             rarity = Rarity.None;
             tags = TraitTag.None;
-            range = BattleRange.none;
+            range = BattleRange.self;
         }
         protected tTriptocainum(tTriptocainum other) : base(other) { }
         public override object Clone() => new tTriptocainum(this);
@@ -39,29 +39,34 @@ namespace Game.Traits
         {
             return base.Points(owner, stacks) + 120 * Mathf.Pow(stacks - 1, 2);
         }
+        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        {
+            return new(0, 0.1f);
+        }
+
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return base.IsUsable(e) && e.isInBattle && e.target.Opposite.Card == null;
+            return base.IsUsable(e) && e.isInBattle;
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
             await base.OnUse(e);
             BattleActiveTrait trait = (BattleActiveTrait)e.trait;
 
-            float strength = DAMAGE_REL_INCREASE * 100 * trait.GetStacks();
+            float strength = DAMAGE_REL_INCREASE * trait.GetStacks();
             await trait.Owner.strength.AdjustValueScale(strength, trait);
             trait.Owner.OnInitiationPostSent.Add(trait.GuidStr, OnInitiationPostSent);
             await trait.SetStacks(0, trait.Side);
         }
 
-        static async UniTask OnInitiationPostSent(object sender, BattleInitiationSendArgs sArgs)
+        static async UniTask OnInitiationPostSent(object sender, BattleInitiationSendArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await owner.Kill(BattleKillMode.IgnoreHealthRestore, trait);
+            await owner.TryKill(BattleKillMode.IgnoreHealthRestore, trait);
         }
     }
 }

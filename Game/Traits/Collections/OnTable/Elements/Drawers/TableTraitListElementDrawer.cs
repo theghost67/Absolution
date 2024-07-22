@@ -17,6 +17,7 @@ namespace Game.Traits
     /// </summary>
     public abstract class TableTraitListElementDrawer : Drawer
     {
+        public const float ACTIVATION_DUR_ALL = ACTIVATION_DUR_APPEAR + ACTIVATION_DUR_DISPLAY + ACTIVATION_DUR_DISAPPEAR;
         const float TWEEN_DURATION = 0.50f;
         const float ACTIVATION_DUR_APPEAR = 0.50f;
         const float ACTIVATION_DUR_DISPLAY = 1.00f;
@@ -72,14 +73,11 @@ namespace Game.Traits
             enqueueAnims = true;
             BlocksSelection = false;
             ChangePointer = ChangePointerBase();
-            OnMouseEnter += OnMouseEnterBase;
-            OnMouseLeave += OnMouseLeaveBase;
-            OnMouseClick += OnMouseClickBase;
 
             RedrawRarityIconAsDefault();
             RedrawTraitIconAsDefault();
             RedrawNameAsDefault();
-            RedrawStacksAsDefault();
+            RedrawStacks();
             SetColor(GetCooldownColor());
         }
 
@@ -115,7 +113,7 @@ namespace Game.Traits
                 Rarity.None => _traitRarityIcon1Sprite,
                 Rarity.Rare => _traitRarityIcon2Sprite,
                 Rarity.Epic => _traitRarityIcon3Sprite,
-                _ => throw new System.NotSupportedException(),
+                _ => throw new NotSupportedException(),
             };
             RedrawRarityIcon(sprite);
         }
@@ -127,9 +125,9 @@ namespace Game.Traits
         {
             RedrawName(attached.Trait.Data.name);
         }
-        public void RedrawStacksAsDefault()
+        public void RedrawStacks()
         {
-            RedrawStacks(attached.Trait.Owner.Data.traits[attached.Trait.Data.id]?.Stacks ?? 0);
+            RedrawStacks(attached.Stacks);
         }
 
         public void RedrawRarityIcon(Sprite sprite)
@@ -205,18 +203,18 @@ namespace Game.Traits
 
             TableTraitListSet set = attached.List.Set;
             TableTraitListSetDrawer setDrawer = set.Drawer;
-            TableFieldCardDrawer cardDrawer = set.Owner.Drawer;
+            TableFieldCard owner = set.Owner;
+            TableFieldCardDrawer ownerDrawer = owner.Drawer;
 
             if (setDrawer == null)
                 return null;
 
             _isActivated = true;
-            bool hadVisibleBg = cardDrawer.BgIsVisible;
             setDrawer.HideStoredElementsInstantly();
-            cardDrawer.ShowBgInstantly();
+            ownerDrawer.ShowBgInstantly();
 
             Trait data = attached.Trait.Data;
-            GameObject prefab = GameObject.Instantiate(_activationPrefab, cardDrawer.transform);
+            GameObject prefab = GameObject.Instantiate(_activationPrefab, ownerDrawer.transform);
             Transform prefabTransform = prefab.transform;
             TextMeshPro prefabTextMesh = prefabTransform.Find<TextMeshPro>("Text");
             SpriteRenderer prefabRenderer = prefabTransform.Find<SpriteRenderer>("Icon");
@@ -262,14 +260,15 @@ namespace Game.Traits
             seq.OnComplete(() =>
             {
                 prefab.Destroy();
-                if (cardDrawer.IsSelected || setDrawer.IsSelected)
+                if (setDrawer.IsSelected && setDrawer.elements.ContainsTraits)
                     setDrawer.ShowStoredElements();
-                else if (!hadVisibleBg) cardDrawer.HideBg();
+                else if (!owner.HasInitiationPreview()) 
+                    ownerDrawer.HideBg();
                 _isActivated = false;
             });
 
             _activationTween = seq;
-            return seq.Play();
+            return _activationTween.Play();
         }
         public Tween AnimScroll(float y)
         {
@@ -326,6 +325,9 @@ namespace Game.Traits
         {
             base.OnMouseClickBase(sender, e);
             if (!e.isLmbDown) return;
+
+            e.handled |= TableEventManager.CanAwaitAnyEvents();
+            if (e.handled) return;
 
             if (ShakeOnMouseClickLeft())
                 transform.DOAShake();

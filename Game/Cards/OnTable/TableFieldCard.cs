@@ -93,10 +93,10 @@ namespace Game.Cards
 
         public virtual UniTask<bool> CanBeAttachedToField(TableFieldAttachArgs e)
         {
-            bool result = e.field != null && e.field.Card == null;
+            bool result = e.field != _field && (e.field == null || e.field.Card == null);
             return UniTask.FromResult(result);
         }
-        public async UniTask AttachToField(TableField field, ITableEntrySource source)
+        public async UniTask TryAttachToField(TableField field, ITableEntrySource source)
         {
             TableEventManager.Add();
             TableFieldAttachArgs args = new(field, source);

@@ -20,7 +20,7 @@ namespace Game.Traits
             name = "Кипящая злость";
             desc = "Кажется, с каждой секундой ей становится только хуже.";
 
-            rarity = Rarity.Rare;
+            rarity = Rarity.None;
             tags = TraitTag.None;
             range = BattleRange.none;
         }

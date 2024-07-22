@@ -32,7 +32,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"В начале следующего хода (П{PRIORITY})",
-                    $"Наложит на себя <i>{traitName}</i> с {traitStacks} зарядами."),
+                    $"Наложит на себя <i>{traitName}</i> с {traitStacks} зарядами. Тратит все заряды."),
             });
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -45,7 +45,7 @@ namespace Game.Traits
             if (trait.WasAdded(e))
                 trait.Territory.OnStartPhase.Add(trait.GuidStr, OnTerritoryStartPhase, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
+                trait.Territory.OnStartPhase.Remove(trait.GuidStr);
         }
 
         async UniTask OnTerritoryStartPhase(object sender, EventArgs e)
@@ -57,8 +57,8 @@ namespace Game.Traits
 
             int stacks = trait.GetStacks();
             await trait.AnimActivation();
-            await trait.Owner.Traits.Passives.AdjustStacks(TRAIT_ID, stacks, trait);
-            trait.SetStacks(0, trait);
+            await trait.Owner.Traits.AdjustStacks(TRAIT_ID, stacks, trait);
+            await trait.SetStacks(0, trait);
         }
     }
 }

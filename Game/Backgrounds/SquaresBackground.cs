@@ -1,9 +1,7 @@
 using DG.Tweening;
 using Game.Palette;
 using MyBox;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 

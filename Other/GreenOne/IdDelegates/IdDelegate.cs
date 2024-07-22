@@ -39,11 +39,16 @@ namespace GreenOne
                 isSubscribed = true;
                 isIncluded = true;
             }
-            public override string ToString() => id.ToString();
+            public override string ToString()
+            {
+                return $"id: {id}, priority: {priority} ({GetType()})";
+            }
             public object Clone() => new Subscriber(id, @delegate, priority) { isSubscribed = isSubscribed, isIncluded = isIncluded };
             public int CompareTo(Subscriber other)
             {
-                return priority.CompareTo(other.priority);
+                if (priority > other.priority)
+                     return 1;
+                else return -1;
             }
         }
 

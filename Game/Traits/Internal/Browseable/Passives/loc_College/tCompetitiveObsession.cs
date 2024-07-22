@@ -55,30 +55,32 @@ namespace Game.Traits
             if (!e.isInBattle) return;
 
             BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            BattleFieldCard owner = trait.Owner;
+
             if (!trait.Side.isMe) return;
             _ownerDeckGuid = trait.Owner.Data.Guid;
 
             if (trait.WasAdded(e))
             {
-                trait.Owner.OnFieldPostAttached.Add(trait.GuidStr, OnOwnerFieldPostAttached, PRIORITY);
-                trait.Owner.Territory.OnPlayerWon.Add(trait.GuidStr, OnPlayerWon, PRIORITY);
-                trait.Owner.Territory.OnPlayerLost.Add(trait.GuidStr, OnPlayerLost, PRIORITY);
+                owner.OnFieldPostAttached.Add(trait.GuidStr, OnOwnerFieldPostAttached, PRIORITY);
+                owner.Territory.OnPlayerWon.Add(trait.GuidStr, OnPlayerWon, PRIORITY);
+                owner.Territory.OnPlayerLost.Add(trait.GuidStr, OnPlayerLost, PRIORITY);
             }
             else if (trait.WasRemoved(e))
             {
-                trait.Owner.OnFieldPostAttached.Remove(trait.GuidStr);
-                trait.Owner.Territory.OnPlayerWon.Remove(trait.GuidStr);
-                trait.Owner.Territory.OnPlayerLost.Remove(trait.GuidStr);
+                owner.OnFieldPostAttached.Remove(trait.GuidStr);
+                owner.Territory.OnPlayerWon.Remove(trait.GuidStr);
+                owner.Territory.OnPlayerLost.Remove(trait.GuidStr);
             }
         }
 
         async UniTask OnOwnerFieldPostAttached(object sender, TableFieldAttachArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
-            PassiveTrait traitData = trait.Data;
+            Trait traitData = trait.Data;
             TraitStorage traitStorage = traitData.storage;
 
             bool hasStrengthEffect = traitStorage.TryGetValue(STRENGTH_REL_STORAGE_ID, out object strengthRel);

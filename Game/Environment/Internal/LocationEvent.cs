@@ -1,7 +1,5 @@
 ﻿using Game.Cards;
 using Game.Territories;
-using Game.Menus;
-using Game.Territories;
 using System;
 
 namespace Game.Environment

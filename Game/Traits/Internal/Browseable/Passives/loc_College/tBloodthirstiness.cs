@@ -19,7 +19,7 @@ namespace Game.Traits
             name = "Кровожадность";
             desc = "Ещё, ЕЩЁ! Мне нужно больше крови!";
 
-            rarity = Rarity.None;
+            rarity = Rarity.Rare;
             tags = TraitTag.None;
             range = new BattleRange(TerritoryRange.ownerSingle, TerritoryRange.oppositeAll);
         }
@@ -47,15 +47,15 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
 
             if (trait.WasAdded(e))
-                trait.Owner.OnKillConfirmed.Add(trait.GuidStr, OnOwnerKill, PRIORITY);
+                trait.Owner.OnKillConfirmed.Add(trait.GuidStr, OnOwnerKillConfirmed, PRIORITY);
             else if (trait.WasRemoved(e))
                 trait.Owner.OnKillConfirmed.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerKill(object sender, BattleFieldCard victim)
+        static async UniTask OnOwnerKillConfirmed(object sender, BattleKillConfirmArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
             await trait.AnimActivation();

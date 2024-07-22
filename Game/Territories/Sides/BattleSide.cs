@@ -61,8 +61,8 @@ namespace Game.Territories
             _deck = DeckCreator();
 
             _healthAtStart = HealthAtStartFunc();
-            _goldAtStart = HealthAtStartFunc();
-            _etherAtStart = HealthAtStartFunc();
+            _goldAtStart = GoldAtStartFunc();
+            _etherAtStart = EtherAtStartFunc();
 
             health = new TableStat(nameof(health), this, _healthAtStart);
             health.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);

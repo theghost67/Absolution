@@ -53,9 +53,9 @@ namespace Game.Cards
             else return null;
         }
 
-        public bool TryUse()
+        public void TryUse()
         {
-            return TryUse(new TableFloatCardUseArgs(this, _side.Territory));
+            TryUse(new TableFloatCardUseArgs(this, _side.Territory));
         }
         protected override Drawer DrawerCreator(Transform parent)
         {

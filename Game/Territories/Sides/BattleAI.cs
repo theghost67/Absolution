@@ -165,7 +165,6 @@ namespace Game.Territories
         }
         public async UniTask MakeTurn()
         {
-            await TableEventManager.WhenAll();
             if (_isMakingTurn || _side.Territory.PhaseSide != _side)
             {
                 Debug.LogError($"can't make a turn because it's not AI's place phase or already making turn.");
@@ -241,13 +240,17 @@ namespace Game.Territories
                 if (card.Data.isField)
                 {
                     BattleFieldCardWeightResult fieldRes = GetBestFieldCardPlaceResult((BattleFieldCard)card, sidesWeight);
-                    TableConsole.LogToFile("ai/vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: abs: {fieldRes.WeightDeltaAbs}, rel: {fieldRes.WeightDeltaRel}, field: {fieldRes.field.TableNameDebug}");
+                    if (fieldRes != null)
+                         TableConsole.LogToFile("vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: abs: {fieldRes.WeightDeltaAbs}, rel: {fieldRes.WeightDeltaRel}, field: {fieldRes.field.TableNameDebug}");
+                    else TableConsole.LogToFile("vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: null (no fields or cannot afford)");
                     result = fieldRes;
                 }
                 else
                 {
                     BattleFloatCardWeightResult floatRes = GetBestFloatCardUseResult((BattleFloatCard)card, sidesWeight);
-                    TableConsole.LogToFile("ai/vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: abs: {floatRes.WeightDeltaAbs}, rel: {floatRes.WeightDeltaRel}");
+                    if (floatRes != null)
+                         TableConsole.LogToFile("vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: abs: {floatRes.WeightDeltaAbs}, rel: {floatRes.WeightDeltaRel}");
+                    else TableConsole.LogToFile("vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: null (cannot afford)");
                     result = floatRes;
                 }
                 if (result != null && result.WeightDeltaAbs != 0 && result.WeightDeltaAbs > noPlaceResult.WeightDeltaAbs)
@@ -291,7 +294,7 @@ namespace Game.Territories
                         goto PickResultAgain;
                 }
                 resultCard.TryDropOn(resultField);
-                await TableEventManager.WhenAll();
+                await TableEventManager.AwaitAnyEvents();
                 await UniTask.Delay(TURN_DELAY);
                 TableConsole.LogToFile("ai", $"CARD PLACEMENT ENDS: {result.Entity.TableNameDebug}");
                 goto End;
@@ -340,8 +343,8 @@ namespace Game.Territories
                 BattleActiveTraitWeightResult result = GetBestActiveTraitUseResult(element.Trait, sidesWeight);
 
                 if (result != null)
-                     TableConsole.LogToFile("ai/vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: abs: {result.WeightDeltaAbs}, rel: {result.WeightDeltaRel}");
-                else TableConsole.LogToFile("ai/vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: null (impossible to use)");
+                     TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: abs: {result.WeightDeltaAbs}, rel: {result.WeightDeltaRel}");
+                else TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: null (impossible to use)");
 
                 if (result != null && result.WeightDeltaAbs != 0 && result.WeightDeltaAbs > noUseResult.WeightDeltaAbs) 
                     results.Add(result);
@@ -362,7 +365,7 @@ namespace Game.Territories
                 goto PickResultAgain;
 
             activeTrait.TryUse(bestResult.target);
-            await TableEventManager.WhenAll();
+            await TableEventManager.AwaitAnyEvents();
             await UniTask.Delay(TURN_DELAY);
             goto Start;
         }
@@ -418,7 +421,7 @@ namespace Game.Territories
         IBattleWeightResult GetNoPlacementResult(float2 sidesWeight)
         {
             BeginWritingLastTerrLogs();
-            UseVirtual(terr => terr.LastPhase(), sidesWeight, out float2 deltas);
+            UseVirtual(null, sidesWeight, out float2 deltas);
             StopWriteLastTerrLogsForNoPlacement();
             BattleFloatCardWeightResult result = new(null, deltas[0], deltas[1]);
             TableConsole.LogToFile("ai", $"NOP result: delta abs: {result.WeightDeltaAbs}.");
@@ -542,12 +545,14 @@ namespace Game.Territories
             }
         }
 
-        void UseVirtual(Action<BattleTerritory> useFunc, float2 sidesWeight, out float2 deltas)
+        void UseVirtual(Action<BattleTerritory>? useFunc, float2 sidesWeight, out float2 deltas)
         {
             BattleTerritory terrClone = CloneTerritory(_side.Territory, out _);
             BattleSide sideClone = _side.isMe ? terrClone.Player : terrClone.Enemy;
 
-            useFunc(terrClone);
+            useFunc?.Invoke(terrClone);
+            terrClone.LastPhase();
+
             deltas = CalculateWeightDeltas(sidesWeight, sideClone, sideClone.Opposite);
             terrClone.Dispose();
         }

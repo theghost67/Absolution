@@ -3,7 +3,6 @@ using DG.Tweening;
 using Game.Effects;
 using Game.Menus;
 using Game.Palette;
-using Game.Traits;
 using GreenOne;
 using MyBox;
 using TMPro;
@@ -374,6 +373,7 @@ namespace Game.Cards
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseEnterBase(sender, e);
+            if (e.handled) return;
             if (IgnoreFirstMouseEnter)
             {
                 IgnoreFirstMouseEnter = false;

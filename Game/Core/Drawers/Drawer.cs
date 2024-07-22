@@ -82,8 +82,6 @@ namespace Game
         // this class implements colliders' mouse events logic
         class Behaviour : MonoBehaviour, IComparable<Behaviour>
         {
-            //const float ALIVE_TIME_REQUIRED = 1f;
-
             public static IEnumerable<Behaviour> SelectedBehaviours => _selectedBehaviours;
             public static IEnumerable<Drawer> SelectedDrawers => _selectedBehaviours.Select(b => b._drawer);
 
@@ -108,11 +106,8 @@ namespace Game
             static Vector2 _ptrLastPos;
             static bool _mouseClickHandled;
             static bool _mouseScrollHandled;
-            static DrawerMouseEventArgs _argsLast;
 
             Drawer _drawer;
-            //float _aliveTime; // used to disable selection on first frames (note: this field's value changes only if it's less than ALIVE_TIME_REQUIRED)
-
             bool _selected;
             bool _active;
             bool _destroyed;
@@ -151,13 +146,12 @@ namespace Game
             static void OnUpdate()
             {
                 if (_isQuitting) return;
-
                 _mouseClickHandled = false;
                 _mouseScrollHandled = false;
 
                 Vector2 pos = Pointer.Position;
-                _argsLast = new(pos, pos - _ptrLastPos, Input.GetMouseButtonDown(0), Input.GetMouseButtonDown(1), Input.mouseScrollDelta.y);
-                UpdateSelections(_argsLast);
+                DrawerMouseEventArgs args = new(pos, pos - _ptrLastPos, Input.GetMouseButtonDown(0), Input.GetMouseButtonDown(1), Input.mouseScrollDelta.y);
+                UpdateSelections(args);
             }
             static void OnWantToQuit()
             {
@@ -289,13 +283,17 @@ namespace Game
             void Reselect()
             {
                 if (!_selected) return;
-                _drawer.OnMouseLeave.Invoke(_drawer, _argsLast);
-                _drawer.OnMouseEnter.Invoke(_drawer, _argsLast);
+                Vector2 pos = Pointer.Position;
+                DrawerMouseEventArgs args = new(pos, Vector2.zero, Input.GetMouseButtonDown(0), Input.GetMouseButtonDown(1), Input.mouseScrollDelta.y);
+                _drawer.OnMouseLeave.Invoke(_drawer, args);
+                _drawer.OnMouseEnter.Invoke(_drawer, args);
             }
             void Deselect()
             {
                 if (!_selected) return;
-                _drawer.OnMouseLeave.Invoke(_drawer, _argsLast);
+                Vector2 pos = Pointer.Position;
+                DrawerMouseEventArgs args = new(pos, Vector2.zero, Input.GetMouseButtonDown(0), Input.GetMouseButtonDown(1), Input.mouseScrollDelta.y);
+                _drawer.OnMouseLeave.Invoke(_drawer, args);
                 _overlappedBehaviours.Remove(this);
                 RemoveFromSelected();
             }

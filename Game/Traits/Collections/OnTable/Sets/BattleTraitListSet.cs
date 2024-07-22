@@ -1,5 +1,5 @@
 ﻿using Game.Cards;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 
 namespace Game.Traits
@@ -25,13 +25,15 @@ namespace Game.Traits
             TryOnInstantiatedAction(GetType(), typeof(BattleTraitListSet));
         }
 
+        public new IBattleTraitListElement this[string id] => (IBattleTraitListElement)Passives[id] ?? Actives[id];
+        public new IBattleTraitListElement this[int index] => throw new NotSupportedException($"Trait list set indexing is not supported. Use {nameof(ITableTraitList)} indexing instead.");
+
         public override object Clone(CloneArgs args)
         {
             if (args is BattleTraitListSetCloneArgs cArgs)
                  return new BattleTraitListSet(this, cArgs);
             else return null;
         }
-
         public new IEnumerator<IBattleTraitListElement> GetEnumerator()
         {
             foreach (BattlePassiveTraitListElement element in Passives)

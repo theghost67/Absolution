@@ -1,9 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
-using Game.Effects;
-using Game.Palette;
 using Game.Traits;
-using GreenOne;
 using MyBox;
 using UnityEngine;
 
@@ -112,12 +108,28 @@ namespace Game.Cards
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseEnterBase(sender, e);
+            if (e.handled) return;
+
+            TableTraitListSetDrawer setDrawer = Traits;
+            if (setDrawer == null) return;
+            if (!setDrawer.elements.ContainsTraits) return;
+
             Traits?.ShowStoredElementsInstantly();
+            ShowBgInstantly();
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseLeaveBase(sender, e);
-            Traits?.HideStoredElementsInstantly();
+
+            TableTraitListSetDrawer setDrawer = Traits;
+            if (setDrawer == null) return;
+            if (!setDrawer.elements.ContainsTraits) return;
+
+            setDrawer?.HideStoredElementsInstantly();
+            if (attached.HasInitiationPreview()) return;
+            if (setDrawer.elements.IsAnyActivated) return;
+
+            HideBgInstantly();
         }
         protected override OutlineType GetOutlineType()
         {

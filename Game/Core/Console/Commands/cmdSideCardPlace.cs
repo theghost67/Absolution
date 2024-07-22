@@ -44,18 +44,6 @@ namespace Game
                 return true;
             }
         }
-
-        readonly struct Pos
-        {
-            public readonly int x;
-            public readonly bool isPlayer;
-            public Pos(int x, bool isPlayer)
-            {
-                this.x = x;
-                this.isPlayer = isPlayer;
-            }
-        }
-
         public cmdSideCardPlace() : base(ID, DESC) { }
 
         protected override void Execute(CommandArgInputDict args)

@@ -19,7 +19,7 @@ namespace Game.Traits
             desc = "Я попал! Я попал в него! Это ведь он?";
 
             rarity = Rarity.Rare;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = BattleRange.none;
         }
         protected tCrosseyedShooter(tCrosseyedShooter other) : base(other) { }
@@ -46,31 +46,29 @@ namespace Game.Traits
                 trait.Owner.OnInitiationPreSent.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs sArgs)
+        static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
+            await trait.AnimActivation();
             int2 pos = owner.Field.Opposite.pos;
-            sArgs.ClearReceivers();
+            e.ClearReceivers();
 
             if (trait.Storage.ContainsKey(ID))
-            {
-                pos.x--; // opposite left
-                trait.Storage.Remove(ID);
-            }
-            else
             {
                 pos.x++; // opposite right
                 trait.Storage.Remove(ID);
             }
+            else
+            {
+                pos.x--; // opposite left
+                trait.Storage.Add(ID, null);
+            }
 
             BattleField field = owner.Territory.Field(pos);
-            if (field == null) return;
-
-            await trait.AnimActivation();
-            sArgs.AddReceiver(field);
+            if (field != null) e.AddReceiver(field);
         }
     }
 }

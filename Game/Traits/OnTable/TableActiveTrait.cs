@@ -51,14 +51,13 @@ namespace Game.Traits
             else return Owner.Traits.Actives.AdjustStacks(_data.id, delta, source);
         }
 
-        public bool TryUse(TableField target)
+        public async void TryUse(TableField target)
         {
             TableActiveTraitUseArgs e = new(this, target);
-            if (!_data.IsUsable(e)) return false;
-
+            if (!_data.IsUsable(e)) return;
             TableEventManager.Add();
-            _data.OnUse(e).ContinueWith(TableEventManager.Remove);
-            return true;
+            await _data.OnUse(e);
+            TableEventManager.Remove();
         }
         public bool IsUsable(TableActiveTraitUseArgs e)
         {

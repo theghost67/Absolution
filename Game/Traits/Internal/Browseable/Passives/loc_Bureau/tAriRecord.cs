@@ -51,7 +51,7 @@ namespace Game.Traits
             else e.target.OnPostKilled.Remove(trait.GuidStr);
         }
 
-        async UniTask OnTargetPostKilled(object sender, ITableEntrySource source)
+        async UniTask OnTargetPostKilled(object sender, BattleKillAttemptArgs e)
         {
             BattleFieldCard target = (BattleFieldCard)sender;
             BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(target.Territory);
@@ -61,7 +61,7 @@ namespace Game.Traits
 
             int stacks = TRAITS_PER_STACK * trait.GetStacks();
             await trait.AnimActivation();
-            await trait.Owner.Traits.Passives.AdjustStacks(TRAIT_ID, stacks, trait);
+            await trait.Owner.Traits.AdjustStacks(TRAIT_ID, stacks, trait);
         }
     }
 }

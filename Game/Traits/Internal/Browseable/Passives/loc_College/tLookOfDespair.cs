@@ -48,11 +48,15 @@ namespace Game.Traits
             string entryId = $"{trait.Guid}/{e.target.Guid}";
 
             if (e.canSeeTarget)
-			{
-				await trait.AnimActivation();
+            {
+                await trait.AnimActivation(e.target);
                 await e.target.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait, entryId);
-			}
-            else await e.target.moxie.RevertValue(entryId);
+            }
+            else
+            {
+                await trait.AnimDeactivation(e.target);
+                await e.target.moxie.RevertValue(entryId);
+            }
         }
     }
 }

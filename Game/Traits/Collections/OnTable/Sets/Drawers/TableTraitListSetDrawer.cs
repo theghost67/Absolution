@@ -65,8 +65,8 @@ namespace Game.Traits
 
         public Tween ShowStoredElements()
         {
-            if (!elements.ContainsTraits) return _animAlphaTween;
-            if (gameObject.activeSelf && !_animAlphaTween.IsActive() && _animAlpha == 1) return _animAlphaTween;
+            if (gameObject.activeSelf && !_animAlphaTween.IsActive() && _animAlpha == 1) 
+                return _animAlphaTween;
 
             gameObject.SetActive(true);
             attached.Owner.Drawer.ShowBg();
@@ -76,8 +76,8 @@ namespace Game.Traits
         }
         public Tween HideStoredElements()
         {
-            if (!elements.ContainsTraits) return _animAlphaTween;
-            if (!gameObject.activeSelf || (!_animAlphaTween.IsActive() && _animAlpha == 0)) return _animAlphaTween;
+            if (!gameObject.activeSelf || (!_animAlphaTween.IsActive() && _animAlpha == 0)) 
+                return _animAlphaTween;
 
             attached.Owner.Drawer.HideBg();
             _animAlphaTween.Kill();
@@ -99,7 +99,6 @@ namespace Game.Traits
             gameObject.SetActive(true);
             _animAlphaTween.Kill();
             SetAlpha(1f);
-            attached.Owner.Drawer.ShowBgInstantly();
         }
         public void HideStoredElementsInstantly()
         {
@@ -109,7 +108,6 @@ namespace Game.Traits
             gameObject.SetActive(false);
             _animAlphaTween.Kill();
             SetAlpha(0f);
-            attached.Owner.Drawer.HideBgInstantly();
         }
 
         protected override void DestroyInstantly()

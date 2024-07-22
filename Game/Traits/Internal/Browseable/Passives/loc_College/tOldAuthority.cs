@@ -45,23 +45,23 @@ namespace Game.Traits
                 trait.Owner.OnInitiationPreSent.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs sArgs)
+        static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
             bool firstActivation = true;
-            for (int i = 0; i < sArgs.Receivers.Count; i++)
+            for (int i = 0; i < e.Receivers.Count; i++)
             {
-                BattleField receiver = sArgs.Receivers[i];
+                BattleField receiver = e.Receivers[i];
                 if (receiver.Card == null || receiver.Card.Traits.Passive(ID) == null) continue;
                 if (firstActivation)
                 {
                     await trait.AnimActivation();
                     firstActivation = false;
                 }
-                sArgs.RemoveReceiver(receiver);
+                e.RemoveReceiver(receiver);
                 i--;
             }
         }

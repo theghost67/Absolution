@@ -22,6 +22,7 @@ namespace Game.Traits
         public bool ContainsTraits => _storage.Count != 0;
         public bool IsAnySelected => IsAnyElementSelected();
         public bool IsAnyActivated => IsAnyElementActivated();
+        public bool IsRunning => _isRunning;
 
         readonly TableTraitListSetDrawer _drawer;
         readonly List<ITableTraitListElement> _storage;
@@ -215,7 +216,7 @@ namespace Game.Traits
             if (OnceComplete == null)
                 await UniTask.Delay(1000);
 
-            if ((!_drawer.Owner?.IsSelected) ?? false)
+            if (_drawer.Owner != null && !_drawer.Owner.IsSelected && !_drawer.Owner.HasInitiationPreview())
                 _drawer.HideStoredElements();
 
             _isRunning = false;

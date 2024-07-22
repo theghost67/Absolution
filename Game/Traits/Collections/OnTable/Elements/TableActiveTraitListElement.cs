@@ -14,7 +14,7 @@ namespace Game.Traits
         readonly TableActiveTraitList _list;
         readonly TableActiveTrait _trait;
 
-        public TableActiveTraitListElement(TableActiveTraitList list, TableActiveTrait trait) : base(list, trait)
+        public TableActiveTraitListElement(TableActiveTraitList list, TableActiveTrait trait, int stacks) : base(list, trait, stacks)
         {
             _list = list;
             _trait = trait;

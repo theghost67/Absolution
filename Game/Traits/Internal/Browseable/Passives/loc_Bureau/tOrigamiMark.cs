@@ -47,15 +47,18 @@ namespace Game.Traits
                 trait.Owner.OnPostKilled.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerPostKilled(object sender, ITableEntrySource source)
+        static async UniTask OnOwnerPostKilled(object sender, BattleKillAttemptArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
+
+            BattleField field = e.field;
+            if (field.Card != null) return;
 
             FieldCard card = CardBrowser.NewField(CARD_ID);
             await trait.AnimActivation();
-            await owner.Territory.PlaceFieldCard(card, owner.Field, trait);
+            await owner.Territory.PlaceFieldCard(card, field, trait);
         }
     }
 }

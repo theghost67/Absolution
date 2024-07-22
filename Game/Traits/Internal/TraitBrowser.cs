@@ -67,15 +67,16 @@ namespace Game.Traits
             AddPassive(new tAlcoRage());
             AddPassive(new tAriRecord());
             AddPassive(new tBecomeHuman());
+            AddPassive(new tBecomeMachine());
             AddPassive(new tCrosseyedShooter());
-            AddPassive(new tMinistryRat());
 
+            AddPassive(new tMinistryRat());
             AddPassive(new tOrderOfAttackWait());
             AddPassive(new tOrderOfDefenceWait());
             AddPassive(new tOrigamiKiller());
             AddPassive(new tOrigamiMark());
-            AddPassive(new tPrediction());
 
+            AddPassive(new tPrediction());
             AddPassive(new tStealth());
             AddPassive(new tTimeToDecideMachine());
 

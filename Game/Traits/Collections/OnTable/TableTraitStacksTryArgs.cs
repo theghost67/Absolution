@@ -6,13 +6,13 @@
     public class TableTraitStacksTryArgs
     {
         public readonly string id;
-        public readonly int stacks;
+        public readonly int delta;
         public readonly ITableEntrySource source; // can be null
 
-        public TableTraitStacksTryArgs(string id, int stacks, ITableEntrySource source)
+        public TableTraitStacksTryArgs(string id, int delta, ITableEntrySource source)
         {
             this.id = id;
-            this.stacks = stacks;
+            this.delta = delta;
             this.source = source;
         }
     }

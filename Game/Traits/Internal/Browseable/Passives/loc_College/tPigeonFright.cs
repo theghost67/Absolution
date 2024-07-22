@@ -58,7 +58,7 @@ namespace Game.Traits
         static async UniTask OnInitiationPreReceived(object sender, BattleInitiationRecvArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
             BattleField[] fields = trait.Area.PossibleTargets().WithoutCard().ToArray();
@@ -69,7 +69,7 @@ namespace Game.Traits
             e.Receiver = prevField;
 
             await trait.AnimActivation();
-            await owner.AttachToField(fields.First(), trait);
+            await owner.TryAttachToField(fields.First(), trait);
 
             await owner.Territory.PlaceFieldCard(spawnCardData, prevField, trait.Side);
             await trait.AdjustStacks(-1, e.Sender);

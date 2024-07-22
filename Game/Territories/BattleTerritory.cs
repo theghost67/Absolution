@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Game.Cards;
 using Game.Menus;
 using System;
@@ -19,6 +20,7 @@ namespace Game.Territories
         protected const int START_PHASE_INDEX = 0;
         protected const int END_PHASE_INDEX = 3;
 
+        // NOTE: do NOT add handlers to OnEndPhase outside of territories classes (it will have same effect as adding to OnStartPhase)
         public IIdEventVoidAsync OnStartPhase => _onStartPhase;
         public IIdEventVoidAsync OnEnemyPhase => _onEnemyPhase;
         public IIdEventVoidAsync OnPlayerPhase => _onPlayerPhase;
@@ -96,13 +98,13 @@ namespace Game.Territories
             _onPlayerWon = new TableEventVoid();
             _onPlayerLost = new TableEventVoid();
 
-            _onStartPhase.Add(_eventsGuid, OnStartPhaseBase);
-            _onEnemyPhase.Add(_eventsGuid, OnEnemyPhaseBase);
-            _onPlayerPhase.Add(_eventsGuid, OnPlayerPhaseBase);
-            _onEndPhase.Add(_eventsGuid, OnEndPhaseBase);
-            _onNextPhase.Add(_eventsGuid, OnNextPhaseBase);
-            _onPlayerWon.Add(_eventsGuid, OnPlayerWonBase);
-            _onPlayerLost.Add(_eventsGuid, OnPlayerLostBase);
+            _onStartPhase.Add(_eventsGuid, OnStartPhaseBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onEnemyPhase.Add(_eventsGuid, OnEnemyPhaseBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onPlayerPhase.Add(_eventsGuid, OnPlayerPhaseBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onEndPhase.Add(_eventsGuid, OnEndPhaseBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onNextPhase.Add(_eventsGuid, OnNextPhaseBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onPlayerWon.Add(_eventsGuid, OnPlayerWonBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _onPlayerLost.Add(_eventsGuid, OnPlayerLostBase_TOP, TableEventVoid.TOP_PRIORITY);
 
             _phaseCycleEvents.Add(_onStartPhase);
             if (_playerMovesFirst)
@@ -233,22 +235,37 @@ namespace Game.Territories
             return _player == side ? _enemy : _player;
         }
         
-        public UniTask<BattleFieldCard> PlaceFieldCard(FieldCard data, BattleField field,  ITableEntrySource source)
+        public UniTask<BattleFieldCard> PlaceFieldCard(FieldCard data, BattleField field, ITableEntrySource source)
         {
-            if (data == null) throw new NullReferenceException();
+            if (data == null || field == null) 
+                throw new NullReferenceException();
+
             BattleFieldCard card = FieldCardCreator(data, field.Side);
+            if (card.Drawer != null)
+            {
+                card.Drawer.SetCollider(false);
+                card.Drawer.IgnoreFirstMouseEnter = true;
+                card.Drawer.transform.position = field.Drawer.transform.position;
+                card.Drawer.SetAlpha(0);
+                card.Drawer.DOFade(1, 1).SetEase(Ease.InCubic).OnComplete(() => card.Drawer.SetCollider(true));
+            }
             return PlaceFieldCard(card, field, source);
         }
         public UniTask<BattleFloatCard> PlaceFloatCard(FloatCard data, BattleSide side, ITableEntrySource source)
         {
-            if (data == null) throw new NullReferenceException();
+            if (data == null)
+                throw new NullReferenceException();
+
             BattleFloatCard card = FloatCardCreator(data, side);
+
             return PlaceFloatCard(card, source);
         }
 
         public async UniTask<BattleFieldCard> PlaceFieldCard(BattleFieldCard card, BattleField field, ITableEntrySource source)
         {
-            if (card == null) throw new NullReferenceException();
+            if (card == null || field == null)
+                throw new NullReferenceException();
+
             string sourceName = source?.TableName;
             string sourceNameDebug = source?.TableNameDebug;
 
@@ -260,18 +277,24 @@ namespace Game.Territories
             }
 
             TableConsole.LogToFile("terr", $"{TableNameDebug}: field card placement: id: {card.Data.id}, field: {field.TableNameDebug} (by: {sourceNameDebug}).");
-            await card.AttachToField(field, source);
+            await card.TryAttachToField(field, source);
+            if (card.Field == null)
+            {
+                card.Dispose();
+                throw new InvalidOperationException("Territory field card placement failed. Field is already occupied.");
+            }
             return card;
         }
         public async UniTask<BattleFloatCard> PlaceFloatCard(BattleFloatCard card, ITableEntrySource source)
         {
             if (card == null) throw new NullReferenceException();
-            if (!card.TryUse())
+            if (!card.IsUsable(new TableFloatCardUseArgs(card, this)))
                 throw new InvalidOperationException("Float card cannot be placed (used) on territory.");
 
             string sourceName = source?.TableName;
             string sourceNameDebug = source?.TableNameDebug;
 
+            card.TryUse();
             if (card.Drawer != null)
             {
                 if (sourceName != null)
@@ -289,6 +312,8 @@ namespace Game.Territories
         }
         public new BattleField Field(in int x, in int y)
         {
+            if (x < 0 || x >= _fields.GetLength(0)) return null;
+            if (y < 0 || y >= _fields.GetLength(1)) return null;
             return _fields[x, y];
         }
 
@@ -402,7 +427,7 @@ namespace Game.Territories
             return PlayerSideCloner(src, args);
         }
 
-        protected virtual UniTask OnStartPhaseBase(object sender, EventArgs e)
+        protected virtual UniTask OnStartPhaseBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             if (!terr.DrawersAreNull)
@@ -410,19 +435,19 @@ namespace Game.Territories
             TableConsole.LogToFile("terr", $"turn: {terr.Turn} (start)");
             return UniTask.CompletedTask;
         }
-        protected virtual UniTask OnEnemyPhaseBase(object sender, EventArgs e)
+        protected virtual UniTask OnEnemyPhaseBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             TableConsole.LogToFile("terr", $"turn: {terr.Turn} (enemy)");
             return UniTask.CompletedTask;
         }
-        protected virtual UniTask OnPlayerPhaseBase(object sender, EventArgs e)
+        protected virtual UniTask OnPlayerPhaseBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             TableConsole.LogToFile("terr", $"turn: {terr.Turn} (player)");
             return UniTask.CompletedTask;
         }
-        protected virtual UniTask OnEndPhaseBase(object sender, EventArgs e)
+        protected virtual UniTask OnEndPhaseBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             if (!terr.DrawersAreNull)
@@ -435,18 +460,18 @@ namespace Game.Territories
             else terr.NextPhase();
             return UniTask.CompletedTask;
         }
-        protected virtual UniTask OnNextPhaseBase(object sender, EventArgs e)
+        protected virtual UniTask OnNextPhaseBase_TOP(object sender, EventArgs e)
         {
             BattleArea.StopTargetAiming();
             return UniTask.CompletedTask;
         }
-        protected virtual UniTask OnPlayerWonBase(object sender, EventArgs e)
+        protected virtual UniTask OnPlayerWonBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             TableConsole.LogToFile("terr", $"{terr.TableNameDebug}: player won");
             return UniTask.CompletedTask;
         }
-        protected virtual UniTask OnPlayerLostBase(object sender, EventArgs e)
+        protected virtual UniTask OnPlayerLostBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             TableConsole.LogToFile("terr", $"{terr.TableNameDebug}: player lost");

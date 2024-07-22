@@ -9,7 +9,7 @@
                    "власти забрали его в свой участок и выяснили, что в реальной жизни его стрельба необычайно эффективна. Теперь он работает. Шпионом.";
 
             rarity = Rarity.None;
-            price = new CardPrice(CardBrowser.GetCurrency("gold"), 0);
+            price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);
             frequency = 1.00f;
         }
         protected cAgent007(cAgent007 other) : base(other) { }

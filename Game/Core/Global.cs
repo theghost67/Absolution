@@ -98,7 +98,7 @@ namespace Game
         // TODO: remove
         Menu demo_CreateCardChoose(int stage)
         {
-            CardChooseMenu menu = new(stage, 4, 0, 3, 4);
+            CardChooseMenu menu = new(stage, 4, 0, 3, 6);
             menu.MenuWhenClosed = () => new BattlePlaceMenu();
             menu.OnClosed += menu.Destroy;
             return menu;
@@ -133,8 +133,11 @@ namespace Game
             // --------- TODO: remove ---------
             Traveler.TryStartTravel(new LocationMission(EnvironmentBrowser.Locations["college"]));
             DOVirtual.DelayedCall(0.8f, () => VFX.CreateScreenBG(Color.black).DOFade(0, 10).SetEase(Ease.InQuad));
-            MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
-            //MenuTransit.Between(null, new BattlePlaceMenu());
+			#if UNITY_EDITOR
+			MenuTransit.Between(null, new BattlePlaceMenu());
+            #else
+			MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
+			#endif
             // --------------------------------
         }
         void Update()

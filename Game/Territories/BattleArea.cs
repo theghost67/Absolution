@@ -320,13 +320,13 @@ namespace Game.Territories
             if (isInRange)
             {
                 _observingCards.Add(target);
-                await observer.AnimCardSeen(target);
+                TableConsole.LogToFile("card", $"{observer.TableNameDebug}: area: {target.TableNameDebug} found.");
                 await _onCardSeen.Invoke(this, target);
             }
             else
             {
                 _observingCards.Remove(target);
-                await observer.AnimCardUnseen(target);
+                TableConsole.LogToFile("card", $"{observer.TableNameDebug}: area: {target.TableNameDebug} lost.");
                 await _onCardUnseen.Invoke(this, target);
             }
         }

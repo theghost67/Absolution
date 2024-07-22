@@ -37,11 +37,12 @@ namespace Game.Traits
         {
             base.OnMouseClickBase(sender, e);
             if (!e.isLmbDown) return;
+            if (e.handled) return;
 
             bool used = _attachedTrait.TryUseWithAim(attached.Trait.Territory.Player);
             if (!used)
                 transform.DOAShake();
-            else if (_attachedTrait.Owner is ITableSleeveCard sleeveCard)
+            else if (_attachedTrait.Owner is ITableSleeveCard sleeveCard && sleeveCard.Sleeve.Drawer.IsPulledOut)
                 sleeveCard.Sleeve.Drawer.PullIn();
         }
     }

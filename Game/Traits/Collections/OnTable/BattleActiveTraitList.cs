@@ -37,19 +37,18 @@ namespace Game.Traits
             BattleActiveTraitListElement element = this[e.id];
             if (element != null)
             {
-                element.AdjustStacksInternal(e.stacks);
+                element.AdjustStacksInternal(e.delta);
                 return element;
             }
 
             BattleActiveTrait trait = new(TraitBrowser.NewActive(e.id), Set.Owner, null);
-            element = new BattleActiveTraitListElement(this, trait);
-            element.AdjustStacksInternal(e.stacks);
+            element = new BattleActiveTraitListElement(this, trait, e.delta);
             return element;
         }
         protected override ITableTraitListElement ElementRemover(TableTraitStacksTryArgs e)
         {
             BattleActiveTraitListElement element = this[e.id];
-            element?.AdjustStacksInternal(e.stacks);
+            element?.AdjustStacksInternal(e.delta);
             return element;
         }
         protected override ITableTraitListElement ElementCloner(ITableTraitListElement src, TableTraitListCloneArgs args)

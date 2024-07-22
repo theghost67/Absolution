@@ -10,7 +10,7 @@
                    "Вероятно, после его принятия побочных эффектов ещё больше...";
 
             rarity = Rarity.Rare;
-            price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
+            price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);
             frequency = 1.00f;
         }
         protected cNorman(cNorman other) : base(other) { }

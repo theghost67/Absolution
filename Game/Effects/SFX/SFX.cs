@@ -1,6 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using Game.Palette;
 using MyBox;
 using System;
 using System.Collections.Generic;

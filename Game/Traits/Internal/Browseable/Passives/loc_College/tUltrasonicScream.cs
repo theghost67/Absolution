@@ -1,7 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using Game.Cards;
-using Game.Effects;
 using Game.Territories;
 using System.Linq;
 using UnityEngine;
@@ -23,7 +21,7 @@ namespace Game.Traits
             name = "Ультразвуковой крик";
             desc = "Что ж, я только посоветую вам прикрыть уши.";
 
-            rarity = Rarity.None;
+            rarity = Rarity.Rare;
             tags = TraitTag.None;
             range = new BattleRange(TerritoryRange.allNotSelf);
         }
@@ -51,7 +49,7 @@ namespace Game.Traits
                  e.target.OnPostKilled.Add(e.trait.GuidStr, OnTargetPostKilled, PRIORITY);
             else e.target.OnPostKilled.Remove(e.trait.GuidStr);
         }
-        async UniTask OnTargetPostKilled(object sender, ITableEntrySource source)
+        async UniTask OnTargetPostKilled(object sender, BattleKillAttemptArgs e)
         {
             BattleFieldCard target = (BattleFieldCard)sender;
             BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(target.Territory);

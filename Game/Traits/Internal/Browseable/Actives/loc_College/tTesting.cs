@@ -21,7 +21,7 @@ namespace Game.Traits
             name = "Тестирование";
             desc = "Итак, начинаем ТЕСТИРОВАНИЕ.";
 
-            rarity = Rarity.Rare;
+            rarity = Rarity.Epic;
             tags = TraitTag.Static;
             range = BattleRange.self;
         }

@@ -11,7 +11,7 @@ namespace Game.Traits
     public class BattleActiveTrait : TableActiveTrait, IBattleTrait
     {
         public new BattleFieldCard Owner => _owner;
-        public new BattleTerritory Territory => _owner.Field.Territory;
+        public new BattleTerritory Territory => _owner.Territory;
         public new BattleField Field => _owner.Field;
         public BattleSide Side => _owner.Side;
 

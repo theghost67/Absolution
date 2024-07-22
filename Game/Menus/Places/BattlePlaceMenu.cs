@@ -13,7 +13,6 @@ using GreenOne;
 using MyBox;
 using System;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 
 namespace Game.Menus
@@ -138,13 +137,7 @@ namespace Game.Menus
         {
             public BattleSleeve Sleeve => Side.Sleeve;
             public ITableSleeveCard AsInSleeve => this;
-
-            bool ITableSleeveCard.IsInMove { get => _isPulling; set => _isPulling = value; }
-            bool ITableSleeveCard.IsPulledOut { get => _isPulledOut; set => _isPulledOut = value; }
-
             readonly BattlePlaceMenu _menu;
-            bool _isPulling;
-            bool _isPulledOut;
 
             public pFieldCard(BattlePlaceMenu menu, FieldCard data, BattleSide side) : base(data, side)
             {
@@ -170,9 +163,9 @@ namespace Game.Menus
                 drawer.OnMouseClick += OnDrawerMouseClickLeft;
                 return drawer;
             }
-            protected override async UniTask OnPostKilledBase_TOP(object sender, ITableEntrySource source)
+            protected override async UniTask OnPostKilledBase_TOP(object sender, BattleKillAttemptArgs e)
             {
-                await base.OnPostKilledBase_TOP(sender, source);
+                await base.OnPostKilledBase_TOP(sender, e);
                 pFieldCard card = (pFieldCard)sender;
                 await card.Side.ether.AdjustValue(1, _menu);
             }
@@ -237,13 +230,13 @@ namespace Game.Menus
                 Drawer.ChangePointer = false;
                 Territory.PlaceFieldCard(this, (BattleField)field, Side);
             }
-            public void OnPullOut(bool sleevePull)
+            public Tween OnPullOut(bool sleevePull)
             {
-                AsInSleeve.PullOutBase(sleevePull);
+                return AsInSleeve.PullOutBase(sleevePull);
             }
-            public void OnPullIn(bool sleevePull)
+            public Tween OnPullIn(bool sleevePull)
             {
-                AsInSleeve.PullInBase(sleevePull);
+                return AsInSleeve.PullInBase(sleevePull);
             }
 
             void SetFieldsHighlight(bool value)
@@ -278,13 +271,7 @@ namespace Game.Menus
         {
             public BattleSleeve Sleeve => Side.Sleeve;
             public ITableSleeveCard AsInSleeve => this;
-
-            bool ITableSleeveCard.IsInMove { get => _isPulling; set => _isPulling = value; }
-            bool ITableSleeveCard.IsPulledOut { get => _isPulledOut; set => _isPulledOut = value; }
-
             readonly BattlePlaceMenu _menu;
-            bool _isPulling;
-            bool _isPulledOut;
 
             public pFloatCard(BattlePlaceMenu menu, FloatCard data, BattleSide side) : base(data, side)
             { 
@@ -363,13 +350,13 @@ namespace Game.Menus
                 Side.Purchase(this);
                 Territory.PlaceFloatCard(this, Side);
             }
-            public void OnPullOut(bool sleevePull)
+            public Tween OnPullOut(bool sleevePull)
             {
-                AsInSleeve.PullOutBase(sleevePull);
+                return AsInSleeve.PullOutBase(sleevePull);
             }
-            public void OnPullIn(bool sleevePull)
+            public Tween OnPullIn(bool sleevePull)
             {
-                AsInSleeve.PullInBase(sleevePull);
+                return AsInSleeve.PullInBase(sleevePull);
             }
 
             void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)
@@ -511,41 +498,41 @@ namespace Game.Menus
             }
 
             // NOTE: 'terr.DrawersAreNull' check is required to determine either this territory is a clone for AI (without drawers) or not (not the best solution)
-            protected override async UniTask OnStartPhaseBase(object sender, EventArgs e)
+            protected override async UniTask OnStartPhaseBase_TOP(object sender, EventArgs e)
             {
-                await base.OnStartPhaseBase(sender, e);
+                await base.OnStartPhaseBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
 
                 if (terr.DrawersAreNull)
                     terr.NextPhase();
                 else VFX.CreateText($"ХОД {terr.Turn}", Color.white, Vector3.zero).DOATextPopUp(0.5f, onComplete: () => terr.NextPhase());
             }
-            protected override async UniTask OnEnemyPhaseBase(object sender, EventArgs e)
+            protected override async UniTask OnEnemyPhaseBase_TOP(object sender, EventArgs e)
             {
-                await base.OnEnemyPhaseBase(sender, e);
+                await base.OnEnemyPhaseBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
                 SidePlacePhase(terr, terr.Enemy);
             }
-            protected override async UniTask OnPlayerPhaseBase(object sender, EventArgs e)
+            protected override async UniTask OnPlayerPhaseBase_TOP(object sender, EventArgs e)
             {
-                await base.OnPlayerPhaseBase(sender, e);
+                await base.OnPlayerPhaseBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
                 SidePlacePhase(terr, terr.Player);
             }
-            protected override async UniTask OnEndPhaseBase(object sender, EventArgs e)
+            protected override async UniTask OnEndPhaseBase_TOP(object sender, EventArgs e)
             {
-                await base.OnEndPhaseBase(sender, e);
+                await base.OnEndPhaseBase_TOP(sender, e);
             }
-            protected override async UniTask OnNextPhaseBase(object sender, EventArgs e)
+            protected override async UniTask OnNextPhaseBase_TOP(object sender, EventArgs e)
             {
-                await base.OnNextPhaseBase(sender, e);
+                await base.OnNextPhaseBase_TOP(sender, e);
                 if (_battleStarted) return;
                 Menu.WriteLogToCurrent("-- НАЧАЛО БОЯ -- ");
                 _battleStarted = true;
             }
-            protected override async UniTask OnPlayerWonBase(object sender, EventArgs e)
+            protected override async UniTask OnPlayerWonBase_TOP(object sender, EventArgs e)
             {
-                await base.OnPlayerWonBase(sender, e);
+                await base.OnPlayerWonBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
                 if (terr.DrawersAreNull) return;
 
@@ -553,32 +540,15 @@ namespace Game.Menus
                 Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ -- ");
                 Menu.WriteLogToCurrent("-- ИГРОК ПОБЕДИЛ -- ");
             }
-            protected override async UniTask OnPlayerLostBase(object sender, EventArgs e)
+            protected override async UniTask OnPlayerLostBase_TOP(object sender, EventArgs e)
             {
-                await base.OnPlayerLostBase(sender, e);
+                await base.OnPlayerLostBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
                 if (terr.DrawersAreNull) return;
 
                 _menu.OnPlayerLost(sender, e);
                 Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ -- ");
                 Menu.WriteLogToCurrent("-- ИГРОК ПРОИГРАЛ -- ");
-            }
-
-            protected override void OnInitiationsProcessingStartBase(object sender, EventArgs e)
-            {
-                base.OnInitiationsProcessingStartBase(sender, e);
-                BattleInitiationQueue queue = (BattleInitiationQueue)sender;
-                BattleTerritory terr = queue.Territory;
-                if (!terr.DrawersAreNull)
-                    _menu.SetPlayerControls(false);
-            }
-            protected override void OnInitiationsProcessingEndBase(object sender, EventArgs e)
-            {
-                base.OnInitiationsProcessingEndBase(sender, e);
-                BattleInitiationQueue queue = (BattleInitiationQueue)sender;
-                BattleTerritory terr = queue.Territory;
-                if (!terr.DrawersAreNull)
-                    _menu.SetPlayerControls(PhaseAwaitsPlayer);
             }
 
             async UniTask SidePlacePhase(pTerritory sender, BattleSide side)
@@ -673,7 +643,7 @@ namespace Game.Menus
         {
             if (!_territory?.PhaseSide?.isMe ?? true) return;
             SetPlayerControls(false);
-            _territory.NextPhase();
+            TableEventManager.AwaitAnyEvents().ContinueWith(_territory.NextPhase);
         }
 
         async void OnPlayerWon(object sender, EventArgs e)
@@ -723,11 +693,11 @@ namespace Game.Menus
         }
 
         #if DEMO
-        Menu demo_CreateCardChooseAndUpgrade(int cPointsPerCard, int cFieldChoices, int cFloatChoices, int cCardsPerChoice, int uPointsLimit)
+        Menu demo_CreateCardChooseAndUpgrade(int cPointsPerCard, int cFieldChoices, int cFloatChoices, int cRerolls, int cCardsPerChoice, int uPointsLimit)
         {
             if (cFieldChoices == 0 && cFloatChoices == 0)
                 return demo_CreateCardUpgrade(uPointsLimit);
-            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, cFieldChoices / 2);
+            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, cRerolls);
             menu.MenuWhenClosed = () => demo_CreateCardUpgrade(uPointsLimit);
             menu.OnClosed += menu.Destroy;
             return menu;
@@ -777,13 +747,14 @@ namespace Game.Menus
             int pointsLimit = fieldCards * pointsPerCard;
 
             int fieldsChoices = (fieldCards - _demoPrevFieldsCount).ClampedMin(1);
-            int floatsChoices = _demoDifficulty >= 2 && _demoDifficulty < DEMO_DIFFICULTY_MID ? 1 : 0;
+            int floatsChoices = _demoDifficulty >= 3 && _demoDifficulty < DEMO_DIFFICULTY_MID ? 1 : 0;
             int cardsPerChoice = (_demoDifficulty + 2).ClampedMax(5);
+            int rerolls = DEMO_DIFFICULTY_MAX - _demoDifficulty - 1;
 
             _demoPrevFieldsCount = fieldCards;
             _demoPrevFloatsCount = floatCards;
 
-            Menu menu = demo_CreateCardChooseAndUpgrade(pointsPerCard, fieldsChoices, floatsChoices, cardsPerChoice, pointsLimit);
+            Menu menu = demo_CreateCardChooseAndUpgrade(pointsPerCard, fieldsChoices, floatsChoices, rerolls, cardsPerChoice, pointsLimit);
             MenuTransit.Between(this, menu);
         }
         async void demo_OnBattleStart(bool firstOpening)

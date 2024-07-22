@@ -37,6 +37,11 @@ namespace Game.Traits
         {
             return base.Points(owner, stacks) + 16 * (stacks - 1);
         }
+        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        {
+            return new(0, 0.16f);
+        }
+
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
             return base.IsUsable(e) && e.isInBattle && e.target.Opposite.Card == null;
@@ -46,7 +51,7 @@ namespace Game.Traits
             await base.OnUse(e);
             BattleActiveTrait trait = (BattleActiveTrait)e.trait;
 
-            await e.target.Card.AttachToField(e.target.Opposite, trait);
+            await e.target.Card.TryAttachToField(e.target.Opposite, trait);
             await trait.SetStacks(0, trait.Side);
         }
     }

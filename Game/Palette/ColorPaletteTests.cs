@@ -1,6 +1,6 @@
 ﻿using GreenOne;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 namespace Game.Palette
 {

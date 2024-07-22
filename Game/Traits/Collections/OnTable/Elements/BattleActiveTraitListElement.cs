@@ -17,7 +17,7 @@ namespace Game.Traits
         IBattleTraitList IBattleTraitListElement.List => _list;
         IBattleTrait IBattleTraitListElement.Trait => _trait;
 
-        public BattleActiveTraitListElement(BattleActiveTraitList list, BattleActiveTrait trait) : base(list, trait)
+        public BattleActiveTraitListElement(BattleActiveTraitList list, BattleActiveTrait trait, int stacks) : base(list, trait, stacks)
         {
             _list = list;
             _trait = trait;

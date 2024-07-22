@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using Game.Cards;
 using Game.Menus;
 using Game.Territories;
@@ -56,6 +55,10 @@ namespace Game
         {
             return traits.Actives[id]?.Trait ?? null;
         }
+        public static Trait Any(this TraitListSet traits, string id)
+        {
+            return traits[id]?.Trait ?? null;
+        }
 
         public static TablePassiveTrait Passive(this TableTraitListSet traits, string id)
         {
@@ -64,6 +67,10 @@ namespace Game
         public static TableActiveTrait Active(this TableTraitListSet traits, string id)
         {
             return traits.Actives[id]?.Trait ?? null;
+        }
+        public static ITableTrait Any(this TableTraitListSet traits, string id)
+        {
+            return traits[id]?.Trait ?? null;
         }
 
         public static BattlePassiveTrait Passive(this BattleTraitListSet traits, string id)
@@ -74,75 +81,72 @@ namespace Game
         {
             return traits.Actives[id]?.Trait ?? null;
         }
+        public static IBattleTrait Any(this BattleTraitListSet traits, string id)
+        {
+            return traits[id]?.Trait ?? null;
+        }
 
-        // NOTE: card death does NOT affect stacks
         public static bool WasAdded(this ITableTrait trait, TableTraitStacksSetArgs e)
         {
-            return WasAdded(trait, e.delta);
+            return WasTraitAdded(trait.GetStacks(), e.delta);
         }
-        public static bool WasRemoved(this ITableTrait trait, TableTraitStacksSetArgs e)
-        {
-            return WasRemoved(trait, e.delta);
-        }
-
         public static bool WasAdded(this ITableTrait trait, in int stacksDelta)
         {
-            return trait.GetStacks() - stacksDelta == 0;
+            return WasTraitAdded(trait.GetStacks(), stacksDelta);
+        }
+        public static bool WasAdded(this ITableTraitListElement element, in int stacksDelta)
+        {
+            return WasTraitAdded(element.Stacks, stacksDelta);
+        }
+        public static bool WasAdded(this TraitListElement element, in int stacksDelta)
+        {
+            return WasTraitAdded(element.Stacks, stacksDelta);
+        }
+
+        public static bool WasRemoved(this ITableTrait trait, TableTraitStacksSetArgs e)
+        {
+            return WasTraitRemoved(trait.GetStacks(), e.delta);
         }
         public static bool WasRemoved(this ITableTrait trait, in int stacksDelta)
         {
-            int stacks = trait.GetStacks();
-            if (stacks <= 0)
-                 return stacks - stacksDelta > 0;
-            else return false;
-        }
-
-        public static bool WasAdded(this ITableTraitListElement element, in int stacksDelta)
-        {
-            return element.Stacks - stacksDelta == 0;
+            return WasTraitRemoved(trait.GetStacks(), stacksDelta);
         }
         public static bool WasRemoved(this ITableTraitListElement element, in int stacksDelta)
         {
-            int stacks = element.Stacks;
-            if (stacks <= 0)
-                 return stacks - stacksDelta > 0;
-            else return false;
-        }
-
-        public static bool WasAdded(this TraitListElement element, in int stacksDelta)
-        {
-            return element.Stacks - stacksDelta == 0;
+            return WasTraitRemoved(element.Stacks, stacksDelta);
         }
         public static bool WasRemoved(this TraitListElement element, in int stacksDelta)
         {
-            int stacks = element.Stacks;
-            if (stacks <= 0)
-                return stacks - stacksDelta > 0;
-            else return false;
+            return WasTraitRemoved(element.Stacks, stacksDelta);
+        }
+
+        public static bool WasTraitAdded(int stacks, int delta)
+        {
+            return stacks - delta == 0;
+        }
+        public static bool WasTraitRemoved(int stacks, int delta)
+        {
+            return stacks <= 0 && stacks - delta > 0;
         }
 
         // TODO: implement all anims
         public static UniTask AnimActivation(this ITableTrait trait)
         {
-            if (trait.Owner == null)
+            if (trait == null || trait.Owner == null)
                 return UniTask.CompletedTask;
 
             TableConsole.LogToFile("card", $"{trait.TableNameDebug}: activation.");
-
-            ITableTraitListElement element;
-            if (trait.Data.isPassive)
-                 element = trait.Owner.Traits.Passives[trait.Data.id];
-            else element = trait.Owner.Traits.Actives[trait.Data.id];
-
+            ITableTraitListElement element = trait.Owner.Traits[trait.Data.id];
             if (element == null || element.Drawer == null)
                 return UniTask.CompletedTask;
 
             Menu.WriteLogToCurrent($"{trait.TableName}: навык активируется!");
-            return element.Drawer.AnimActivation().AsyncWaitForCompletion();
+            element.Drawer.AnimActivation();
+            return UniTask.Delay((int)(TableTraitListElementDrawer.ACTIVATION_DUR_ALL * 1000));
         }
         public static UniTask AnimDeactivation(this ITableTrait trait)
         {
-            if (trait.Owner == null)
+            if (trait == null || trait.Owner == null)
                 return UniTask.CompletedTask;
 
             TableConsole.LogToFile("card", $"{trait.TableNameDebug}: deactivation.");
@@ -152,18 +156,37 @@ namespace Game
             return UniTask.CompletedTask;
         }
 
-        // show WHO detected the card (arrow + icon), and eye (clear/crossed) depending on seen/unseen status
-        public static UniTask AnimCardSeen(this IBattleObject observer, IBattleCard card)
+        // TODO: implement stackable anims (by checking transform child)
+        // if detected multiple targets, duration still equals to 1.0f
+        public static UniTask AnimActivation(this ITableTrait trait, TableFieldCard seenCard)
         {
-            TableConsole.LogToFile("card", $"{observer.TableNameDebug}: area: {card.TableNameDebug} found.");
-            return UniTask.CompletedTask;
+            return AnimActivation(trait);
         }
-        public static UniTask AnimCardUnseen(this IBattleObject observer, IBattleCard card)
+        public static UniTask AnimDeactivation(this ITableTrait trait, TableFieldCard unseenCard)
         {
-            TableConsole.LogToFile("card", $"{observer.TableNameDebug}: area: {card.TableNameDebug} lost.");
-            return UniTask.CompletedTask;
+            return AnimDeactivation(trait);
         }
         #endregion
+
+        public static bool HasInitiationPreview(this TableFieldCard card)
+        {
+            return card.Field?.Drawer.HasInitiationPreview() ?? false;
+        }
+        public static bool HasInitiationPreview(this TableField field)
+        {
+            return field.Drawer.HasInitiationPreview();
+        }
+        public static bool HasInitiationPreview(this TableFieldCardDrawer cardDrawer)
+        {
+            return cardDrawer.attached.Field?.Drawer.HasInitiationPreview() ?? false;
+        }
+        public static bool HasInitiationPreview(this TableFieldDrawer fieldDrawer)
+        {
+            if (fieldDrawer == null) return false;
+            if (fieldDrawer != null)
+                return fieldDrawer.transform.Find("Initiation") != null;
+            else return false;
+        }
 
         public static IEnumerable<T> WithCard<T>(this IEnumerable<T> collection) where T : TableField
         {

@@ -43,6 +43,11 @@ namespace Game.Traits
         {
             return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
         }
+        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        {
+            return new(0, 0.1f);
+        }
+
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
             await base.OnStacksChanged(e);
@@ -57,7 +62,7 @@ namespace Game.Traits
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return base.IsUsable(e) && e.isInBattle && e.target.Card != null;
+            return base.IsUsable(e) && e.isInBattle && e.target.Card != null && e.trait.GetStacks() > 1;
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
@@ -72,13 +77,13 @@ namespace Game.Traits
             await trait.SetStacks(1, trait.Side);
         }
 
-        static async UniTask OnOwnerInitiationPostReceived(object sender, BattleInitiationRecvArgs rArgs)
+        static async UniTask OnOwnerInitiationPostReceived(object sender, BattleInitiationRecvArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
-            int stacks = (rArgs.strength * DAMAGE_RECEIVED_RATIO).Ceiling();
+            int stacks = (e.strength * DAMAGE_RECEIVED_RATIO).Ceiling();
             await trait.AdjustStacks(stacks, trait);
         }
     }

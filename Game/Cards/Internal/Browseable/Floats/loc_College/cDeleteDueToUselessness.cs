@@ -43,7 +43,7 @@ namespace Game.Cards
                 if (fieldCard.price > 0 && fieldCard.strength > 0)
                     continue;
 
-                await fieldCard.Kill(BattleKillMode.Default, card);
+                await fieldCard.TryKill(BattleKillMode.Default, card);
                 if (!fieldCard.IsKilled) continue;
 
                 killedCardsCount++;

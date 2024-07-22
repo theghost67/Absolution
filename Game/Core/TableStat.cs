@@ -140,7 +140,7 @@ namespace Game
             else return 0;
         }
 
-        public UniTask SetValue(float value, ITableEntrySource source, string entryId = null)
+        public UniTask SetValueSeparately(float value, ITableEntrySource source, string entryId = null)
         {
             return AdjustValue(value - _posValue - _negValue, source, entryId, false, false);
         }
@@ -148,12 +148,12 @@ namespace Game
         {
             return AdjustValue(value - _posScale, source, entryId, true, false);
         }
-        public UniTask SetValueDefault(float value, ITableEntrySource source, string entryId = null)
+        public UniTask SetValue(float value, ITableEntrySource source, string entryId = null)
         {
             return AdjustValue(value - _posValue, source, entryId, false, true);
         }
 
-        public UniTask AdjustValue(float value, ITableEntrySource source, string entryId = null)
+        public UniTask AdjustValueSeparately(float value, ITableEntrySource source, string entryId = null)
         {
             return AdjustValue(value, source, entryId, false, false);
         }
@@ -161,7 +161,7 @@ namespace Game
         {
             return AdjustValue(value, source, entryId, true, false);
         }
-        public UniTask AdjustValueDefault(float value, ITableEntrySource source, string entryId = null)
+        public UniTask AdjustValue(float value, ITableEntrySource source, string entryId = null)
         {
             return AdjustValue(value, source, entryId, false, true);
         }

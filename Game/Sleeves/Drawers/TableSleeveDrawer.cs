@@ -2,7 +2,7 @@
 using Game.Cards;
 using GreenOne;
 using MyBox;
-using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -34,11 +34,11 @@ namespace Game.Sleeves
         public readonly new TableSleeve attached;
         static readonly AlignSettings _alignSettings;
 
+        HashSet<Tween> _cardsTweens;
         Tween _posYTween;
+
         float _normalPosY;
         float _moveOutPosY;
-        float _pullOutPosY;
-
         bool _canPullOut;
         bool _isPulledOut;
         bool _isMovedOut;
@@ -51,10 +51,10 @@ namespace Game.Sleeves
         {
             attached = sleeve;
 
-            _canPullOut = true;
+            _cardsTweens = new HashSet<Tween>();
             _normalPosY  = sleeve.isForMe ? -2.16f : 2.16f;
             _moveOutPosY = sleeve.isForMe ? -2.40f : 2.40f;
-            _pullOutPosY = sleeve.isForMe ? -1.10f : 1.10f;
+            _canPullOut = true;
             transform.localPosition = Vector3.up * _normalPosY;
 
             Global.OnUpdate += OnUpdate;
@@ -72,7 +72,7 @@ namespace Game.Sleeves
                 drawer.SetCollider(colliderState);
 
             drawer.transform.SetParent(transform);
-            UpdateCardsPosAndOrder();
+            UpdateCardsPosAndOrderInstantly();
 
             TableSleeveCardComponent component = drawer.gameObject.GetOrAddComponent<TableSleeveCardComponent>();
             if (!component.Enabled)
@@ -84,34 +84,30 @@ namespace Game.Sleeves
             if (drawer == null || drawer.IsDestroying) return;
 
             drawer.transform.SetParent(transform.parent, worldPositionStays: true);
-            UpdateCardsPosAndOrder();
+            UpdateCardsPosAndOrderInstantly();
 
             if (drawer.gameObject.TryGetComponent(out TableSleeveCardComponent component))
                 component.Detatch();
         }
 
-        // can be pulled by user (see Update() method)
+        // can be pulled by user (see OnUpdate method)
         public void PullOut()
         {
             _isPulledOut = true;
             _isMovedOut = false;
 
-            //_posYTween.Kill();
-            //_posYTween = transform.DOLocalMoveY(_pullOutPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnPulledOut);
             gameObject.SetActive(true);
             foreach (ITableSleeveCard card in attached)
-                card.OnPullOut(true);
+                _cardsTweens.Add(card.OnPullOut(true));
         }
         public void PullIn()
         {
             _isPulledOut = false;
             _isMovedOut = false;
 
-            //_posYTween.Kill();
-            //_posYTween = transform.DOLocalMoveY(_normalPosY, MOVE_DURATION).SetEase(Ease.OutQuad).OnComplete(OnPulledIn);
             gameObject.SetActive(true);
             foreach (ITableSleeveCard card in attached)
-                card.OnPullIn(true);
+                _cardsTweens.Add(card.OnPullIn(true));
         }
 
         public void MoveIn()
@@ -184,7 +180,8 @@ namespace Game.Sleeves
             card.DestroyDrawer(instantly);
         }
 
-        void UpdateCardsPosAndOrder()
+        // TODO: implement 'animated' method (fix 'x' tweening)
+        void UpdateCardsPosAndOrderAnimated()
         {
             if (IsDestroying) return;
             SetCollider(false);
@@ -199,18 +196,48 @@ namespace Game.Sleeves
                 _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
             else _alignSettings.distance.x = DISTANCE;
 
+            foreach (Tween tween in _cardsTweens)
+                tween.Kill();
+
             _alignSettings.ApplyTo(i => attached[i].Drawer.transform, cardsCount);
+            Tween lastTween = null;
             for (int i = 0; i < cardsCount; i++) 
             {
                 ITableSleeveCard card = attached[i];
                 TableCardDrawer drawer = card.Drawer;
-                drawer.SetSortingOrder(SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD, asDefault: true);
                 Vector3 newPos = drawer.transform.position;
+
+                drawer.SetSortingOrder(SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD, asDefault: true);
+                drawer.transform.position = cardsOldPos[i];
                 DOVirtual.Float(0, 1, ITableSleeveCard.PULL_DURATION, v =>
                 {
                     newPos.y = transform.position.y;
                     drawer.transform.position = Vector3.Lerp(cardsOldPos[i], newPos, v);
                 });
+            }
+            lastTween.OnComplete(() => SetCollider(true));
+        }
+        void UpdateCardsPosAndOrderInstantly()
+        {
+            if (IsDestroying) return;
+            const int THRESHOLD = 3;
+            const float DISTANCE = TableCardDrawer.WIDTH - TableCardDrawer.WIDTH * 0.25f;
+
+            int cardsCount = attached.Count;
+            float[] cardsY = new float[cardsCount].FillBy(i => attached[i].Drawer.transform.position.y);
+
+            if (transform.childCount > THRESHOLD)
+                _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
+            else _alignSettings.distance.x = DISTANCE;
+
+            foreach (Tween tween in _cardsTweens)
+                tween.Kill();
+
+            _alignSettings.ApplyTo(i => attached[i].Drawer.transform, cardsCount);
+            for (int i = 0; i < cardsCount; i++)
+            {
+                ITableSleeveCard card = attached[i];
+                card.Drawer.SetSortingOrder(SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD, asDefault: true);
             }
         }
 

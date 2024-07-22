@@ -1,6 +1,6 @@
 ﻿using DG.Tweening;
-using DG.Tweening.Core.Enums;
 using DG.Tweening.Core;
+using DG.Tweening.Core.Enums;
 using GreenOne;
 using MyBox;
 using System;

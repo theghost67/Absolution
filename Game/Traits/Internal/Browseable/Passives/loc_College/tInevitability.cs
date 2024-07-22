@@ -71,7 +71,7 @@ namespace Game.Traits
             if (trait == null) return;
             field.Card.OnPostKilled.Add(trait.GuidStr, OnTerritoryCardPostKilled, PRIORITY);
         }
-        async UniTask OnTerritoryCardPostKilled(object sender, ITableEntrySource source)
+        async UniTask OnTerritoryCardPostKilled(object sender, BattleKillAttemptArgs e)
         {
             BattleFieldCard terrCard = (BattleFieldCard)sender;
             BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(terrCard.Territory);

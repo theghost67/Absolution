@@ -52,13 +52,13 @@ namespace Game.Traits
                 trait.Owner.OnPostKilled.Remove(trait.GuidStr);
         }
 
-        async UniTask OnOwnerPostKilled(object sender, ITableEntrySource source)
+        async UniTask OnOwnerPostKilled(object sender, BattleKillAttemptArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
-            BattleFieldCard killer = source.AsBattleFieldCard();
+            BattleFieldCard killer = e.source.AsBattleFieldCard();
             if (killer == null) return;
             float relDecrease = -HP_STR_DECREASE_SCALE * trait.GetStacks();
 

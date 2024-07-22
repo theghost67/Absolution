@@ -75,18 +75,19 @@ namespace Game.Sleeves
         public void Add(ITableSleeveCard card)
         {
             if (card == null) return;
-            if (card == _latestRemovedCard)
+            if (_latestRemovedCardIndex != -1 && _latestRemovedCardIndex < _cards.Count && card == _latestRemovedCard)
                  _cards.Insert(card, _latestRemovedCardIndex);
             else _cards.Add(card);
             Drawer?.AddCardDrawer(card);
         }
-        public void Remove(ITableSleeveCard card)
+        public bool Remove(ITableSleeveCard card)
         {
-            if (card == null) return;
+            if (card == null) return false;
             _latestRemovedCard = card;
             _latestRemovedCardIndex = _cards.IndexOf(card);
-            _cards.Remove(card);
+            if (!_cards.Remove(card)) return false;
             Drawer?.RemoveCardDrawer(card);
+            return true;
         }
         public bool Contains(ITableSleeveCard card)
         {

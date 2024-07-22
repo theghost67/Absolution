@@ -39,6 +39,11 @@ namespace Game.Traits
         {
             return base.Points(owner, stacks) + 20 * Mathf.Pow(stacks - 1, 2);
         }
+        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        {
+            return new(0, 0.1f);
+        }
+
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
             return base.IsUsable(e) && e.isInBattle && e.target.Opposite.Card == null;

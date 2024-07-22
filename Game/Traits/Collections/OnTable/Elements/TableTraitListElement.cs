@@ -19,11 +19,11 @@
         readonly TableEntryDict _stacksEntries;
         int _stacks;
 
-        public TableTraitListElement(ITableTraitList list, ITableTrait trait) : base(list.Set.Drawer?.transform)
+        public TableTraitListElement(ITableTraitList list, ITableTrait trait, int stacks) : base(list.Set.Drawer?.transform)
         {
             _list = list;
             _trait = trait;
-            _stacks = 0;
+            _stacks = stacks;
             _stacksEntries = new TableEntryDict();
             TryOnInstantiatedAction(GetType(), typeof(TableTraitListElement));
         }

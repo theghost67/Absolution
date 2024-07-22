@@ -1,5 +1,4 @@
-﻿using Game;
-using GreenOne;
+﻿using GreenOne;
 using TMPro;
 using UnityEngine;
 

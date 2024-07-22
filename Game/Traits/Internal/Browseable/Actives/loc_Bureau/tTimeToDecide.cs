@@ -68,7 +68,7 @@ namespace Game.Traits
                 float strength = STRENGTH_REL_INCREASE * trait.GetStacks();
                 await owner.health.AdjustValueScale(health, trait);
                 await owner.strength.AdjustValueScale(strength, trait);
-                await owner.Traits.Passives.AdjustStacks(TRAIT_ID, 1, trait);
+                await owner.Traits.AdjustStacks(TRAIT_ID, 1, trait);
             }
             await trait.SetStacks(0, trait.Side);
         }

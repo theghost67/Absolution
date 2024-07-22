@@ -42,7 +42,7 @@ namespace Game.Traits
             await base.OnUse(e);
             BattleActiveTrait trait = (BattleActiveTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
-            trait.Storage.Add(trait.GuidStr, e.target.pos);
+            trait.Storage[trait.GuidStr] = e.target.pos;
             owner.OnInitiationPreSent.Add(trait.GuidStr, OnOwnerInitiationPreSent, PRIORITY);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -57,18 +57,18 @@ namespace Game.Traits
             trait.Owner.OnInitiationPreSent.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs sArgs)
+        static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
             await trait.AnimActivation();
             int2 pos = (int2)trait.Storage[trait.GuidStr];
             BattleField field = owner.Territory.Field(pos);
 
-            sArgs.ClearReceivers();
-            sArgs.AddReceiver(field);
+            e.ClearReceivers();
+            e.AddReceiver(field);
         }
     }
 }

@@ -1,14 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using Game.Cards;
-using Game.Effects;
-using Game.Menus;
 using GreenOne;
 using MyBox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 namespace Game.Environment

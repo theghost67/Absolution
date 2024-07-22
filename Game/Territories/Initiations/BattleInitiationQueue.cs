@@ -2,7 +2,6 @@
 using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
-using Game.Menus;
 using GreenOne;
 using MyBox;
 using System;
@@ -10,7 +9,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI;
 
 namespace Game.Territories
 {
@@ -18,20 +16,22 @@ namespace Game.Territories
     // 1. Positive strength = damage, negative strength = healing.
     // 2. Initiations are ordered by 'Priority'. Initiations with higher priority dequeue first.
     // 3. If initiation has multiple targets, it will process one target at a time, sorting them by their 'Priority' ascending.
-    // 4. BattleInitiationRecvArgs.Receiver can be changed to redirect the initiation to other receiver (it will work ONLY ONCE).
+    // 4. BattleInitiationRecvArgs.Receiver can be changed to redirect the initiation to other receiver.
 
     /// <summary>
     /// Представляет очередь инициаций карт на территории сражения (см. <see cref="BattleTerritory"/>).
     /// </summary>
     public sealed class BattleInitiationQueue : IDisposable
     {
+        public static bool IsAnyRunning => _isAnyRunning;
+        public bool IsRunning => _isRunning;
+        public BattleTerritory Territory => _territory;
+        public int Count => _list.Count;
+        public float SpeedScale => _speedScale; // TODO: implement 'set' (set time scale for each active tween)
+
         public event EventHandler OnStarted;
         public event EventHandler OnEnded;
         public event EventHandler OnceComplete;
-
-        public BattleTerritory Territory => _territory;
-        public float SpeedScale => _speedScale; // TODO: implement 'set' (set time scale for each active tween)
-        public int Count => _list.Count;
 
         static readonly GameObject _initiationPreviewPrefab;
         static readonly GameObject _initiationInMovePrefab;
@@ -42,6 +42,7 @@ namespace Game.Territories
         static readonly Sprite _initiationPreviewReceiverDmgSprite;
         static readonly Sprite _initiationPreviewReceiverHealSprite;
 
+        static bool _isAnyRunning;
         readonly BattleTerritory _territory;
         readonly List<BattleInitiationSendArgs> _list;
 
@@ -370,7 +371,7 @@ namespace Game.Territories
             if (field.Card != null)
             {
                 BattleFieldCardDrawer cardDrawer = field.Card.Drawer;
-                if (cardDrawer != null && !cardDrawer.IsSelected)
+                if (cardDrawer != null && !cardDrawer.Traits.elements.IsRunning)
                     cardDrawer.HideBg();
             }
 
@@ -486,7 +487,7 @@ namespace Game.Territories
                 drawer.transform.DOAShake();
                 drawer.CreateTextAsDamage(((float)rArgs.strength).Abs().Ceiling(), rArgs.strength < 0);
             }
-            field.health.AdjustValue(-rArgs.strength, rArgs.Sender);
+            field.health.AdjustValueSeparately(-rArgs.strength, rArgs.Sender);
         }
         void OnInitiationReceivedByCard(BattleFieldCard card, BattleInitiationRecvArgs rArgs)
         {
@@ -496,30 +497,30 @@ namespace Game.Territories
                 drawer.transform.DOAShake();
                 drawer.CreateTextAsDamage(((float)rArgs.strength).Abs().Ceiling(), rArgs.strength < 0);
             }
-            card.health.AdjustValue(-rArgs.strength, rArgs.Sender);
+            card.health.AdjustValueSeparately(-rArgs.strength, rArgs.Sender);
         }
 
-        UniTask InvokeSendArgsEvent(IIdEventVoidAsync<BattleInitiationSendArgs> @event, object sender, BattleInitiationSendArgs sArgs)
+        UniTask InvokeSendArgsEvent(IIdEventVoidAsync<BattleInitiationSendArgs> @event, object sender, BattleInitiationSendArgs e)
         {
-            ((TableEventVoid<BattleInitiationSendArgs>)@event).Invoke(sender, sArgs);
-            if (sArgs.Sender.Drawer != null)
+            ((TableEventVoid<BattleInitiationSendArgs>)@event).Invoke(sender, e);
+            if (e.Sender.Drawer != null)
                  return AwaitTweensAndEvents();
             else return UniTask.CompletedTask;
         }
-        UniTask InvokeRecvArgsEvent(IIdEventVoidAsync<BattleInitiationRecvArgs> @event, object sender, BattleInitiationRecvArgs rArgs)
+        UniTask InvokeRecvArgsEvent(IIdEventVoidAsync<BattleInitiationRecvArgs> @event, object sender, BattleInitiationRecvArgs e)
         {
-            ((TableEventVoid<BattleInitiationRecvArgs>)@event).Invoke(sender, rArgs);
-            if (rArgs.Receiver.Drawer != null)
+            ((TableEventVoid<BattleInitiationRecvArgs>)@event).Invoke(sender, e);
+            if (e.Receiver.Drawer != null)
                 return AwaitTweensAndEvents();
             else return UniTask.CompletedTask;
         }
 
         async UniTask AwaitTweensAndEvents()
         {
-            while (TableEventManager.IsAnyRunning  ||
-                   TweenIsRunning(_iShowTween)     ||
-                   TweenIsRunning(_iUpdateTween)   || 
-                   TweenIsRunning(_iRedirectTween) || 
+            while (TableEventManager.CanAwaitTableEvents()  ||
+                   TweenIsRunning(_iShowTween)              ||
+                   TweenIsRunning(_iUpdateTween)            || 
+                   TweenIsRunning(_iRedirectTween)          || 
                    TweenIsRunning(_iHideTween))
                 await UniTask.Yield();
         }

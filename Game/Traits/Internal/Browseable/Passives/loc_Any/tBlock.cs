@@ -54,14 +54,14 @@ namespace Game.Traits
                 trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationRecvArgs rArgs)
+        static async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationRecvArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await rArgs.strength.SetValue(0, trait);
+            await e.strength.SetValue(0, trait);
         }
     }
 }

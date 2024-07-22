@@ -1,6 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
-using Game.Sleeves;
 using Game.Territories;
 
 namespace Game.Traits
@@ -41,10 +40,9 @@ namespace Game.Traits
             await base.OnUse(e);
             BattleActiveTrait trait = (BattleActiveTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
+            BattleSide ownerSide = owner.Side;
 
-            await owner.AttachToField(null, trait);
-            owner.Side.Sleeve.Add(owner as ITableSleeveCard);
-            await UniTask.Delay((int)(ITableSleeveCard.PULL_DURATION * 1000));
+            await owner.TryAttachToSideSleeve(ownerSide, trait);
             await trait.SetStacks(0, trait.Side);
         }
     }

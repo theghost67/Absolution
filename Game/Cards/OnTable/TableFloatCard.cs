@@ -36,19 +36,14 @@ namespace Game.Cards
             else return null;
         }
 
-        public bool TryUse(TableFloatCardUseArgs e)
+        public async void TryUse(TableFloatCardUseArgs e)
         {
-            if (!IsUsable(e)) return false;
-            if (Drawer == null)
-            {
-                TableEventManager.Add();
-                OnUsed(e).ContinueWith(TableEventManager.Remove);
-                return true;
-            }
-
+            if (!IsUsable(e)) return;
             TableEventManager.Add();
-            AnimUse().OnComplete(() => OnUsed(e).ContinueWith(TableEventManager.Remove));
-            return true;
+            if (Drawer != null) 
+                await AnimUse().AsyncWaitForCompletion();
+            await OnUsed(e);
+            TableEventManager.Remove();
         }
         public bool IsUsable(TableFloatCardUseArgs e)
         {

@@ -12,7 +12,7 @@ namespace Game.Traits
     {
         const string ID = "bricky_taste";
         const int PRIORITY = 2;
-        const int MOXIE_DECREASE = 1;
+        const int MOXIE_DECREASE = 2;
 
         public tBrickyTaste() : base(ID)
         {
@@ -37,7 +37,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -52,14 +52,14 @@ namespace Game.Traits
                 trait.Owner.OnInitiationPostReceived.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPostReceived(object sender, BattleInitiationRecvArgs rArgs)
+        static async UniTask OnOwnerInitiationPostReceived(object sender, BattleInitiationRecvArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            BattlePassiveTrait trait = owner.Traits.Passive(ID);
+            IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await rArgs.Sender.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait);
+            await e.Sender.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait);
         }
     }
 }

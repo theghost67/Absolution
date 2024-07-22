@@ -31,7 +31,10 @@ namespace Game.Traits
                     $"перенаправляет всю силу карты в её здоровье. Так же восстанавливает своё здоровье на то же значение."),
             });
         }
-
+        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        {
+            return new(0, 0.1f);
+        }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
             return base.IsUsable(e) && e.isInBattle && e.trait.Owner.Field != null && e.target.Card != null;

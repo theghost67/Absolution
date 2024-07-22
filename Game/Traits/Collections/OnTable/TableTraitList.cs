@@ -81,7 +81,7 @@ namespace Game.Traits
             TableTraitStacksTryArgs listArgs = new(id, stacks, source);
             if (!await _onStacksTryToChange.InvokeAND(this, listArgs)) return;
 
-            stacks = listArgs.stacks;
+            stacks = listArgs.delta;
             ITableTraitListElement element = AdjustInternal(listArgs);
             if (element == null) return;
 
@@ -116,13 +116,13 @@ namespace Game.Traits
             if (element == null) return;
 
             ITableTrait trait = element.Trait;
-            TableTraitStacksSetArgs stacksArgs = new(element, listArgs.stacks, listArgs.source);
+            TableTraitStacksSetArgs stacksArgs = new(element, listArgs.delta, listArgs.source);
 
             if (element.Drawer != null)
             {
                 if (element.Drawer.enqueueAnims)
-                    _set.Drawer?.elements.Enqueue(element, listArgs.stacks);
-                else element.Drawer.AnimAdjust(listArgs.stacks);
+                    _set.Drawer?.elements.Enqueue(element, listArgs.delta);
+                else element.Drawer.AnimAdjust(listArgs.delta);
             }
 
             await trait.Data.OnStacksChanged(stacksArgs);
@@ -160,7 +160,7 @@ namespace Game.Traits
             string ownerName = owner.TableNameDebug;
             string sourceName = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile("card", $"{ownerName}: traits: {e.id}: OnTryToChange: delta: {e.stacks} (by: {sourceName}).");
+            TableConsole.LogToFile("card", $"{ownerName}: traits: {e.id}: OnTryToChange: delta: {e.delta} (by: {sourceName}).");
             return UniTask.FromResult(true);
         }
         protected virtual UniTask OnStacksChangedBase_TOP(object sender, TableTraitStacksSetArgs e)
@@ -181,18 +181,18 @@ namespace Game.Traits
 
         ITableTraitListElement AdjustInternal(TableTraitStacksTryArgs args)
         {
-            if (args.stacks == 0) return null;
+            if (args.delta == 0) return null;
             ITableTraitListElement element;
-            if (args.stacks > 0)
+            if (args.delta > 0)
             {
                 element = ElementCreator(args);
-                if (element.WasAdded(args.stacks))
+                if (element.WasAdded(args.delta))
                     _list.Add(element);
             }
             else
             {
                 element = ElementRemover(args);
-                if (element != null && element.WasRemoved(args.stacks))
+                if (element != null && element.WasRemoved(args.delta))
                     _list.Remove(element);
             }
             return element;

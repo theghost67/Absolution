@@ -1,5 +1,4 @@
-﻿using Game.Traits;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Game.Environment
 {

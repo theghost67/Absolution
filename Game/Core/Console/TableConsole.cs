@@ -37,6 +37,7 @@ namespace Game
             Commands.Add(new cmdData());
             Commands.Add(new cmdDeckCardAdd());
             Commands.Add(new cmdHelp());
+            Commands.Add(new cmdMove());
             Commands.Add(new cmdSideCardAdd());
             Commands.Add(new cmdSideCardPlace());
             Commands.Add(new cmdSideStatAdd());
@@ -44,8 +45,6 @@ namespace Game
 
             _filePath = Application.persistentDataPath + "/console.log";
             _fileStream = new(_filePath);
-            _fileStream.WriteLine($"PATH SHORTCUT: {_filePath}\n");
-            _fileStream.Flush();
 
             _consoleObject = Global.Root.Find("CORE/Console").gameObject;
             _inputTextMesh = _consoleObject.Find<TMP_InputField>("Input text");

@@ -34,19 +34,18 @@ namespace Game.Traits
             TablePassiveTraitListElement element = this[e.id];
             if (element != null)
             {
-                element.AdjustStacksInternal(e.stacks);
+                element.AdjustStacksInternal(e.delta);
                 return element;
             }
 
             TablePassiveTrait trait = new(TraitBrowser.NewPassive(e.id), Set.Owner, null);
-            element = new TablePassiveTraitListElement(this, trait);
-            element.AdjustStacksInternal(e.stacks);
+            element = new TablePassiveTraitListElement(this, trait, e.delta);
             return element;
         }
         protected override ITableTraitListElement ElementRemover(TableTraitStacksTryArgs e)
         {
             TablePassiveTraitListElement element = this[e.id];
-            element?.AdjustStacksInternal(e.stacks);
+            element?.AdjustStacksInternal(e.delta);
             return element;
         }
         protected override ITableTraitListElement ElementCloner(ITableTraitListElement src, TableTraitListCloneArgs args)

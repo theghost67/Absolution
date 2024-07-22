@@ -1,6 +1,6 @@
 ﻿using DG.Tweening;
-using Game.Territories;
 using Game.Sleeves;
+using Game.Territories;
 using UnityEngine;
 
 namespace Game

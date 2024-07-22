@@ -60,7 +60,7 @@ namespace Game.Cards
 
             AddField(new cAgent007());
             AddField(new cAgentOfBeholder());
-            AddField(new cAnderson());
+            AddField(new cAnderson()); 
             AddField(new cArchivist());
             AddField(new cCarl());
 

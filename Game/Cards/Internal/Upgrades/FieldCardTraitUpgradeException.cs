@@ -2,9 +2,9 @@
 
 namespace Game.Cards
 {
-	/// <summary>
-	/// Класс, представляющий исключение во время улучшения одного из навыков карты (см. <see cref="FieldCardUpgradeRules"/>).
-	/// </summary>
+    /// <summary>
+    /// Класс, представляющий исключение во время улучшения одного из навыков карты (см. <see cref="FieldCardUpgradeRules"/>).
+    /// </summary>
     public class FieldCardTraitUpgradeException : Exception
 	{
 		public FieldCardTraitUpgradeException(string traitId, float upgradePoints, float statsPointsShare, float traitsPointsShare)

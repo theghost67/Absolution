@@ -10,12 +10,12 @@ namespace Game
     {
         public static bool IsVisible { get => _isVisible; set => SetVisibility(value); }
         public static PointerType Type { get => _type; set => SetType(value); }
-        public static Vector3 Position => _position;
+        public static Vector2 Position => _position;
         public static Transform Transform => _transform;
 
         static bool _isVisible;
         static PointerType _type;
-        static Vector3 _position;
+        static Vector2 _position;
         static Sprite _typeSprite;
 
         static bool _update;

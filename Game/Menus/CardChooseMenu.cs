@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
-using Game.Effects;
 using Game.Palette;
 using GreenOne;
 using MyBox;

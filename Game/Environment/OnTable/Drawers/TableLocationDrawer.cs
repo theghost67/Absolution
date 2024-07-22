@@ -1,6 +1,4 @@
-﻿using Game.Effects;
-using Game.Menus;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Game.Environment
 {

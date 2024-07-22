@@ -1,8 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using Game.Cards;
-using Game.Effects;
-using Game.Palette;
 using Game.Territories;
 using UnityEngine;
 
@@ -57,24 +54,24 @@ namespace Game.Traits
             if (e.target.Data.id != "granny") return;
             if (e.canSeeTarget)
             {
-                e.target.OnPostKilled.Add(trait.GuidStr, OnTargetCardKilled, PRIORITY);
-                await trait.AnimActivation();
+                e.target.OnPostKilled.Add(trait.GuidStr, OnTargetPostKilled, PRIORITY);
+                await trait.AnimActivation(e.target);
                 await trait.Owner.strength.AdjustValueScale(STRENGTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
             }
             else
             {
                 e.target.OnPostKilled.Remove(trait.GuidStr);
-                await trait.AnimDeactivation();
+                await trait.AnimDeactivation(e.target);
                 await trait.Owner.strength.RevertValueScale(entryId);
             }
         }
 
-        async UniTask OnTargetCardKilled(object sender, ITableEntrySource source)
+        async UniTask OnTargetPostKilled(object sender, BattleKillAttemptArgs e)
         {
             BattleFieldCard observingCard = (BattleFieldCard)sender;
             BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(observingCard.Territory);
             if (trait == null) return;
-            await trait.Owner.Kill(BattleKillMode.Default, source);
+            await trait.Owner.TryKill(BattleKillMode.Default, e.source);
         }
     }
 }
