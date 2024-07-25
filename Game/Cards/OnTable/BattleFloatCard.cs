@@ -1,4 +1,5 @@
-﻿using Game.Sleeves;
+﻿using Cysharp.Threading.Tasks;
+using Game.Sleeves;
 using Game.Territories;
 using MyBox;
 using UnityEngine;
@@ -53,9 +54,9 @@ namespace Game.Cards
             else return null;
         }
 
-        public void TryUse()
+        public UniTask TryUse()
         {
-            TryUse(new TableFloatCardUseArgs(this, _side.Territory));
+            return TryUse(new TableFloatCardUseArgs(this, _side.Territory));
         }
         protected override Drawer DrawerCreator(Transform parent)
         {

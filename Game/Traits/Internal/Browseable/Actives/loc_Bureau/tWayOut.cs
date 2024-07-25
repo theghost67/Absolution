@@ -14,7 +14,7 @@ namespace Game.Traits
         public tWayOut() : base(ID)
         {
             name = "Побег";
-            desc = "";
+            desc = "С тобой или без тебя - я это сделаю.";
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;

@@ -12,12 +12,13 @@ namespace Game.Traits
     {
         const string ID = "triptocainum";
         const int PRIORITY = 7;
+        const int COOLDOWN = 3;
         const float DAMAGE_REL_INCREASE = 1.00f;
 
         public tTriptocainum() : base(ID)
         {
             name = "Триптокаинум";
-            desc = "";
+            desc = "КОКАИНУМ!";
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -32,7 +33,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании",
-                    $"Увеличивает силу владельца на <u>{effect}%</u>. Владелец умрёт (игнор. здоровья) сразу после совершения атакующей инициации (П{PRIORITY}). Тратит все заряды."),
+                    $"Увеличивает силу владельца на <u>{effect}%</u>. Владелец умрёт (игнор. здоровья) сразу после совершения атакующей инициации (П{PRIORITY}). Перезарядка: 3 х."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
@@ -56,7 +57,7 @@ namespace Game.Traits
             float strength = DAMAGE_REL_INCREASE * trait.GetStacks();
             await trait.Owner.strength.AdjustValueScale(strength, trait);
             trait.Owner.OnInitiationPostSent.Add(trait.GuidStr, OnInitiationPostSent);
-            await trait.SetStacks(0, trait.Side);
+            trait.Storage.turnsDelay += COOLDOWN;
         }
 
         static async UniTask OnInitiationPostSent(object sender, BattleInitiationSendArgs e)

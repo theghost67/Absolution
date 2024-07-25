@@ -244,10 +244,9 @@ namespace Game.Territories
             if (card.Drawer != null)
             {
                 card.Drawer.SetCollider(false);
-                card.Drawer.IgnoreFirstMouseEnter = true;
                 card.Drawer.transform.position = field.Drawer.transform.position;
                 card.Drawer.SetAlpha(0);
-                card.Drawer.DOFade(1, 1).SetEase(Ease.InCubic).OnComplete(() => card.Drawer.SetCollider(true));
+                card.Drawer.DOFade(1, 0.5f).SetEase(Ease.InCubic).OnComplete(() => card.Drawer.SetCollider(true));
             }
             return PlaceFieldCard(card, field, source);
         }
@@ -268,7 +267,6 @@ namespace Game.Territories
 
             string sourceName = source?.TableName;
             string sourceNameDebug = source?.TableNameDebug;
-
             if (card.Drawer != null)
             {
                 if (sourceName != null)
@@ -276,14 +274,16 @@ namespace Game.Territories
                 else Menu.WriteLogToCurrent($"Установка карты {card.Data.name} на поле {field.TableName}.");
             }
 
+            TableEventManager.Add();
             TableConsole.LogToFile("terr", $"{TableNameDebug}: field card placement: id: {card.Data.id}, field: {field.TableNameDebug} (by: {sourceNameDebug}).");
             await card.TryAttachToField(field, source);
-            if (card.Field == null)
-            {
-                card.Dispose();
-                throw new InvalidOperationException("Territory field card placement failed. Field is already occupied.");
-            }
-            return card;
+            TableEventManager.Remove();
+
+            if (card.Field != null)
+                return card;
+
+            card.Dispose();
+            throw new InvalidOperationException("Territory field card placement failed. Field is already occupied.");
         }
         public async UniTask<BattleFloatCard> PlaceFloatCard(BattleFloatCard card, ITableEntrySource source)
         {
@@ -293,8 +293,6 @@ namespace Game.Territories
 
             string sourceName = source?.TableName;
             string sourceNameDebug = source?.TableNameDebug;
-
-            card.TryUse();
             if (card.Drawer != null)
             {
                 if (sourceName != null)
@@ -302,7 +300,11 @@ namespace Game.Territories
                 else Menu.WriteLogToCurrent($"Использование карты {card.Data.name}.");
             }
 
+            TableEventManager.Add();
             TableConsole.LogToFile("terr", $"{TableNameDebug}: float card placement: id: {card.Data.id} (by: {sourceNameDebug}).");
+            await card.TryUse();
+            TableEventManager.Remove();
+
             return card;
         }
 

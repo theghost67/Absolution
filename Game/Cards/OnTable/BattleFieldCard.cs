@@ -224,7 +224,7 @@ namespace Game.Cards
             TableEventManager.Add();
 
             if (health > 0)
-                await health.SetValue(0, source);
+                await health.SetValueDefault(0, source);
 
             BattleKillAttemptArgs args = new(source, Field);
             Drawer?.transform.DOAShake();
@@ -238,7 +238,7 @@ namespace Game.Cards
             }
 
             _isKilled = true;
-            await TryAttachToField(null, null);
+            await AttachToFieldInternal(new TableFieldAttachArgs(null, null));
             await _onPostKilled.Invoke(this, args);
             if (source is BattleFieldCard killer && !killer.IsKilled)
                 await killer._onKillConfirmed.Invoke(killer, new BattleKillConfirmArgs(this, args));

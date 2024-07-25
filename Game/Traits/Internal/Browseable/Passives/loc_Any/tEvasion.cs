@@ -16,7 +16,7 @@ namespace Game.Traits
         public tEvasion() : base(ID)
         {
             name = "Уклонение";
-            desc = "";
+            desc = "И что ты сделаешь? Что ты сделаешь?";
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -58,6 +58,7 @@ namespace Game.Traits
 
             await trait.AnimActivation();
             e.handled = true;
+            trait.AdjustStacks(-1, trait);
         }
     }
 }

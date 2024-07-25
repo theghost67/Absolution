@@ -11,7 +11,7 @@ namespace Game.Traits
 {
     /// <summary>
     /// Класс, представляющий коллекцию элементов списка навыков (см. <see cref="TableTraitListElement"/>) у отрисовщика.<br/>
-    /// Существует для удобства пользователя (добавляет изменение стаков навыков в очередь).
+    /// Существует для удобства пользователя (добавляет изменение зарядов навыков в очередь).
     /// </summary>
     public class TableTraitListSetDrawerElementsCollection : IEnumerable<TableTraitListElementDrawer>
     {
@@ -19,9 +19,7 @@ namespace Game.Traits
         public event EventHandler OnEnded;
         public event EventHandler OnceComplete;
 
-        public bool ContainsTraits => _storage.Count != 0;
-        public bool IsAnySelected => IsAnyElementSelected();
-        public bool IsAnyActivated => IsAnyElementActivated();
+        public bool IsEmpty => _storage.Count == 0;
         public bool IsRunning => _isRunning;
 
         readonly TableTraitListSetDrawer _drawer;
@@ -132,25 +130,6 @@ namespace Game.Traits
             EnqueueInternal(query);
         }
 
-        bool IsAnyElementSelected()
-        {
-            foreach (ITableTraitListElement element in _storage)
-            {
-                if (element.Drawer?.IsSelected ?? false)
-                    return true;
-            }
-            return false;
-        }
-        bool IsAnyElementActivated()
-        {
-            foreach (ITableTraitListElement element in _storage)
-            {
-                if (element.Drawer?.IsActivated ?? false)
-                    return true;
-            }
-            return false;
-        }
-
         void EnqueueInternal(QueueQuery elementQuery)
         {
             _queue.Enqueue(elementQuery);
@@ -216,7 +195,7 @@ namespace Game.Traits
             if (OnceComplete == null)
                 await UniTask.Delay(1000);
 
-            if (_drawer.Owner != null && !_drawer.Owner.IsSelected && !_drawer.Owner.HasInitiationPreview())
+            if (_drawer.Owner != null && !_drawer.Owner.IsSelected)
                 _drawer.HideStoredElements();
 
             _isRunning = false;

@@ -12,11 +12,13 @@ namespace Game.Cards
     {
         public TableTraitListSetDrawer Traits => attached.Traits.Drawer;
         public readonly new TableFieldCard attached;
+        public readonly TableFieldCardDrawerQueue queue;
         readonly string _eventsGuid;
 
         public TableFieldCardDrawer(TableFieldCard card, Transform parent) : base(card, parent, redrawIcons: false)
         {
             attached = card;
+            queue = new TableFieldCardDrawerQueue(this);
             _eventsGuid = this.GuidGen(2);
 
             attached.price.OnPostSet.Add(_eventsGuid, OnPriceStatPostSet);
@@ -112,10 +114,13 @@ namespace Game.Cards
 
             TableTraitListSetDrawer setDrawer = Traits;
             if (setDrawer == null) return;
-            if (!setDrawer.elements.ContainsTraits) return;
+            if (setDrawer.elements.IsEmpty) return;
+            if (setDrawer.elements.IsRunning) return;
+            if (queue.IsRunning) return;
 
             Traits?.ShowStoredElementsInstantly();
-            ShowBgInstantly();
+            if (!this.HasInitiationPreview())
+                ShowBgInstantly();
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
         {
@@ -123,20 +128,19 @@ namespace Game.Cards
 
             TableTraitListSetDrawer setDrawer = Traits;
             if (setDrawer == null) return;
-            if (!setDrawer.elements.ContainsTraits) return;
+            if (setDrawer.elements.IsEmpty) return;
+            if (setDrawer.elements.IsRunning) return;
+            if (queue.IsRunning) return;
 
             setDrawer?.HideStoredElementsInstantly();
-            if (attached.HasInitiationPreview()) return;
-            if (setDrawer.elements.IsAnyActivated) return;
-
-            HideBgInstantly();
+            if (!this.HasInitiationPreview())
+                HideBgInstantly();
         }
         protected override OutlineType GetOutlineType()
         {
             TableTraitListSet traits = attached.Traits;
             bool hasPassives = traits.Passives.Count != 0;
             bool hasActives = traits.Actives.Count != 0;
-
             if (hasPassives == hasActives)
             {
                 if (hasPassives)
@@ -152,7 +156,6 @@ namespace Game.Cards
         {
             TableTraitList list = (TableTraitList)sender;
             TableFieldCard card = list.Set.Owner;
-
             TableFieldCardDrawer drawer = card.Drawer;
             drawer?.RedrawOutline();
             return UniTask.CompletedTask;

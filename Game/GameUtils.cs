@@ -130,41 +130,60 @@ namespace Game
         }
 
         // TODO: implement all anims
-        public static UniTask AnimActivation(this ITableTrait trait)
+        public static async UniTask AnimActivation(this ITableTrait trait)
         {
             if (trait == null || trait.Owner == null)
-                return UniTask.CompletedTask;
+                return;
 
             TableConsole.LogToFile("card", $"{trait.TableNameDebug}: activation.");
-            ITableTraitListElement element = trait.Owner.Traits[trait.Data.id];
-            if (element == null || element.Drawer == null)
-                return UniTask.CompletedTask;
+            if (trait.Owner.Drawer == null)
+                return;
 
             Menu.WriteLogToCurrent($"{trait.TableName}: навык активируется!");
-            element.Drawer.AnimActivation();
-            return UniTask.Delay((int)(TableTraitListElementDrawer.ACTIVATION_DUR_ALL * 1000));
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueActivation(trait, true));
+            await trait.Owner.Drawer.queue.Await();
         }
-        public static UniTask AnimDeactivation(this ITableTrait trait)
+        public static async UniTask AnimDeactivation(this ITableTrait trait)
         {
             if (trait == null || trait.Owner == null)
-                return UniTask.CompletedTask;
+                return;
 
             TableConsole.LogToFile("card", $"{trait.TableNameDebug}: deactivation.");
-            //if (trait.Drawer != null)
-            //    Menu.WriteLogToCurrent($"{trait.TableName}: навык деактивируется.");
+            if (trait.Owner.Drawer == null)
+                return;
 
-            return UniTask.CompletedTask;
+            Menu.WriteLogToCurrent($"{trait.TableName}: навык деактивируется.");
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueActivation(trait, false));
+            await trait.Owner.Drawer.queue.Await();
         }
 
         // TODO: implement stackable anims (by checking transform child)
         // if detected multiple targets, duration still equals to 1.0f
-        public static UniTask AnimActivation(this ITableTrait trait, TableFieldCard seenCard)
+        public static async UniTask AnimDetectionOnSeen(this ITableTrait trait, TableFieldCard seenCard)
         {
-            return AnimActivation(trait);
+            if (trait == null || trait.Owner == null)
+                return;
+
+            TableConsole.LogToFile("card", $"{trait.TableNameDebug}: card seen.");
+            if (trait.Owner.Drawer == null)
+                return;
+
+            Menu.WriteLogToCurrent($"{trait.TableName}: карта обнаружена.");
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, seenCard.Field.pos, true));
+            await trait.Owner.Drawer.queue.Await();
         }
-        public static UniTask AnimDeactivation(this ITableTrait trait, TableFieldCard unseenCard)
+        public static async UniTask AnimDetectionOnUnseen(this ITableTrait trait, TableFieldCard unseenCard)
         {
-            return AnimDeactivation(trait);
+            if (trait == null || trait.Owner == null)
+                return;
+
+            TableConsole.LogToFile("card", $"{trait.TableNameDebug}: card unseen.");
+            if (trait.Owner.Drawer == null)
+                return;
+
+            Menu.WriteLogToCurrent($"{trait.TableName}: карта потеряна.");
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, unseenCard.Field.pos, false));
+            await trait.Owner.Drawer.queue.Await();
         }
         #endregion
 
@@ -183,9 +202,10 @@ namespace Game
         public static bool HasInitiationPreview(this TableFieldDrawer fieldDrawer)
         {
             if (fieldDrawer == null) return false;
-            if (fieldDrawer != null)
-                return fieldDrawer.transform.Find("Initiation") != null;
-            else return false;
+            bool result = fieldDrawer.transform.Find("Initiation") != null;
+            if (result) return result;
+            result = fieldDrawer.attached.Card?.Drawer?.transform.Find("Initiation") != null;
+            return result;
         }
 
         public static IEnumerable<T> WithCard<T>(this IEnumerable<T> collection) where T : TableField

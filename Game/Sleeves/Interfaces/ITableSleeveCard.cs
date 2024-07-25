@@ -7,13 +7,12 @@ namespace Game.Sleeves
     // TODO: recreate as ITableSleeveCardDrawer?
     /// <summary>
     /// Реализует карту стола как карту рукава, добавляя возможность подбирать, возвращать и бросать карту на поле из рукава.<br/>
-    /// Примечание: карта должна иметь отрисовщик, а также, методы этого интерфейса должны вызываться только от лица пользователя (не от противника). 
     /// </summary>
     public interface ITableSleeveCard : ITableCard
     {
         public const float PULL_DURATION = 0.33f;
         public TableSleeve Sleeve { get; }
-        private static readonly System.Exception _ex = new($"{nameof(ITableSleeveCard)} methods should be invoked only by player (user) interaction and when the card has it's own {nameof(Drawer)} ({nameof(Sleeve)} must have drawer too).");
+        private static readonly System.Exception _ex = new($"{nameof(ITableSleeveCard)} methods (except for {nameof(TryDropOn)}) should be invoked only by player (user) interaction and when the card has it's own {nameof(Drawer)} ({nameof(Sleeve)} must have drawer too).");
 
         public bool TryTake()
         {
@@ -87,7 +86,7 @@ namespace Game.Sleeves
         public Tween OnPullIn(bool sleevePull);
 
         // --- use only in implementing class ---
-        public void TakeBase()
+        public void OnTakeBase()
         {
             Drawer.SetCollider(false);
             Sleeve.Remove(this);
@@ -97,14 +96,14 @@ namespace Game.Sleeves
             Drawer.SetSortingAsTop();
             Drawer.transform.DOKill();
         }
-        public void ReturnBase()
+        public void OnReturnBase()
         {
             Drawer.SetCollider(true);
 
             Sleeve.Add(this);
             Sleeve.Drawer.CanPullOut = true;
         }
-        public void DropOnBase(TableField field)
+        public void OnDropOnBase(TableField field)
         {
             Drawer.SetCollider(true);
 
@@ -114,13 +113,13 @@ namespace Game.Sleeves
             Drawer.transform.SetParent(Global.Root);
             Drawer.SetSortingAsDefault();
         }
-        public Tween PullOutBase(bool sleevePull)
+        public Tween OnPullOutBase(bool sleevePull)
         {
             float endY = sleevePull ? -1.25f : -0.22f;
             if (Sleeve.isForMe) endY = -endY;
             return Drawer.transform.DOLocalMoveY(endY, PULL_DURATION).SetEase(Ease.OutQuad);
         }
-        public Tween PullInBase(bool sleevePull)
+        public Tween OnPullInBase(bool sleevePull)
         {
             return Drawer.transform.DOLocalMoveY(0, PULL_DURATION).SetEase(Ease.OutQuad);
         }

@@ -37,10 +37,6 @@ namespace Game.Traits
                     $"Увеличивает свою силу на <u>{STRENGTH_REL_INCREASE_ON_OWNER_SIDE_SEEN * 100}%</u> и инициативу на <u>{MOXIE_ABS_INCREASE_ON_OWNER_SIDE_SEEN}</u> ед."),
             });
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return base.Points(owner, stacks) + 30 * Mathf.Pow(stacks - 1, 2);
-        }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
             await base.OnTargetStateChanged(e);
@@ -51,13 +47,13 @@ namespace Game.Traits
             if (e.target.Data.id != OBS_CARD_ID) return;
             if (e.canSeeTarget)
             {
-                await trait.AnimActivation(e.target);
+                await trait.AnimDetectionOnSeen(e.target);
                 await owner.strength.AdjustValueScale(STRENGTH_REL_INCREASE_ON_OWNER_SIDE_SEEN, trait, guid);
                 await owner.moxie.AdjustValue(MOXIE_ABS_INCREASE_ON_OWNER_SIDE_SEEN, trait, guid);
             }
             else
             {
-                await trait.AnimDeactivation(e.target);
+                await trait.AnimDetectionOnUnseen(e.target);
                 await owner.strength.RevertValueScale(guid);
                 await owner.moxie.RevertValue(guid);
             }

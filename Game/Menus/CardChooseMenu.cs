@@ -379,15 +379,12 @@ namespace Game.Menus
             SetColliders(false);
             if (chosenCard != null)
             {
-                if (chosenCard.Drawer.Outline.GetColor().a == 0)
-                    chosenCard.Drawer.Outline.SetColor(Color.white);
-                chosenCard.Drawer.HighlightOutline(chosenCard.Drawer.Outline.GetColor(), 1.5f, false);
-
+                Tween tween = chosenCard.Drawer.AnimHighlightOutline(1.5f);
                 Card data = chosenCard.Data;
                 if (data.isField)
                      Player.Deck.fieldCards.Add((FieldCard)data, true);
                 else Player.Deck.floatCards.Add((FloatCard)data, true);
-                await UniTask.Delay(1500);
+                await tween.AsyncWaitForCompletion();
             }
 
             if (_cardsAreFields)

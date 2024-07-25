@@ -100,19 +100,19 @@ namespace Game.Menus
             public bool CanPullOut() => _selected != this && Drawer.ColliderEnabled;
             public bool CanPullIn() => _selected != this && Drawer.ColliderEnabled;
 
-            public void OnTake() => AsInSleeve.TakeBase();
-            public void OnReturn() => AsInSleeve.ReturnBase();
-            public void OnDropOn(TableField field) => AsInSleeve.DropOnBase(field);
+            public void OnTake() => AsInSleeve.OnTakeBase();
+            public void OnReturn() => AsInSleeve.OnReturnBase();
+            public void OnDropOn(TableField field) => AsInSleeve.OnDropOnBase(field);
             public Tween OnPullOut(bool sleevePull)
             {
                 if (_selected != this)
-                     return AsInSleeve.PullOutBase(sleevePull);
+                     return AsInSleeve.OnPullOutBase(sleevePull);
                 else return null;
             }
             public Tween OnPullIn(bool sleevePull)
             {
                 if (_selected != this)
-                     return AsInSleeve.PullInBase(sleevePull);
+                     return AsInSleeve.OnPullInBase(sleevePull);
                 else return null;
             }
 
@@ -152,14 +152,11 @@ namespace Game.Menus
 
             public void AnimHighlightAsUpgrade()
             {
-                if (_lastOutlineColor.a != 0 && Drawer.Outline.GetColorTween().IsPlaying())
-                    Drawer.Outline.SetColor(_lastOutlineColor);
-                _lastOutlineColor = Drawer.Outline.GetColor();
-                Drawer.HighlightOutline(_lastOutlineColor, 0.5f);
+                Drawer.AnimHighlightOutline(0.5f);
             }
             public void AnimHighlightAsDowngrade()
             {
-                Drawer.HighlightOutline(new Color(1.0f, 0.2f, 0.2f), 0.5f);
+                Drawer.AnimHighlightOutline(0.5f, new Color(1.0f, 0.2f, 0.2f));
             }
 
             protected override void OnDrawerCreatedBase(object sender, EventArgs e)
@@ -470,19 +467,19 @@ namespace Game.Menus
                 int times = UpgradedTimes;
                 await base.Reset();
                 card.Data.price.value -= times;
-                await card.price.SetValue(card.Data.price.value, null);
+                await card.price.SetValueDefault(card.Data.price.value, null);
             }
             protected override async UniTask Upgrade(int times)
             {
                 await base.Upgrade(times);
                 card.Data.price.value += times;
-                await card.price.SetValue(card.Data.price.value, null);
+                await card.price.SetValueDefault(card.Data.price.value, null);
             }
             protected override async UniTask Downgrade(int times)
             {
                 await base.Downgrade(times);
                 card.Data.price.value -= times;
-                await card.price.SetValue(card.Data.price.value, null);
+                await card.price.SetValueDefault(card.Data.price.value, null);
             }
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {
@@ -499,19 +496,19 @@ namespace Game.Menus
                 int times = UpgradedTimes;
                 await base.Reset();
                 card.Data.moxie -= times;
-                await card.moxie.SetValue(card.Data.moxie, null);
+                await card.moxie.SetValueDefault(card.Data.moxie, null);
             }
             protected override async UniTask Upgrade(int times)
             {
                 await base.Upgrade(times);
                 card.Data.moxie += times;
-                await card.moxie.SetValue(card.Data.moxie, null);
+                await card.moxie.SetValueDefault(card.Data.moxie, null);
             }
             protected override async UniTask Downgrade(int times)
             {
                 await base.Downgrade(times);
                 card.Data.moxie -= times;
-                await card.moxie.SetValue(card.Data.moxie, null);
+                await card.moxie.SetValueDefault(card.Data.moxie, null);
             }
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {
@@ -528,19 +525,19 @@ namespace Game.Menus
                 int times = UpgradedTimes;
                 await base.Reset();
                 card.Data.health -= times;
-                await card.health.SetValue(card.Data.health, null);
+                await card.health.SetValueDefault(card.Data.health, null);
             }
             protected override async UniTask Upgrade(int times)
             {
                 await base.Upgrade(times);
                 card.Data.health += times;
-                await card.health.SetValue(card.Data.health, null);
+                await card.health.SetValueDefault(card.Data.health, null);
             }
             protected override async UniTask Downgrade(int times)
             {
                 await base.Downgrade(times);
                 card.Data.health -= times;
-                await card.health.SetValue(card.Data.health, null);
+                await card.health.SetValueDefault(card.Data.health, null);
             }
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {
@@ -557,19 +554,19 @@ namespace Game.Menus
                 int times = UpgradedTimes;
                 await base.Reset();
                 card.Data.strength -= times;
-                await card.strength.SetValue(card.Data.strength, null);
+                await card.strength.SetValueDefault(card.Data.strength, null);
             }
             protected override async UniTask Upgrade(int times)
             {
                 await base.Upgrade(times);
                 card.Data.strength += times;
-                await card.strength.SetValue(card.Data.strength, null);
+                await card.strength.SetValueDefault(card.Data.strength, null);
             }
             protected override async UniTask Downgrade(int times)
             {
                 await base.Downgrade(times);
                 card.Data.strength -= times;
-                await card.strength.SetValue(card.Data.strength, null);
+                await card.strength.SetValueDefault(card.Data.strength, null);
             }
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {

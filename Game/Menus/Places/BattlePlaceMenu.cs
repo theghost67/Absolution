@@ -172,8 +172,8 @@ namespace Game.Menus
 
             public bool CanTake()
             {
-                bool result = false;
-                if (Side.isMe && _menu._territory.PhaseAwaitsPlayer)
+                bool result = BattleArea.IsAnyAiming;
+                if (!result && Side.isMe && _menu._territory.PhaseAwaitsPlayer)
                     result = Side.CanAfford(this);
 
                 if (!result)
@@ -202,27 +202,26 @@ namespace Game.Menus
 
             public void OnTake()
             {
-                AsInSleeve.TakeBase();
+                AsInSleeve.OnTakeBase();
                 _menu.SetPlayerControls(false);
                 _menu._territory.SetCardsColliders(false);
                 SetFieldsHighlight(true);
             }
             public void OnReturn()
             {
-                AsInSleeve.ReturnBase();
+                AsInSleeve.OnReturnBase();
                 _menu.SetPlayerControls(true);
                 _menu._territory.SetFieldsColliders(true);
                 SetFieldsHighlight(false);
             }
             public void OnDropOn(TableField field)
             {
-                AsInSleeve.DropOnBase(field);
+                AsInSleeve.OnDropOnBase(field);
                 if (Side.isMe)
                 {
                     _menu.SetPlayerControls(true);
                     _menu._territory.SetFieldsColliders(true);
                     Drawer.IsSelected = false;
-                    Drawer.IgnoreFirstMouseEnter = true;
                     SetFieldsHighlight(false);
                 }
                 Side.Purchase(this);
@@ -232,11 +231,11 @@ namespace Game.Menus
             }
             public Tween OnPullOut(bool sleevePull)
             {
-                return AsInSleeve.PullOutBase(sleevePull);
+                return AsInSleeve.OnPullOutBase(sleevePull);
             }
             public Tween OnPullIn(bool sleevePull)
             {
-                return AsInSleeve.PullInBase(sleevePull);
+                return AsInSleeve.OnPullInBase(sleevePull);
             }
 
             void SetFieldsHighlight(bool value)
@@ -296,18 +295,11 @@ namespace Game.Menus
                 drawer.OnMouseLeave += OnDrawerMouseLeave;
                 return drawer;
             }
-            protected override async UniTask OnUsed(TableFloatCardUseArgs e)
-            {
-                await base.OnUsed(e);
-                if (!Side.isMe) return;
-                _menu.SetPlayerControls(true);
-                _menu._territory.SetFieldsColliders(true);
-            }
 
             public bool CanTake()
             {
-                bool result = false;
-                if (Side.isMe && _menu._territory.PhaseAwaitsPlayer)
+                bool result = BattleArea.IsAnyAiming;
+                if (!result && Side.isMe && _menu._territory.PhaseAwaitsPlayer)
                     result = Side.CanAfford(this);
 
                 if (!result)
@@ -334,29 +326,35 @@ namespace Game.Menus
 
             public void OnTake()
             {
-                AsInSleeve.TakeBase();
+                AsInSleeve.OnTakeBase();
                 _menu.SetPlayerControls(false);
                 _menu._territory.SetCardsColliders(false);
             }
             public void OnReturn()
             {
-                AsInSleeve.ReturnBase();
+                AsInSleeve.OnReturnBase();
                 _menu.SetPlayerControls(true);
                 _menu._territory.SetFieldsColliders(true);
             }
             public void OnDropOn(TableField field)
             {
-                AsInSleeve.DropOnBase(field);
+                AsInSleeve.OnDropOnBase(field);
+                if (!Side.isMe)
+                {
+                    _menu.SetPlayerControls(true);
+                    _menu._territory.SetFieldsColliders(true);
+                    Drawer.IsSelected = false;
+                }
                 Side.Purchase(this);
                 Territory.PlaceFloatCard(this, Side);
             }
             public Tween OnPullOut(bool sleevePull)
             {
-                return AsInSleeve.PullOutBase(sleevePull);
+                return AsInSleeve.OnPullOutBase(sleevePull);
             }
             public Tween OnPullIn(bool sleevePull)
             {
-                return AsInSleeve.PullInBase(sleevePull);
+                return AsInSleeve.OnPullInBase(sleevePull);
             }
 
             void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)

@@ -17,7 +17,7 @@ namespace Game.Traits
         public tReporting() : base(ID)
         {
             name = "Составление рапорта";
-            desc = "Да у него непробиваемый слой защиты! Что это может быть?";
+            desc = "Я ведь напишу куда надо.";
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -37,7 +37,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 20 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + 10 * Mathf.Pow(stacks - 1, 2);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
         {

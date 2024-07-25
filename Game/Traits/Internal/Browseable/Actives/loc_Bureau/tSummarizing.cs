@@ -19,7 +19,7 @@ namespace Game.Traits
         public tSummarizing() : base(ID)
         {
             name = "Резюмирование";
-            desc = "";
+            desc = "Приговор может быть смертельнее всякого оружия.";
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;

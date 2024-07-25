@@ -109,15 +109,9 @@ namespace Game.Territories
             {
                 if (observingPoint.Field == null)
                     throw new Exception($"{nameof(BattleArea)}: SetObserveTargets(true) can be used only when observingPoint is attached to a field.");
-
                 await EnableContiniousObserving();
-                observingPoint.OnFieldPostAttached.Add(_eventsGuid, OnObservingPointAttachedToField);
             }
-            else
-            {
-                await DisableContiniousObserving();
-                observingPoint.OnFieldPostAttached.Remove(_eventsGuid);
-            }
+            else await DisableContiniousObserving();
         }
         public void SelectTargetsByWeight()
         {
@@ -291,15 +285,19 @@ namespace Game.Territories
             {
                 if (field.Card != null)
                     await CheckObserveStateFor(field.Card);
-                field.OnCardAttached.Add(_eventsGuid, OnCardAttachedToAnyField, Range.priority);
+
+                // adds only once
+                field.OnCardAttached.Add(_eventsGuid, OnCardAttachedOrDetatched, Range.priority);
+                field.OnCardDetatched.Add(_eventsGuid, OnCardAttachedOrDetatched, Range.priority);
             }
         }
         async UniTask DisableContiniousObserving()
         {
             foreach (BattleFieldCard target in _observingCards)
-                await _onCardUnseen.Invoke(this, target);
-            foreach (BattleField field in observingPoint.Territory.Fields())
-                field.OnCardAttached.Remove(_eventsGuid);
+            {
+                if (target != null)
+                    await _onCardUnseen.Invoke(this, target);
+            }
 
             _observingCards = new List<BattleFieldCard>(TableTerritory.MAX_SIZE);
             _aimedTargetSplash = Array.Empty<BattleField>();
@@ -320,13 +318,11 @@ namespace Game.Territories
             if (isInRange)
             {
                 _observingCards.Add(target);
-                TableConsole.LogToFile("card", $"{observer.TableNameDebug}: area: {target.TableNameDebug} found.");
                 await _onCardSeen.Invoke(this, target);
             }
             else
             {
                 _observingCards.Remove(target);
-                TableConsole.LogToFile("card", $"{observer.TableNameDebug}: area: {target.TableNameDebug} lost.");
                 await _onCardUnseen.Invoke(this, target);
             }
         }
@@ -401,18 +397,7 @@ namespace Game.Territories
             return observingPoint.Territory.Fields(center.pos, Range.potential).ToArray();
         }
 
-        UniTask OnObservingPointAttachedToField(object sender, TableFieldAttachArgs e)
-        {
-            BattleFieldCard card = (BattleFieldCard)sender;
-            IBattleWeighty observer = (IBattleWeighty)this.observer.Finder.FindInBattle(card.Territory);
-            if (observer == null) return UniTask.CompletedTask;
-
-            BattleArea area = observer.Area;
-            if (area.CanObserve())
-                 return area.EnableContiniousObserving();
-            else return UniTask.CompletedTask;
-        }
-        UniTask OnCardAttachedToAnyField(object sender, EventArgs e)
+        UniTask OnCardAttachedOrDetatched(object sender, EventArgs e)
         {
             BattleField field = (BattleField)sender;
             BattleTerritory terr = field.Territory;

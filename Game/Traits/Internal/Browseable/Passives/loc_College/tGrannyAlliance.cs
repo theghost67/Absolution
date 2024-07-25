@@ -55,13 +55,13 @@ namespace Game.Traits
             if (e.canSeeTarget)
             {
                 e.target.OnPostKilled.Add(trait.GuidStr, OnTargetPostKilled, PRIORITY);
-                await trait.AnimActivation(e.target);
+                await trait.AnimDetectionOnSeen(e.target);
                 await trait.Owner.strength.AdjustValueScale(STRENGTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
             }
             else
             {
                 e.target.OnPostKilled.Remove(trait.GuidStr);
-                await trait.AnimDeactivation(e.target);
+                await trait.AnimDetectionOnUnseen(e.target);
                 await trait.Owner.strength.RevertValueScale(entryId);
             }
         }

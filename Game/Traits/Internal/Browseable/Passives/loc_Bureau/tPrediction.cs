@@ -60,19 +60,18 @@ namespace Game.Traits
             await base.OnTargetStateChanged(e);
             BattlePassiveTrait trait = (BattlePassiveTrait)e.trait;
             if (trait == null) return;
-            if (trait.Owner.Field == null) return;
 
             int moxie = MOXIE_PER_STACK * trait.GetStacks();
             string guid = trait.GuidGen(e.target.Guid);
 
             if (e.canSeeTarget)
             {
-                await trait.AnimActivation(e.target);
+                await trait.AnimDetectionOnSeen(e.target);
                 await e.target.moxie.AdjustValue(moxie, trait, guid);
             }
             else
             {
-                await trait.AnimDeactivation(e.target);
+                await trait.AnimDetectionOnUnseen(e.target);
                 await e.target.moxie.RevertValue(guid);
             }
         }

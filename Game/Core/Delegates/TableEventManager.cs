@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using Game.Cards;
 using Game.Territories;
 
 namespace Game
@@ -23,16 +24,21 @@ namespace Game
         {
             return _runningCount != 0;
         }
+        public static bool CanAwaitTableCardQueue()
+        {
+            return TableFieldCardDrawerQueue.IsAnyRunning;
+        }
         public static bool CanAwaitInitiationQueue()
         {
             return BattleInitiationQueue.IsAnyRunning;
         }
         public static bool CanAwaitAnyEvents()
         {
-            return CanAwaitTableEvents() || CanAwaitInitiationQueue();
+            return CanAwaitTableEvents() || CanAwaitTableCardQueue() || CanAwaitInitiationQueue();
         }
 
         // NOTE: can await initiation queue inside of the table event
+        // TODO: try use without TableEventManager Adds/Removes?
         /* EXAMPLE:
            trait.Territory.Initiations.Run();
            TableEventManager.Remove(); // TableEventManager.AwaitAnyEvents will still work because of initiations queue

@@ -36,7 +36,7 @@ namespace Game.Cards
             else return null;
         }
 
-        public async void TryUse(TableFloatCardUseArgs e)
+        public async UniTask TryUse(TableFloatCardUseArgs e)
         {
             if (!IsUsable(e)) return;
             TableEventManager.Add();

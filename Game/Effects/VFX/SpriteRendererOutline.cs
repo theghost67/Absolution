@@ -12,11 +12,19 @@ namespace Game.Effects
         static readonly Material _outlinePaletteMaterial;
         static readonly Material _outlineMaterial;
 
+        public Color ColorCurrent => _colorCurrent;
+        public Color ColorDefault => _colorDefault;
+        public Tween ColorDefaultTween => _colorDefaultTween;
+        public Tween ColorCurrentTween => _colorCurrentTween;
+        public bool ColorDefaultTweenIsHidden { get; set; } // use to disable material update (combine with ColorCurrent tweening)
+
         readonly SpriteRenderer _renderer;
         readonly Material _material;
 
-        Color _color;
-        Tween _colorTween;
+        Color _colorCurrent;
+        Color _colorDefault;
+        Tween _colorCurrentTween;
+        Tween _colorDefaultTween;
 
         static SpriteRendererOutline()
         {
@@ -44,44 +52,54 @@ namespace Game.Effects
 
         public void Dispose()
         {
-            _colorTween.Kill();
+            _colorDefaultTween.Kill();
             ColorPalette.RemoveDependantMaterial(_material);
             Object.Destroy(_material);
         }
 
-        public Color GetColor() => _color;
-        public Tween GetColorTween() => _colorTween;
-
-        public void SetColor(Color value)
+        public void SetColorCurrent(Color value)
         {
-            _color = value;
+            _colorCurrent = value;
             if (_material != null)
-                 _material.color = value;
-            else _colorTween.Kill();
+                _material.color = value;
         }
-        public Tween TweenColor(Color value, float duration)
+        public void SetColorDefault(Color value)
         {
-            _colorTween.Kill();
-            _colorTween = DOVirtual.Color(_color, value, duration, SetColor);
-            _colorTween.SetTarget(_renderer);
-            return _colorTween;
+            _colorDefault = value;
+            if (_material != null)
+                  _material.color = value;
         }
 
-        public void TweenColorLerpEndless(Color start, Color end, float startDuration, float lerpDuration)
+        public Tween TweenColorCurrent(TweenCallback<float> onUpdate, float duration)
         {
-            _colorTween.Kill();
-            void PlayLerpEndlessTween()
-            {
-                DOVirtual.Color(start, end, lerpDuration, SetColor).SetEase(Ease.InOutQuad).SetLoops(-1, LoopType.Yoyo);
-            }
+            _colorCurrentTween.Kill();
+            _colorCurrentTween = DOVirtual.Float(0, 1, duration, onUpdate); // use ColorDefault in it's onUpdate function
+            _colorCurrentTween.SetTarget(_renderer);
+            return _colorCurrentTween;
+        }
+        public Tween TweenColorDefault(Color value, float duration)
+        {
+            _colorDefaultTween.Kill();
+            _colorDefaultTween = DOVirtual.Color(_colorDefault, value, duration, TweenColorDefaultOnUpdate);
+            _colorDefaultTween.SetTarget(_renderer);
+            return _colorDefaultTween;
+        }
+        public Tween TweenColorDefaultLoop(Color start, Color end, float duration)
+        {
+            _colorDefaultTween.Kill();
+            void PlayLerpEndlessTween() => DOVirtual.Color(start, end, duration, TweenColorDefaultOnUpdate).SetEase(Ease.InOutQuad).SetLoops(-1, LoopType.Yoyo);
 
-            if (startDuration > 0)
-                _colorTween = TweenColor(start, startDuration).OnComplete(PlayLerpEndlessTween);
-            else
-            {
-                SetColor(start);
-                PlayLerpEndlessTween();
-            }
+            if (duration > 0)
+                _colorDefaultTween = TweenColorDefault(start, duration).OnComplete(PlayLerpEndlessTween);
+            else throw new System.ArgumentException(nameof(duration));
+            return _colorDefaultTween;
+        }
+
+        void TweenColorDefaultOnUpdate(Color c)
+        {
+            if (!ColorDefaultTweenIsHidden)
+                 SetColorDefault(c);
+            else _colorDefault = c;
         }
     }
 }

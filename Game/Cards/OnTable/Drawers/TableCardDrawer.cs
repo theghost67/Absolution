@@ -19,9 +19,7 @@ namespace Game.Cards
         public const int HEIGHT = 112;
         const float BG_ALPHA_MAX = 0.8f;
 
-        public bool IgnoreFirstMouseEnter { get; set; }
         public bool BgIsVisible => _bgIsVisible;
-
         public SpriteRendererOutline Outline => _outline;
         protected override SpriteRenderer SelectableRenderer => _spriteRenderer;
 
@@ -263,39 +261,31 @@ namespace Game.Cards
             await RedrawHeaderTypingBase(resetOnFinish: false, texts);
         }
 
-        public void HighlightOutline(Color color, float duration = 1, bool redraw = true)
+        public Tween AnimHighlightOutline(float duration)
         {
-            Color prevColor = Outline.GetColor();
-            float brightF = Mathf.Pow(2, 6);
-
-            color.r *= brightF;
-            color.g *= brightF;
-            color.b *= brightF;
-
-            if (duration == -1)
-                duration = 1;
-
-            Outline.SetColor(color);
-            Outline.TweenColor(prevColor, duration).SetEase(Ease.InOutQuad);
-            if (redraw) 
-                Outline.GetColorTween().OnComplete(RedrawOutline);
+            return AnimHighlightOutline(duration, Outline.ColorDefault);
         }
-        public void HighlightOutline(bool asPassive, float duration = 1, bool redraw = true)
+        public Tween AnimHighlightOutline(float duration, Color color)
         {
-            if (asPassive)
-            {
-                Outline.SetColor(_outlineBrightPassiveColor);
-                Outline.TweenColor(_outlineDimPassiveColor, duration).SetEase(Ease.OutQuad);
-            }
-            else
-            {
-                Outline.SetColor(_outlineBrightActiveColor);
-                Outline.TweenColor(_outlineDimActiveColor, duration).SetEase(Ease.OutQuad);
-            }
-            if (redraw)
-                Outline.GetColorTween().OnComplete(RedrawOutline);
-        }
+            Outline.ColorDefaultTweenIsHidden = true;
+            float factor = Mathf.Pow(2, 6);
 
+            color.r *= factor;
+            color.g *= factor;
+            color.b *= factor;
+
+            void OnUpdate(float v)
+            {
+                Color c = Color.Lerp(color, Outline.ColorDefault, v);
+                Outline.SetColorCurrent(c);
+            }
+            void OnComplete()
+            {
+                Outline.ColorDefaultTweenIsHidden = false;
+            }
+
+            return Outline.TweenColorCurrent(OnUpdate, duration).SetEase(Ease.OutQuad).OnComplete(OnComplete);
+        }
         public Tween AnimExplosion()
         {
             return _spriteRenderer.DOAExplosion();
@@ -318,14 +308,10 @@ namespace Game.Cards
             const float DURATION = 1.5f;
             switch (GetOutlineType())
             {
-                case OutlineType.Passive: Outline.TweenColor(_outlineDimPassiveColor, DURATION); break;
-                case OutlineType.Active: Outline.TweenColor(_outlineDimActiveColor, DURATION); break;
-                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, DURATION, DURATION); break;
-
-                default:
-                    if (Outline.GetColor().a != 0)
-                        Outline.TweenColor(Color.clear, DURATION);
-                    break;
+                case OutlineType.Passive: Outline.TweenColorDefault(_outlineDimPassiveColor, DURATION); break;
+                case OutlineType.Active: Outline.TweenColorDefault(_outlineDimActiveColor, DURATION); break;
+                case OutlineType.Both: Outline.TweenColorDefaultLoop(_outlineDimPassiveColor, _outlineDimActiveColor, DURATION); break;
+                default: Outline.TweenColorDefault(ColorPalette.GetColor(0), DURATION); break;
             }
         }
         protected void RedrawOutlineInstantly()
@@ -333,14 +319,13 @@ namespace Game.Cards
             const float DURATION = 1.5f;
             switch (GetOutlineType())
             {
-                case OutlineType.Passive: Outline.SetColor(_outlineDimPassiveColor); break;
-                case OutlineType.Active: Outline.SetColor(_outlineDimActiveColor); break;
-                case OutlineType.Both: Outline.TweenColorLerpEndless(_outlineDimPassiveColor, _outlineDimActiveColor, 0, DURATION); break;
-
-                default:
-                    if (Outline.GetColor().a != 0)
-                        Outline.SetColor(Color.clear);
+                case OutlineType.Passive: Outline.SetColorDefault(_outlineDimPassiveColor); break;
+                case OutlineType.Active: Outline.SetColorDefault(_outlineDimActiveColor); break;
+                case OutlineType.Both:
+                    Outline.SetColorDefault(_outlineDimPassiveColor);
+                    Outline.TweenColorDefaultLoop(_outlineDimPassiveColor, _outlineDimActiveColor, DURATION);
                     break;
+                default: Outline.SetColorDefault(ColorPalette.GetColor(0)); break;
             }
         }
         protected virtual OutlineType GetOutlineType()
@@ -374,12 +359,6 @@ namespace Game.Cards
         {
             base.OnMouseEnterBase(sender, e);
             if (e.handled) return;
-            if (IgnoreFirstMouseEnter)
-            {
-                IgnoreFirstMouseEnter = false;
-                e.handled = true;
-                return;
-            }
             Menu.WriteDescToCurrent(attached.DescRich());
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)

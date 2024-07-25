@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using UnityEngine;
 
 namespace Game.Traits
 {
@@ -46,13 +47,13 @@ namespace Game.Traits
             if (e.target.Data.id != OBS_CARD_ID) return;
             if (e.canSeeTarget)
             {
-                await trait.AnimActivation(e.target);
+                await trait.AnimDetectionOnSeen(e.target);
                 await owner.strength.AdjustValueScale(-STRENGTH_REL_DECREASE_ON_OPPOSITE_SIDE_SEEN, trait, guid);
                 await owner.moxie.AdjustValue(-MOXIE_ABS_DECREASE_ON_OPPOSITE_SIDE_SEEN, trait, guid);
             }
             else
             {
-                await trait.AnimDeactivation(e.target);
+                await trait.AnimDetectionOnUnseen(e.target);
                 await owner.strength.RevertValueScale(guid);
                 await owner.moxie.RevertValue(guid);
             }

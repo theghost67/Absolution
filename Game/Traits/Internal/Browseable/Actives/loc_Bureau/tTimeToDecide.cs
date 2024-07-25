@@ -19,7 +19,7 @@ namespace Game.Traits
         public tTimeToDecide() : base(ID)
         {
             name = "Время решать, Коннор";
-            desc = "- Не делай этого, Коннор.";
+            desc = "Не делай этого, Коннор.";
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;

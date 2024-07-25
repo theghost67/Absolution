@@ -124,7 +124,7 @@ namespace Game.Cards
                 }
 
                 if (!traitSrc.tags.HasFlag(TraitTag.Static)) // if is stackable
-                    cardTraitsStackable.Add(traitId, 1f - traitFrequency);
+                    cardTraitsStackable.Add(traitId, 1f);
             }
             #endregion
 
@@ -145,6 +145,7 @@ namespace Game.Cards
                 {
                     TryAddStacks:
                     float stacksAddPointsDelta = card.PointsDeltaForTrait(traitSrc, traitUpStep);
+                    if (stacksAddPointsDelta <= 0) return;
                     if (stacksAddPointsDelta + traitPointsShareCurrent < traitPointsShare)
                     {
                         traitPointsShareCurrent += stacksAddPointsDelta;

@@ -19,6 +19,7 @@ namespace Game.Traits
     {
         const float VIEWPORT_HEIGHT = 0.69f;
         public TableFieldCardDrawer Owner => attached.Owner.Drawer;
+        public new bool IsSelected => IsAnySelected();
 
         public readonly new TableTraitListSet attached;
         public readonly TableTraitListSetDrawerElementsCollection elements;
@@ -93,7 +94,7 @@ namespace Game.Traits
 
         public void ShowStoredElementsInstantly()
         {
-            if (!elements.ContainsTraits) return;
+            if (elements.IsEmpty) return;
             if (gameObject.activeSelf) return;
 
             gameObject.SetActive(true);
@@ -102,7 +103,7 @@ namespace Game.Traits
         }
         public void HideStoredElementsInstantly()
         {
-            if (!elements.ContainsTraits) return;
+            if (elements.IsEmpty) return;
             if (!gameObject.activeSelf) return;
 
             gameObject.SetActive(false);
@@ -127,6 +128,15 @@ namespace Game.Traits
         }
         protected override bool SetActiveStateOnAlphaSet() => false;
 
+        bool IsAnySelected()
+        {
+            foreach (TableTraitListElementDrawer element in elements)
+            {
+                if (element?.IsSelected ?? false)
+                    return true;
+            }
+            return false;
+        }
         void OnSetDrawerCreated(object sender, EventArgs e)
         {
             TableTraitListSet set = (TableTraitListSet)sender;

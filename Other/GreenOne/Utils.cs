@@ -141,7 +141,6 @@ namespace GreenOne
                 textMesh.text = srcText;
             return textMesh.textBounds.size;
         }
-
         public static Transform CreateEmptyObject(this Transform transform, string name)
         {
             var gameObject = new GameObject(name);
@@ -152,14 +151,24 @@ namespace GreenOne
 
             return objTransform;
         }
+
         public static void Destroy(this Component component)
         {
-            Object.Destroy(component);
+            Object.Destroy(component, 0);
         }
         public static void Destroy(this GameObject gameObject)
         {
-            Object.Destroy(gameObject);
+            Object.Destroy(gameObject, 0);
         }
+        public static void Destroy(this Component component, float time)
+        {
+            Object.Destroy(component, time);
+        }
+        public static void Destroy(this GameObject gameObject, float time)
+        {
+            Object.Destroy(gameObject, time);
+        }
+
         public static void DestroyImmediate(this Component component)
         {
             Object.DestroyImmediate(component);

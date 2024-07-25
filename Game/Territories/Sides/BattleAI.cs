@@ -1,6 +1,4 @@
-﻿//#define LEGACY_AI
-
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
 using Game.Sleeves;
@@ -21,6 +19,7 @@ namespace Game.Territories
     public sealed class BattleAI
     {
         const int TURN_DELAY = 500;
+        const int ITERATIONS_MAX = 64;
 
         readonly BattleSide _side;
 
@@ -179,10 +178,6 @@ namespace Game.Territories
                 _lastTerr?.Dispose();
             });
 
-            await UniTask.Delay(TURN_DELAY);
-            #if LEGACY_AI
-            await MakeTurn_Legacy();
-            #else
             try
             {
                 TableConsole.LogToFile("ai", $"TURN STARTED");
@@ -195,7 +190,6 @@ namespace Game.Territories
                 Debug.LogException(ex);
                 _lastTerr?.Dispose();
             }
-            #endif
 
             TableConsole.LogToFile("ai", $"TURN ENDED");
             _turnTween.Kill();
@@ -211,7 +205,11 @@ namespace Game.Territories
             CardsResultsListSet resultsSet = new();
 
             Start:
-            if (iterations++ > 16)
+            await UniTask.Delay(TURN_DELAY / 2);
+            await TableEventManager.AwaitAnyEvents();
+            await UniTask.Delay(TURN_DELAY / 2);
+
+            if (iterations++ > ITERATIONS_MAX)
             {
                 Debug.LogError("too many iterations.");
                 return;
@@ -294,8 +292,6 @@ namespace Game.Territories
                         goto PickResultAgain;
                 }
                 resultCard.TryDropOn(resultField);
-                await TableEventManager.AwaitAnyEvents();
-                await UniTask.Delay(TURN_DELAY);
                 TableConsole.LogToFile("ai", $"CARD PLACEMENT ENDS: {result.Entity.TableNameDebug}");
                 goto End;
             }
@@ -311,8 +307,13 @@ namespace Game.Territories
         async UniTask MakeTurn_Traits()
         {
             int iterations = 0;
+
             Start:
-            if (iterations++ > 16)
+            await UniTask.Delay(TURN_DELAY / 2);
+            await TableEventManager.AwaitAnyEvents();
+            await UniTask.Delay(TURN_DELAY / 2);
+
+            if (iterations++ > ITERATIONS_MAX)
             {
                 Debug.LogError("too many iterations.");
                 return;
@@ -343,7 +344,7 @@ namespace Game.Territories
                 BattleActiveTraitWeightResult result = GetBestActiveTraitUseResult(element.Trait, sidesWeight);
 
                 if (result != null)
-                     TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: abs: {result.WeightDeltaAbs}, rel: {result.WeightDeltaRel}");
+                     TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: abs: {result.WeightDeltaAbs}, rel: {result.WeightDeltaRel}, target: {result.target.TableNameDebug}");
                 else TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: null (impossible to use)");
 
                 if (result != null && result.WeightDeltaAbs != 0 && result.WeightDeltaAbs > noUseResult.WeightDeltaAbs) 
@@ -365,58 +366,8 @@ namespace Game.Territories
                 goto PickResultAgain;
 
             activeTrait.TryUse(bestResult.target);
-            await TableEventManager.AwaitAnyEvents();
-            await UniTask.Delay(TURN_DELAY);
             goto Start;
         }
-
-        #if LEGACY_AI
-        async UniTask MakeTurn_Legacy()
-        {
-            BattleField[] oppositeFieldsWithCard = _side.Opposite.Fields().WithCard().ToArray();
-            if (oppositeFieldsWithCard.Length == 0) goto SkipDefend;
-            int defendAttempts = 0;
-            while (defendAttempts < BattleTerritory.MAX_WIDTH) // defend
-            {
-                BattleField oppositeFieldWithCard = oppositeFieldsWithCard.GetRandom();
-                BattleField myField = _side.Territory.FieldOpposite(oppositeFieldWithCard.pos);
-                if (myField.Card != null)
-                {
-                    defendAttempts++;
-                    continue;
-                }
-
-                IBattleSleeveCard[] availableCards = ((IEnumerable<IBattleSleeveCard>)_side.Sleeve).Where(c => c.Data.isField && _side.CanAfford(c)).ToArray();
-                if (availableCards.Length == 0) return;
-
-                defendAttempts++;
-                availableCards.GetRandom().TryDropOn(myField);
-                await TableEventManager.WhenAll();
-            }
-
-            SkipDefend:
-            BattleField[] oppositeFieldsWithoutCard = _side.Opposite.Fields().WithoutCard().ToArray();
-            if (oppositeFieldsWithoutCard.Length == 0) goto SkipDefend;
-            int attackAttempts = 0;
-            while (attackAttempts < BattleTerritory.MAX_WIDTH) // attack
-            {
-                BattleField oppositeFieldWithoutCard = oppositeFieldsWithoutCard.GetRandom();
-                BattleField myField = _side.Territory.FieldOpposite(oppositeFieldWithoutCard.pos);
-                if (myField.Card != null)
-                {
-                    attackAttempts++;
-                    continue;
-                }
-
-                IBattleSleeveCard[] availableCards = ((IEnumerable<IBattleSleeveCard>)_side.Sleeve).Where(c => c.Data.isField && _side.CanAfford(c)).ToArray();
-                if (availableCards.Length == 0) return;
-
-                attackAttempts++;
-                availableCards.GetRandom().TryDropOn(myField);
-                await TableEventManager.WhenAll();
-            }
-        }
-        #endif
 
         IBattleWeightResult GetNoPlacementResult(float2 sidesWeight)
         {
@@ -456,8 +407,10 @@ namespace Game.Territories
                 terrClone.PlaceFieldCard(cardClone, fieldClone, sideClone);
                 terrClone.LastPhase();
 
-                float2 deltas = CalculateWeightDeltas(sidesWeight, sideClone, sideClone.Opposite);
-                results[p] = new BattleFieldCardWeightResult(card, srcTerritory.Field(fieldPos), deltas[0], deltas[1]);
+                BattleSide sideCloneOpposite = sideClone.Opposite;
+                float2 weightsWeightAfterTurn = new(sideClone.Weight, sideCloneOpposite.Weight);
+                float2 weightDelta = CalculateWeightDelta(sidesWeight, weightsWeightAfterTurn, sideClone, sideCloneOpposite);
+                results[p] = new BattleFieldCardWeightResult(card, srcTerritory.Field(fieldPos), weightDelta[0], weightDelta[1]);
 
                 terrClone.Dispose();
             }
@@ -553,17 +506,20 @@ namespace Game.Territories
             useFunc?.Invoke(terrClone);
             terrClone.LastPhase();
 
-            deltas = CalculateWeightDeltas(sidesWeight, sideClone, sideClone.Opposite);
+            BattleSide sideCloneOpposite = sideClone.Opposite;
+            float2 weightsWeightAfterTurn = new(sideClone.Weight, sideCloneOpposite.Weight);
+
+            deltas = CalculateWeightDelta(sidesWeight, weightsWeightAfterTurn, sideClone, sideCloneOpposite);
             terrClone.Dispose();
         }
-        float2 CalculateWeightDeltas(float2 sidesStartWeight, BattleSide thisSideAfterTurn, BattleSide oppoSideAfterTurn)
+        float2 CalculateWeightDelta(float2 sidesStartWeight, float2 sidesEndWeight, BattleSide thisSideAfterTurn, BattleSide oppoSideAfterTurn)
         {
             // before/after turn
             float thisSideWeightBefore = ThisSideWeight_ScaledByStyle(_side, sidesStartWeight.x);     
-            float thisSideWeightAfter  = ThisSideWeight_ScaledByStyle(thisSideAfterTurn, thisSideAfterTurn.Weight);
+            float thisSideWeightAfter  = ThisSideWeight_ScaledByStyle(thisSideAfterTurn, sidesEndWeight.x);
 
             float oppoSideWeightBefore = OppoSideWeight_ScaledByStyle(_side.Opposite, sidesStartWeight.y);
-            float oppoSideWeightAfter  = OppoSideWeight_ScaledByStyle(thisSideAfterTurn, oppoSideAfterTurn.Weight);
+            float oppoSideWeightAfter  = OppoSideWeight_ScaledByStyle(oppoSideAfterTurn, sidesEndWeight.y);
 
             // if sidesStartWeight sum is 200 and weightDeltaAbs is 40,
             // weightDeltaRel equals to (40 / 200) = 0.2

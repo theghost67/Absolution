@@ -12,8 +12,8 @@ namespace Game.Traits
     {
         const string ID = "alco_rage";
         const int PRIORITY = 5;
-        const float HEALTH_ABS_RESTORE = 0.50f;
-        const int MOXIE_ABS_DECREASE = 2;
+        const float HEALTH_ABS_RESTORE = 0.33f;
+        const int MOXIE_ABS_DECREASE_STATIC = 2;
 
         public tAlcoRage() : base(ID)
         {
@@ -30,7 +30,7 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             float healthEffect = HEALTH_ABS_RESTORE * 100 * trait.GetStacks();
-            float moxieEffect = MOXIE_ABS_DECREASE * trait.GetStacks();
+            float moxieEffect = MOXIE_ABS_DECREASE_STATIC;
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После убийства вражеской карты владельцем (П{PRIORITY})",
@@ -39,7 +39,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 24 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + 48 * Mathf.Pow(stacks - 1, 2);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -63,7 +63,7 @@ namespace Game.Traits
 
             int stacks = trait.GetStacks();
             float health = owner.Data.health * HEALTH_ABS_RESTORE * stacks;
-            float moxie = -MOXIE_ABS_DECREASE * stacks;
+            float moxie = -MOXIE_ABS_DECREASE_STATIC;
 
             await trait.AnimActivation();
             await owner.health.AdjustValue(health, trait);

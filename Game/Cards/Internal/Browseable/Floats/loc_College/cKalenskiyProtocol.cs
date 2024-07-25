@@ -1,12 +1,14 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Territories;
+using GreenOne;
 using System.Collections.Generic;
 
 namespace Game.Cards
 {
     public class cKalenskiyProtocol : FloatCard
     {
-        const float MOXIE_TO_STRENGTH_REL = 0.25f;
+        const float MOXIE_TO_STRENGTH_REL = 0.20f;
+        const int MAX_MOXIE_TO_STRENGTH = 5;
 
         public cKalenskiyProtocol() : base("kalenskiy_protocol")
         {
@@ -22,8 +24,7 @@ namespace Game.Cards
 
         public override string DescRich(ITableCard card)
         {
-            const float EFFECT = MOXIE_TO_STRENGTH_REL * 100;
-            return DescRichBase(card, $"Переносит инициативу всех карт на своей территории в их силу: -1 ед. инициативы в +{EFFECT}% силы");
+            return DescRichBase(card, $"Переносит инициативу всех карт на своей территории в их силу: -1 ед. инициативы в +{MOXIE_TO_STRENGTH_REL * 100}% силы. Перенос более {MAX_MOXIE_TO_STRENGTH} инициативы не имеет эффекта.");
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {
@@ -43,7 +44,7 @@ namespace Game.Cards
 
                 await fieldCard.moxie.AdjustValue(-fieldCard.moxie, card, guid);
                 float moxieDelta = fieldCard.moxie.EntryValue(guid);
-                float strengthRel = -moxieDelta * MOXIE_TO_STRENGTH_REL;
+                float strengthRel = (-moxieDelta).ClampedMax(MAX_MOXIE_TO_STRENGTH) * MOXIE_TO_STRENGTH_REL;
                 await fieldCard.strength.AdjustValueScale(strengthRel, card);
             }
         }

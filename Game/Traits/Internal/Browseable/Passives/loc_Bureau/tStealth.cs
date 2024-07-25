@@ -66,7 +66,7 @@ namespace Game.Traits
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
             if (receiver == null) return;
-            trait.Storage.Add(receiver.GuidStr, null);
+            trait.Storage.TryAdd(receiver.GuidStr, null);
         }
         static async UniTask OnOwnerKillConfirmed(object sender, BattleKillConfirmArgs e)
         {

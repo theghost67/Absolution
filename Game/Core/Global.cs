@@ -133,11 +133,12 @@ namespace Game
             // --------- TODO: remove ---------
             Traveler.TryStartTravel(new LocationMission(EnvironmentBrowser.Locations["college"]));
             DOVirtual.DelayedCall(0.8f, () => VFX.CreateScreenBG(Color.black).DOFade(0, 10).SetEase(Ease.InQuad));
-			#if UNITY_EDITOR
-			MenuTransit.Between(null, new BattlePlaceMenu());
-            #else
-			MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
-			#endif
+            MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
+            //#if UNITY_EDITOR
+            //MenuTransit.Between(null, new BattlePlaceMenu());
+            //         #else
+            //MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
+            //#endif
             // --------------------------------
         }
         void Update()

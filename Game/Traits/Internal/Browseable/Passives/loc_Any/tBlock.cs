@@ -61,7 +61,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await e.strength.SetValue(0, trait);
+            await e.strength.SetValueDefault(0, trait);
         }
     }
 }

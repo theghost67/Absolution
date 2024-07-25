@@ -49,12 +49,12 @@ namespace Game.Traits
 
             if (e.canSeeTarget)
             {
-                await trait.AnimActivation(e.target);
+                await trait.AnimDetectionOnSeen(e.target);
                 await e.target.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait, entryId);
             }
             else
             {
-                await trait.AnimDeactivation(e.target);
+                await trait.AnimDetectionOnUnseen(e.target);
                 await e.target.moxie.RevertValue(entryId);
             }
         }

@@ -54,7 +54,7 @@ namespace Game.Traits
             if (e.target.Traits.Passive(ID) == null) return;
             if (e.canSeeTarget)
             {
-                await trait.AnimActivation(e.target);
+                await trait.AnimDetectionOnSeen(e.target);
                 await trait.Owner.health.AdjustValueScale(HEALTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
             }
         }

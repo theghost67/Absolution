@@ -157,7 +157,9 @@ namespace Game.Environment
                 throw new InvalidOperationException("Travel is not in progress.");
             if (statPointsPerCard == -1)
                 statPointsPerCard = _location.stage;
+
             DeckCardsCountRandom(statPointsPerCard, out int fieldCardsCount, out int floatCardsCount);
+            fieldCardsCount = fieldCardsCount.ClampedMin(4);
 
             CardDeck deck = new();
             int pointsSum = statPointsPerCard * fieldCardsCount;
@@ -186,30 +188,12 @@ namespace Game.Environment
             if (preArgs.handled) return deck;
 
             // generate cards using ratios (to make more diverse deck)
-            Dictionary<string, float> notGoldFieldCards = null;
             for (int i = 0; i < fieldCardsCount; i++)
             {
                 if (deck.LimitReached) break;
                 int points = Convert.ToInt32(statPointsRatios[i] * pointsSum);
                 int traitsCount = Convert.ToInt32(traitsCountRatios[i] * traitsCountSum);
-                FieldCard card;
-                // TODO: move conditions below to other function?
-                if (fieldCardsCount > 2)
-                {
-                    card = NewField(type, points, traitsCount);
-                    deck.fieldCards.Add(card);
-                    continue;
-                }
-                if (notGoldFieldCards == null) // do not add cards with gold currency if deck count <= 2
-                {
-                    notGoldFieldCards = new Dictionary<string, float>(fieldsFrequencies);
-                    foreach (string id in fieldsFrequencies.Keys)
-                    {
-                        if (CardBrowser.GetCard(id).price.currency.id != "gold")
-                            notGoldFieldCards.Remove(id);
-                    }
-                }
-                card = NewField(type, points, traitsCount, notGoldFieldCards.GetWeightedRandom(p => p.Value).Key);
+                FieldCard card = NewField(type, points, traitsCount);
                 deck.fieldCards.Add(card);
             }
 

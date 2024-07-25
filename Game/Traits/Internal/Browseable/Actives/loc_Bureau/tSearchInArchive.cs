@@ -18,7 +18,7 @@ namespace Game.Traits
         public tSearchInArchive() : base(ID)
         {
             name = "Порыться в архивах";
-            desc = "";
+            desc = "Сейчас, где же оно? О, нашёл, тут сказано, что вы...";
 
             rarity = Rarity.None;
             tags = TraitTag.None;

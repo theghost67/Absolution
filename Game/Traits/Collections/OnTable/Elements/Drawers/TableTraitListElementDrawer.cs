@@ -1,5 +1,4 @@
 ﻿using DG.Tweening;
-using Game.Cards;
 using Game.Effects;
 using Game.Menus;
 using Game.Palette;
@@ -17,42 +16,32 @@ namespace Game.Traits
     /// </summary>
     public abstract class TableTraitListElementDrawer : Drawer
     {
-        public const float ACTIVATION_DUR_ALL = ACTIVATION_DUR_APPEAR + ACTIVATION_DUR_DISPLAY + ACTIVATION_DUR_DISAPPEAR;
         const float TWEEN_DURATION = 0.50f;
-        const float ACTIVATION_DUR_APPEAR = 0.50f;
-        const float ACTIVATION_DUR_DISPLAY = 1.00f;
-        const float ACTIVATION_DUR_DISAPPEAR = 0.50f;
-
         static readonly GameObject _prefab;
-        static readonly GameObject _activationPrefab;
         static readonly Vector2 _minSizeDelta;
 
         static readonly Sprite _traitRarityIcon1Sprite;
         static readonly Sprite _traitRarityIcon2Sprite;
         static readonly Sprite _traitRarityIcon3Sprite;
 
-        public bool IsActivated => _isActivated;
         public readonly new TableTraitListElement attached;
         public bool enqueueAnims;
 
         readonly SpriteRenderer _rarityIconRenderer;
         readonly SpriteRenderer _traitIconRenderer;
-        readonly TextMeshPro _nameText;
-        readonly TextMeshPro _stacksText;
+        readonly TextMeshPro _nameTextMesh;
+        readonly TextMeshPro _stacksTextMesh;
         readonly RectTransform _rectTransform;
 
         Tween _appearTween;
         Tween _adjustTween;
         Tween _disappearTween;
-        Tween _activationTween;
         Tween _scrollTween; // note: not used at the moment
-
-        bool _isActivated;
 
         static TableTraitListElementDrawer()
         {
             _prefab = Resources.Load<GameObject>("Prefabs/Traits/Trait list element");
-            _activationPrefab = Resources.Load<GameObject>("Prefabs/Traits/Trait activation");
+
             _minSizeDelta = new Vector2(0.46f, 0.105f);
 
             _traitRarityIcon1Sprite = Resources.Load<Sprite>("Sprites/Traits/Parts/trait rarity icon 1");
@@ -66,9 +55,9 @@ namespace Game.Traits
 
             _rarityIconRenderer = gameObject.Find<SpriteRenderer>("Rarity icon");
             _traitIconRenderer = gameObject.Find<SpriteRenderer>("Trait icon");
-            _nameText = transform.Find<TextMeshPro>("Name");
-            _stacksText = transform.Find<TextMeshPro>("Stacks");
-            _rectTransform = _nameText.GetComponent<RectTransform>();
+            _nameTextMesh = transform.Find<TextMeshPro>("Name");
+            _stacksTextMesh = transform.Find<TextMeshPro>("Stacks");
+            _rectTransform = _nameTextMesh.GetComponent<RectTransform>();
 
             enqueueAnims = true;
             BlocksSelection = false;
@@ -84,8 +73,8 @@ namespace Game.Traits
         public override void SetSortingOrder(int value, bool asDefault = false)
         {
             base.SetSortingOrder(value, asDefault);
-            _nameText.sortingOrder = value;
-            _stacksText.sortingOrder = value;
+            _nameTextMesh.sortingOrder = value;
+            _stacksTextMesh.sortingOrder = value;
             _rarityIconRenderer.sortingOrder = value;
             _traitIconRenderer.sortingOrder = value;
         }
@@ -94,16 +83,16 @@ namespace Game.Traits
             base.SetAlpha(value);
             _rarityIconRenderer.color = _rarityIconRenderer.color.WithAlpha(value);
             _traitIconRenderer.color = _traitIconRenderer.color.WithAlpha(value);
-            _nameText.color = _nameText.color.WithAlpha(value);
-            _stacksText.color = _stacksText.color.WithAlpha(value);
+            _nameTextMesh.color = _nameTextMesh.color.WithAlpha(value);
+            _stacksTextMesh.color = _stacksTextMesh.color.WithAlpha(value);
         }
         public override void SetColor(Color value)
         {
             base.SetColor(value);
             _rarityIconRenderer.color = value;
             _traitIconRenderer.color = value;
-            _nameText.color = value;
-            _stacksText.color = value;
+            _nameTextMesh.color = value;
+            _stacksTextMesh.color = value;
         }
 
         public void RedrawRarityIconAsDefault()
@@ -140,11 +129,11 @@ namespace Game.Traits
         }
         public void RedrawName(string text)
         {
-            _nameText.text = text;
+            _nameTextMesh.text = text;
 
             Transform parent = transform.parent;
             transform.SetParent(Global.Root, worldPositionStays: true); // ignore current parent active state (otherwise this method returns Vector2.zero)
-            _nameText.ForceMeshUpdate(ignoreActiveState: true);
+            _nameTextMesh.ForceMeshUpdate(ignoreActiveState: true);
 
             Vector2 deltaOld = _rectTransform.sizeDelta;
             Vector2 deltaNew = new(deltaOld.x.SelectMax(_minSizeDelta.x), deltaOld.y.SelectMax(_minSizeDelta.y));
@@ -155,8 +144,8 @@ namespace Game.Traits
         public void RedrawStacks(int stacks)
         {
             if (stacks <= 0)
-                 _stacksText.text = "-";
-            else _stacksText.text = "x" + stacks.ToString();
+                 _stacksTextMesh.text = "-";
+            else _stacksTextMesh.text = "x" + stacks.ToString();
         }
 
         public Vector2 GetSizeDelta() => _rectTransform.sizeDelta;
@@ -197,79 +186,6 @@ namespace Game.Traits
             _disappearTween = AnimPosX(0.25f);
             return _disappearTween;
         }
-        public Tween AnimActivation()
-        {
-            _activationTween.Kill(complete: true);
-
-            TableTraitListSet set = attached.List.Set;
-            TableTraitListSetDrawer setDrawer = set.Drawer;
-            TableFieldCard owner = set.Owner;
-            TableFieldCardDrawer ownerDrawer = owner.Drawer;
-
-            if (setDrawer == null)
-                return null;
-
-            _isActivated = true;
-            setDrawer.HideStoredElementsInstantly();
-            ownerDrawer.ShowBgInstantly();
-
-            Trait data = attached.Trait.Data;
-            GameObject prefab = GameObject.Instantiate(_activationPrefab, ownerDrawer.transform);
-            Transform prefabTransform = prefab.transform;
-            TextMeshPro prefabTextMesh = prefabTransform.Find<TextMeshPro>("Text");
-            SpriteRenderer prefabRenderer = prefabTransform.Find<SpriteRenderer>("Icon");
-
-            prefabRenderer.sprite = Resources.Load<Sprite>(data.spritePath);
-            prefabTextMesh.text = data.name;
-
-            Vector3 scale1 = Vector3.one * 2.00f;
-            Vector3 scale2 = Vector3.one * 1.00f;
-            Vector3 scale3 = Vector3.one * 0.75f;
-
-            Color color1 = ColorPalette.GetColor(0);
-            Color color2 = ColorPalette.GetColor(data.isPassive ? 5 : 6);
-            Color color3 = ColorPalette.GetColor(1).WithAlpha(0);
-
-            prefabTransform.localScale = scale1;
-            prefabRenderer.color = color1;
-            prefabTextMesh.color = color1;
-            attached.Trait.Owner.Drawer.HighlightOutline(data.isPassive);
-
-            Tween textTween1 = prefabTextMesh.DOColor(color2, ACTIVATION_DUR_APPEAR).Pause().SetTarget(prefab).SetEase(Ease.Linear);
-            Tween textTween2 = prefabTextMesh.DOColor(color3, ACTIVATION_DUR_DISAPPEAR).Pause().SetTarget(prefab).SetEase(Ease.Linear);
-            Tween spriteTween1 = prefabRenderer.DOColor(color2, ACTIVATION_DUR_APPEAR).Pause().SetTarget(prefab).SetEase(Ease.Linear);
-            Tween spriteTween2 = prefabRenderer.DOColor(color3, ACTIVATION_DUR_DISAPPEAR).Pause().SetTarget(prefab).SetEase(Ease.Linear);
-            Tween scaleTween1 = prefabTransform.DOScale(scale2, ACTIVATION_DUR_APPEAR).Pause().SetTarget(prefab).SetEase(Ease.OutCubic);
-            Tween scaleTween2 = prefabTransform.DOScale(scale3, ACTIVATION_DUR_DISAPPEAR).Pause().SetTarget(prefab).SetEase(Ease.OutCubic);
-
-            Sequence seq = DOTween.Sequence(prefab);
-            seq.AppendCallback(() =>
-            {
-                scaleTween1.Play();
-                textTween1.Play();
-                spriteTween1.Play();
-            });
-            seq.AppendInterval(ACTIVATION_DUR_DISPLAY);
-            seq.AppendCallback(() =>
-            {
-                scaleTween2.Play();
-                textTween2.Play();
-                spriteTween2.Play();
-            });
-            seq.AppendInterval(ACTIVATION_DUR_DISAPPEAR);
-            seq.OnComplete(() =>
-            {
-                prefab.Destroy();
-                if (setDrawer.IsSelected && setDrawer.elements.ContainsTraits)
-                    setDrawer.ShowStoredElements();
-                else if (!owner.HasInitiationPreview()) 
-                    ownerDrawer.HideBg();
-                _isActivated = false;
-            });
-
-            _activationTween = seq;
-            return _activationTween.Play();
-        }
         public Tween AnimScroll(float y)
         {
             float srcPosY = transform.localPosition.y;
@@ -294,7 +210,6 @@ namespace Game.Traits
             _appearTween.Kill();
             _adjustTween.Kill();
             _disappearTween.Kill();
-            _activationTween.Kill();
             _scrollTween.Kill();
         }
 
@@ -307,18 +222,18 @@ namespace Game.Traits
             bool isPassive = trait.Data.isPassive;
             Color color = ColorPalette.GetColor(isPassive ? 5 : 6);
 
-            _nameText.text = trait.Data.name.Underlined();
-            _stacksText.color = color;
+            _nameTextMesh.text = trait.Data.name.Underlined();
+            _stacksTextMesh.color = color;
             _traitIconRenderer.color = color;
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e) 
         {
             base.OnMouseLeaveBase(sender, e);
             ITableTrait trait = attached.Trait;
-            if (trait.Owner.Drawer.IsSelected && !trait.Owner.Drawer.Traits.elements.IsAnySelected)
+            if (trait.Owner.Drawer.IsSelected && !trait.Owner.Drawer.Traits.IsSelected)
                 Menu.WriteDescToCurrent(trait.Owner.DescRich());
 
-            _nameText.text = trait.Data.name;
+            _nameTextMesh.text = trait.Data.name;
             SetColor(GetCooldownColor());
         }
         protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
@@ -340,23 +255,23 @@ namespace Game.Traits
 
         Tween AnimAlpha(float to)
         {
-            return DOVirtual.Float(_nameText.color.a, to, TWEEN_DURATION, OnTweenUpdateAlpha).SetEase(Ease.OutQuad);
+            return DOVirtual.Float(_nameTextMesh.color.a, to, TWEEN_DURATION, OnTweenUpdateAlpha).SetEase(Ease.OutQuad);
         }
         Tween AnimStacks(int to)
         {
-            if (!int.TryParse(_stacksText.text[1..], out int from))
+            if (!int.TryParse(_stacksTextMesh.text[1..], out int from))
                 return null;
 
             if (to == from) return null;
             if (to > from)
-                 _stacksText.color = Color.green;
-            else _stacksText.color = Color.red;
+                 _stacksTextMesh.color = Color.green;
+            else _stacksTextMesh.color = Color.red;
 
-            return DOVirtual.Int(from, to, TWEEN_DURATION, OnTweenUpdateStacks).OnComplete(() => _stacksText.color = Color);
+            return DOVirtual.Int(from, to, TWEEN_DURATION, OnTweenUpdateStacks).OnComplete(() => _stacksTextMesh.color = Color);
         }
         Tween AnimStacksScale(Vector3 to)
         {
-            return DOVirtual.Vector3(_stacksText.transform.localScale, to, TWEEN_DURATION, OnTweenUpdateStacksScale);
+            return DOVirtual.Vector3(_stacksTextMesh.transform.localScale, to, TWEEN_DURATION, OnTweenUpdateStacksScale);
         }
         Tween AnimPosX(float to)
         {
@@ -374,7 +289,7 @@ namespace Game.Traits
         }
         void OnTweenUpdateStacksScale(Vector3 value)
         {
-            _stacksText.transform.localScale = value;
+            _stacksTextMesh.transform.localScale = value;
         }
         void OnTweenUpdatePosX(float value)
         {
