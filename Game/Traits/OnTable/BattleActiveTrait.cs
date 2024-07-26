@@ -63,9 +63,9 @@ namespace Game.Traits
         {
             if (Owner == null) return false;
             if (Side != by) return false;
-            if (!IsReadyToUse()) return false;
-
-            _area.StartTargetAiming(AimFilter, AimFinished);
+            if (_owner.Field != null)
+                _area.StartTargetAiming(AimFilter, AimFinished);
+            else TryUse(null);
             return true;
         }
 
@@ -82,20 +82,6 @@ namespace Game.Traits
             return trait.Data.OnTargetStateChanged(new BattleTraitTargetStateChangeArgs(trait, card, false));
         }
 
-        bool IsReadyToUse()
-        {
-            bool isUsable = _owner.Field == null && Data.IsUsable(new TableActiveTraitUseArgs(this, null));
-            if (!isUsable && _owner.Field != null)
-            {
-                foreach (BattleField possibleTarget in Territory.Fields(Owner.Field.pos, Range.potential))
-                {
-                    if (!Data.IsUsable(new TableActiveTraitUseArgs(this, possibleTarget))) continue;
-                    isUsable = true;
-                    break;
-                }
-            }
-            return isUsable;
-        }
         bool AimFilter(BattleField aimedField)
         {
             return Data.IsUsable(new TableActiveTraitUseArgs(this, aimedField));

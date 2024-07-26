@@ -311,11 +311,12 @@ namespace Game.Territories
             if (obj is BattleFieldCard objAsCard)
                  cardDrawer = objAsCard.Drawer;
             else cardDrawer = ((BattleField)obj).Card?.Drawer;
-            if (cardDrawer != null)
+
+            TableTraitListSetDrawerElementsCollection elements = cardDrawer?.Traits?.elements;
+            if (cardDrawer != null && elements != null)
             {
-                TableTraitListSetDrawerElementsCollection elements = cardDrawer.Traits?.elements;
-                if (!(cardDrawer.IsSelected && !elements.IsEmpty) || (!elements?.IsRunning ?? true))
-                    cardDrawer.ShowBg();
+                bool showBg = cardDrawer.IsSelected ? elements.IsEmpty : !elements.IsRunning;
+                if (showBg) cardDrawer.ShowBg();
             }
 
             GameObject previewPrefab = GameObject.Instantiate(_initiationPreviewPrefab, obj.Drawer.transform);
@@ -395,11 +396,12 @@ namespace Game.Territories
             if (obj is BattleFieldCard objAsCard)
                 cardDrawer = objAsCard.Drawer;
             else cardDrawer = ((BattleField)obj).Card?.Drawer;
-            if (cardDrawer != null)
+
+            TableTraitListSetDrawerElementsCollection elements = cardDrawer?.Traits?.elements;
+            if (cardDrawer != null && elements != null)
             {
-                TableTraitListSetDrawerElementsCollection elements = cardDrawer.Traits?.elements;
-                if (!(cardDrawer.IsSelected && !elements.IsEmpty) || (!elements?.IsRunning ?? true))
-                    cardDrawer.HideBg();
+                bool hideBg = cardDrawer.IsSelected ? elements.IsEmpty : !elements.IsRunning;
+                if (hideBg) cardDrawer.HideBg();
             }
 
             previewTransform.gameObject.name = "Initiation (hiding)";
