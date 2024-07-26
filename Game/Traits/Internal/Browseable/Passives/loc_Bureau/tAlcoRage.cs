@@ -34,7 +34,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После убийства вражеской карты владельцем (П{PRIORITY})",
-                    $"Восстанавливает себе <u>{healthEffect}%</u> здоровья и уменьшает свою инициативу на <u>{moxieEffect}</u> ед."),
+                    $"Восстанавливает себе <u>{healthEffect}%</u> здоровья и уменьшает свою инициативу на {moxieEffect} ед."),
             });
         }
         public override float Points(FieldCard owner, int stacks)

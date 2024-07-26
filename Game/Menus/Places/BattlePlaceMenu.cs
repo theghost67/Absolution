@@ -339,7 +339,7 @@ namespace Game.Menus
             public void OnDropOn(TableField field)
             {
                 AsInSleeve.OnDropOnBase(field);
-                if (!Side.isMe)
+                if (Side.isMe)
                 {
                     _menu.SetPlayerControls(true);
                     _menu._territory.SetFieldsColliders(true);

@@ -20,7 +20,7 @@ namespace Game.Traits
             name = "Белоснежная бомбардировка";
             desc = "Чёрт, это опять те голуби, бежим отсюда, пока не поздно!";
 
-            rarity = Rarity.Rare;
+            rarity = Rarity.Epic;
             tags = TraitTag.None;
             range = new BattleRange(TerritoryRange.all);
         }

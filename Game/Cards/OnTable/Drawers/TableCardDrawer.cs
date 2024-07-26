@@ -40,8 +40,6 @@ namespace Game.Cards
         static readonly Sprite _cardRarity2Sprite;
         static readonly Sprite _cardRarity3Sprite;
 
-        static Color _outlineBrightPassiveColor;
-        static Color _outlineBrightActiveColor;
         static Color _outlineDimPassiveColor;
         static Color _outlineDimActiveColor;
 
@@ -82,7 +80,7 @@ namespace Game.Cards
             OnPaletteColorChanged_Static(ColorPalette.ACTIVE_INDEX);
             ColorPalette.OnColorChanged += OnPaletteColorChanged_Static;
         }
-        public TableCardDrawer(TableCard card, Transform parent, bool redrawIcons) : base(card, _prefab, parent)
+        public TableCardDrawer(TableCard card, Transform parent) : base(card, _prefab, parent)
         {
             attached = card;
             gameObject.name = attached.Data.id;
@@ -111,9 +109,6 @@ namespace Game.Cards
             RedrawPortraitAsDefault();
             RedrawHeaderAsDefault();
             RedrawHeaderColor(Color.black);
-
-            if (redrawIcons)
-                RedrawIcons();
         }
 
         public override void SetSortingOrder(int value, bool asDefault = false)
@@ -267,9 +262,7 @@ namespace Game.Cards
         }
         public Tween AnimHighlightOutline(float duration, Color color)
         {
-            Outline.ColorDefaultTweenIsHidden = true;
             float factor = Mathf.Pow(2, 6);
-
             color.r *= factor;
             color.g *= factor;
             color.b *= factor;
@@ -279,12 +272,7 @@ namespace Game.Cards
                 Color c = Color.Lerp(color, Outline.ColorDefault, v);
                 Outline.SetColorCurrent(c);
             }
-            void OnComplete()
-            {
-                Outline.ColorDefaultTweenIsHidden = false;
-            }
-
-            return Outline.TweenColorCurrent(OnUpdate, duration).SetEase(Ease.OutQuad).OnComplete(OnComplete);
+            return Outline.TweenColorCurrent(OnUpdate, duration).SetEase(Ease.OutQuad);
         }
         public Tween AnimExplosion()
         {
@@ -396,15 +384,12 @@ namespace Game.Cards
         {
             const int PASSIVE = ColorPalette.PASSIVE_INDEX;
             const int ACTIVE = ColorPalette.ACTIVE_INDEX;
-            float brightF = Mathf.Pow(2, 6); // intensity = 6
 
             if (index == PASSIVE)
             {
                 Color color = ColorPalette.GetColor(PASSIVE);
                 float grayscale = color.grayscale;
                 color = ((1 - grayscale) * Color.white + color * grayscale).WithAlpha(1);
-
-                _outlineBrightPassiveColor = (color * brightF).WithAlpha(1);
                 _outlineDimPassiveColor = color;
             }
             else if (index == ACTIVE)
@@ -412,8 +397,6 @@ namespace Game.Cards
                 Color color = ColorPalette.GetColor(ACTIVE);
                 float grayscale = color.grayscale;
                 color = ((1 - grayscale) * Color.white + color * grayscale).WithAlpha(1);
-
-                _outlineBrightActiveColor = (color * brightF).WithAlpha(1);
                 _outlineDimActiveColor = color;
             }
         }

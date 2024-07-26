@@ -13,7 +13,7 @@ namespace Game.Traits
         const string ID = "triptocainum";
         const int PRIORITY = 7;
         const int COOLDOWN = 3;
-        const float DAMAGE_REL_INCREASE = 1.00f;
+        const float DAMAGE_REL_INCREASE = 0.50f;
 
         public tTriptocainum() : base(ID)
         {

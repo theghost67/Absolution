@@ -15,7 +15,7 @@ namespace Game.Cards
         public readonly TableFieldCardDrawerQueue queue;
         readonly string _eventsGuid;
 
-        public TableFieldCardDrawer(TableFieldCard card, Transform parent) : base(card, parent, redrawIcons: false)
+        public TableFieldCardDrawer(TableFieldCard card, Transform parent) : base(card, parent)
         {
             attached = card;
             queue = new TableFieldCardDrawerQueue(this);

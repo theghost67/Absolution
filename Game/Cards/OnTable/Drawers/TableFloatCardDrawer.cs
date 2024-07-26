@@ -9,15 +9,17 @@ namespace Game.Cards
     public class TableFloatCardDrawer : TableCardDrawer
     {
         public readonly new TableFloatCard attached;
-        public TableFloatCardDrawer(TableFloatCard card, Transform parent) : base(card, parent, redrawIcons: false)
+        public TableFloatCardDrawer(TableFloatCard card, Transform parent) : base(card, parent)
         {
             attached = card;
+
+            RedrawSubheader("Способность");
             RedrawIcons();
+            RedrawOutlineInstantly();
 
             moxieIcon.RedrawValueAsNull();
             healthIcon.RedrawValueAsNull();
             strengthIcon.RedrawValueAsNull();
-            RedrawSubheader("Способность");
         }
 
         protected override string UpperLeftIconTooltip()

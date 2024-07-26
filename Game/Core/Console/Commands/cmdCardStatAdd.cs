@@ -46,6 +46,11 @@ namespace Game
 
         protected override void Execute(CommandArgInputDict args)
         {
+            if (TableEventManager.CanAwaitAnyEvents())
+            {
+                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                return;
+            }
             TableCardDrawer drawer = (TableCardDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is TableCardDrawer);
             if (drawer == null)
             {

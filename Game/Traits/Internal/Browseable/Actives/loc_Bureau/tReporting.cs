@@ -37,7 +37,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 10 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks - 1, 1.6f);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
         {
@@ -46,7 +46,7 @@ namespace Game.Traits
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return base.IsUsable(e) && e.isInBattle && e.target.Opposite.Card == null;
+            return base.IsUsable(e) && e.isInBattle && e.target.Card != null && e.target.Opposite.Card == null;
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {

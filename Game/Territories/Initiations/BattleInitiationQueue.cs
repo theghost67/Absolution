@@ -2,6 +2,7 @@
 using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
+using Game.Traits;
 using GreenOne;
 using MyBox;
 using System;
@@ -237,6 +238,8 @@ namespace Game.Territories
             if (sArgs.Sender.Drawer == null)
                 return UniTask.CompletedTask;
 
+            sArgs.Sender.OnPostKilled.Add("init_preview", (s, e) => HideInitiationPreviews(sArgs));
+
             Tween lastTargetTween = null;
             foreach (BattleField target in sArgs.Receivers)
                 lastTargetTween = ShowInitiationPreview(target, sArgs.strength, fieldIsSender: false);
@@ -250,6 +253,8 @@ namespace Game.Territories
         {
             if (sArgs.Sender.Drawer == null)
                 return UniTask.CompletedTask;
+
+            sArgs.Sender.OnPostKilled.Remove("init_preview");
 
             // preview is hidden once received by target or when the initiation is handled 
             return HideInitiationPreview(sArgs.Sender, instantly: false).AsyncWaitForCompletion();
@@ -306,8 +311,12 @@ namespace Game.Territories
             if (obj is BattleFieldCard objAsCard)
                  cardDrawer = objAsCard.Drawer;
             else cardDrawer = ((BattleField)obj).Card?.Drawer;
-            if (!(cardDrawer?.IsSelected ?? true) && !(cardDrawer?.Traits?.elements.IsRunning ?? true))
-                cardDrawer.ShowBg();
+            if (cardDrawer != null)
+            {
+                TableTraitListSetDrawerElementsCollection elements = cardDrawer.Traits?.elements;
+                if (!(cardDrawer.IsSelected && !elements.IsEmpty) || (!elements?.IsRunning ?? true))
+                    cardDrawer.ShowBg();
+            }
 
             GameObject previewPrefab = GameObject.Instantiate(_initiationPreviewPrefab, obj.Drawer.transform);
             Transform previewTransform = previewPrefab.transform;
@@ -386,8 +395,12 @@ namespace Game.Territories
             if (obj is BattleFieldCard objAsCard)
                 cardDrawer = objAsCard.Drawer;
             else cardDrawer = ((BattleField)obj).Card?.Drawer;
-            if (!(cardDrawer?.IsSelected ?? true) && !(cardDrawer?.Traits?.elements.IsRunning ?? true))
-                cardDrawer.HideBg();
+            if (cardDrawer != null)
+            {
+                TableTraitListSetDrawerElementsCollection elements = cardDrawer.Traits?.elements;
+                if (!(cardDrawer.IsSelected && !elements.IsEmpty) || (!elements?.IsRunning ?? true))
+                    cardDrawer.HideBg();
+            }
 
             previewTransform.gameObject.name = "Initiation (hiding)";
             TextMeshPro previewText = previewTransform.Find<TextMeshPro>("Text");

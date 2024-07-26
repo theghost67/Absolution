@@ -15,8 +15,7 @@ namespace Game.Effects
         public Color ColorCurrent => _colorCurrent;
         public Color ColorDefault => _colorDefault;
         public Tween ColorDefaultTween => _colorDefaultTween;
-        public Tween ColorCurrentTween => _colorCurrentTween;
-        public bool ColorDefaultTweenIsHidden { get; set; } // use to disable material update (combine with ColorCurrent tweening)
+        public Tween ColorCurrentTween => _colorCurrentTween; // if is active, _colorDefaultTween will not update material color
 
         readonly SpriteRenderer _renderer;
         readonly Material _material;
@@ -97,7 +96,7 @@ namespace Game.Effects
 
         void TweenColorDefaultOnUpdate(Color c)
         {
-            if (!ColorDefaultTweenIsHidden)
+            if (!_colorCurrentTween.IsActive())
                  SetColorDefault(c);
             else _colorDefault = c;
         }

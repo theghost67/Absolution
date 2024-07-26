@@ -48,12 +48,16 @@ namespace Game
 
         protected override void Execute(CommandArgInputDict args)
         {
+            if (TableEventManager.CanAwaitAnyEvents())
+            {
+                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                return;
+            }
             if (Menu.GetCurrent() is not IMenuWithTerritory menu || menu.Territory is not BattleTerritory territory)
             {
                 TableConsole.Log("Текущее меню не содержит территорию сражения.", LogType.Error);
                 return;
             }
-
             BattleFieldDrawer drawer = (BattleFieldDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is BattleFieldDrawer);
             if (drawer == null)
             {

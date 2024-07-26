@@ -250,7 +250,7 @@ namespace Game.Effects
                 }
 
                 BeatMap beatMap = _playingMusic?.beatMap;
-                if (!_updateBeats || beatMap == null || beatMap.Count == 0) return;
+                if (!_updateBeats || beatMap == null || beatMap.Count == 0 || _playingBeatIndex >= beatMap.Count) return;
                 Beat beat = beatMap[_playingBeatIndex];
                 if (Time < beatMap.Delay + beat.time) return;
 

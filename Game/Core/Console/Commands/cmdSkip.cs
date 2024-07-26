@@ -31,6 +31,11 @@ namespace Game
 
         protected override void Execute(CommandArgInputDict args)
         {
+            if (TableEventManager.CanAwaitAnyEvents())
+            {
+                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                return;
+            }
             if (Menu.GetCurrent() is not BattlePlaceMenu menu)
             {
                 TableConsole.Log("Текущее меню не является местом сражения.", LogType.Error);
