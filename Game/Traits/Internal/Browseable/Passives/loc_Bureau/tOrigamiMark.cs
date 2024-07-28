@@ -31,7 +31,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После смерти владельца (П{PRIORITY})",
-                    $"создаёт на месте владельца карту <i>{cardName}</i>."),
+                    $"создаёт на месте владельца карту <i>{cardName}</i>. Не сработает, если владелец уже является данной картой."),
             });
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -39,7 +39,7 @@ namespace Game.Traits
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
                 trait.Owner.OnPostKilled.Add(trait.GuidStr, OnOwnerPostKilled, PRIORITY);
@@ -52,6 +52,7 @@ namespace Game.Traits
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
+            if (owner.Data.id == CARD_ID) return;
 
             BattleField field = e.field;
             if (field.Card != null) return;

@@ -2,7 +2,7 @@
 {
     public class cAnderson : FieldCard
     {
-        public cAnderson() : base("anderson", "p become_human", "p become_machine")
+        public cAnderson() : base("anderson", "become_human", "become_machine")
         {
             name = "Лейтенант Андерсон";
             desc = "Один из первых лейтенантов своего подразделения. Вскоре после появления сраного андроида-напарника в его жизни, он" +

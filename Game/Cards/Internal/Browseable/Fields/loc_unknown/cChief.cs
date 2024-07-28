@@ -2,7 +2,7 @@
 {
     public class cChief : FieldCard
     {
-        public cChief() : base("chief", "p cook")
+        public cChief() : base("chief", "cook")
         {
             name = "Шев";
             desc = "Шеф-повар";

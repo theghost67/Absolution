@@ -2,7 +2,7 @@
 {
     public class cOguzok : FieldCard
     {
-        public cOguzok() : base("oguzok", "p cook")
+        public cOguzok() : base("oguzok", "cook")
         {
             name = "Огузок";
             desc = "Недо-повар";

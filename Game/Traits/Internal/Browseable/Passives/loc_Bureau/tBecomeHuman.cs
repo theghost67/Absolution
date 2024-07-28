@@ -31,16 +31,18 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             string cardName = CardBrowser.GetCard(OBS_CARD_ID).name;
+            float strengthEffect = STRENGTH_REL_INCREASE_ON_OWNER_SIDE_SEEN * 100;
+            int moxieEffect = MOXIE_ABS_INCREASE_ON_OWNER_SIDE_SEEN;
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При появлении карты <i>{cardName}</i> на союзной стороне (П{PRIORITY})",
-                    $"Увеличивает свою силу на <u>{STRENGTH_REL_INCREASE_ON_OWNER_SIDE_SEEN * 100}%</u> и инициативу на <u>{MOXIE_ABS_INCREASE_ON_OWNER_SIDE_SEEN}</u> ед."),
+                    $"Увеличивает свою силу на {strengthEffect}% и инициативу на {moxieEffect} ед."),
             });
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
             await base.OnTargetStateChanged(e);
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
             string guid = trait.GuidGen(e.target.Guid);
 

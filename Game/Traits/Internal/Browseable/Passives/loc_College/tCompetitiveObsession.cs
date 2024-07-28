@@ -54,7 +54,7 @@ namespace Game.Traits
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
 
             if (!trait.Side.isMe) return;

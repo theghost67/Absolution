@@ -42,7 +42,7 @@ namespace Game.Traits
         {
             await base.OnUse(e);
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard target = (BattleFieldCard)e.target.Card;
 
             trait.Storage.turnsDelay += COOLDOWN;

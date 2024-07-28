@@ -2,7 +2,7 @@
 {
     public class cHobo : FieldCard
     {
-        public cHobo() : base("hobo", "p brown_wave")
+        public cHobo() : base("hobo", "brown_wave")
         {
             name = "Бомж";
             desc = "Король свалки";

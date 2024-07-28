@@ -22,7 +22,7 @@ namespace Game.Cards
 
         public override string DescRich(ITableCard card)
         {
-            return DescRichBase(card, "Убивает все карты со стоимостью ≤ 0 ед. или атакой ≤ 0 ед., возвращая по 1 ед. золота за каждую убитую карту владельцу.");
+            return DescRichBase(card, "Уничтожает все карты со стоимостью ≤ 0 ед. или атакой ≤ 0 ед., возвращая по 1 ед. золота за каждую убитую карту владельцу.");
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

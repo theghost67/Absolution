@@ -18,7 +18,7 @@ namespace Game.Territories
     /// </summary>
     public sealed class BattleAI
     {
-        const int TURN_DELAY = 500;
+        const int TURN_DELAY_MS = 500;
         const int ITERATIONS_MAX = 64;
 
         readonly BattleSide _side;
@@ -205,9 +205,8 @@ namespace Game.Territories
             CardsResultsListSet resultsSet = new();
 
             Start:
-            await UniTask.Delay(TURN_DELAY / 2);
             await TableEventManager.AwaitAnyEvents();
-            await UniTask.Delay(TURN_DELAY / 2);
+            await UniTask.Delay(TURN_DELAY_MS);
 
             if (iterations++ > ITERATIONS_MAX)
             {
@@ -309,9 +308,8 @@ namespace Game.Territories
             int iterations = 0;
 
             Start:
-            await UniTask.Delay(TURN_DELAY / 2);
             await TableEventManager.AwaitAnyEvents();
-            await UniTask.Delay(TURN_DELAY / 2);
+            await UniTask.Delay(TURN_DELAY_MS);
 
             if (iterations++ > ITERATIONS_MAX)
             {
@@ -365,7 +363,7 @@ namespace Game.Territories
             if (!activeTraitData.IsUsable(activeTraitUseArgs) || !activeTraitData.Threshold.WeightIsEnough(bestResult))
                 goto PickResultAgain;
 
-            activeTrait.TryUse(bestResult.target);
+            await activeTrait.TryUse(bestResult.target);
             goto Start;
         }
 
@@ -387,9 +385,9 @@ namespace Game.Territories
             BattleFieldCardWeightResult[] results = new BattleFieldCardWeightResult[possibleFieldsPos.Length];
             BattleTerritory srcTerritory = _side.Territory;
 
-            for (int p = 0; p < possibleFieldsPos.Length; p++)
+            for (int i = 0; i < possibleFieldsPos.Length; i++)
             {
-                int2 fieldPos = possibleFieldsPos[p];
+                int2 fieldPos = possibleFieldsPos[i];
                 BattleTerritory terrClone = CloneTerritory(_side.Territory, out BattleTerritoryCloneArgs terrCArgs);
 
                 if (srcTerritory.GetType() != terrClone.GetType())
@@ -410,7 +408,7 @@ namespace Game.Territories
                 BattleSide sideCloneOpposite = sideClone.Opposite;
                 float2 weightsWeightAfterTurn = new(sideClone.Weight, sideCloneOpposite.Weight);
                 float2 weightDelta = CalculateWeightDelta(sidesWeight, weightsWeightAfterTurn, sideClone, sideCloneOpposite);
-                results[p] = new BattleFieldCardWeightResult(card, srcTerritory.Field(fieldPos), weightDelta[0], weightDelta[1]);
+                results[i] = new BattleFieldCardWeightResult(card, srcTerritory.Field(fieldPos), weightDelta[0], weightDelta[1]);
 
                 terrClone.Dispose();
             }

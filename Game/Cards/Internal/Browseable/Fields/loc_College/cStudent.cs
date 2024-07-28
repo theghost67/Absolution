@@ -2,7 +2,7 @@
 {
     public class cStudent : FieldCard
     {
-        public cStudent() : base("student", "p scholar")
+        public cStudent() : base("student", "scholar")
         {
             name = "Студент";
             desc = "Прошло несколько лет с тех пор, как он поступил в так называемое ЧУПО КЖК. Он рассчитывал, что получит актуальные " +

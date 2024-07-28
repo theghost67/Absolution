@@ -2,7 +2,7 @@
 {
     public class cIncredible : FieldCard
     {
-        public cIncredible() : base("incredible", "p incredible")
+        public cIncredible() : base("incredible", "incredible")
         {
             name = "Мистер Исключительный";
             desc = "Исключительный герой";

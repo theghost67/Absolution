@@ -2,7 +2,7 @@
 {
     public class cHacker : FieldCard
     {
-        public cHacker() : base("hacker", "p hack")
+        public cHacker() : base("hacker", "hack")
         {
             name = "Хацкер";
             desc = "413 430 43D 434 43E 43D";

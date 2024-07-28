@@ -2,7 +2,7 @@
 {
     public class cHarry : FieldCard
     {
-        public cHarry() : base("harry", "a alco_heal", "p alco_rage")
+        public cHarry() : base("harry", "alco_heal", "alco_rage")
         {
             name = "Детектив Гарри";
             desc = "Гарри использует своё алкогольное озарение для раскрытия самых запутанных дел. Удивительно, но это действительно работает. " +

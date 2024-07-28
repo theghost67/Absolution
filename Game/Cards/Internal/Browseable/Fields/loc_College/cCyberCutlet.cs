@@ -2,7 +2,7 @@
 {
     public class cCyberCutlet : FieldCard
     {
-        public cCyberCutlet() : base("cyber_cutlet", "p meaty", "p competitive_obsession")
+        public cCyberCutlet() : base("cyber_cutlet", "meaty", "competitive_obsession")
         {
             name = "Киберкотлета";
             desc = "Несколько лет исследований и опасных (и негуманных) экспериментов от учёных, " +

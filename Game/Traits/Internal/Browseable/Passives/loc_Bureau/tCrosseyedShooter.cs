@@ -29,7 +29,7 @@ namespace Game.Traits
         {
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед нанесением атакующей инициации владельцем (П{PRIORITY})",
+                new($"Перед атакой владельца (П{PRIORITY})",
                     $"Атакует вражеские поля слева/справа по очереди (сначала левое, потом правое, затем снова левое и так далее)."),
             });
         }
@@ -38,7 +38,7 @@ namespace Game.Traits
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
                 trait.Owner.OnInitiationPreSent.Add(trait.GuidStr, OnOwnerInitiationPreSent, PRIORITY);

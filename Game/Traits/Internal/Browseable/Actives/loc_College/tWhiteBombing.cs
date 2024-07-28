@@ -22,7 +22,7 @@ namespace Game.Traits
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
-            range = new BattleRange(TerritoryRange.all);
+            range = new BattleRange(TerritoryRange.bothSingle);
         }
         protected tWhiteBombing(tWhiteBombing other) : base(other) { }
         public override object Clone() => new tWhiteBombing(this);
@@ -57,7 +57,7 @@ namespace Game.Traits
             await base.OnUse(e);
 
             BattleField target = (BattleField)e.target;
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             bool usedOnOwnerSide = target.Side.isMe;
 
             if (usedOnOwnerSide)

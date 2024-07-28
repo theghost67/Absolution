@@ -53,7 +53,7 @@ namespace Game.Traits
         {
             await base.OnUse(e);
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
 
             bool isAllyField = e.target.IsMine();

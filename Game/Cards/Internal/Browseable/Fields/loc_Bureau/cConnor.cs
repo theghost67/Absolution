@@ -2,7 +2,7 @@
 {
     public class cConnor : FieldCard
     {
-        public cConnor() : base("connor", "a time_to_decide")
+        public cConnor() : base("connor", "time_to_decide")
         {
             name = "Коннор RK800";
             desc = "Новейшая модель андроида-расследователя, присланная из Киберлайф. Но кто же он на самом деле? " +

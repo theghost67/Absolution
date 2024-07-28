@@ -2,7 +2,7 @@
 {
     public class cMyers : FieldCard
     {
-        public cMyers() : base("myers", "p stalker")
+        public cMyers() : base("myers", "stalker")
         {
             name = "Майкл Майерс";
             desc = "Один из самых жутких убийц, Майкл Майерс, перед тем, как убить свою цель, пристально наблюдал за ней на расстоянии в своей зловещей маске, заставляя её паниковать. " +

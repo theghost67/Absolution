@@ -2,7 +2,7 @@
 {
     public class cNorman : FieldCard
     {
-        public cNorman() : base("norman", "a triptocainum", "p ari_record")
+        public cNorman() : base("norman", "triptocainum", "ari_record")
         {
             name = "Норман Джейден";
             desc = "Норман Джейден, ФБР. Инновационные очки с технологией УРС позволяют ему анализировать улики прямо на месте. " +

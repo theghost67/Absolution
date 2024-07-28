@@ -2,7 +2,7 @@
 {
     public class cPrincipalsOffice : FieldCard
     {
-        public cPrincipalsOffice() : base("principals_office", "p inevitability", "p bloodthirstiness")
+        public cPrincipalsOffice() : base("principals_office", "inevitability", "bloodthirstiness")
         {
             name = "Кабинет директора";
             desc = "Лишь единицы знают, что находится за дверью кабинета директора, большинство оттуда так и не смогло уйти. " +

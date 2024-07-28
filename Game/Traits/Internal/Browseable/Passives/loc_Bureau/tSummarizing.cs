@@ -10,11 +10,13 @@ namespace Game.Traits
     /// <summary>
     /// Класс, представляющий один из игровых навыков.
     /// </summary>
-    public class tSummarizing : ActiveTrait
+    public class tSummarizing : PassiveTrait
     {
         const string ID = "summarizing";
         const int PRIORITY = 5;
-        const float DAMAGE_RECEIVED_RATIO = 1.00f;
+        const string TRAIT_ID = "sentence";
+        const float DAMAGE_RECEIVED_RATIO_BASE = 1.00f;
+        const float DAMAGE_RECEIVED_RATIO_PER_STACK = 0.50f;
 
         public tSummarizing() : base(ID)
         {
@@ -30,22 +32,17 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = DAMAGE_RECEIVED_RATIO * 100 * trait.GetStacks();
+            string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
+            float effect = (DAMAGE_RECEIVED_RATIO_BASE + DAMAGE_RECEIVED_RATIO_PER_STACK * trait.GetStacks()) * 100;
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"После получения атакующей инициации владельцем (П{PRIORITY})",
-                    $"Увеличивает количество зарядов данного навыка на {effect}% от полученного урона."),
-                new($"При использовании на карте напротив, если зарядов > 1",
-                    $"Наносит цели урон, равный количеству зарядов навыка. Сбрасывает заряды до 1."),
+                new($"После атаки на владельца (П{PRIORITY})",
+                    $"Увеличивает количество зарядов навыка <i>{traitName}</i> на {effect}% от силы атаки."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
             return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
-        }
-        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
-        {
-            return new(0, 0.1f);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -53,38 +50,22 @@ namespace Game.Traits
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
                 trait.Owner.OnInitiationPostReceived.Add(trait.GuidStr, OnOwnerInitiationPostReceived, PRIORITY);
             else if (trait.WasRemoved(e))
                 trait.Owner.OnInitiationPostReceived.Remove(trait.GuidStr);
         }
-        public override bool IsUsable(TableActiveTraitUseArgs e)
-        {
-            return base.IsUsable(e) && e.isInBattle && e.target.Card != null && e.trait.GetStacks() > 1;
-        }
-        public override async UniTask OnUse(TableActiveTraitUseArgs e)
-        {
-            await base.OnUse(e);
-
-            BattleFieldCard target = (BattleFieldCard)e.target.Card;
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
-
-            int damage = e.trait.GetStacks();
-            target.Drawer.CreateTextAsSpeech($"Итог\n<size=50%>-{damage}", Color.red);
-            await target.health.AdjustValue(-damage, trait);
-            await trait.SetStacks(1, trait.Side);
-        }
-
         static async UniTask OnOwnerInitiationPostReceived(object sender, BattleInitiationRecvArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
-            int stacks = (e.strength * DAMAGE_RECEIVED_RATIO).Ceiling();
-            await trait.AdjustStacks(stacks, trait);
+            float ratio = DAMAGE_RECEIVED_RATIO_BASE + DAMAGE_RECEIVED_RATIO_PER_STACK * trait.GetStacks();
+            int stacks = (e.strength * ratio).Ceiling();
+            await owner.Traits.AdjustStacks(TRAIT_ID, stacks, trait);
         }
     }
 }

@@ -44,7 +44,7 @@ namespace Game.Traits
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
             await base.OnTargetStateChanged(e);
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (e.canSeeTarget)
                  e.target.OnPostKilled.Add(trait.GuidStr, OnTargetPostKilled, PRIORITY);

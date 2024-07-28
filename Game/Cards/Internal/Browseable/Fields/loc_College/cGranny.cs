@@ -2,7 +2,7 @@
 {
     public class cGranny : FieldCard
     {
-        public cGranny() : base("granny", "p granny_alliance", "p old_authority")
+        public cGranny() : base("granny", "granny_alliance", "old_authority")
         {
             name = "Бабуся";
             desc = "Основательница Синдиката Бабуль, где каждая бабуля следит за каждым в городе, что позволяет оперативно решать проблемы.";

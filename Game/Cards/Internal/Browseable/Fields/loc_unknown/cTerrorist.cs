@@ -2,7 +2,7 @@
 {
     public class cTerrorist : FieldCard
     {
-        public cTerrorist() : base("terrorist", "p on_ready")
+        public cTerrorist() : base("terrorist", "on_ready")
         {
             name = "Террорист";
             desc = "Является частью террористической организации Пердящие микрофоны, чья цель - взорвать некие точки B. Никто так и не понял, что это означает, " +

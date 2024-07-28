@@ -2,7 +2,7 @@
 {
     public class cAgentOfBeholder : FieldCard
     {
-        public cAgentOfBeholder() : base("agent_of_beholder", "a recruitment")
+        public cAgentOfBeholder() : base("agent_of_beholder", "recruitment")
         {
             name = "Агент Наблюдателя";
             desc = "Тот, кто всегда следит. Тот, кто всегда на шаг впереди. Тот, кто уже наставил свой ствол в вашу сторону - Наблюдатель. " +

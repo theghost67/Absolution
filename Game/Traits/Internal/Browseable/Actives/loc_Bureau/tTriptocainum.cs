@@ -33,7 +33,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании",
-                    $"Увеличивает силу владельца на <u>{effect}%</u>. Владелец умрёт (игнор. здоровья) сразу после совершения атакующей инициации (П{PRIORITY}). Перезарядка: 3 х."),
+                    $"Увеличивает силу владельца на <u>{effect}%</u>. Владелец умрёт (игнор. здоровья) сразу после совершения атаки (П{PRIORITY}). Перезарядка: 3 х."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
@@ -52,7 +52,7 @@ namespace Game.Traits
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
             await base.OnUse(e);
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             float strength = DAMAGE_REL_INCREASE * trait.GetStacks();
             await trait.Owner.strength.AdjustValueScale(strength, trait);

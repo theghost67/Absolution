@@ -2,7 +2,7 @@
 {
     public class cRussian : FieldCard
     {
-        public cRussian() : base("russian", "p look_of_despair")
+        public cRussian() : base("russian", "look_of_despair")
         {
             name = "Россиянин";
             desc = "Насмотревшись на серость, окружающую его на протяжении всей жизни, он сам стал серым и унылым. " +

@@ -2,7 +2,7 @@
 {
     public class cPigeon : FieldCard
     {
-        public cPigeon() : base("pigeon", "p pigeon_fright", "a white_bombing")
+        public cPigeon() : base("pigeon", "pigeon_fright", "white_bombing")
         {
             name = "Голубь";
             desc = "Этот голубь прожил большую часть своей жизни в городской среде. Имеет в запасе множество сюрпризов, " +

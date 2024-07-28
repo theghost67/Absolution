@@ -10,7 +10,7 @@ namespace Game.Traits
     public class tAlcoHeal : ActiveTrait
     {
         const string ID = "alco_heal";
-        const int HEALTH_ABS_INCREASE = 2;
+        const int HEALTH_ABS_INCREASE_PER_STACK = 2;
         const int MOXIE_ABS_DECREASE_STATIC = 2;
         const int COOLDOWN = 1;
 
@@ -28,7 +28,7 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float health = HEALTH_ABS_INCREASE * trait.GetStacks();
+            float health = HEALTH_ABS_INCREASE_PER_STACK * trait.GetStacks();
             const int MOXIE = MOXIE_ABS_DECREASE_STATIC;
             return DescRichBase(trait, new TraitDescChunk[]
             {
@@ -40,6 +40,10 @@ namespace Game.Traits
         {
             return base.Points(owner, stacks) + 8 * (stacks - 1);
         }
+        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        {
+            return new(HEALTH_ABS_INCREASE_PER_STACK * 2 * trait.GetStacks());
+        }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -49,10 +53,10 @@ namespace Game.Traits
         {
             await base.OnUse(e);
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard card = (BattleFieldCard)e.target.Card;
 
-            float health = HEALTH_ABS_INCREASE * trait.GetStacks();
+            float health = HEALTH_ABS_INCREASE_PER_STACK * trait.GetStacks();
             const int MOXIE = -MOXIE_ABS_DECREASE_STATIC;
 
             trait.Storage.turnsDelay += COOLDOWN;

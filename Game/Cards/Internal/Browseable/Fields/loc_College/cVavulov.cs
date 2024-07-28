@@ -2,7 +2,7 @@
 {
     public class cVavulov : FieldCard
     {
-        public cVavulov() : base("vavulov", "p competitive_obsession", "p scholar")
+        public cVavulov() : base("vavulov", "competitive_obsession", "scholar")
         {
             name = "Вавулов";
             desc = "Особая паразитарная форма жизни, распространённая в образовательных учреждениях и выживающая " +

@@ -48,7 +48,7 @@ namespace Game.Traits
         {
             await base.OnTargetStateChanged(e);
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             string entryId = $"{trait.Guid}/{e.target.Guid}";
 
             if (e.target.Data.id != "granny") return;

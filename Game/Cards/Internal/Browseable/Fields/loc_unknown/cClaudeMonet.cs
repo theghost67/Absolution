@@ -2,7 +2,7 @@
 {
     public class cClaudeMonet : FieldCard
     {
-        public cClaudeMonet() : base("claude_monet", "a maintenance")
+        public cClaudeMonet() : base("claude_monet", "maintenance")
         {
             name = "Клод Моне";
             desc = "Худший ресторан Москвы";

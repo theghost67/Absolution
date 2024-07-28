@@ -128,7 +128,7 @@ namespace Game.Cards
         };
         void FillTraitListSet(string[] traitsStrArray)
         {
-            const string FORMAT_STR = "Format: \"[1] [2] [3]\" where [1] is a trait type (p/a), [2] is a trait id and [3] is trait stacks.";
+            const string FORMAT_STR = "Format: [traitId] [traitStacks].";
             foreach (string str in traitsStrArray)
             {
                 if (str == null || str.Length == 0)
@@ -136,19 +136,14 @@ namespace Game.Cards
 
                 string[] split = str.Split(' ');
                 int splitLength = split.Length;
-                if (splitLength == 0 || splitLength > 3)
+                if (splitLength == 0 || splitLength > 2)
                     throw new ArgumentException($"Invalid trait string split length.\n{FORMAT_STR}");
 
-                string sType = split[0];
-                string sId = split[1];
-                string sStacks = split.Length == 3 ? split[2] : "1";
+                string sId = split[0];
+                string sStacks = split.Length == 2 ? split[1] : "1";
                 int iStacks = Convert.ToInt32(sStacks);
 
-                if (sType == "p")
-                    traits.Passives.AdjustStacks(sId, iStacks);
-                else if (sType == "a")
-                    traits.Actives.AdjustStacks(sId, iStacks);
-                else throw new ArgumentException($"Unknown trait type.\n{FORMAT_STR}");
+                traits.AdjustStacks(sId, iStacks);
             }
         }
     }

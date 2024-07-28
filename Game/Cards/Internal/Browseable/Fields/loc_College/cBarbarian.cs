@@ -2,7 +2,7 @@
 {
     public class cBarbarian : FieldCard
     {
-        public cBarbarian() : base("barbarian", "a unscheduled_test", "p boiling_anger")
+        public cBarbarian() : base("barbarian", "unscheduled_test", "boiling_anger")
         {
             name = "Варварка";
             desc = "Когда ученики приходят на очередной урок, который ведёт Варвара, они понимают - сейчас они будут страдать.";

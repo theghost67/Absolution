@@ -2,7 +2,7 @@
 {
     public class cJeweller : FieldCard
     {
-        public cJeweller() : base("jeweller", "p cook")
+        public cJeweller() : base("jeweller", "cook")
         {
             name = "Ювелир";
             desc = "Властелин за... увеличительным стеклом";

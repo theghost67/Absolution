@@ -2,7 +2,7 @@
 {
     public class cCarl : FieldCard
     {
-        public cCarl() : base("carl", "a reporting", "p ministry_rat")
+        public cCarl() : base("carl", "reporting", "ministry_rat")
         {
             name = "Карл-0";
             desc = "Карл Штейн, некогда занимающий должность смотрителя дома, решил окончательно перейти на сторону министерства," +

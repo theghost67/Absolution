@@ -171,7 +171,7 @@ namespace Game.Traits
             string ownerName = owner.TableNameDebug;
             string sourceName = e.source?.TableNameDebug;
 
-            TableConsole.LogToFile("card", $"{ownerName}: traits: {e.Trait.Data.id}: OnChanged: delta: {e.delta} (by: {sourceName}).");
+            TableConsole.LogToFile("card", $"{ownerName}: traits: {e.trait.Data.id}: OnChanged: delta: {e.delta} (by: {sourceName}).");
             return UniTask.CompletedTask;
         }
         protected override Drawer DrawerCreator(Transform parent)

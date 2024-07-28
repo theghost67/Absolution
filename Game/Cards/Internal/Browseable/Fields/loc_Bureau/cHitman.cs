@@ -2,7 +2,7 @@
 {
     public class cHitman : FieldCard
     {
-        public cHitman() : base("hitman", "a scope", "p stealth")
+        public cHitman() : base("hitman", "scope", "stealth")
         {
             name = "Хитман";
             desc = "Всю жизнь выполнял контракты и расстреливал свои цели направо и налево. Никто не знает, " +

@@ -49,7 +49,7 @@ namespace Game.Traits
         {
             await base.OnUse(e);
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField[] fields = trait.Territory.Fields(trait.Field.pos, cardsSpawn).WithoutCard().ToArray();
             int health = HEALTH_PER_STACK * trait.GetStacks();
 

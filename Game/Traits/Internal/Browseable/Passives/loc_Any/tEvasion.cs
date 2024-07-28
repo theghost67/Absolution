@@ -29,7 +29,7 @@ namespace Game.Traits
         {
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед получением атакующей инициации владельцем (П{PRIORITY})",
+                new($"Перед атакой на владельца (П{PRIORITY})",
                     $"Отменяет данную инициацию на владельца. Тратит один заряд."),
             });
         }
@@ -42,7 +42,7 @@ namespace Game.Traits
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
                 trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived, PRIORITY);

@@ -22,16 +22,14 @@ namespace Game.Traits
             base.OnMouseEnterBase(sender, e);
             BattleFieldCard owner = _attachedTrait.Owner;
             if (owner == null) return;
-            if (owner.Field != null)
-                _attachedTrait.Area.CreateTargetsHighlight();
+            _attachedTrait.Area.CreateTargetsHighlight();
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseLeaveBase(sender, e);
             BattleFieldCard owner = _attachedTrait.Owner;
             if (owner == null) return;
-            if (owner.Field != null)
-                _attachedTrait.Area.DestroyTargetsHighlight();
+            _attachedTrait.Area.DestroyTargetsHighlight();
         }
     }
 }

@@ -29,8 +29,8 @@ namespace Game.Traits
         {
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед получением атакующей инициации владельцем (П{PRIORITY})",
-                    $"Уменьшает количество своих зарядов на 1 и силу инициации до нуля."),
+                new($"Перед атакой на владельца (П{PRIORITY})",
+                    $"Уменьшает количество своих зарядов на 1 и силу атаки до нуля."),
             });
         }
         public override BattleWeight Weight(IBattleTrait trait)
@@ -46,7 +46,7 @@ namespace Game.Traits
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
                 trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived, PRIORITY);

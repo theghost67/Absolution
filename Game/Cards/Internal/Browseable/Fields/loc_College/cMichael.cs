@@ -2,7 +2,7 @@
 {
     public class cMichael : FieldCard
     {
-        public cMichael() : base("michael", "a zen_school", "p scholar")
+        public cMichael() : base("michael", "zen_school", "scholar")
         {
             name = "Майкл";
             desc = "Один из студентов, который спустя годы учёбы и унижений со стороны " +

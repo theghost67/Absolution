@@ -882,9 +882,15 @@ namespace Game.Menus
             float points = _pointsAvailable.Rounded(0);
             string pointsStr;
 
-            if (points > 0)
+            if (points == 0)
+            {
+                if (_pointsAvailable >= 0)
+                     pointsStr = $"<color=green>>0</color>";
+                else pointsStr = $"<color=red><0</color>";
+            }
+            else if (_pointsAvailable > 0)
                  pointsStr = $"<color=green>{points}</color>";
-            else if (points < 0)
+            else if (_pointsAvailable < 0)
                  pointsStr = $"<color=red>{points}</color>";
             else pointsStr = points.ToString();
             _headerTextMesh.text = $"УЛУЧШИТЕ СВОИ КАРТЫ\n<size=75%>доступных очков прокачки: {pointsStr} ОП.";

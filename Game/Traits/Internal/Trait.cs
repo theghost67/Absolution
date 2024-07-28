@@ -74,9 +74,9 @@ namespace Game.Traits
 
         public virtual async UniTask OnStacksChanged(TableTraitStacksSetArgs e) // invokes either on table or in battle (check 'isInBattle' field)
         {
-            _traitFinder = e.Trait.Finder;
+            _traitFinder = e.trait.Finder;
             if (!e.isInBattle) return;
-            IBattleTrait trait = (IBattleTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             if (trait.WasRemoved(e))
                 await trait.Area.SetObserveTargets(false);
         }

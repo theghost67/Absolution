@@ -46,9 +46,9 @@ namespace Game.Traits
         {
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
-            if (e.Trait.WasAdded(e)) return;
+            if (e.trait.WasAdded(e)) return;
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             IEnumerable<BattleFieldCard> cards = trait.Area.PotentialTargets().WithCard().Select(f => f.Card);
 
             await trait.AnimActivation();
@@ -58,7 +58,7 @@ namespace Game.Traits
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
             await base.OnTargetStateChanged(e);
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             if (trait == null) return;
 
             int moxie = MOXIE_PER_STACK * trait.GetStacks();

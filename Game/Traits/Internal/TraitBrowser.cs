@@ -78,6 +78,7 @@ namespace Game.Traits
 
             AddPassive(new tPrediction());
             AddPassive(new tStealth());
+            AddPassive(new tSummarizing());
             AddPassive(new tTimeToDecideMachine());
 
             AddActive(new tAlcoHeal());
@@ -88,9 +89,10 @@ namespace Game.Traits
 
             AddActive(new tReporting());
             AddActive(new tSearchInArchive());
-            AddActive(new tSummarizing());
+  
             AddActive(new tTimeToDecide());
             AddActive(new tTriptocainum());
+            AddActive(new tSentence());
             AddActive(new tWayOut());
 
             // -----------------------------------

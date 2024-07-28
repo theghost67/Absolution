@@ -49,7 +49,7 @@ namespace Game.Traits
         {
             await base.OnUse(e);
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
             IEnumerable<BattleField> fields = owner.Territory.Fields(owner.Field.pos, targets).WithCard();
             foreach (BattleFieldCard card in fields.Select(f => f.Card))

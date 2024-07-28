@@ -52,7 +52,7 @@ namespace Game.Traits
         {
             await base.OnUse(e);
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField newCardField = (BattleField)e.target.Opposite;
             FieldCard newCard = CardBrowser.NewField(CARD_ID);
 

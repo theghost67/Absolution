@@ -2,7 +2,7 @@
 {
     public class cHysteric : FieldCard
     {
-        public cHysteric() : base("hysteric", "p ultrasonic_scream")
+        public cHysteric() : base("hysteric", "ultrasonic_scream")
         {
             name = "Истеричка";
             desc = "Довольно раздражительна. Возможно слишком. А ещё может одним визгом разбить все стёкла в радиусе ста метров.";

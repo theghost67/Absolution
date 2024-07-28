@@ -2,7 +2,7 @@
 {
     public class cBread : FieldCard
     {
-        public cBread() : base("bread", "p bricky_taste", "p food_poisoning")
+        public cBread() : base("bread", "bricky_taste", "food_poisoning")
         {
             name = "Протухший хлеб";
             desc = "Эта буханка была найдена в углу самого дальнего шкафчика на кухне столовой. " +

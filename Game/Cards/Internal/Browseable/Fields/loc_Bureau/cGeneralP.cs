@@ -2,7 +2,7 @@
 {
     public class cGeneralP : FieldCard
     {
-        public cGeneralP() : base("general_p", "a order_of_attack", "a order_of_defence", "p tactician")
+        public cGeneralP() : base("general_p", "order_of_attack", "order_of_defence", "tactician")
         {
             name = "Генерал П";
             desc = "Матёрый воитель, участвующий во множестве исторических сражений, а тажке переживший времена Великой Сегрегации и Эпохи Вавулизации. " + 

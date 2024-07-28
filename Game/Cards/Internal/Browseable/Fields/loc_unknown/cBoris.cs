@@ -2,7 +2,7 @@
 {
     public class cBoris : FieldCard
     {
-        public cBoris() : base("boris") // "p cat_secret"
+        public cBoris() : base("boris") // "cat_secret"
         {
             name = "Кот Борис";
             desc = "";

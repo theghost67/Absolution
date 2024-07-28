@@ -43,6 +43,7 @@ namespace Game.Cards
         public new BattleFieldCardDrawer Drawer => ((TableObject)this).Drawer as BattleFieldCardDrawer;
         public new BattleTraitListSet Traits => base.Traits as BattleTraitListSet; // has StacksChanged events
         public new BattleField Field => base.Field as BattleField;
+        public new BattleField LastField => base.LastField as BattleField;
 
         public BattleTerritory Territory => _side.Territory;
         public BattleSide Side => _side;

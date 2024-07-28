@@ -30,7 +30,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на вражеской карте рядом",
-                    $"Перед своими следующими инициациями (П{PRIORITY}), сделает цель своей новой целью инициации."),
+                    $"Перед каждой последующей атакой владельца (П{PRIORITY}), цель станет целью атаки."),
             });
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -40,7 +40,7 @@ namespace Game.Traits
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
             await base.OnUse(e);
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
             trait.Storage[trait.GuidStr] = e.target.pos;
             owner.OnInitiationPreSent.Add(trait.GuidStr, OnOwnerInitiationPreSent, PRIORITY);
@@ -50,7 +50,7 @@ namespace Game.Traits
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             if (!trait.WasRemoved(e)) return;
 
             trait.Storage.Remove(trait.GuidStr);

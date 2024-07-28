@@ -2,7 +2,7 @@
 {
     public class cSpiderling : FieldCard
     {
-        public cSpiderling() : base("spiderling", "p weaver")
+        public cSpiderling() : base("spiderling", "weaver")
         {
             name = "Паукообразный";
             desc = "Разумный прямоходящий паук, питающийся мясом монстров и обречённый скитаться в одиночестве. Он пытался подружиться с кем-то из соседей, " +

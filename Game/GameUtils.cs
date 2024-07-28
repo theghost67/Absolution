@@ -6,6 +6,7 @@ using Game.Traits;
 using GreenOne;
 using MyBox;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Game
@@ -28,7 +29,7 @@ namespace Game
 
         #region guids
         // these methods generate guids for object's event handlers and collections
-        // you can use num as you like (separate events base subs from derived subs or if you subscribe multiple handlers from one object to one event)
+        // you can use 'num' as you like (separate events base subs from derived subs or if you subscribe multiple handlers from one object to one event)
 
         public static string GuidGen(this ITableObject obj, int num)
         {
@@ -159,7 +160,7 @@ namespace Game
 
         // TODO: implement stackable anims (by checking transform child)
         // if detected multiple targets, duration still equals to 1.0f
-        public static async UniTask AnimDetectionOnSeen(this ITableTrait trait, TableFieldCard seenCard)
+        public static async UniTask AnimDetectionOnSeen(this ITableTrait trait, BattleFieldCard seenCard)
         {
             if (trait == null || trait.Owner == null)
                 return;
@@ -169,10 +170,10 @@ namespace Game
                 return;
 
             Menu.WriteLogToCurrent($"{trait.TableName}: карта обнаружена.");
-            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, seenCard.Field.pos, true));
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, seenCard.LastField.pos, true));
             await trait.Owner.Drawer.queue.Await();
         }
-        public static async UniTask AnimDetectionOnUnseen(this ITableTrait trait, TableFieldCard unseenCard)
+        public static async UniTask AnimDetectionOnUnseen(this ITableTrait trait, BattleFieldCard unseenCard)
         {
             if (trait == null || trait.Owner == null)
                 return;
@@ -182,7 +183,7 @@ namespace Game
                 return;
 
             Menu.WriteLogToCurrent($"{trait.TableName}: карта потеряна.");
-            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, unseenCard.Field.pos, false));
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, unseenCard.LastField.pos, false));
             await trait.Owner.Drawer.queue.Await();
         }
         #endregion

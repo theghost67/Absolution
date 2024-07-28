@@ -23,12 +23,14 @@ namespace Game.Cards
         public readonly TableStat strength;
 
         public TableField Field => _field;
+        public TableField LastField => _lastField;
         public TableTraitListSet Traits => _traits;
 
         readonly FieldCard _data;
         readonly TableFieldCardFinder _finder;
         readonly string _eventsGuid;
         TableField _field;
+        TableField _lastField;
         TableTraitListSet _traits;
 
         public TableFieldCard(FieldCard data, Transform parent) : base(data, parent)
@@ -128,6 +130,7 @@ namespace Game.Cards
                 if (_field != null) 
                     await Field.DetatchCard(e.source);
                 _field = e.field;
+                _lastField = _field;
                 await _field.AttachCard(this, e.source);
             }
         }

@@ -31,7 +31,7 @@ namespace Game.Traits
             int effect = MOXIE_DECREASE * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"После получения любой инициации владельцем (П{PRIORITY})",
+                new($"После атаки/лечения на владельца (П{PRIORITY})",
                     $"уменьшает инициативу инициатора на <u>{effect}</u> ед."),
             });
         }
@@ -44,7 +44,7 @@ namespace Game.Traits
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
                 trait.Owner.OnInitiationPostReceived.Add(trait.GuidStr, OnOwnerInitiationPostReceived, PRIORITY);

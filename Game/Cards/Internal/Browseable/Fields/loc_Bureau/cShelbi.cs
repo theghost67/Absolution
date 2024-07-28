@@ -2,7 +2,7 @@
 {
     public class cShelbi : FieldCard
     {
-        public cShelbi() : base("shelbi", "a origami_victim", "p origami_killer")
+        public cShelbi() : base("shelbi", "origami_victim", "origami_killer")
         {
             name = "Детектив Шелби";
             desc = "Мастерский детектив, тайно расследующий дело о Мастере Оригами. Говорят, убийца топит своих жертв в дождевой воде. " + 

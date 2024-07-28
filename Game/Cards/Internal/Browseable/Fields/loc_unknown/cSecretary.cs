@@ -2,7 +2,7 @@
 {
     public class cSecretary : FieldCard
     {
-        public cSecretary() : base("secretary", "p rat")
+        public cSecretary() : base("secretary", "rat")
         {
             name = "Секретарша";
             desc = "Офисная крыса";

@@ -2,7 +2,7 @@
 {
     public class cGavenko : FieldCard
     {
-        public cGavenko() : base("gavenko", "a testing", "p old_authority")
+        public cGavenko() : base("gavenko", "testing", "old_authority")
         {
             name = "Гавенко";
             desc = "Всемирно известный тестировщик ПО, изобрёвший такие термины, как: вёкщит, висио, " +

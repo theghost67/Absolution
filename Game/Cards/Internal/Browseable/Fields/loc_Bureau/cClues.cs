@@ -2,7 +2,7 @@
 {
     public class cClues : FieldCard
     {
-        public cClues() : base("clues", "a summarizing")
+        public cClues() : base("clues", "summarizing")
         {
             name = "Улики";
             desc = "Совершенно секретная информация, которая используется против вас. Любое ваше действие, указанное в этих бумагах, " +

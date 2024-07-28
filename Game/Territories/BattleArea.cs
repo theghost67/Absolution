@@ -209,13 +209,13 @@ namespace Game.Territories
             {
                 _highlightedTargets = _possibleTargets.SelectMany(arr => arr);
                 foreach (BattleField target in _highlightedTargets)
-                    target.Drawer.AnimShowCovering();
+                    target.Drawer?.AnimShowCovering();
             }
             else
             {
                 _highlightedTargets = _potentialTargets;
                 foreach (BattleField field in _highlightedTargets)
-                    field.Drawer.AnimShowOutline();
+                    field.Drawer?.AnimShowOutline();
             }
         }
         public void DestroyTargetsHighlight()
@@ -224,12 +224,12 @@ namespace Game.Territories
             if (Range.potential.targetIsSingle)
             {
                 foreach (BattleField target in _highlightedTargets)
-                    target.Drawer.AnimHideCovering();
+                    target.Drawer?.AnimHideCovering();
             }
             else
             {
                 foreach (BattleField field in _highlightedTargets)
-                    field.Drawer.AnimHideOutline();
+                    field.Drawer?.AnimHideOutline();
             }
             _highlightedTargets = null;
         }

@@ -38,7 +38,7 @@ namespace Game.Traits
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
             await base.OnUse(e);
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
             BattleSide ownerSide = owner.Side;
 

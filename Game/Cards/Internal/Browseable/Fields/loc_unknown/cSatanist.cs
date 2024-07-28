@@ -2,7 +2,7 @@
 {
     public class cSatanist : FieldCard
     {
-        public cSatanist() : base("satanist", "p sacrifice")
+        public cSatanist() : base("satanist", "sacrifice")
         {
             name = "Козёл-сатанист";
             desc = "Перед очередным жертвоприношением козы во имя всевышних сил, рядом стоящий козёл возмутился (откуда он там взялся - непонятно) " +

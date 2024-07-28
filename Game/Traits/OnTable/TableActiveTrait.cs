@@ -51,7 +51,7 @@ namespace Game.Traits
             else return Owner.Traits.Actives.AdjustStacks(_data.id, delta, source);
         }
 
-        public async void TryUse(TableField target)
+        public async UniTask TryUse(TableField target)
         {
             TableActiveTraitUseArgs e = new(this, target);
             if (!_data.IsUsable(e)) return;

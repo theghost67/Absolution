@@ -53,7 +53,7 @@ namespace Game.Traits
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
             await base.OnUse(e);
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             await e.target.Card.TryAttachToField(e.target.Opposite, trait);
             await trait.SetStacks(0, trait.Side);

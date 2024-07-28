@@ -2,7 +2,7 @@
 {
     public class cVanga : FieldCard
     {
-        public cVanga() : base("vanga", "p prediction")
+        public cVanga() : base("vanga", "prediction")
         {
             name = "Ванга";
             desc = "Недавно нанятый оперативник, обладающий экстрасенсорными способностями. Состоит в секретном проекте МК ВАНГУЛЬТРА." + 

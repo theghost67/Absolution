@@ -8,8 +8,10 @@ namespace Game
     {
         const string ID = "skip";
         const string DESC = "пропускает сражение";
-        public cmdSkip() : base(ID, DESC) { }
+        const int SKIP_CUR = -1;
+        const int SKIP_FORCE = -2;
 
+        public cmdSkip() : base(ID, DESC) { }
         class StageArg : CommandArg
         {
             public const string ID = "stage";
@@ -19,6 +21,12 @@ namespace Game
             {
                 if (!base.TryParseValue(str, out value))
                     return false;
+                if (str == "f")
+                {
+                    value = SKIP_FORCE;
+                    return true;
+                }
+
                 if (!int.TryParse(str, out int stage))
                     return false;
                 if (stage <= 0 || stage > 7)
@@ -42,8 +50,14 @@ namespace Game
                 return;
             }
 
-            int stage = (int)(args.ContainsKey(StageArg.ID) ? args[StageArg.ID].value : -1);
-            if (stage != -1)
+            int stage = (int)(args.ContainsKey(StageArg.ID) ? args[StageArg.ID].value : SKIP_CUR);
+            if (stage == SKIP_FORCE)
+            {
+                menu.TryFlee();
+                TableConsole.Log($"Сражение пропущено принудительно [может вызвать ошибки].", LogType.Log);
+                return;
+            }
+            if (stage != SKIP_CUR)
             {
                 if (stage <= menu.DemoDifficulty)
                 {
@@ -52,7 +66,6 @@ namespace Game
                 }
                 else menu.DemoDifficulty = stage - 1;
             }
-
             if (!menu.PlayerControlsEnabled)
             {
                 TableConsole.Log("В данный момент сражения пропуск невозможен, так как управление игрока заблокировано.", LogType.Error);

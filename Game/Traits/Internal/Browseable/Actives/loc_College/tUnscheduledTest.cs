@@ -59,7 +59,7 @@ namespace Game.Traits
         {
             await base.OnUse(e);
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             IEnumerable<BattleField> fields = trait.Owner.Territory.Fields(trait.Owner.Field.pos, targets).WithCard();
             int strength = (STRENGTH_PER_STACK * trait.GetStacks()).Ceiling();
 

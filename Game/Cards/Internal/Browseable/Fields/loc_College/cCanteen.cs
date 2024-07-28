@@ -2,7 +2,7 @@
 {
     public class cCanteen : FieldCard
     {
-        public cCanteen() : base("canteen", "a lunch_break")
+        public cCanteen() : base("canteen", "lunch_break")
         {
             name = "Школьная столовая";
             desc = "Ассортимент в этой столовой довольно скудный, но большинство людей не против перекусить здесь. " +

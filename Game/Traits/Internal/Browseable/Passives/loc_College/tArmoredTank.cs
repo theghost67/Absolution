@@ -31,8 +31,8 @@ namespace Game.Traits
             float effect = DAMAGE_REL_DECREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед получением атакующей инициации владельцем (П{PRIORITY})",
-                    $"уменьшает силу инициации на <u>{effect}%</u>."),
+                new($"Перед атакой на владельца (П{PRIORITY})",
+                    $"уменьшает силу атаки на <u>{effect}%</u>."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
@@ -44,7 +44,7 @@ namespace Game.Traits
             await base.OnStacksChanged(e);
             if (!e.isInBattle) return;
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
                 trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived, PRIORITY);
@@ -57,6 +57,7 @@ namespace Game.Traits
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
+            if (e.strength < 0) return;
 
             await trait.AnimActivation();
             await e.strength.AdjustValueScale(-DAMAGE_REL_DECREASE * trait.GetStacks(), trait);

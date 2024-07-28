@@ -24,7 +24,8 @@ namespace Game.Cards
 
         public override string DescRich(ITableCard card)
         {
-            return DescRichBase(card, $"Переносит инициативу всех карт на своей территории в их силу: -1 ед. инициативы в +{MOXIE_TO_STRENGTH_REL * 100}% силы. Перенос более {MAX_MOXIE_TO_STRENGTH} инициативы не имеет эффекта.");
+            return DescRichBase(card, $"Переносит инициативу всех карт на своей территории в их силу: -1 ед. инициативы в +{MOXIE_TO_STRENGTH_REL * 100}% силы. " +
+                                      $"Перенос более {MAX_MOXIE_TO_STRENGTH} инициативы не даёт бонус к силе.");
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

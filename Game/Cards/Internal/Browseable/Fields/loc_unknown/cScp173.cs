@@ -2,7 +2,7 @@
 {
     public class cScp173 : FieldCard
     {
-        public cScp173() : base("scp_173", "p fracture", "p fragile")
+        public cScp173() : base("scp_173", "fracture", "fragile")
         {
             name = "Печенька";
             desc = "Разумная бетонная скульптура, перемещающаяся с высокой скоростью, когда её не видят. " +

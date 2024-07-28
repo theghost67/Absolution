@@ -57,7 +57,7 @@ namespace Game.Traits
         {
             await base.OnUse(e);
 
-            BattleActiveTrait trait = (BattleActiveTrait)e.trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = (BattleFieldCard)e.target.Card;
             BattleFieldCard[] cards = owner.Territory.Fields(owner.Field.pos, targets).WithCard().Select(f => f.Card).ToArray();
 

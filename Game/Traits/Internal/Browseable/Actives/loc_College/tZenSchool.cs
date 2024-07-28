@@ -30,7 +30,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на любой союзной карте",
-                    $"перенаправляет всю силу карты в её здоровье: 1 ед. силы = {STRENGTH_TO_HEALTH_ABS} ед здоровья. Так же восстанавливает своё здоровье на то же значение. Перезарядка: {COOLDOWN} х."),
+                    $"перенаправляет всю силу цели в её здоровье: 1 ед. силы = {STRENGTH_TO_HEALTH_ABS} ед здоровья. Так же восстанавливает своё здоровье на то же значение. Перезарядка: {COOLDOWN} х."),
             });
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)

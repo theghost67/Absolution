@@ -33,7 +33,7 @@ namespace Game.Traits
             string cardName = CardBrowser.GetCard(SPAWN_CARD_ID).name;
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед получением атакующей инициации владельцем (П{PRIORITY})",
+                new($"Перед атакой на владельца (П{PRIORITY})",
                     $"если есть свободное поле слева или справа от владельца, тратит один заряд и перемещается на это поле, оставляя на прошлом месте карту <i>{cardName}</i>.")
             });
         }
@@ -46,7 +46,7 @@ namespace Game.Traits
             if (!e.isInBattle)
                 return UniTask.CompletedTask;
 
-            BattlePassiveTrait trait = (BattlePassiveTrait)e.Trait;
+            IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
 
             if (trait.WasAdded(e)) owner.OnInitiationPreReceived.Add(trait.GuidStr, OnInitiationPreReceived, PRIORITY);

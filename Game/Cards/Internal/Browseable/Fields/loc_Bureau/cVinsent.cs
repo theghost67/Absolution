@@ -2,7 +2,7 @@
 {
     public class cVinsent : FieldCard
     {
-        public cVinsent() : base("vinsent", "a way_out")
+        public cVinsent() : base("vinsent", "way_out")
         {
             name = "Винсент";
             desc = "Уважаемый полицейский и главный участник операции Выход Наружу, заключавшаяся в маскировке под заключённого с целью найти убийцу брата Винсента. " +
