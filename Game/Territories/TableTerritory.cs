@@ -1,4 +1,5 @@
-﻿using Game.Core;
+﻿using Cysharp.Threading.Tasks;
+using Game.Core;
 using Game.Menus;
 using GreenOne;
 using System;
@@ -17,14 +18,18 @@ namespace Game.Territories
         public const int MAX_HEIGHT = 2;
         public const int MAX_SIZE = MAX_WIDTH * MAX_HEIGHT;
 
-        public bool DrawersAreNull => _fieldsDrawersAreNull;
         public override string TableName => "Территория" + (_fieldsDrawersAreNull ? " (виртуальная)" : "");
         public override string TableNameDebug => $"{Menu.GetCurrent().Id}/territory+{GuidStr}";
+        public bool DrawersAreNull => _fieldsDrawersAreNull;
 
+        public IIdEventVoidAsync<TableFieldAttachArgs> OnAnyCardAttachedToField => _onAnyCardAttachedToField;
+        public IIdEventVoidAsync<TableFieldAttachArgs> OnAnyCardDetatchedFromField => _onAnyCardDetatchedFromField;
         public int2 Grid => _grid;
         public Transform Transform => _transform;
         public Transform TransformForFields => _transformForFields;
 
+        readonly TableEventVoid<TableFieldAttachArgs> _onAnyCardAttachedToField;
+        readonly TableEventVoid<TableFieldAttachArgs> _onAnyCardDetatchedFromField;
         readonly int2 _grid;
         readonly AlignSettings _alignSettings;
         readonly TableField[,] _fields;
@@ -37,8 +42,10 @@ namespace Game.Territories
         {
             if (grid.x > 5) 
                 throw new ArgumentException("Territory size X cannot be larger than 5.");
-
             float2 alignDistance = new(TableFieldDrawer.WIDTH + 8, TableFieldDrawer.HEIGHT + 8);
+
+            _onAnyCardAttachedToField = new TableEventVoid<TableFieldAttachArgs>();
+            _onAnyCardDetatchedFromField = new TableEventVoid<TableFieldAttachArgs>();
             _grid = grid;
             _alignSettings = new AlignSettings(Vector2.zero, AlignAnchor.MiddleCenter, alignDistance, true, grid.x);
             _fields = new TableField[grid.x, grid.y];
@@ -50,6 +57,8 @@ namespace Game.Territories
         }
         protected TableTerritory(TableTerritory src, TableTerritoryCloneArgs args) : base(src)
         {
+            _onAnyCardAttachedToField = (TableEventVoid<TableFieldAttachArgs>)src._onAnyCardAttachedToField.Clone();
+            _onAnyCardDetatchedFromField = (TableEventVoid<TableFieldAttachArgs>)src._onAnyCardDetatchedFromField.Clone();
             _grid = src.Grid;
             _fields = new TableField[Grid.x, Grid.y];
             _fieldsDrawersAreNull = true;
@@ -101,6 +110,9 @@ namespace Game.Territories
                 {
                     TableField field = FieldCreator(x, y);
                     if (field == null) continue;
+
+                    field.OnCardAttached.Add(GuidStr, OnAnyCardAttachedToFieldBase_TOP, TableEventVoid.TOP_PRIORITY);
+                    field.OnCardDetatched.Add(GuidStr, OnAnyCardDetatchedFromFieldBase_TOP, TableEventVoid.TOP_PRIORITY);
 
                     _fields[x, y]?.Dispose();
                     FieldSetter(x, y, field);
@@ -184,6 +196,34 @@ namespace Game.Territories
                 yield return _fields[pos.x, pos.y];
         }
 
+        // use to invoke handler on all currently placed cards and all cards that will be attached later
+        // if (source == null) handler was invoked on a already placed card
+        public void ContinuousAttachHandler_Add(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler)
+        {
+            foreach (TableField field in Fields().WithCard())
+                handler.Invoke(this, new TableFieldAttachArgs(field.Card, field, null));
+            _onAnyCardAttachedToField.Add(guid, handler);
+        }
+        public void ContinuousAttachHandler_Remove(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler)
+        {
+            foreach (TableField field in Fields().WithCard())
+                handler.Invoke(this, new TableFieldAttachArgs(field.Card, field, null));
+            _onAnyCardAttachedToField.Remove(guid);
+        }
+
+        protected virtual UniTask OnAnyCardAttachedToFieldBase_TOP(object sender, TableFieldAttachArgs e)
+        {
+            TableTerritory terr = e.field.Territory;
+            terr._onAnyCardAttachedToField.Invoke(terr, e);
+            return UniTask.CompletedTask;
+        }
+        protected virtual UniTask OnAnyCardDetatchedFromFieldBase_TOP(object sender, TableFieldAttachArgs e)
+        {
+            TableTerritory terr = e.field.Territory;
+            terr._onAnyCardDetatchedFromField.Invoke(terr, e);
+            return UniTask.CompletedTask;
+        }
+
         protected virtual TableField FieldCreator(int x, int y)
         {
             return new TableField(this, new int2(x, y), TransformForFields);
@@ -239,7 +279,6 @@ namespace Game.Territories
             foreach (TableField field in Fields())
                 field.DestroyDrawer(Drawer?.IsDestroyed ?? true);
         }
-
         protected override Drawer DrawerCreator(Transform parent) => new DrawerShell(this, parent.CreateEmptyObject("Territory"));
     }
 }

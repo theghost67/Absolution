@@ -19,7 +19,7 @@ namespace Game.Effects
 
         public static float MusicPitchScale
         {
-            get => _musicVolumeScale;
+            get => _musicPitchScale;
             set
             {
                 if (value < 0 || value > 1)
@@ -172,6 +172,7 @@ namespace Game.Effects
             public MusicSource(AudioSource source)
             {
                 _ownVolume = 1.0f;
+                _ownPitch = 1.0f;
                 _source = source; 
             }
 

@@ -34,9 +34,9 @@ namespace Game.Menus
         public UniTask TransitFromThis();
 
         // use 'from' to determine either this menu from which transition begins to 'to' menu
-        public void OnTransitStart(bool from);  // invokes before transit animation
-        public void OnTransitMiddle(bool from); // invokes at the black screen of transit animation
-        public void OnTransitEnd(bool from);    // invokes after transit animation
+        public void OnTransitStart(bool isFromThis);  // invokes before transit animation
+        public void OnTransitMiddle(bool isFromThis); // invokes at the black screen of transit animation
+        public void OnTransitEnd(bool isFromThis);    // invokes after transit animation
 
         public void Open();
         public void Close();

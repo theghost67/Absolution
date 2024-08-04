@@ -3,22 +3,25 @@
 namespace Game.Territories
 {
     /// <summary>
-    /// Класс, представляющий результат взвешивания сущности во время боя.
+    /// Класс, представляющий результат взвешивания какого-либо действия относительно сущности типа <typeparamref name="T"/> во время боя.
     /// </summary>
     public class BattleWeightResult<T> : IBattleWeightResult, IComparable<BattleWeightResult<T>>, IEquatable<BattleWeightResult<T>> where T : IBattleObject
     {
         public T Entity => entity;
+        public BattleField Field => field;
         public float WeightDeltaAbs => weightDeltaAbs;
         public float WeightDeltaRel => weightDeltaRel;
 
+        protected readonly T entity;
+        protected readonly BattleField field;
         protected float weightDeltaAbs;
         protected float weightDeltaRel;
-        protected readonly T entity;
         IBattleObject IBattleWeightResult.Entity => entity;
 
-        public BattleWeightResult(T entity, float weightDeltaAbs, float weightDeltaRel)
+        public BattleWeightResult(T entity, BattleField field, float weightDeltaAbs, float weightDeltaRel)
         {
             this.entity = entity;
+            this.field = field;
             this.weightDeltaAbs = weightDeltaAbs;
             this.weightDeltaRel = weightDeltaRel;
         }
@@ -31,7 +34,7 @@ namespace Game.Territories
         }
         public bool Equals(BattleWeightResult<T> other)
         {
-            return entity.Equals(other.entity);
+            return GetHashCode().Equals(other.GetHashCode());
         }
 
         public int CompareTo(BattleWeightResult<T> other)

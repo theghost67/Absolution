@@ -9,6 +9,7 @@ using GreenOne;
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Game
 {
@@ -26,11 +27,11 @@ namespace Game
         public static event Action OnUpdate;      // hz/s
         public static event Action OnFixedUpdate; // 50/s
         public static event Action OnSlowUpdate;  // 10/s
-        public static event Action OnWantToQuit;
         public static event Action<bool> OnFocus;
 
         public static Transform Root => _root;
         public static Camera Camera => _camera;
+        public static Volume Volume => _volume;
         public static bool IsQuitting => _isQuitting;
 
         public static bool writeConsoleLogs = true;
@@ -38,10 +39,6 @@ namespace Game
         public static float soundVolumeScale = 1.0f; // set by player
         public static float musicVolumeScale = 1.0f; // in settings
 
-        static Transform _root;
-        static Camera _camera;
-        static bool _isQuitting;
-        static int _slowCounter;
         static readonly Color[] _palette = new Color[]
         {
             Utils.HexToColor("#eeeeee"),
@@ -53,6 +50,11 @@ namespace Game
             Utils.HexToColor("#00ffff"),
             Utils.HexToColor("#ffff00"),
         };
+        static Transform _root;
+        static Camera _camera;
+        static Volume _volume;
+        static bool _isQuitting;
+        static int _slowCounter;
 
         static int _errorsCount;
         static Tween _errorTween;
@@ -74,9 +76,8 @@ namespace Game
                 TableConsole.LogToFile("global", condition);
             });
         }
-        static bool OnWantToQuitBase()
+        static bool OnWantToQuit()
         {
-            OnWantToQuit?.Invoke();
             _isQuitting = true;
             return true;
         }
@@ -106,8 +107,9 @@ namespace Game
 
         void Start()
         {
+            _root = transform.root;
             _camera = Camera.main;
-            _root = _camera.transform.root;
+            _volume = _camera.GetComponent<Volume>();
 
             _errorTween = DOVirtual.DelayedCall(5, HideErrors);
             _errorGameObject = _root.Find("CORE/Errors").gameObject;
@@ -116,7 +118,7 @@ namespace Game
             Application.targetFrameRate = (int)Screen.currentResolution.refreshRateRatio.value;
             Application.logMessageReceivedThreaded += LogReceived;
             Application.logMessageReceived += LogReceived;
-            Application.wantsToQuit += OnWantToQuitBase;
+            Application.wantsToQuit += OnWantToQuit;
             DOTween.onWillLog = OnTweenLog;
             //Time.fixedDeltaTime = 1 / 20f;
 
@@ -128,7 +130,8 @@ namespace Game
 
             Player.Load();
             SaveSystem.LoadAll();
-            ColorPalette.SetPalette(_palette);
+            for (int i = 0; i < _palette.Length; i++)
+                ColorPalette.All[i].ColorAll = _palette[i];
 
             // --------- TODO: remove ---------
             Traveler.TryStartTravel(new LocationMission(EnvironmentBrowser.Locations["college"]));

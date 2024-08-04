@@ -180,20 +180,20 @@ namespace Game.Menus
             return MenuTransit.Between(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
         }
 
-        public virtual void OnTransitStart(bool from)
+        public virtual void OnTransitStart(bool isFromThis)
         {
-            if (!from)
+            if (!isFromThis)
                  SFX.PlayMusicMix(LinkedMusicMixId);
             else SetColliders(false);
         }
-        public virtual void OnTransitMiddle(bool from)
+        public virtual void OnTransitMiddle(bool isFromThis)
         {
-            if (!from)
+            if (!isFromThis)
                 SetColliders(false);
         }
-        public virtual void OnTransitEnd(bool from)
+        public virtual void OnTransitEnd(bool isFromThis)
         {
-            if (!from)
+            if (!isFromThis)
                 SetColliders(true);
         }
 

@@ -102,7 +102,7 @@ namespace Game.Cards
                 return overflowColor;
             else if (_chunksValue < 0)
                 return underflowColor;
-            else return ColorPalette.GetColor(0);
+            else return ColorPalette.C1.ColorCur;
         }
         SpriteRenderer[] ChunksArrayFilledWithChildren(Transform chunksParent)
         {

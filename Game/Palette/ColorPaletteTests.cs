@@ -20,7 +20,7 @@ namespace Game.Palette
             {
                 TMP_InputField field = _inputFields[i];
                 field.onEndEdit.AddListener(UpdatePalette);
-                field.text = "#" + Utils.ColorToHex(ColorPalette.GetColor(i)).ToLower();
+                field.text = "#" + Utils.ColorToHex(ColorPalette.All[i].ColorCur).ToLower();
             }
         }
         void UpdatePalette(string text)
@@ -31,7 +31,8 @@ namespace Game.Palette
                 for (int i = 0; i < _inputFields.Length; i++)
                     colors[i] = Utils.HexToColor(_inputFields[i].text);
 
-                ColorPalette.SetPalette(colors);
+                for (int i = 0; i < colors.Length; i++)
+                    ColorPalette.All[i].ColorAll = colors[i];
             }
             catch { }
         }

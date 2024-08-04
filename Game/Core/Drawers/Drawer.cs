@@ -130,7 +130,7 @@ namespace Game
             public static void Initialize()
             {
                 Global.OnUpdate += OnUpdate;
-                Global.OnWantToQuit += OnWantToQuit;
+                Application.wantsToQuit += OnWantToQuit;
             }
 
             public int CompareTo(Behaviour other)
@@ -153,9 +153,10 @@ namespace Game
                 DrawerMouseEventArgs args = new(pos, pos - _ptrLastPos, Input.GetMouseButtonDown(0), Input.GetMouseButtonDown(1), Input.mouseScrollDelta.y);
                 UpdateSelections(args);
             }
-            static void OnWantToQuit()
+            static bool OnWantToQuit()
             {
                 _isQuitting = true;
+                return true;
             }
 
             static void UpdateSelections(DrawerMouseEventArgs e)

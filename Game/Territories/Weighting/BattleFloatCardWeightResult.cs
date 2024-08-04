@@ -7,11 +7,11 @@ namespace Game.Territories
     /// </summary>
     public class BattleFloatCardWeightResult : BattleWeightResult<BattleFloatCard>
     {
-        public BattleFloatCardWeightResult(BattleFloatCard card, float weightDeltaAbs, float weightDeltaRel) : base(card, weightDeltaAbs, weightDeltaRel) 
+        public BattleFloatCardWeightResult(BattleFloatCard card, float weightDeltaAbs, float weightDeltaRel) 
+            : base(card, null, weightDeltaAbs, weightDeltaRel) 
         {
             if (card == null) return;
             if (card.Side.CanAfford(card)) return;
-
             float diffModifier = UnityEngine.Mathf.Pow(2, card.Side.GetCurrencyDifference(card));
             base.weightDeltaAbs /= diffModifier;
             base.weightDeltaRel /= diffModifier;

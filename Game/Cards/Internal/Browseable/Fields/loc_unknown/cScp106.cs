@@ -2,7 +2,7 @@
 {
     public class cScp106 : FieldCard
     {
-        public cScp106() : base("scp_106")
+        public cScp106() : base("scp_106", "play_with_victim")
         {
             name = "Дед";
             desc = "Игривый дед, любящий поиграть со своей жертвой перед её смертью. Появляется в самых неожиданных местах - за углом, в стене, в штанах. " +

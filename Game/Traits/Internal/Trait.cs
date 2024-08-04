@@ -108,7 +108,7 @@ namespace Game.Traits
         {
             StringBuilder sb = new();
             Trait data = trait.Data;
-            string headColorHex = data.isPassive ? ColorPalette.Passive.Hex : ColorPalette.Active.Hex;
+            string headColorHex = data.isPassive ? ColorPalette.CP.Hex : ColorPalette.CA.Hex;
 
             sb.Append($"<size=150%>{data.name} x{trait.GetStacks()}</size>\n<i>");
             switch (data.rarity)
@@ -130,7 +130,7 @@ namespace Game.Traits
                 else sb.Append($"<color={headColorHex}>{descChunk.header}</color>\n{descChunk.contents}");
             }
 
-            string colorHex = ColorPalette.GetColorInfo(2).Hex;
+            string colorHex = ColorPalette.C3.Hex;
             if (descChunks.Length != 0)
                  sb.Append($"\n\n<color={colorHex}>");
             else sb.Append($"<color={colorHex}>");

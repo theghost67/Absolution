@@ -46,13 +46,13 @@ namespace Game.Effects
             _material.color = Color.clear;
             _renderer = renderer;
             _renderer.GetComponent<Renderer>().material = _material;
-            ColorPalette.AddDependantMaterial(_material);
+            ColorPalette.LinkMaterial(_material);
         }
 
         public void Dispose()
         {
             _colorDefaultTween.Kill();
-            ColorPalette.RemoveDependantMaterial(_material);
+            ColorPalette.UnlinkMaterial(_material);
             Object.Destroy(_material);
         }
 

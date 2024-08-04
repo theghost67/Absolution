@@ -33,15 +33,15 @@ namespace Game.Palette
             ColorPalette.OnColorChanged -= OnPaletteColorChanged;
         }
 
-        void OnPaletteColorChanged(int index)
+        void OnPaletteColorChanged(IPaletteColorInfo info)
         {
-            if (index != _syncedColorIndex) return;
+            if (info.Index != _syncedColorIndex) return;
             _spriteRenderer.color = GetPaletteColor();
         }
         Color GetPaletteColor()
         {
             float a = _opacity == -1 ? _spriteRenderer.color.a : _opacity;
-            Color color = ColorPalette.GetColor(_syncedColorIndex) * _multiplier;
+            Color color = ColorPalette.All[_syncedColorIndex].ColorCur * _multiplier;
             color.a = a;
             return color;
         }

@@ -109,9 +109,9 @@ namespace Game.Territories
             {
                 if (observingPoint.Field == null)
                     throw new Exception($"{nameof(BattleArea)}: SetObserveTargets(true) can be used only when observingPoint is attached to a field.");
-                await EnableContiniousObserving();
+                await EnableContinuousObserving();
             }
-            else await DisableContiniousObserving();
+            else await DisableContinuousObserving();
         }
         public void SelectTargetsByWeight()
         {
@@ -262,7 +262,7 @@ namespace Game.Territories
                 yield return field;
         }
 
-        async UniTask EnableContiniousObserving()
+        async UniTask EnableContinuousObserving()
         {
             _potentialTargets = GetPotentialTargetsOf(observingPoint.Field);
             if (Range.potential.targetIsSingle)
@@ -291,7 +291,7 @@ namespace Game.Territories
                 field.OnCardDetatched.Add(_eventsGuid, OnCardAttachedOrDetatched, Range.priority);
             }
         }
-        async UniTask DisableContiniousObserving()
+        async UniTask DisableContinuousObserving()
         {
             foreach (BattleFieldCard target in _observingCards)
             {
@@ -397,7 +397,7 @@ namespace Game.Territories
             return observingPoint.Territory.Fields(center.pos, Range.potential).ToArray();
         }
 
-        UniTask OnCardAttachedOrDetatched(object sender, EventArgs e)
+        UniTask OnCardAttachedOrDetatched(object sender, TableFieldAttachArgs e)
         {
             BattleField field = (BattleField)sender;
             BattleTerritory terr = field.Territory;

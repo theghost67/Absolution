@@ -342,11 +342,11 @@ namespace GreenOne
             else return value;
         }
 
-        public static string ToSignedNumberString(this int value)
+        public static string ToSignedString(this int value)
         {
             return value > 0 ? $"+{value}" : value.ToString();
         }
-        public static string ToSignedNumberString(this float value)
+        public static string ToSignedString(this float value)
         {
             return value > 0 ? $"+{value}" : value.ToString();
         }

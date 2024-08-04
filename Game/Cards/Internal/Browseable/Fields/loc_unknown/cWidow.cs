@@ -2,10 +2,11 @@
 {
     public class cWidow : FieldCard
     {
-        public cWidow() : base("widow")
+        public cWidow() : base("widow", "scope_plus", "shooting_passion")
         {
-            name = "Вдоводелка";
-            desc = "Вань шот. Вань килль.";
+            name = "Вдова";
+            desc = "Мастерский наёмный убийца, готовый уничтожить свою цель любой ценой. Даже ценой поражения в этом матче - неважно. " +
+                   "Она знает как расставлять приоритеты. А ещё знает две фразы на английском: One shot. One kill.";
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 3);

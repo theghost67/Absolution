@@ -7,9 +7,9 @@ namespace Game.Traits
     /// <summary>
     /// Абстрактный класс для всех активных навыков. Эти навыкы имеют цели и (возможно) условия активации.
     /// </summary>
-    public abstract class ActiveTrait : Trait, IBattleActiveTraitThresholdUsable
+    public abstract class ActiveTrait : Trait, IBattleThresholdUsable<BattleActiveTrait>
     {
-        public IBattleActiveTraitThresholdUsable Threshold => this;
+        public IBattleThresholdUsable<BattleActiveTrait> Threshold => this;
         public ActiveTrait(string id) : base(id, isPassive: false) { }
         protected ActiveTrait(ActiveTrait other) : base(other) { }
 
@@ -17,9 +17,7 @@ namespace Game.Traits
         {
             return new TableActiveTrait(this, null, parent);
         }
-
-        // see how weight threshold is used in BattleAI.CalculateWeightDeltas()
-        public virtual BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait) => BattleWeight.none;
+        public virtual BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result) => BattleWeight.none;
 
         public virtual bool IsUsableInSleeve() => false;
         public virtual bool IsUsable(TableActiveTraitUseArgs e)

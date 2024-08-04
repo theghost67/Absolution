@@ -13,7 +13,7 @@ namespace Game.Cards
                    "умеренно-деградантского интеллектуального уровня населения и его последующего порабощения.";
 
             rarity = Rarity.Epic;
-            price = new CardPrice(CardBrowser.GetCurrency("gold"), 4);
+            price = new CardPrice(CardBrowser.GetCurrency("gold"), 5);
             frequency = 1.00f;
         }
         protected cVavulization(cVavulization other) : base(other) { }

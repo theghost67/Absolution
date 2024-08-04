@@ -26,15 +26,15 @@ namespace Game.Palette
             ColorPalette.OnColorChanged -= OnPaletteColorChanged;
         }
 
-        void OnPaletteColorChanged(int index)
+        void OnPaletteColorChanged(IPaletteColorInfo info)
         {
-            if (index != _syncedColorIndex) return;
+            if (info.Index != _syncedColorIndex) return;
             _textMesh.color = GetPaletteColor();
         }
         Color GetPaletteColor()
         {
             float a = _opacity == -1 ? _textMesh.color.a : _opacity;
-            return ColorPalette.GetColor(_syncedColorIndex).WithAlpha(a);
+            return ColorPalette.All[_syncedColorIndex].ColorCur.WithAlpha(a);
         }
     }
 }

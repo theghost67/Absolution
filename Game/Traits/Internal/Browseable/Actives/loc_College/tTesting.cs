@@ -36,7 +36,7 @@ namespace Game.Traits
                     $"Тестирует карты все карты напротив владельца на прочность - если её инициатива ≤ {MOXIE_THRESHOLD}, ей будет нанесено {DAMAGE} ед. урона. Тратит все заряды."),
             });
         }
-        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(0, 0.16f);
         }
@@ -57,7 +57,7 @@ namespace Game.Traits
                 if (card.moxie <= MOXIE_THRESHOLD)
                     await card.health.AdjustValue(-DAMAGE, owner);
             }
-            trait.SetStacks(0, owner.Side);
+            await trait.SetStacks(0, owner.Side);
         }
     }
 }

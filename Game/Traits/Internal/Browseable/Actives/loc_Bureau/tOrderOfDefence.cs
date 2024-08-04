@@ -46,7 +46,7 @@ namespace Game.Traits
         {
             return base.Points(owner, stacks) + 100 * Mathf.Pow(stacks - 1, 2);
         }
-        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(0, 0.2f);
         }

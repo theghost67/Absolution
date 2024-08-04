@@ -303,11 +303,11 @@ namespace Game.Menus
             };
         }
 
-        public override async void OnTransitEnd(bool from)
+        public override async void OnTransitEnd(bool isFromThis)
         {
-            if (!from)
+            if (!isFromThis)
                 await ShowCards();
-            base.OnTransitEnd(from);
+            base.OnTransitEnd(isFromThis);
         }
 
         public override void Open()

@@ -37,7 +37,7 @@ namespace Game.Territories
 
             _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
             _light = transform.Find<Light2D>("Light");
-            _light.color = ColorPalette.GetColor(0);
+            _light.color = ColorPalette.C1.ColorCur;
 
             OnMouseClick += OnMouseClickBase;
             ColorPalette.OnColorChanged += OnColorPaletteChanged;
@@ -86,10 +86,10 @@ namespace Game.Territories
             return _attachTween; // TODO: implement?
         }
 
-        protected virtual void OnColorPaletteChanged(int index)
+        protected virtual void OnColorPaletteChanged(IPaletteColorInfo info)
         {
-            if (index == 1)
-                _light.color = ColorPalette.GetColor(index);
+            if (info.Index == 1)
+                _light.color = info.ColorCur;
         }
         protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
         {

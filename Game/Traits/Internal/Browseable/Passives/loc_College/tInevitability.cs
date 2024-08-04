@@ -64,7 +64,7 @@ namespace Game.Traits
             }
         }
 
-        async UniTask OnCardAttachedToAnyField(object sender, EventArgs e)
+        async UniTask OnCardAttachedToAnyField(object sender, TableFieldAttachArgs e)
         {
             BattleField field = (BattleField)sender;
             BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(field.Territory);

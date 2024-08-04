@@ -2,6 +2,8 @@
 using DG.Tweening;
 using Game.Cards;
 using Game.Menus;
+using Game.Palette;
+using MyBox;
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
@@ -17,8 +19,8 @@ namespace Game.Territories
         public const int PLAYER_FIELDS_Y = 0;
         public const int ENEMY_FIELDS_Y = 1;
 
-        protected const int START_PHASE_INDEX = 0;
-        protected const int END_PHASE_INDEX = 3;
+        const int START_PHASE_INDEX = 0;
+        const int END_PHASE_INDEX = 3;
 
         // NOTE: do NOT add handlers to OnEndPhase outside of territories classes (it will have same effect as adding to OnStartPhase)
         public IIdEventVoidAsync OnStartPhase => _onStartPhase;
@@ -45,7 +47,6 @@ namespace Game.Territories
         public int PhaseCyclesPassed => _phaseCyclesPassed;
         public int PhasesPassed => _phasesPassed;
         public int Turn => _phaseCyclesPassed + 1;
-        protected int CurrentPhaseCycleIndex => _currentPhaseCycleIndex;
 
         public BattleSide Player => _player;
         public BattleSide Enemy => _enemy;
@@ -122,10 +123,10 @@ namespace Game.Territories
             AddOnInstantiatedAction(GetType(), typeof(BattleTerritory), () =>
             {
                 _player = PlayerSideCreator();
-                _player.health.OnPostSet.Add(_eventsGuid, OnSideHealthSet);
+                _player.health.OnPostSet.Add(_eventsGuid, OnSideHealthPostSet);
 
                 _enemy = EnemySideCreator();
-                _enemy.health.OnPostSet.Add(_eventsGuid, OnSideHealthSet);
+                _enemy.health.OnPostSet.Add(_eventsGuid, OnSideHealthPostSet);
 
                 if (_player.isMe == _enemy.isMe)
                     throw new Exception($"BattleTerritory should contain only one side with {nameof(BattleSide.isMe)} set to 'true'.");
@@ -198,6 +199,15 @@ namespace Game.Territories
             else return null;
         }
 
+        public bool IsStartPhase()
+        {
+            return _currentPhaseCycleIndex == START_PHASE_INDEX;
+        }
+        public bool IsEndPhase()
+        {
+            return _currentPhaseCycleIndex == END_PHASE_INDEX;
+        }
+
         public async UniTask NextPhase()
         {
             if (!_phaseCycleEnabled) return;
@@ -222,6 +232,7 @@ namespace Game.Territories
             for (int i = 0; i < repeats; i++)
                 await NextPhase();
         }
+
         public async UniTask Conclude(bool playerWon)
         {
             if (_concluded) return;
@@ -489,7 +500,7 @@ namespace Game.Territories
                 terr.NextPhase();
         }
 
-        UniTask OnSideHealthSet(object sender, TableStat.PostSetArgs e)
+        UniTask OnSideHealthPostSet(object sender, TableStat.PostSetArgs e)
         {
             if (e.newStatValue > 0)
                 return UniTask.CompletedTask;

@@ -51,9 +51,9 @@ namespace Game.Cards
             Vector3 scale2 = Vector3.one * 1.00f;
             Vector3 scale3 = Vector3.one * 0.75f;
 
-            Color color1 = ColorPalette.GetColor(0);
-            Color color2 = ColorPalette.GetColor(data.isPassive ? 5 : 6);
-            Color color3 = ColorPalette.GetColor(1).WithAlpha(0);
+            Color color1 = ColorPalette.C1.ColorCur;
+            Color color2 = ColorPalette.All[data.isPassive ? 5 : 6].ColorCur;
+            Color color3 = ColorPalette.C2.ColorCur.WithAlpha(0);
 
             prefabTransform.localScale = scale1;
             prefabHeader.color = color1;

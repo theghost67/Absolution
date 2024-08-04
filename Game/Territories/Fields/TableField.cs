@@ -14,8 +14,8 @@ namespace Game.Territories
     /// </summary>
     public class TableField : TableObject, ITableFindable, ITableLoggable, ICloneableWithArgs
     {
-        public IIdEventVoidAsync OnCardAttached => _onCardAttached;
-        public IIdEventVoidAsync OnCardDetatched => _onCardDetatched;
+        public IIdEventVoidAsync<TableFieldAttachArgs> OnCardAttached => _onCardAttached;
+        public IIdEventVoidAsync<TableFieldAttachArgs> OnCardDetatched => _onCardDetatched;
 
         public TableTerritory Territory => _territory;
         public TableField Opposite => _territory?.FieldOpposite(pos);
@@ -31,8 +31,8 @@ namespace Game.Territories
 
         readonly TableTerritory _territory;
         readonly TableFieldFinder _finder;
-        readonly TableEventVoid _onCardAttached;
-        readonly TableEventVoid _onCardDetatched;
+        readonly TableEventVoid<TableFieldAttachArgs> _onCardAttached;
+        readonly TableEventVoid<TableFieldAttachArgs> _onCardDetatched;
         readonly string _eventsGuid;
 
         TableFieldCard _card;
@@ -43,8 +43,8 @@ namespace Game.Territories
             this.pos = pos;
             _territory = territory;
             _finder = new TableFieldFinder(this);
-            _onCardAttached = new TableEventVoid();
-            _onCardDetatched = new TableEventVoid();
+            _onCardAttached = new TableEventVoid<TableFieldAttachArgs>();
+            _onCardDetatched = new TableEventVoid<TableFieldAttachArgs>();
             _eventsGuid = this.GuidGen(2);
 
             health = new TableStat(nameof(health), this, 0);
@@ -60,8 +60,9 @@ namespace Game.Territories
             pos = src.pos;
             _territory = args.srcTerrClone;
             _finder = new TableFieldFinder(this);
-            _onCardAttached = (TableEventVoid)src._onCardAttached.Clone();
-            _onCardDetatched = (TableEventVoid)src._onCardDetatched.Clone();
+            _onCardAttached = (TableEventVoid<TableFieldAttachArgs>)src._onCardAttached.Clone();
+            _onCardDetatched = (TableEventVoid<TableFieldAttachArgs>)src._onCardDetatched.Clone();
+            _eventsGuid = (string)src._eventsGuid.Clone();
 
             TableStatCloneArgs healthCArgs = new(this, args.terrCArgs);
             health = (TableStat)src.health.Clone(healthCArgs);
@@ -91,7 +92,7 @@ namespace Game.Territories
             _card = card;
             if (Drawer != null)
                 await Drawer.AnimAttachCard(card.Drawer).AsyncWaitForCompletion();
-            await _onCardAttached.Invoke(this, EventArgs.Empty);
+            await _onCardAttached.Invoke(this, new TableFieldAttachArgs(card, this, source));
             await card.TryAttachToField(this, source);
         }
         public async UniTask DetatchCard(ITableEntrySource source)
@@ -99,7 +100,7 @@ namespace Game.Territories
             if (_card == null) return;
             TableFieldCard card = _card;
 
-            await _onCardDetatched.Invoke(this, EventArgs.Empty);
+            await _onCardDetatched.Invoke(this, new TableFieldAttachArgs(card, this, source));
 
             _card = null;
             if (Drawer != null)

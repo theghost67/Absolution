@@ -58,7 +58,7 @@ namespace Game.Traits
 
             await trait.AnimActivation();
             e.handled = true;
-            trait.AdjustStacks(-1, trait);
+            await trait.AdjustStacks(-1, trait);
         }
     }
 }

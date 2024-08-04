@@ -46,7 +46,7 @@ namespace Game.Traits
         {
             return base.Points(owner, stacks) + (12 * (stacks - 1));
         }
-        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(0, 0.12f);
         }
@@ -69,7 +69,7 @@ namespace Game.Traits
                 if (card.moxie >= MOXIE_THRESHOLD) continue;
                 if (card.Traits.Passive("scholar") != null)
                 {
-                    card.Drawer.CreateTextAsSpeech("Ученик", ColorPalette.GetColor(5));
+                    card.Drawer.CreateTextAsSpeech("Ученик", ColorPalette.CP.ColorCur);
                     continue;
                 }
                 card.Drawer.CreateTextAsSpeech($"Кол\n<size=50%>-{strength}", Color.red);

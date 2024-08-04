@@ -5,7 +5,7 @@
         public cCrap() : base("crap")
         {
             name = "Говняшка";
-            desc = "Омерзительные экскременты";
+            desc = "Психически тяжёлая для обезвреживания ловушка.";
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 0);

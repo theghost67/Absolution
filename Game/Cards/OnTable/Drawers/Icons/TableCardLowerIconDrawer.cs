@@ -53,7 +53,7 @@ namespace Game.Cards
 
         public override void RedrawColor()
         {
-            _textMesh.color = ColorPalette.GetColor(0);
+            _textMesh.color = ColorPalette.C1.ColorCur;
         }
         public override void RedrawColor(Color color)
         {

@@ -33,7 +33,7 @@ namespace Game.Traits
                     $"перенаправляет всю силу цели в её здоровье: 1 ед. силы = {STRENGTH_TO_HEALTH_ABS} ед здоровья. Так же восстанавливает своё здоровье на то же значение. Перезарядка: {COOLDOWN} х."),
             });
         }
-        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(0, 0.20f);
         }

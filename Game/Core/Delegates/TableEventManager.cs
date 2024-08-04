@@ -17,7 +17,12 @@ namespace Game
         }
         public static void Remove()
         {
-            _runningCount--;
+            if (_runningCount > 0)
+                _runningCount--;
+        }
+        public static void Reset()
+        {
+            _runningCount = 0;
         }
 
         public static bool CanAwaitTableEvents()

@@ -40,9 +40,9 @@ namespace Game.Traits
         {
             return base.Points(owner, stacks) + 8 * (stacks - 1);
         }
-        public override BattleWeight WeightDeltaUseThreshold(BattleActiveTrait trait)
+        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(HEALTH_ABS_INCREASE_PER_STACK * 2 * trait.GetStacks());
+            return new(HEALTH_ABS_INCREASE_PER_STACK * 2 * result.Entity.GetStacks());
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

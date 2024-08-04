@@ -101,7 +101,7 @@ namespace Game.Cards
         public async UniTask TryAttachToField(TableField field, ITableEntrySource source)
         {
             TableEventManager.Add();
-            TableFieldAttachArgs args = new(field, source);
+            TableFieldAttachArgs args = new(this, field, source);
             if (await CanBeAttachedToField(args))
                 await AttachToFieldInternal(args);
             TableEventManager.Remove();

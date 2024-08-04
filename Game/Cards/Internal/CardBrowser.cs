@@ -76,53 +76,54 @@ namespace Game.Cards
             AddField(new cVanga());
             AddField(new cVinsent());
 
-            return;
-
             /* --------------------------------- //
             ||           LOC: MEGAPOLIS          ||
             // --------------------------------- */
 
-            AddField(new cChief());
-            AddField(new cOguzok());
-            AddField(new cClaudeMonet());
-            AddField(new cViktorovich());
-            AddField(new cPeter());
+            //AddField(new cChief());
+            //AddField(new cOguzok());
+            //AddField(new cClaudeMonet());
+            //AddField(new cViktorovich());
+            //AddField(new cPeter());
 
-            AddField(new cJeweller());
-            AddField(new cSecretary());
-            AddField(new cHacker());
-            AddField(new cBusinessman());
-            AddField(new cMayor());
+            //AddField(new cJeweller());
+            //AddField(new cSecretary());
+            //AddField(new cHacker());
+            //AddField(new cBusinessman());
+            //AddField(new cMayor());
 
-            AddField(new cInvestor());
-            AddField(new cConsultant());
-            AddField(new cBoris());
-            AddField(new cHobo());
-            AddField(new cIncredible());
+            //AddField(new cInvestor());
+            //AddField(new cConsultant());
+            //AddField(new cBoris());
+            //AddField(new cHobo());
+            //AddField(new cIncredible());
 
             //===================================//
             //     WITH NO SPECIFIC LOCATION     //
             //===================================//
 
-            AddField(new cDoof());
-            AddField(new cDj());
-            AddField(new cMyers());
-            AddField(new cMyersMirror());
+            //AddField(new cCrap());
+            //AddField(new cCrapper());
+            //AddField(new cDj());
+            //AddField(new cDoof());
+            //AddField(new cFengMina());
 
-            AddField(new cSpiderling());
-            AddField(new cSpiderlingCocon());
-            AddField(new cCrapper());
-            AddField(new cCrap());
-            AddField(new cSatanist());
+            //AddField(new cKillerOfFun());
+            //AddField(new cMegTomat());
+            //AddField(new cMine());
+            //AddField(new cMyers());
+            //AddField(new cMyersMirror());
 
-            AddField(new cScp173());
-            AddField(new cScp106());
-            AddField(new cTerrorist());
-            AddField(new cOtzdarva());
-            AddField(new cFunKiller());
+            //AddField(new cPhantom());
+            //AddField(new cSatanist());
+            //AddField(new cScp106());
+            //AddField(new cScp173());
+            //AddField(new cSpider());
 
-            AddField(new cPhantom());
-            AddField(new cWidow());
+            //AddField(new cSpiderling());
+            //AddField(new cSpiderlingCocon());
+            //AddField(new cTerrorist());
+            //AddField(new cWidow());
         }
 
         public static CardCurrency NewCurrency(string id)

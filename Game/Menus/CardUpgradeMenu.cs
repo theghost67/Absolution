@@ -843,8 +843,8 @@ namespace Game.Menus
             _infoLeftTextMesh.gameObject.SetActive(true);
             _infoRightTextMesh.gameObject.SetActive(true);
 
-            string upgradePriceStr = (-upgradedPointsDelta.Clamped(-9999, 9999).Rounded(0)).ToSignedNumberString();
-            string downgradePriceStr = (-downgradedPointsDelta.Clamped(-9999, 9999).Rounded(0)).ToSignedNumberString();
+            string upgradePriceStr = (-upgradedPointsDelta.Clamped(-9999, 9999).Rounded(0)).ToSignedString();
+            string downgradePriceStr = (-downgradedPointsDelta.Clamped(-9999, 9999).Rounded(0)).ToSignedString();
 
             _infoLeftTextMesh.text = $"УЛУЧШИТЬ:\n{upgradePriceStr} ОП";
             _infoLeftTextMesh.color = upgradedPointsDelta == 0 ? Color.gray : Color.white;

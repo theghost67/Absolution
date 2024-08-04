@@ -152,7 +152,7 @@ namespace Game.Traits
         public Color GetCooldownColor()
         {
             bool hasCooldown = attached.Trait.Storage.turnsDelay > 0;
-            return ColorPalette.GetColor(hasCooldown ? 1 : 0);
+            return ColorPalette.All[hasCooldown ? 1 : 0].ColorCur;
         }
 
         public Tween AnimAppear()
@@ -220,7 +220,7 @@ namespace Game.Traits
             Menu.WriteDescToCurrent(trait.DescRich());
 
             bool isPassive = trait.Data.isPassive;
-            Color color = ColorPalette.GetColor(isPassive ? 5 : 6);
+            Color color = ColorPalette.All[isPassive ? 5 : 6].ColorCur;
 
             _nameTextMesh.text = trait.Data.name.Underlined();
             _stacksTextMesh.color = color;

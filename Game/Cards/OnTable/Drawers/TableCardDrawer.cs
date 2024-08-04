@@ -76,8 +76,8 @@ namespace Game.Cards
             _cardRarity2Sprite = Resources.Load<Sprite>("Sprites/Cards/card rarity 2");
             _cardRarity3Sprite = Resources.Load<Sprite>("Sprites/Cards/card rarity 3");
 
-            OnPaletteColorChanged_Static(ColorPalette.PASSIVE_INDEX);
-            OnPaletteColorChanged_Static(ColorPalette.ACTIVE_INDEX);
+            OnPaletteColorChanged_Static(ColorPalette.CP);
+            OnPaletteColorChanged_Static(ColorPalette.CA);
             ColorPalette.OnColorChanged += OnPaletteColorChanged_Static;
         }
         public TableCardDrawer(TableCard card, Transform parent) : base(card, _prefab, parent)
@@ -299,7 +299,7 @@ namespace Game.Cards
                 case OutlineType.Passive: Outline.TweenColorDefault(_outlineDimPassiveColor, DURATION); break;
                 case OutlineType.Active: Outline.TweenColorDefault(_outlineDimActiveColor, DURATION); break;
                 case OutlineType.Both: Outline.TweenColorDefaultLoop(_outlineDimPassiveColor, _outlineDimActiveColor, DURATION); break;
-                default: Outline.TweenColorDefault(ColorPalette.GetColor(0), DURATION); break;
+                default: Outline.TweenColorDefault(ColorPalette.C1.ColorCur, DURATION); break;
             }
         }
         protected void RedrawOutlineInstantly()
@@ -313,7 +313,7 @@ namespace Game.Cards
                     Outline.SetColorDefault(_outlineDimPassiveColor);
                     Outline.TweenColorDefaultLoop(_outlineDimPassiveColor, _outlineDimActiveColor, DURATION);
                     break;
-                default: Outline.SetColorDefault(ColorPalette.GetColor(0)); break;
+                default: Outline.SetColorDefault(ColorPalette.C1.ColorCur); break;
             }
         }
         protected virtual OutlineType GetOutlineType()
@@ -380,27 +380,22 @@ namespace Game.Cards
             return UniTask.CompletedTask;
         }
 
-        static void OnPaletteColorChanged_Static(int index)
+        static void OnPaletteColorChanged_Static(IPaletteColorInfo info)
         {
-            const int PASSIVE = ColorPalette.PASSIVE_INDEX;
-            const int ACTIVE = ColorPalette.ACTIVE_INDEX;
-
-            if (index == PASSIVE)
+            Color color = info.ColorCur;
+            float grayscale = color.grayscale;
+            if (info == ColorPalette.CP)
             {
-                Color color = ColorPalette.GetColor(PASSIVE);
-                float grayscale = color.grayscale;
                 color = ((1 - grayscale) * Color.white + color * grayscale).WithAlpha(1);
                 _outlineDimPassiveColor = color;
             }
-            else if (index == ACTIVE)
+            else if (info == ColorPalette.CA)
             {
-                Color color = ColorPalette.GetColor(ACTIVE);
-                float grayscale = color.grayscale;
                 color = ((1 - grayscale) * Color.white + color * grayscale).WithAlpha(1);
                 _outlineDimActiveColor = color;
             }
         }
-        void OnPaletteColorChanged(int index)
+        void OnPaletteColorChanged(IPaletteColorInfo info)
         {
             RedrawOutlineInstantly();
         }

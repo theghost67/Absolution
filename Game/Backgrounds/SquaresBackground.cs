@@ -132,7 +132,7 @@ namespace Game.Backgrounds
             CreateSquares();
             InvokeRepeating(nameof(UpdateVisibleSquares), 0, SQUARES_VISIBLE_REFRESH_RATE);
 
-            OnColorPaletteChanged();
+            OnColorPaletteChanged(0);
             ColorPalette.OnPaletteChanged += OnColorPaletteChanged;
             _initialized = true;
         }
@@ -198,10 +198,10 @@ namespace Game.Backgrounds
             return new Vector3(SQUARE_START_X + SQUARES_DISTANCE * x, SQUARE_START_Y + SQUARES_DISTANCE * y);
         }
 
-        void OnColorPaletteChanged()
+        void OnColorPaletteChanged(int colorsChanged)
         {
-            _lightColor = ColorPalette.GetColor(1).WithAlpha(0.75f);
-            _defaultColor = ColorPalette.GetColor(3).WithAlpha(0.75f);
+            _lightColor = ColorPalette.C2.ColorCur.WithAlpha(0.75f);
+            _defaultColor = ColorPalette.C4.ColorCur.WithAlpha(0.75f);
 
             for (int y = 0; y < GRID_SIZE_Y; y++)
             {

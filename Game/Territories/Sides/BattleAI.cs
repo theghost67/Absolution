@@ -198,7 +198,6 @@ namespace Game.Territories
             _side.Territory.NextPhase();
         }
 
-        // TODO[IMPORTANT]: await async queue before making turn (cards/traits)
         async UniTask MakeTurn_Cards()
         {
             int iterations = 0;
@@ -238,7 +237,7 @@ namespace Game.Territories
                 {
                     BattleFieldCardWeightResult fieldRes = GetBestFieldCardPlaceResult((BattleFieldCard)card, sidesWeight);
                     if (fieldRes != null)
-                         TableConsole.LogToFile("vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: abs: {fieldRes.WeightDeltaAbs}, rel: {fieldRes.WeightDeltaRel}, field: {fieldRes.field.TableNameDebug}");
+                         TableConsole.LogToFile("vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: abs: {fieldRes.WeightDeltaAbs}, rel: {fieldRes.WeightDeltaRel}, field: {fieldRes.Field.TableNameDebug}");
                     else TableConsole.LogToFile("vrt", $"sleeve field card: name: {card.TableNameDebug}, can afford: {_side.CanAfford(card)}, result: null (no fields or cannot afford)");
                     result = fieldRes;
                 }
@@ -280,7 +279,7 @@ namespace Game.Territories
 
                 TableConsole.LogToFile("ai", $"CARD PLACEMENT BEGINS: {result.Entity.TableNameDebug} ");
                 if (result is BattleFieldCardWeightResult resultOfFieldCard)
-                    resultField = resultOfFieldCard.field;
+                    resultField = resultOfFieldCard.Field;
                 else
                 {
                     BattleFloatCardWeightResult resultOfFloatCard = (BattleFloatCardWeightResult)result;
@@ -306,6 +305,7 @@ namespace Game.Territories
         async UniTask MakeTurn_Traits()
         {
             int iterations = 0;
+            bool lockActive = false;
 
             Start:
             await TableEventManager.AwaitAnyEvents();
@@ -338,12 +338,14 @@ namespace Game.Territories
             List<BattleActiveTraitWeightResult> results = new();
             foreach (BattleActiveTraitListElement element in elements)
             {
-                BattleWeight threshold = element.Trait.Data.WeightDeltaUseThreshold(element.Trait);
                 BattleActiveTraitWeightResult result = GetBestActiveTraitUseResult(element.Trait, sidesWeight);
+                BattleWeight threshold = element.Trait.Data.WeightDeltaUseThreshold(result);
 
-                if (result != null)
-                     TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: abs: {result.WeightDeltaAbs}, rel: {result.WeightDeltaRel}, target: {result.target.TableNameDebug}");
-                else TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: null (impossible to use)");
+                if (result == null)
+                    TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: null");
+                else if (result.Field == null)
+                     TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: abs: {result.WeightDeltaAbs}, rel: {result.WeightDeltaRel}, target: null");
+                else TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: abs: {result.WeightDeltaAbs}, rel: {result.WeightDeltaRel}, target: {result.Field.TableNameDebug}");
 
                 if (result != null && result.WeightDeltaAbs != 0 && result.WeightDeltaAbs > noUseResult.WeightDeltaAbs) 
                     results.Add(result);
@@ -359,11 +361,11 @@ namespace Game.Territories
 
             BattleActiveTrait activeTrait = bestResult.Entity;
             ActiveTrait activeTraitData = activeTrait.Data;
-            TableActiveTraitUseArgs activeTraitUseArgs = new(activeTrait, bestResult.target);
+            TableActiveTraitUseArgs activeTraitUseArgs = new(activeTrait, bestResult.Field);
             if (!activeTraitData.IsUsable(activeTraitUseArgs) || !activeTraitData.Threshold.WeightIsEnough(bestResult))
                 goto PickResultAgain;
 
-            await activeTrait.TryUse(bestResult.target);
+            await activeTrait.TryUse(bestResult.Field);
             goto Start;
         }
 
@@ -371,7 +373,7 @@ namespace Game.Territories
         {
             BeginWritingLastTerrLogs();
             UseVirtual(null, sidesWeight, out float2 deltas);
-            StopWriteLastTerrLogsForNoPlacement();
+            StopWritingLastTerrLogsForNoPlacement();
             BattleFloatCardWeightResult result = new(null, deltas[0], deltas[1]);
             TableConsole.LogToFile("ai", $"NOP result: delta abs: {result.WeightDeltaAbs}.");
             return result;
@@ -558,7 +560,7 @@ namespace Game.Territories
             TableConsole.LogToFile("ai", $"LAST AI TERRITORY CLONE LOGS END ({(forCards ? "CARDS" : "TRAITS")})");
             _lastTerrLogs.Clear();
         }
-        void StopWriteLastTerrLogsForNoPlacement()
+        void StopWritingLastTerrLogsForNoPlacement()
         {
             TableConsole.OnLogToFile -= OnConsoleLogToFile;
             TableConsole.LogToFile("ai", $"NOP AI TERRITORY CLONE LOGS START");

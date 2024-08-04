@@ -119,7 +119,7 @@ namespace Game.Cards
                 sb.Append("\n\n");
             }
 
-            string colorHex = ColorPalette.GetColorInfo(2).Hex;
+            string colorHex = ColorPalette.C3.Hex;
             sb.Append($"<color={colorHex}>");
 
             if (card is BattleFieldCard bCard && bCard.Field != null)
@@ -129,6 +129,9 @@ namespace Game.Cards
                      sb.Append($"Установлена: {turnAge} х. назад\n\n");
                 else sb.Append("Установлена: на этом ходу\n\n");
             }
+
+            if (string.IsNullOrEmpty(data.desc))
+                return sb.ToString();
 
             sb.Append($"<i>«{data.desc}»");
             return sb.ToString();

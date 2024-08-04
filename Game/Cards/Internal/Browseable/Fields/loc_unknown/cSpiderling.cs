@@ -9,7 +9,7 @@
                      "но они оказались настоящими свиньями и даже не впустили его в дом. Единственные друзья, которые у него есть - паучьи коконы.";
 
             rarity = Rarity.Rare;
-            price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
+            price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);
             frequency = 1.00f;
         }
         protected cSpiderling(cSpiderling other) : base(other) { }

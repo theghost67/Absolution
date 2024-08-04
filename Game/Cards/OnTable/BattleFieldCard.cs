@@ -239,7 +239,7 @@ namespace Game.Cards
             }
 
             _isKilled = true;
-            await AttachToFieldInternal(new TableFieldAttachArgs(null, null));
+            await AttachToFieldInternal(new TableFieldAttachArgs(this, null, null));
             await _onPostKilled.Invoke(this, args);
             if (source is BattleFieldCard killer && !killer.IsKilled)
                 await killer._onKillConfirmed.Invoke(killer, new BattleKillConfirmArgs(this, args));

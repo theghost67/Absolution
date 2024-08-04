@@ -7,10 +7,12 @@ namespace Game.Territories
     /// </summary>
     public class TableFieldAttachArgs
     {
+        public readonly TableFieldCard card;
         public readonly TableField field;
         public readonly ITableEntrySource source;
-        public TableFieldAttachArgs(TableField field, ITableEntrySource source)
+        public TableFieldAttachArgs(TableFieldCard card, TableField field, ITableEntrySource source)
         {
+            this.card = card;
             this.field = field;
             this.source = source;
         }

@@ -14,6 +14,8 @@ using MyBox;
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace Game.Menus
 {
@@ -22,9 +24,11 @@ namespace Game.Menus
     /// </summary>
     public class BattlePlaceMenu : Menu, IMenuWithTerritory
     {
+        const string ID = "battle";
+
         static readonly GameObject _prefab = Resources.Load<GameObject>("Prefabs/Menus/Places/Battle");
         public TableTerritory Territory => _territory;
-        public override string LinkedMusicMixId => "battle";
+        public override string LinkedMusicMixId => ID;
 
         public int DemoDifficulty { get => _demoDifficulty; set => _demoDifficulty = value; }
         public bool PlayerControlsEnabled { get; private set; }
@@ -131,7 +135,7 @@ namespace Game.Menus
         readonly TextMeshPro _descTextMesh;
         pTerritory _territory;
         SquaresBackground _bg;
-        bool _fleed;
+        Sequence _deathsDoorSequence;
 
         protected class pFieldCard : BattleFieldCard, IBattleSleeveCard
         {
@@ -423,6 +427,7 @@ namespace Game.Menus
             public pSide(BattlePlaceMenu menu, BattleTerritory territory, bool isMe) : base(territory, isMe)
             {
                 _menu = menu;
+                health.OnPostSet.Add(ID, _menu.OnPlayerHealthPostSet);
                 TryOnInstantiatedAction(GetType(), typeof(pSide));
             }
             protected pSide(pSide src, BattleSideCloneArgs args) : base(src, args)
@@ -453,6 +458,14 @@ namespace Game.Menus
                 if (isMe)
                      return _demoLocStageForPlayer * 2;
                 else return (_demoLocStageForEnemy * 2 * 1 + ((_demoDifficultyScale - 1) * 2)).Ceiling();
+            }
+            protected override int GoldAtStartFunc()
+            {
+                return 1;
+            }
+            protected override int EtherAtStartFunc()
+            {
+                return 1;
             }
         }
         protected class pTerritory : BattleTerritory
@@ -565,7 +578,7 @@ namespace Game.Menus
             }
         }
 
-        public BattlePlaceMenu() : base("battle", _prefab)
+        public BattlePlaceMenu() : base(ID, _prefab)
         {
             _turnButton = new Drawer(null, Transform.Find<SpriteRenderer>("Turn button"));
             _fleeButton = new Drawer(null, Transform.Find<SpriteRenderer>("Flee button"));
@@ -665,6 +678,56 @@ namespace Game.Menus
             await UniTask.Delay(2000);
             Application.Quit();
         }
+        UniTask OnPlayerHealthPostSet(object sender, TableStat.PostSetArgs e)
+        {
+            TableStat stat = (TableStat)sender;
+            BattleSide side = (BattleSide)stat.Owner;
+            float sideHealthRatio = (float)e.newStatValue / side.HealthAtStart;
+
+            if (side.isMe && side.Drawer != null)
+                SetDeathsDoorEffect(sideHealthRatio);
+            return UniTask.CompletedTask;
+        }
+
+        void SetDeathsDoorEffect(float sideHealthRatio)
+        {
+            float ratio = 1 - Mathf.Pow(1 - sideHealthRatio.Clamped(0, 1), 2);
+            float duration = ratio == 0 ? 2.0f : 0.5f;
+
+            float pitchFrom = SFX.MusicPitchScale;
+            float pitchTo = ratio == 0 ? 0 : 1f - 0.1f * (1f - ratio);
+
+            float volumeFrom = SFX.MusicVolumeScale;
+            float volumeTo = 1f - 0.33f * (1f - ratio);
+
+            Global.Volume.profile.TryGet(out ColorAdjustments component);
+            component.saturation.value = -100 * (1f - ratio);
+
+            _deathsDoorSequence.Kill();
+            _deathsDoorSequence = DOTween.Sequence();
+            _deathsDoorSequence.AppendCallback(() =>
+            {
+                DOVirtual.Float(pitchFrom, pitchTo, duration, v => SFX.MusicPitchScale = v).SetEase(Ease.OutCubic);
+                DOVirtual.Float(volumeFrom, volumeTo, duration, v => SFX.MusicVolumeScale = v).SetEase(Ease.OutCubic);
+            });
+            _deathsDoorSequence.Play();
+        }
+        void ResetDeathsDoorEffect()
+        {
+            const float DURATION = 2.0f;
+
+            Global.Volume.profile.TryGet(out ColorAdjustments component);
+            component.saturation.value = 0;
+
+            _deathsDoorSequence.Kill();
+            _deathsDoorSequence = DOTween.Sequence();
+            _deathsDoorSequence.AppendCallback(() =>
+            {
+                DOVirtual.Float(SFX.MusicPitchScale, 1f, DURATION, v => SFX.MusicPitchScale = v).SetEase(Ease.OutCubic);
+                DOVirtual.Float(SFX.MusicVolumeScale, 1f, DURATION, v => SFX.MusicVolumeScale = v).SetEase(Ease.OutCubic);
+            });
+            _deathsDoorSequence.Play();
+        }
 
         void SetPlayerControls(bool value)
         {
@@ -753,11 +816,13 @@ namespace Game.Menus
             _demoPrevFloatsCount = floatCards;
 
             Menu menu = demo_CreateCardChooseAndUpgrade(pointsPerCard, fieldsChoices, floatsChoices, rerolls, cardsPerChoice, pointsLimit);
-            MenuTransit.Between(this, menu);
+            MenuTransit.Between(this, menu, ResetDeathsDoorEffect);
         }
         async void demo_OnBattleStart(bool firstOpening)
         {
-            ColorPalette.SetPalette(_demoPalettes[_demoDifficulty], asDefault: true);
+            for (int i = 0; i < _demoPalettes[_demoDifficulty].Length; i++)
+                ColorPalette.All[i].ColorCur = _demoPalettes[_demoDifficulty][i];
+
             _demoDifficulty++;
             if (_demoDifficulty == DEMO_DIFFICULTY_MIN)
                 _demoStartTime = DateTime.Now;
@@ -774,7 +839,7 @@ namespace Game.Menus
             SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
             await UniTask.Delay(500);
             string text1 = $"ЭТАП {_demoDifficulty}/{DEMO_DIFFICULTY_MID}";
-            string text2Hex = ColorPalette.GetColorInfo(1).Hex;
+            string text2Hex = ColorPalette.C2.Hex;
             string text2 = $"\n<size=50%><color={text2Hex}>угроза: {_demoLocStageForPlayer}    сложность: {_demoDifficultyScale * 100}%";
             string text3 = _territory.PlayerMovesFirst ? $"\nвы ходите первым" : "\nвы ходите последним";
 

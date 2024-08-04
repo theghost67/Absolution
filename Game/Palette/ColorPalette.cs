@@ -11,206 +11,174 @@ namespace Game.Palette
     /// </summary>
     public class ColorPalette : MonoBehaviour
     {
-        public const int COLORS = 7; // 5 main colors, 2 additional (for traits)
-        public const int PASSIVE_INDEX = 5;
-        public const int ACTIVE_INDEX = 6;
+        const int COLORS_IN_PALETTE = 7; // 5 main colors, 2 additional (for traits)
+        const string LINKED_PROP_PREFIX = "_PaletteColor";
 
-        public static event Action OnPaletteChanged;
-        public static event Action<int> OnColorChanged;
+        public static event Action<int> OnPaletteChanged; // int = amount of colors changed since the last update
+        public static event Action<IPaletteColorInfo> OnColorChanged;
 
-        public static IColorInfo Passive => GetColorInfo(PASSIVE_INDEX);
-        public static IColorInfo Active => GetColorInfo(ACTIVE_INDEX);
+        // 'c' stands for Color
+        public static IPaletteColorInfo C1 => GetInfo(0);
+        public static IPaletteColorInfo C2 => GetInfo(1);
+        public static IPaletteColorInfo C3 => GetInfo(2);
+        public static IPaletteColorInfo C4 => GetInfo(3);
+        public static IPaletteColorInfo C5 => GetInfo(4);
+        public static IPaletteColorInfo CP => GetInfo(5); // Passive
+        public static IPaletteColorInfo CA => GetInfo(6); // Active
+        public static IPaletteColorInfo[] All => _instanceColorInfos;
 
-        static Material _instanceMaterial;
-        static ColorInfo[] _instanceColors;
-        static List<Material> _instanceDependantMaterials;
+        static ColorInfo[] _instanceColorInfos;
+        static List<Material> _instanceLinkedMaterials;
+        static int _colorsChangedSinceUpdate;
 
-        [SerializeField] List<Material> _dependantMaterials;
-        [SerializeField] Material _paletteMaterial;
-        [NonSerialized] ColorInfo[] _colors;
+        [SerializeField] List<Material> _linkedMaterials;
+        [SerializeField] Material _shaderMaterial;
+        [NonSerialized] ColorInfo[] _colorInfos;
 
-        public class ColorTweenInfo
+        private class ColorInfo : IEquatable<ColorInfo>, IPaletteColorInfo
         {
-            public readonly bool hasStartValue;
-            public readonly Color startValue;
-            public readonly Color endValue;
-            public readonly float duration;
+            public int Index => _index;
+            public string Hex => _colorCur.ToHex();
+            public Color ColorDef { get => _colorDef; set => SetColorDef(value); }
+            public Color ColorCur { get => _colorCur; set => SetColorCur(value); }
+            public Color ColorAll { set { SetColorDef(value); SetColorCur(value); } }
 
-            public ColorTweenInfo(Color endValue, float duration)
+            private readonly int _index;
+            private Color _colorDef;
+            private Color _colorCur;
+            private Tween _colorDefTween;
+            private Tween _colorCurTween;
+
+            public ColorInfo(int index, Color defaultValue)
             {
-                hasStartValue = false;
-                this.endValue = endValue;
-                this.duration = duration;
+                _index = index;
+                SetColorDef(defaultValue);
+                SetColorCur(defaultValue);
+                UpdateLinkedMaterials();
             }
-            public ColorTweenInfo(Color startValue, Color endValue, float duration)
+            public bool Equals(ColorInfo other)
             {
-                hasStartValue = true;
-                this.startValue = startValue;
-                this.endValue = endValue;
-                this.duration = duration;
+                return _index == other._index;
+            }
+
+            public Tween DOColorDef(Func<Color> from, Func<Color> to, float duration)
+            {
+                SetColorDef(from());
+                _colorDefTween?.Kill();
+                _colorDefTween = DOVirtual.Float(0, 1, duration, v => SetColorDef(Color.Lerp(from(), to(), v)));
+                return _colorDefTween;
+            }
+            public Tween DOColorCur(Func<Color> from, Func<Color> to, float duration)
+            {
+                SetColorCur(from());
+                _colorCurTween?.Kill();
+                _colorCurTween = DOVirtual.Float(0, 1, duration, v => SetColorCur(Color.Lerp(from(), to(), v)));
+                return _colorCurTween;
+            }
+
+            private void SetColorDef(Color value)
+            {
+                _colorDef = value;
+            }
+            private void SetColorCur(Color value)
+            {
+                _colorCur = value;
+                UpdateLinkedMaterials();
+                OnColorChanged.Invoke(this);
+            }
+            private void UpdateLinkedMaterials()
+            {
+                foreach (Material material in _instanceLinkedMaterials)
+                    material.SetColor($"{LINKED_PROP_PREFIX}{_index}", _colorCur);
             }
         }
-        public interface IColorInfo
+        private class ColorTweenWrapper
         {
-            public Color DefaultColor { get; }
-            public Color CurrentColor { get; }
-            public string Hex { get; }
-            public Tween Tween { get; }
-            public bool TweenIsPlaying { get; }
-        }
-        class ColorInfo : IColorInfo
-        {
-            public Color DefaultColor => defaultColor;
-            public Color CurrentColor => currentColor;
-            public string Hex => hex;
-            public Tween Tween => tween;
-            public bool TweenIsPlaying => tweenIsPlaying;
+            public Color Color => _color;
+            public float Value => _value;
+            public Tween Tween => _tween;
 
-            public Color defaultColor;
-            public Color currentColor;
-            public string hex;
-            public Tween tween;
-            public bool tweenIsPlaying;
+            private readonly Func<Color> _from;
+            private readonly Func<Color> _to;
+            private readonly Action<Color> _onUpdate;
+            private readonly float _duration;
 
-            public ColorInfo(Color color)
+            private Color _color;
+            private float _value;
+            private Tween _tween;
+
+            private ColorTweenWrapper(Func<Color> from, Func<Color> to, float duration, Action<Color> onUpdate)
             {
-                this.currentColor = color;
-                this.defaultColor = color;
-                this.hex = color.ToHex();
+                _from = from;
+                _to = to;
+                _duration = duration;
+                _onUpdate = onUpdate;
+            }
+            public static ColorTweenWrapper DOColor(Func<Color> from, Func<Color> to, float duration, Action<Color> onUpdate)
+            {
+                ColorTweenWrapper wrapper = new(from, to, duration, onUpdate);
+                wrapper.CreateTween();
+                return wrapper;
+            }
+            private void CreateTween()
+            {
+                _tween = DOVirtual.Float(0, 1, _duration, OnTweenUpdate).Play();
+            }
+            private void OnTweenUpdate(float value)
+            {
+                _value = value;
+                _color = Color.Lerp(_from(), _to(), value);
+                _onUpdate(_color);
             }
         }
 
-        static ColorPalette() { _instanceDependantMaterials = new List<Material>(); }
-        private ColorPalette() { _dependantMaterials = new List<Material>(); }
+        static ColorPalette()
+        {
+            _instanceLinkedMaterials = new List<Material>(); 
+        }
+        private ColorPalette()
+        {
+            _linkedMaterials = new List<Material>(); 
+        }
+
         private void Awake()
         {
-            if (_instanceColors != null)
+            if (_instanceColorInfos != null)
                 throw new Exception($"There should be only one {nameof(ColorPalette)} instance.");
 
-            _colors = new ColorInfo[COLORS];
-            for (int i = 0; i < COLORS; i++)
-            {
-                Color color = _paletteMaterial.GetColor($"_Color{i}");
-                foreach (Material dependantMat in _dependantMaterials)
-                    dependantMat.SetColor($"_PaletteColor{i}", color);
-                _colors[i] = new ColorInfo(color);
-            }
+            if (!_linkedMaterials.Contains(_shaderMaterial))
+                throw new Exception($"{nameof(_shaderMaterial)} must be in palette's {nameof(_linkedMaterials)} with valid property names.");
 
-            _instanceColors = _colors;
-            _instanceMaterial = _paletteMaterial;
-            _instanceDependantMaterials = _dependantMaterials;
+            OnPaletteChanged = null;
+            OnColorChanged = i => _colorsChangedSinceUpdate++;
+
+            _colorInfos = new ColorInfo[COLORS_IN_PALETTE];
+            for (int i = 0; i < COLORS_IN_PALETTE; i++)
+                _colorInfos[i] = new ColorInfo(i, _shaderMaterial.GetColor($"{LINKED_PROP_PREFIX}{i}"));
+
+            _instanceLinkedMaterials = _linkedMaterials;
+            _instanceColorInfos = _colorInfos;
         }
         private void Update()
         {
-            bool isAnyPlaying = false;
-            for (int i = 0; i < COLORS; i++)
-            {
-                if (_colors[i].tweenIsPlaying)
-                {
-                    isAnyPlaying = true;
-                    break;
-                }
-            }
-            if (isAnyPlaying)
-                OnPaletteChanged?.Invoke();
+            if (_colorsChangedSinceUpdate == 0) return;
+            OnPaletteChanged?.Invoke(_colorsChangedSinceUpdate);
+            _colorsChangedSinceUpdate = 0;
         }
 
-        public static void AddDependantMaterial(Material material, bool update = true)
+        public static void LinkMaterial(Material material)
         {
-            _instanceDependantMaterials.Add(material);
-            if (update) UpdateDependantMaterial(material);
+            _instanceLinkedMaterials.Add(material);
+            for (int i = 0; i < COLORS_IN_PALETTE; i++)
+                material.SetColor($"{LINKED_PROP_PREFIX}{i}", _instanceColorInfos[i].ColorCur);
         }
-        public static void UpdateDependantMaterial(Material material)
+        public static void UnlinkMaterial(Material material)
         {
-            for (int i = 0; i < COLORS; i++)
-                material.SetColor($"_PaletteColor{i}", _instanceColors[i].currentColor);
+            _instanceLinkedMaterials.Remove(material);
         }
-        public static void RemoveDependantMaterial(Material material)
+        private static IPaletteColorInfo GetInfo(int index)
         {
-            _instanceDependantMaterials.Remove(material);
-        }
-
-        public static Color GetColor(int index)
-        {
-            return _instanceColors[index].currentColor;
-        }
-        public static IColorInfo GetColorInfo(int index)
-        {
-            return _instanceColors[index];
-        }
-
-        public static void SetColor(int index, Color value, bool asDefault = false)
-        {
-            SetColorInternal(index, value, asDefault);
-            OnColorChanged?.Invoke(index);
-            OnPaletteChanged?.Invoke();
-        }
-        public static void SetColorAsDefault(int index)
-        {
-            SetColor(index, _instanceColors[index].defaultColor, false);
-        }
-
-        public static void SetPalette(Color[] values, bool asDefault = false)
-        {
-            for (int i = 0; i < COLORS && i < values.Length; i++)
-            {
-                SetColorInternal(i, values[i], asDefault);
-                OnColorChanged?.Invoke(i);
-            }
-            OnPaletteChanged?.Invoke();
-        }
-        public static void SetPaletteAsDefault()
-        {
-            Color[] defaultColors = new Color[COLORS];
-            for (int i = 0; i < COLORS; i++)
-                defaultColors[i] = _instanceColors[i].defaultColor;
-            SetPalette(defaultColors, false);
-        }
-
-        public static Tween TweenColor(int index, Color value, float duration, bool asDefault = false)
-        {
-            return TweenColor(index, new ColorTweenInfo(value, duration), asDefault);
-        }
-        public static Tween TweenColor(int index, ColorTweenInfo info, bool asDefault = false)
-        {
-            if (info.hasStartValue)
-                 SetColor(index, info.startValue);
-
-            ColorInfo pair = _instanceColors[index];
-            Tween tween = pair.tween;
-
-            tween?.Kill();
-            tween = DOVirtual.Color(pair.currentColor, info.endValue, info.duration, c =>
-            {
-                SetColorInternal(index, c, asDefault);
-                OnColorChanged?.Invoke(index);
-            });
-            tween.onComplete += () => pair.tweenIsPlaying = false;
-
-            pair.tweenIsPlaying = true;
-            pair.tween = tween;
-            return tween;
-        }
-        public static Tween[] TweenPalette(ColorTweenInfo[] infos, bool asDefault = false)
-        {
-            if (infos.Length != COLORS)
-                throw new ArgumentException("Array size must be equal to pallette size.");
-
-            Tween[] tweens = new Tween[COLORS];
-            for (int i = 0; i < COLORS; i++)
-                tweens[i] = TweenColor(i, infos[i], asDefault);
-            return tweens;
-        }
-
-        static void SetColorInternal(int index, Color value, bool asDefault)
-        {
-            if (asDefault) _instanceColors[index].defaultColor = value;
-            _instanceColors[index].currentColor = value;
-            _instanceColors[index].hex = value.ToHex();
-            _instanceMaterial.SetColor($"_Color{index}", value);
-
-            foreach (Material dependantMat in _instanceDependantMaterials)
-                dependantMat.SetColor($"_PaletteColor{index}", value);
+            return _instanceColorInfos[index];
         }
     }
 }

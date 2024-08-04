@@ -4,12 +4,14 @@ using System.Collections.Generic;
 namespace Game.Territories
 {
     /// <summary>
-    /// Структура, представляющая [дополнительный] вес сущности во время сражения (см. <see cref="IBattleWeighty"/>).<br/> 
-    /// Этот вес прибавляется к стороне, к которой принадлежит эта сущность.
+    /// Структура, представляющая вес сущности во время сражения (см. <see cref="IBattleWeighty"/>).<br/> 
+    /// Этот вес прибавляется к стороне, к которой принадлежит эта сущность.<br/>
+    /// Тип может использоваться как дополнительный вес к уже существующему типу <see cref="BattleWeight"/>.
     /// </summary>
     public readonly struct BattleWeight : IEquatable<BattleWeight>
     {
         public static readonly BattleWeight none = new(0, 0);
+        public static readonly BattleWeight negative = new(-1, -1);
 
         public readonly float absolute;
         public readonly float relative;
