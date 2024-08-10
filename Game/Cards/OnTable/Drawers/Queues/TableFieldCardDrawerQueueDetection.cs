@@ -7,6 +7,7 @@ using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using MyBox;
+using Game.Territories;
 
 namespace Game.Cards
 {
@@ -16,7 +17,7 @@ namespace Game.Cards
         const float ACTIVATION_DUR_DISPLAY = 1.00f;
         const float ACTIVATION_DUR_DISAPPEAR = 0.50f;
 
-        public readonly int2 pos;
+        public readonly TableField target;
         public readonly bool canSee;
         static readonly GameObject _detectionPrefab;
 
@@ -24,9 +25,9 @@ namespace Game.Cards
         {
             _detectionPrefab = Resources.Load<GameObject>("Prefabs/Traits/Trait detection");
         }
-        public TableFieldCardDrawerQueueDetection(ITableTrait trait, int2 pos, bool canSee) : base(trait)
+        public TableFieldCardDrawerQueueDetection(ITableTrait trait, TableField target, bool canSee) : base(trait)
         {
-            this.pos = pos;
+            this.target = target;
             this.canSee = canSee;
         }
 
@@ -61,7 +62,9 @@ namespace Game.Cards
             prefabHeader.color = color1;
             prefabIcon.color = color2;
             prefabSubheader.color = color1;
+
             trait.Owner.Drawer.AnimHighlightOutline(1);
+            target?.Drawer.AnimShowSelection();
 
             void OnColorTweenUpdate(Color c)
             {
@@ -75,9 +78,13 @@ namespace Game.Cards
             Tween scaleTween2 = prefabTransform.DOScale(scale3, ACTIVATION_DUR_DISAPPEAR).Pause().SetTarget(prefab).SetEase(Ease.OutCubic);
 
             scaleTween1.Play();
+
             await UniTask.Delay((int)(ACTIVATION_DUR_DISPLAY * 1000));
+
             colorTween1.Play();
             scaleTween2.Play();
+
+            target?.Drawer.AnimHideSelection();
             prefab.Destroy(ACTIVATION_DUR_DISAPPEAR);
         }
     }

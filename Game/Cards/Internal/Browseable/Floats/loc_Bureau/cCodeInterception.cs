@@ -8,7 +8,6 @@ namespace Game.Cards
     {
         const string ID = "code_interception";
         const string CARD_ID = "code_loaf";
-        const int MOXIE_DECREASE = 5;
 
         public cCodeInterception() : base(ID)
         {
@@ -16,7 +15,7 @@ namespace Game.Cards
             desc = "По коням! Вперёд, вперёд, вперёд!";
 
             rarity = Rarity.Rare;
-            price = new CardPrice(CardBrowser.GetCurrency("gold"), 3);
+            price = new CardPrice(CardBrowser.GetCurrency("gold"), 4);
             frequency = 1.00f;
         }
         protected cCodeInterception(cCodeInterception other) : base(other) { }
@@ -25,7 +24,8 @@ namespace Game.Cards
         public override string DescRich(ITableCard card)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return DescRichBase(card, $"Создаёт карты <i>{cardName}</i> напротив каждой вражеской карты (если поле напротив сводобно). Здоровье карты будет равняться сумме здоровья и силы карты напротив.");
+            return DescRichBase(card, $"Создаёт карты <i>{cardName}</i> напротив каждой вражеской карты (если поле напротив сводобно). " +
+                                      $"Здоровье карты будет равняться сумме здоровья и силы карты напротив.");
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {
@@ -44,7 +44,7 @@ namespace Game.Cards
                 if (opposite.Card != null) continue;
                 BattleFieldCard fieldCard = field.Card;
                 FieldCard newCard = CardBrowser.NewField(CARD_ID);
-                newCard.health = fieldCard.health + fieldCard.strength;
+                newCard.health = fieldCard.Health + fieldCard.Strength;
                 newCard.strength = 0;
                 await card.Territory.PlaceFieldCard(newCard, opposite, card);
             }

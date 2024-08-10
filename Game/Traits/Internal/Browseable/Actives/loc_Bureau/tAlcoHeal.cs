@@ -10,9 +10,9 @@ namespace Game.Traits
     public class tAlcoHeal : ActiveTrait
     {
         const string ID = "alco_heal";
-        const int HEALTH_ABS_INCREASE_PER_STACK = 2;
-        const int MOXIE_ABS_DECREASE_STATIC = 2;
-        const int COOLDOWN = 1;
+        static readonly TraitStatFormula _healthIncF = new(false, 0, 3);
+        static readonly TraitStatFormula _moxieDecF = new(false, 2, 0);
+        const int CD = 1;
 
         public tAlcoHeal() : base(ID)
         {
@@ -28,21 +28,19 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float health = HEALTH_ABS_INCREASE_PER_STACK * trait.GetStacks();
-            const int MOXIE = MOXIE_ABS_DECREASE_STATIC;
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на карте рядом",
-                    $"Восстанавливает <u>{health}</u> ед. здоровья цели, уменьшает её инициативу на {MOXIE} ед. Перезарядка: {COOLDOWN} х."),
+                    $"Восстанавливает {_healthIncF.Format(trait)} здоровья цели, уменьшает её инициативу на {_moxieDecF.Format(trait)}. Перезарядка: {CD} х."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 8 * (stacks - 1);
+            return base.Points(owner, stacks) + PointsLinear(8, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(HEALTH_ABS_INCREASE_PER_STACK * 2 * result.Entity.GetStacks());
+            return new(_healthIncF.Value(result.Entity));
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -56,12 +54,10 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard card = (BattleFieldCard)e.target.Card;
 
-            float health = HEALTH_ABS_INCREASE_PER_STACK * trait.GetStacks();
-            const int MOXIE = -MOXIE_ABS_DECREASE_STATIC;
-
-            trait.Storage.turnsDelay += COOLDOWN;
-            await card.health.AdjustValue(health * trait.GetStacks(), trait);
-            await card.moxie.AdjustValue(MOXIE, trait);
+            int stacks = trait.GetStacks();
+            trait.Storage.turnsDelay += CD;
+            await card.Health.AdjustValue(_healthIncF.Value(trait, stacks), trait);
+            await card.Moxie.AdjustValue(-_moxieDecF.Value(trait, stacks), trait);
         }
     }
 }

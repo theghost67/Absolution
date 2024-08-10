@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using GreenOne;
 using UnityEngine;
 
 namespace Game.Traits
@@ -10,16 +11,16 @@ namespace Game.Traits
     /// </summary>
     public class tReflection : PassiveTrait
     {
-        const string ID = "armored_tank";
+        const string ID = "reflection";
         const int PRIORITY = 5;
-        const float DAMAGE_REL_DECREASE = 0.50f;
+        static readonly TraitStatFormula _strengthF = new(true, 0.75f, 0.25f);
 
         public tReflection() : base(ID)
         {
             name = "Отражение";
             desc = "Посмотри на себя. Стоило ли оно того?";
 
-            rarity = Rarity.Rare;
+            rarity = Rarity.Epic;
             tags = TraitTag.None;
             range = BattleRange.none;
         }
@@ -28,16 +29,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = DAMAGE_REL_DECREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"уменьшает силу атаки на <u>{effect}%</u>."),
+                new($"После атаки на владельца (П{PRIORITY})",
+                    $"Атакует атакующего в ответ с силой, равной {_strengthF.Format(trait)} от атаки."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(30, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -47,20 +47,24 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
-                trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived, PRIORITY);
+                trait.Owner.OnInitiationPostReceived.Add(trait.GuidStr, OnOwnerInitiationPostReceived, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
+                trait.Owner.OnInitiationPostReceived.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationRecvArgs e)
+        static async UniTask OnOwnerInitiationPostReceived(object sender, BattleInitiationRecvArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
+            if (owner.IsKilled) return;
+            if (e.Sender.IsKilled || e.Sender.Field == null) return;
+
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
-            if (e.strength < 0) return;
 
+            int strength = (e.strength * _strengthF.Value(trait)).Rounded();
+            BattleInitiationSendArgs initiation = new(owner, strength, true, false, e.Sender.Field);
             await trait.AnimActivation();
-            await e.strength.AdjustValueScale(-DAMAGE_REL_DECREASE * trait.GetStacks(), trait);
+            owner.Territory.Initiations.EnqueueAndRun(initiation);
         }
     }
 }

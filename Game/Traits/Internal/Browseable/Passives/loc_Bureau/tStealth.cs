@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -38,7 +37,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 80 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(80, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

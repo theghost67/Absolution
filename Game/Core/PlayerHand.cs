@@ -1,6 +1,7 @@
 ﻿using DG.Tweening;
 using Game.Sleeves;
 using Game.Territories;
+using System.Linq;
 using UnityEngine;
 
 namespace Game
@@ -37,17 +38,12 @@ namespace Game
         }
         static void TryDropCard()
         {
-            TableField field = null;
-            foreach (Drawer drawer in Drawer.SelectedDrawers)
-            {
-                if (drawer is TableFieldDrawer fieldDrawer)
-                {
-                    field = fieldDrawer.attached;
-                    break;
-                }
-            }
+            TableFieldDrawer drawer = (TableFieldDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is TableFieldDrawer);
+            TableField field = drawer?.attached;
 
-            if (field == null || _isInCooldown || !_isHoldingAnyCard || !_card.TryDropOn(field))
+            if (field == null || _isInCooldown || !_isHoldingAnyCard)
+                return;
+            if (TableEventManager.CanAwaitAnyEvents() || !_card.TryDropOn(field))
                 return;
 
             _card = null;

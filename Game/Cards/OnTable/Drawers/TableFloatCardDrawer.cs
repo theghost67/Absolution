@@ -28,7 +28,7 @@ namespace Game.Cards
             string priceCurrencyStr = priceCurrency.name.Colored(priceCurrency.color);
 
             int priceDefault = attached.Data.price.value;
-            int priceCurrent = attached.price;
+            int priceCurrent = attached.Price;
             return $"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault} ед.\nТекущее: {priceCurrent} ед.\n<color=grey><i>Стоимость: цена установки на территорию.";
         }
         protected override string UpperRightIconTooltip()

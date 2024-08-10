@@ -1,8 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Game.Traits
 {
@@ -11,7 +9,7 @@ namespace Game.Traits
     /// </summary>
     public class tTeleportationBag : ActiveTrait
     {
-        const string ID = "testing";
+        const string ID = "teleportation_bag";
         const string TRAIT_ID = "teleportation_scroll";
 
         public tTeleportationBag() : base(ID)
@@ -21,7 +19,7 @@ namespace Game.Traits
 
             rarity = Rarity.None;
             tags = TraitTag.None;
-            range = BattleRange.self;
+            range = new BattleRange(TerritoryRange.ownerAllNotSelf);
         }
         protected tTeleportationBag(tTeleportationBag other) : base(other) { }
         public override object Clone() => new tTeleportationBag(this);
@@ -42,6 +40,10 @@ namespace Game.Traits
                  return BattleWeight.none;
             else return BattleWeight.negative;
         }
+        public override float Points(FieldCard owner, int stacks)
+        {
+            return base.Points(owner, stacks) + PointsExponential(30, stacks, 2);
+        }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -54,8 +56,8 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard target = (BattleFieldCard)e.target.Card;
 
-            await target.Traits.AdjustStacks(TRAIT_ID, 1, trait);
             await trait.AdjustStacks(-1, trait.Side);
+            await target.Traits.AdjustStacks(TRAIT_ID, 1, trait);
         }
     }
 }

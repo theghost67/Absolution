@@ -15,9 +15,11 @@ namespace Game.Menus
     /// <summary>
     /// Абстрактный класс, представляющий какой-либо графический интерфейс для пользователя как меню.
     /// </summary>
-    public abstract class Menu : IMenu
+    public abstract class Menu : Unique, IMenu
     {
         public static string Log => _logString;
+        public static event Action OnAnyOpened;
+        public static event Action OnAnyClosed;
 
         public event Action OnOpened;
         public event Action OnClosed;
@@ -35,9 +37,6 @@ namespace Game.Menus
         public int OpenDepth => _openDepth;
         public int FullDepth => _fullDepth;
         public virtual string LinkedMusicMixId => null; // see AudioBrowser
-
-        public int Guid => 0x0111E;
-        public string GuidStr => Guid.ToString();
 
         public string TableName => "Меню";
         public string TableNameDebug => _id;
@@ -208,6 +207,7 @@ namespace Game.Menus
 
             SetSortingOrder(_openDepth * 32);
             OnOpened?.Invoke();
+            OnAnyOpened?.Invoke();
         }
         public virtual void Close()
         {
@@ -223,6 +223,7 @@ namespace Game.Menus
             _openDepth = -1;
             _gameObject.SetActive(false);
             OnClosed?.Invoke();
+            OnAnyClosed?.Invoke();
         }
         public virtual void Destroy()
         {

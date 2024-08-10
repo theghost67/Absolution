@@ -37,7 +37,7 @@ namespace Game.Traits
         }
         public virtual UniTask OnUse(TableActiveTraitUseArgs e)
         {
-            return e.trait.AnimActivation();
+            return e.AnimActivation();
         }
     }
 }

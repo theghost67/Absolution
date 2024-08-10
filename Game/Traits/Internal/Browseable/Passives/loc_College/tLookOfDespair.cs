@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -12,7 +11,7 @@ namespace Game.Traits
     {
         const string ID = "look_of_despair";
         const int PRIORITY = 7;
-        const int MOXIE_DECREASE = 5;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 5);
 
         public tLookOfDespair() : base(ID)
         {
@@ -28,34 +27,33 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = MOXIE_DECREASE * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При появлении карты напротив владельца (П{PRIORITY})",
-                    $"уменьшает её инициативу на <u>{effect}</u> ед."),
+                    $"уменьшает её инициативу на {_moxieF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 16 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(32, stacks);
         }
 
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
             await base.OnTargetStateChanged(e);
 
-            IBattleTrait trait = (IBattleTrait)e.trait;
+            IBattleTrait trait = e.trait;
             string entryId = $"{trait.Guid}/{e.target.Guid}";
 
             if (e.canSeeTarget)
             {
                 await trait.AnimDetectionOnSeen(e.target);
-                await e.target.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait, entryId);
+                await e.target.Moxie.AdjustValue(-_moxieF.Value(trait), trait, entryId);
             }
             else
             {
                 await trait.AnimDetectionOnUnseen(e.target);
-                await e.target.moxie.RevertValue(entryId);
+                await e.target.Moxie.RevertValue(entryId);
             }
         }
     }

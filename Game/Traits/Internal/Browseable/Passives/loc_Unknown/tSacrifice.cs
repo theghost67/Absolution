@@ -1,7 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Game.Traits
 {
@@ -10,17 +12,17 @@ namespace Game.Traits
     /// </summary>
     public class tSacrifice : PassiveTrait
     {
-        const string ID = "armored_tank";
-        const int PRIORITY = 5;
-        const float DAMAGE_REL_DECREASE = 0.50f;
+        const string ID = "sacrifice";
+        const int PRIORITY = 3;
+        static readonly TerritoryRange _range = TerritoryRange.ownerDouble;
 
         public tSacrifice() : base(ID)
         {
-            name = "Жертвоприношение";
+            name = "Жертвенный дар";
             desc = "Прими же нашу смиренную жертву!";
 
-            rarity = Rarity.Rare;
-            tags = TraitTag.None;
+            rarity = Rarity.Epic;
+            tags = TraitTag.Static;
             range = BattleRange.none;
         }
         protected tSacrifice(tSacrifice other) : base(other) { }
@@ -28,16 +30,11 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = DAMAGE_REL_DECREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"уменьшает силу атаки на <u>{effect}%</u>."),
+                new($"В начале хода владельца (П{PRIORITY})",
+                    $"Убивает союзные карты рядом и забирает их силу и здоровье."),
             });
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -47,20 +44,39 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
-                trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived, PRIORITY);
+                trait.Territory.OnStartPhase.Add(trait.GuidStr, OnTerritoryStartPhase, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
+                trait.Territory.OnStartPhase.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationRecvArgs e)
+        async UniTask OnTerritoryStartPhase(object sender, EventArgs e)
         {
-            BattleFieldCard owner = (BattleFieldCard)sender;
-            IBattleTrait trait = owner.Traits.Any(ID);
+            BattleTerritory territory = (BattleTerritory)sender;
+            IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(territory);
             if (trait == null) return;
-            if (e.strength < 0) return;
+
+            BattleFieldCard owner = trait.Owner;
+            if (owner.Field == null) return;
+
+            BattleField[] fields = territory.Fields(owner.Field.pos, _range).WithCard().ToArray();
+            if (fields.Length == 0) return;
 
             await trait.AnimActivation();
-            await e.strength.AdjustValueScale(-DAMAGE_REL_DECREASE * trait.GetStacks(), trait);
+            foreach (BattleField field in fields)
+            {
+                int health = field.Card.Health;
+                int strength = field.Card.Strength;
+
+                await field.Card.TryKill(BattleKillMode.Default, trait);
+                if (!(field.Card?.IsKilled ?? true))
+                {
+                    owner.Drawer?.RedrawHeaderTypingWithReset("Не дёргайся!");
+                    continue;
+                }
+
+                await owner.Health.AdjustValue(health, trait);
+                await owner.Strength.AdjustValue(strength, trait);
+            }
         }
     }
 }

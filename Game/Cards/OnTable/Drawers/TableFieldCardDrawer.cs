@@ -21,10 +21,6 @@ namespace Game.Cards
             queue = new TableFieldCardDrawerQueue(this);
             _eventsGuid = this.GuidGen(2);
 
-            attached.price.OnPostSet.Add(_eventsGuid, OnPriceStatPostSet);
-            attached.moxie.OnPostSet.Add(_eventsGuid, OnMoxieStatPostSet);
-            attached.health.OnPostSet.Add(_eventsGuid, OnHealthStatPostSet);
-            attached.strength.OnPostSet.Add(_eventsGuid, OnStrengthStatPostSet);
             attached.Traits.Passives.OnStacksChanged.Add(_eventsGuid, OnTraitsStacksChanged);
             attached.Traits.Actives.OnStacksChanged.Add(_eventsGuid, OnTraitsStacksChanged);
 
@@ -57,28 +53,28 @@ namespace Game.Cards
         {
             base.DestroyInstantly();
 
-            attached.price.OnPostSet.Remove(_eventsGuid);
-            attached.moxie.OnPostSet.Remove(_eventsGuid);
-            attached.health.OnPostSet.Remove(_eventsGuid);
-            attached.strength.OnPostSet.Remove(_eventsGuid);
+            attached.Price.OnPostSet.Remove(_eventsGuid);
+            attached.Moxie.OnPostSet.Remove(_eventsGuid);
+            attached.Health.OnPostSet.Remove(_eventsGuid);
+            attached.Strength.OnPostSet.Remove(_eventsGuid);
             attached.Traits.Passives.OnStacksChanged.Remove(_eventsGuid);
             attached.Traits.Actives.OnStacksChanged.Remove(_eventsGuid);
         }
         protected override int UpperLeftIconDisplayValue()
         {
-            return attached.price;
+            return attached.Price;
         }
         protected override int UpperRightIconDisplayValue()
         {
-            return attached.moxie;
+            return attached.Moxie;
         }
         protected override int LowerLeftIconDisplayValue()
         {
-            return attached.health;
+            return attached.Health;
         }
         protected override int LowerRightIconDisplayValue()
         {
-            return attached.strength;
+            return attached.Strength;
         }
 
         protected override string UpperLeftIconTooltip()
@@ -86,25 +82,25 @@ namespace Game.Cards
             CardCurrency priceCurrency = attached.Data.price.currency;
             string priceCurrencyStr = priceCurrency.name.Colored(priceCurrency.color);
             int priceDefault = attached.Data.price.value;
-            return $"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault}.\nТекущее: {attached.price.StatToStringRich(priceDefault)} ед.\n<color=grey><i>Стоимость: цена установки на территорию.";
+            return $"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault}.\nТекущее: {attached.Price.StatToStringRich(priceDefault)} ед.\n<color=grey><i>Стоимость: цена установки на территорию.";
         }
         protected override string UpperRightIconTooltip()
         {
             int moxieDefault = attached.Data.moxie;
             int initiationOrder = (attached as BattleFieldCard)?.InitiationOrder ?? -1;
             if (initiationOrder == -1)
-                 return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.moxie.StatToStringRich(moxieDefault)} ед.\n<color=grey><i>Инициатива: определяет быстроту действий.";
-            else return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.moxie.StatToStringRich(moxieDefault)} ед.\nПозиция в очереди: {initiationOrder}.\n<color=grey><i>Инициатива: определяет быстроту действий.";
+                 return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.StatToStringRich(moxieDefault)} ед.\n<color=grey><i>Инициатива: определяет быстроту действий.";
+            else return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.StatToStringRich(moxieDefault)} ед.\nПозиция в очереди: {initiationOrder}.\n<color=grey><i>Инициатива: определяет быстроту действий.";
         }
         protected override string LowerLeftIconTooltip()
         {
             int healthDefault = attached.Data.health;
-            return $"По умолчанию: {healthDefault} ед.\nТекущее: {attached.health.StatToStringRich(healthDefault)} ед.\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.";
+            return $"По умолчанию: {healthDefault} ед.\nТекущее: {attached.Health.StatToStringRich(healthDefault)} ед.\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.";
         }
         protected override string LowerRightIconTooltip()
         {
             int strengthDefault = attached.Data.strength;
-            return $"По умолчанию: {strengthDefault} ед.\nТекущее: {attached.strength.StatToStringRich(strengthDefault)} ед.\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.";
+            return $"По умолчанию: {strengthDefault} ед.\nТекущее: {attached.Strength.StatToStringRich(strengthDefault)} ед.\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.";
         }
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
@@ -158,34 +154,6 @@ namespace Game.Cards
             TableFieldCard card = list.Set.Owner;
             TableFieldCardDrawer drawer = card.Drawer;
             drawer?.RedrawOutline();
-            return UniTask.CompletedTask;
-        }
-        UniTask OnPriceStatPostSet(object sender, TableStat.PostSetArgs e)
-        {
-            TableStat stat = (TableStat)sender;
-            TableFieldCard card = (TableFieldCard)stat.Owner;
-            card.Drawer?.priceIcon.RedrawValue(e.newStatValue);
-            return UniTask.CompletedTask;
-        }
-        UniTask OnMoxieStatPostSet(object sender, TableStat.PostSetArgs e)
-        {
-            TableStat stat = (TableStat)sender;
-            TableFieldCard card = (TableFieldCard)stat.Owner;
-            card.Drawer?.moxieIcon.RedrawValue(e.newStatValue);
-            return UniTask.CompletedTask;
-        }
-        UniTask OnHealthStatPostSet(object sender, TableStat.PostSetArgs e)
-        {
-            TableStat stat = (TableStat)sender;
-            TableFieldCard card = (TableFieldCard)stat.Owner;
-            card.Drawer?.healthIcon.RedrawValue(e.newStatValue);
-            return UniTask.CompletedTask;
-        }
-        UniTask OnStrengthStatPostSet(object sender, TableStat.PostSetArgs e)
-        {
-            TableStat stat = (TableStat)sender;
-            TableFieldCard card = (TableFieldCard)stat.Owner;
-            card.Drawer?.strengthIcon.RedrawValue(e.newStatValue);
             return UniTask.CompletedTask;
         }
     }

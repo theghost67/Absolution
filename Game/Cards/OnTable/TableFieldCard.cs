@@ -18,9 +18,9 @@ namespace Game.Cards
         public override string TableName => $"{Data.name}[{_field?.TableName ?? "-"}]";
         public override string TableNameDebug => $"{Data.id}[{_field?.TableNameDebug ?? "-"}]+{GuidStr}";
 
-        public readonly TableStat moxie;
-        public readonly TableStat health;
-        public readonly TableStat strength;
+        public TableStat Moxie => _moxie;
+        public TableStat Health => _health;
+        public TableStat Strength => _strength;
 
         public TableField Field => _field;
         public TableField LastField => _lastField;
@@ -29,6 +29,11 @@ namespace Game.Cards
         readonly FieldCard _data;
         readonly TableFieldCardFinder _finder;
         readonly string _eventsGuid;
+
+        readonly TableStat _moxie;
+        readonly TableStat _health;
+        readonly TableStat _strength;
+
         TableField _field;
         TableField _lastField;
         TableTraitListSet _traits;
@@ -39,17 +44,17 @@ namespace Game.Cards
             _finder = new TableFieldCardFinder(this);
             _eventsGuid = this.GuidGen(2);
 
-            health = new TableStat(nameof(health), this, data.health);
-            health.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
-            health.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _health = new TableStat("health", this, data.health);
+            _health.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _health.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
 
-            strength = new TableStat(nameof(strength), this, data.strength);
-            strength.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
-            strength.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _strength = new TableStat("strength", this, data.strength);
+            _strength.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _strength.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
 
-            moxie = new TableStat(nameof(moxie), this, data.moxie);
-            moxie.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
-            moxie.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _moxie = new TableStat("moxie", this, data.moxie);
+            _moxie.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _moxie.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
 
             AddOnInstantiatedAction(GetType(), typeof(TableFieldCard), () =>
             {
@@ -63,9 +68,9 @@ namespace Game.Cards
             _finder = new TableFieldCardFinder(this);
 
             TableStatCloneArgs statCArgs = new(this, args.terrCArgs);
-            health = (TableStat)src.health.Clone(statCArgs);
-            strength = (TableStat)src.strength.Clone(statCArgs);
-            moxie = (TableStat)src.moxie.Clone(statCArgs);
+            _health = (TableStat)src._health.Clone(statCArgs);
+            _strength = (TableStat)src._strength.Clone(statCArgs);
+            _moxie = (TableStat)src._moxie.Clone(statCArgs);
 
             _field = args.srcCardFieldClone;
             AddOnInstantiatedAction(GetType(), typeof(TableFieldCard), () =>
@@ -79,12 +84,12 @@ namespace Game.Cards
             base.Dispose();
             _traits.Dispose();
 
-            health.OnPreSet.Clear();
-            health.OnPostSet.Clear();
-            strength.OnPreSet.Clear();
-            strength.OnPostSet.Clear();
-            moxie.OnPreSet.Clear();
-            moxie.OnPostSet.Clear();
+            _health.OnPreSet.Clear();
+            _health.OnPostSet.Clear();
+            _strength.OnPreSet.Clear();
+            _strength.OnPostSet.Clear();
+            _moxie.OnPreSet.Clear();
+            _moxie.OnPostSet.Clear();
         }
         public override object Clone(CloneArgs args)
         {
@@ -100,11 +105,9 @@ namespace Game.Cards
         }
         public async UniTask TryAttachToField(TableField field, ITableEntrySource source)
         {
-            TableEventManager.Add();
             TableFieldAttachArgs args = new(this, field, source);
             if (await CanBeAttachedToField(args))
                 await AttachToFieldInternal(args);
-            TableEventManager.Remove();
         }
 
         protected virtual TableTraitListSet TraitListSetCreator()
@@ -151,16 +154,5 @@ namespace Game.Cards
             TableFieldCard owner = (TableFieldCard)sender;
             owner.Traits.DestroyDrawer(Drawer?.IsDestroyed ?? true);
         }
-
-        // used in BattleFieldCard for debug-logging
-        protected virtual UniTask OnStatPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
-        {
-            return UniTask.CompletedTask;
-        }
-        protected virtual UniTask OnStatPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
-        {
-            return UniTask.CompletedTask;
-        }
-        // ----
     }
 }

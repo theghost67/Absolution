@@ -75,9 +75,9 @@ namespace Game
             BattleSide side = isPlayerSide ? territory.Player : territory.Enemy;
             TableStat stat = id switch
             {
-                "health" => side.health,
-                "gold" => side.gold,
-                "ether" => side.ether,
+                "health" => side.Health,
+                "gold" => side.Gold,
+                "ether" => side.Ether,
                 _ => throw new System.NotSupportedException(),
             };
 

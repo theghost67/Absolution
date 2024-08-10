@@ -12,7 +12,7 @@ namespace Game.Traits
     {
         const string ID = "unpleasant_scent";
         const int PRIORITY = 4;
-        const int MOXIE_DECREASE = 1;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 1);
 
         public tUnpleasantScent() : base(ID)
         {
@@ -28,16 +28,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            int effect = MOXIE_DECREASE * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После смерти владельца (П{PRIORITY})",
-                    $"уменьшает инициативу инициатора на <u>{effect}</u> ед."),
+                    $"уменьшает инициативу инициатора на {_moxieF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 4 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(16, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -62,7 +61,7 @@ namespace Game.Traits
             if (killer == null) return;
 
             await trait.AnimActivation();
-            await killer.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait);
+            await killer.Moxie.AdjustValue(_moxieF.Value(trait), trait);
         }
     }
 }

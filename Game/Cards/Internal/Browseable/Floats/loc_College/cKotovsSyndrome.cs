@@ -37,7 +37,7 @@ namespace Game.Cards
             IEnumerable<BattleField> fields = card.Side.Opposite.Fields().WithCard();
 
             foreach (BattleField field in fields)
-                await field.Card.moxie.AdjustValue(-MOXIE_DECREASE, card);
+                await field.Card.Moxie.AdjustValue(-MOXIE_DECREASE, card);
         }
     }
 }

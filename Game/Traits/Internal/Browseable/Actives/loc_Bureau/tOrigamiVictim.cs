@@ -11,7 +11,7 @@ namespace Game.Traits
     {
         const string ID = "origami_victim";
         const string TRAIT_ID = "origami_mark";
-        const int COOLDOWN = 1;
+        const int CD = 1;
 
         public tOrigamiVictim() : base(ID)
         {
@@ -31,7 +31,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на любой вражеской карте",
-                    $"Объявляет её следующей жертвой Мастера Оригами и накладывает навык <i>{traitName}</i>. Перезарядка: {COOLDOWN} х."),
+                    $"Объявляет её следующей жертвой Мастера Оригами и накладывает навык <i>{traitName}</i>. Перезарядка: {CD} х."),
             });
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -45,7 +45,7 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard target = (BattleFieldCard)e.target.Card;
 
-            trait.Storage.turnsDelay += COOLDOWN;
+            trait.Storage.turnsDelay += CD;
             await target.Traits.AdjustStacks(TRAIT_ID, 1, trait);
         }
     }

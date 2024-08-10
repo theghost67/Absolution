@@ -57,7 +57,7 @@ namespace Game
 
         public static void LogToFile(string module, string text)
         {
-            text = $"[{DateTime.Now:O}] [{module}] {text}";
+            text = $"[{module}] {text}";
             if (OnLogToFile?.Invoke(text) ?? !Global.writeConsoleLogs) return;
             _fileQueuedLogs.Enqueue(text);
         }
@@ -65,7 +65,7 @@ namespace Game
         {
             for (int i = 0; i < texts.Count; i++)
             {
-                string text = $"[{DateTime.Now:O}] [{module}] {texts[i]}";
+                string text = $"[{module}] {texts[i]}";
                 if (OnLogToFile?.Invoke(text) ?? !Global.writeConsoleLogs) continue;
                 _fileQueuedLogs.Enqueue(text);
             }

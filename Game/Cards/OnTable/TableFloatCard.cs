@@ -39,11 +39,11 @@ namespace Game.Cards
         public async UniTask TryUse(TableFloatCardUseArgs e)
         {
             if (!IsUsable(e)) return;
-            TableEventManager.Add();
+            TableEventManager.Add(-Guid);
             if (Drawer != null) 
                 await AnimUse().AsyncWaitForCompletion();
             await OnUsed(e);
-            TableEventManager.Remove();
+            TableEventManager.Remove(-Guid);
         }
         public bool IsUsable(TableFloatCardUseArgs e)
         {

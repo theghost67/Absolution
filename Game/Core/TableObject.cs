@@ -15,11 +15,11 @@ namespace Game
         public virtual string TableNameDebug => "table object";
 
         public Drawer Drawer => _drawer;
-        public bool Disposed => _disposed;
+        public bool IsDisposed => _isDisposed;
 
         Drawer _drawer;
         Transform _parent;
-        bool _disposed;
+        bool _isDisposed;
 
         // invokes only in the most derived constructor
         // call TryOnInstantiatedAction (or AddOnInstantiatedAction) as the last instruction in every derived class
@@ -49,7 +49,7 @@ namespace Game
         {
             _drawer?.Dispose();
             _drawer = null;
-            _disposed = true;
+            _isDisposed = true;
         }
         public override string ToString()
         {
@@ -58,7 +58,7 @@ namespace Game
 
         public bool CreateDrawer(Transform parent)
         {
-            if (_disposed)
+            if (_isDisposed)
                 throw new NotSupportedException("Impossible to create Drawer of a disposed object.");
 
             if (parent == null || _drawer != null) 
@@ -70,7 +70,7 @@ namespace Game
         }
         public bool DestroyDrawer(bool instantly)
         {
-            if (_disposed)
+            if (_isDisposed)
                 throw new NotSupportedException("Impossible to destroy Drawer of a disposed object.");
 
             if (_drawer == null)

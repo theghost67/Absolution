@@ -12,10 +12,10 @@ namespace Game.Territories
     /// <summary>
     /// Класс, представляющий игровое поле на столе с возможностью хранения карты типа <see cref="TableFieldCard"/>.
     /// </summary>
-    public class TableField : TableObject, ITableFindable, ITableLoggable, ICloneableWithArgs
+    public class TableField : TableObject, ITableFindable, ITableLoggable, ICloneableWithArgs, IComparable<TableField>
     {
-        public IIdEventVoidAsync<TableFieldAttachArgs> OnCardAttached => _onCardAttached;
-        public IIdEventVoidAsync<TableFieldAttachArgs> OnCardDetatched => _onCardDetatched;
+        public ITableEventVoid<TableFieldAttachArgs> OnCardAttached => _onCardAttached;
+        public ITableEventVoid<TableFieldAttachArgs> OnCardDetatched => _onCardDetatched;
 
         public TableTerritory Territory => _territory;
         public TableField Opposite => _territory?.FieldOpposite(pos);
@@ -47,7 +47,7 @@ namespace Game.Territories
             _onCardDetatched = new TableEventVoid<TableFieldAttachArgs>();
             _eventsGuid = this.GuidGen(2);
 
-            health = new TableStat(nameof(health), this, 0);
+            health = new TableStat("health", this, 0);
             health.OnPostSet.Add(_eventsGuid, OnHealthPostSetBase);
 
             OnDrawerCreated += OnDrawerCreatedBase;
@@ -82,12 +82,19 @@ namespace Game.Territories
                  return new TableField(this, cArgs);
             else return null;
         }
+        public int CompareTo(TableField other)
+        {
+            int result = pos.x.CompareTo(other.pos.x);
+            if (result == 0)
+                 return pos.y < other.pos.y ? -1 : 1;
+            else return result;
+        }
 
         public async UniTask AttachCard(TableFieldCard card, ITableEntrySource source)
         {
             if (_card != null) return;
             if (card == null)
-                DetatchCard(source);
+                await DetatchCard(source);
 
             _card = card;
             if (Drawer != null)

@@ -10,7 +10,7 @@ namespace Game.Environment
         static readonly GameObject _prefab;
         static readonly Sprite _lockedSprite;
 
-        public readonly TableLocation attached;
+        public readonly new TableLocation attached;
 
         readonly SpriteRenderer _spriteRenderer;
         readonly Sprite _unlockedSprite;

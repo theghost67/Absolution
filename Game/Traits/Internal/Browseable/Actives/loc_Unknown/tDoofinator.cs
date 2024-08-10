@@ -1,9 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using System.Collections.Generic;
-using System.Linq;
-using static UnityEngine.UI.GridLayoutGroup;
+using static UnityEngine.GraphicsBuffer;
 
 namespace Game.Traits
 {
@@ -14,7 +12,7 @@ namespace Game.Traits
     {
         const string ID = "doofinator";
         const string CARD_ID = "doof";
-        const int MOXIE_THRESHOLD = 0;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 0);
 
         public tDoofinator() : base(ID)
         {
@@ -34,17 +32,22 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на карте рядом",
-                    $"Если инициатива цели ≤ {MOXIE_THRESHOLD}, она превратится в карту {cardName} с такими же характеристиками, как у владельца. Тратит один заряд."),
+                    $"Если инициатива цели ≤ {_moxieF.Format(trait)}, она превратится в карту {cardName} с такими же характеристиками, как у владельца. Тратит один заряд."),
             });
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(0, 0.12f);
         }
+        public override float Points(FieldCard owner, int stacks)
+        {
+            return base.Points(owner, stacks) + PointsExponential(16, stacks, 2);
+        }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return base.IsUsable(e) && e.isInBattle && e.target.Card != null && e.trait.Owner.Field != null;
+            return base.IsUsable(e) && e.isInBattle && e.target.Card != null 
+                && e.trait.Owner.Field != null && e.target.Card.Moxie > _moxieF.Value(e.trait);
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
@@ -53,17 +56,15 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField targetField = (BattleField)e.target;
             BattleFieldCard target = targetField.Card;
-            if (target.moxie <= MOXIE_THRESHOLD)
-            {
-                await target.TryKill(BattleKillMode.Default, trait);
-                if (target.IsKilled)
-                {
-                    FieldCard ownerClone = (FieldCard)trait.Owner.Data.CloneAsNew();
-                    ownerClone.traits.Clear();
-                    await trait.Territory.PlaceFieldCard(ownerClone, targetField, trait);
-                }
-            }
+
             await trait.AdjustStacks(-1, trait.Side);
+            await target.TryKill(BattleKillMode.Default, trait);
+            if (target.IsKilled)
+            {
+                FieldCard ownerClone = (FieldCard)trait.Owner.Data.CloneAsNew();
+                ownerClone.traits.Clear();
+                await trait.Territory.PlaceFieldCard(ownerClone, targetField, trait);
+            }
         }
     }
 }

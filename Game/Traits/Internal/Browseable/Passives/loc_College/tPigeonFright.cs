@@ -2,7 +2,6 @@
 using Game.Cards;
 using Game.Territories;
 using System.Linq;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -14,6 +13,7 @@ namespace Game.Traits
         const string ID = "pigeon_fright";
         const int PRIORITY = 6;
         const string SPAWN_CARD_ID = "pigeon_litter";
+        static readonly TerritoryRange _range = TerritoryRange.ownerDouble;
 
         public tPigeonFright() : base(ID)
         {
@@ -22,7 +22,6 @@ namespace Game.Traits
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
-            range = new BattleRange(TerritoryRange.ownerSingle, TerritoryRange.ownerDouble);
             frequency = 0.12f;
         }
         protected tPigeonFright(tPigeonFright other) : base(other) { }
@@ -39,7 +38,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 4 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(12, stacks);
         }
         public override UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -60,8 +59,9 @@ namespace Game.Traits
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
+            if (owner.Field == null) return;
 
-            BattleField[] fields = trait.Area.PossibleTargets().WithoutCard().ToArray();
+            BattleField[] fields = trait.Territory.Fields(owner.Field.pos, _range).ToArray();
             if (fields.Length == 0) return;
 
             FieldCard spawnCardData = CardBrowser.NewField(SPAWN_CARD_ID);
@@ -69,10 +69,10 @@ namespace Game.Traits
             e.Receiver = prevField;
 
             await trait.AnimActivation();
-            await owner.TryAttachToField(fields.First(), trait);
-
-            await owner.Territory.PlaceFieldCard(spawnCardData, prevField, trait.Side);
             await trait.AdjustStacks(-1, e.Sender);
+
+            await owner.TryAttachToField(fields.First(), trait);
+            await owner.Territory.PlaceFieldCard(spawnCardData, prevField, trait.Side);
         }
     }
 }

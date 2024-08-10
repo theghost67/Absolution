@@ -46,11 +46,11 @@ namespace Game.Territories
             BattleFieldCardCloneArgs cardCArgs = new((FieldCard)src.Data.Clone(), this, _side, argsCast.terrCArgs);
             return (BattleFieldCard)src.Clone(cardCArgs);
         }
-        protected override async UniTask OnHealthPostSetBase(object sender, TableStat.PostSetArgs e)
+        protected override UniTask OnHealthPostSetBase(object sender, TableStat.PostSetArgs e)
         {
             TableStat stat = (TableStat)sender;
             BattleField field = (BattleField)stat.Owner;
-            await field._side.health.AdjustValue(e.totalDeltaValue, e.source);
+            return field._side.Health.AdjustValue(e.totalDeltaValue, e.source);
         }
 
         // TODO: add GetObservingEntities?

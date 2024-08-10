@@ -1,8 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using System;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -13,7 +11,7 @@ namespace Game.Traits
     {
         const string ID = "inevitability";
         const int PRIORITY = 5;
-        const float HEALTH_REL_INCREASE = 0.25f;
+        static readonly TraitStatFormula _healthF = new(true, 0.00f, 0.25f);
 
         public tInevitability() : base(ID)
         {
@@ -29,16 +27,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = HEALTH_REL_INCREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После смерти любой карты на территории (П{PRIORITY})",
-                    $"увеличивает здоровье владельца на <u>{effect}%</u>."),
+                    $"увеличивает здоровье владельца на {_healthF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(20, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -80,7 +77,7 @@ namespace Game.Traits
             if (terrCard == trait.Owner) return;
 
             await trait.AnimActivation();
-            await trait.Owner.health.AdjustValueScale(HEALTH_REL_INCREASE * trait.GetStacks(), trait);
+            await trait.Owner.Health.AdjustValueScale(_healthF.Value(trait), trait);
         }
     }
 }

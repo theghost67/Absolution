@@ -3,6 +3,7 @@ using DG.Tweening;
 using Game.Cards;
 using Game.Sleeves;
 using Game.Traits;
+using GreenOne;
 using MyBox;
 using System;
 using System.Collections;
@@ -49,7 +50,6 @@ namespace Game.Territories
 
         List<string> _lastTerrLogs;
         BattleTerritory _lastTerr;
-        Tween _turnTween;
 
         static bool _isAnyMakingTurn;
         bool _isMakingTurn;
@@ -170,17 +170,12 @@ namespace Game.Territories
                 return;
             }
 
+            TableConsole.LogToFile("ai", $"TURN STARTED");
             _isMakingTurn = true;
             _isAnyMakingTurn = true;
-            _turnTween = DOVirtual.DelayedCall(5, () =>
-            {
-                _isMakingTurn = false;
-                _lastTerr?.Dispose();
-            });
 
             try
             {
-                TableConsole.LogToFile("ai", $"TURN STARTED");
                 await MakeTurn_Cards();
                 await MakeTurn_Traits();
             }
@@ -191,22 +186,22 @@ namespace Game.Territories
                 _lastTerr?.Dispose();
             }
 
-            TableConsole.LogToFile("ai", $"TURN ENDED");
-            _turnTween.Kill();
             _isMakingTurn = false;
             _isAnyMakingTurn = false;
-            _side.Territory.NextPhase();
+
+            TableConsole.LogToFile("ai", $"TURN ENDED");
+            await _side.Territory.NextPhase();
         }
 
         async UniTask MakeTurn_Cards()
         {
+            int eventsCount = TableEventManager.Count();
             int iterations = 0;
             CardsResultsListSet resultsSet = new();
 
             Start:
-            await TableEventManager.AwaitAnyEvents();
-            await UniTask.Delay(TURN_DELAY_MS);
-
+            await MakeTurn_Await(eventsCount);
+            
             if (iterations++ > ITERATIONS_MAX)
             {
                 Debug.LogError("too many iterations.");
@@ -304,12 +299,11 @@ namespace Game.Territories
         }
         async UniTask MakeTurn_Traits()
         {
+            int eventsCount = TableEventManager.Count();
             int iterations = 0;
-            bool lockActive = false;
 
             Start:
-            await TableEventManager.AwaitAnyEvents();
-            await UniTask.Delay(TURN_DELAY_MS);
+            await MakeTurn_Await(eventsCount);
 
             if (iterations++ > ITERATIONS_MAX)
             {
@@ -339,7 +333,7 @@ namespace Game.Territories
             foreach (BattleActiveTraitListElement element in elements)
             {
                 BattleActiveTraitWeightResult result = GetBestActiveTraitUseResult(element.Trait, sidesWeight);
-                BattleWeight threshold = element.Trait.Data.WeightDeltaUseThreshold(result);
+                BattleWeight threshold = result == null ? BattleWeight.negative : element.Trait.Data.WeightDeltaUseThreshold(result);
 
                 if (result == null)
                     TableConsole.LogToFile("vrt", $"active trait: name: {element.Trait.TableNameDebug}, threshold: abs: {threshold.absolute}, rel: {threshold.relative}; result: null");
@@ -367,6 +361,12 @@ namespace Game.Territories
 
             await activeTrait.TryUse(bestResult.Field);
             goto Start;
+        }
+        async UniTask MakeTurn_Await(int eventsCountBeforeTurn)
+        {
+            while (TableEventManager.Count() > eventsCountBeforeTurn)
+                await UniTask.Yield();
+            await UniTask.Delay(TURN_DELAY_MS);
         }
 
         IBattleWeightResult GetNoPlacementResult(float2 sidesWeight)
@@ -402,10 +402,11 @@ namespace Game.Territories
                 BattleField cardFieldClone = card.Field == null ? null : terrClone.Field(card.Field.pos);
                 BattleFieldCardCloneArgs cardCArgs = new(dataClone, cardFieldClone, sideClone, terrCArgs);
                 BattleFieldCard cardClone = (BattleFieldCard)card.Clone(cardCArgs);
-                int cardCloneHealth = cardClone.health;
+                int cardCloneHealth = cardClone.Health;
 
-                terrClone.PlaceFieldCard(cardClone, fieldClone, sideClone);
-                terrClone.LastPhase();
+                // will still run synchronously (handlers should check ITableObject.Drawer for null value)
+                _ = terrClone.PlaceFieldCard(cardClone, fieldClone, sideClone);
+                _ = terrClone.LastPhase();
 
                 BattleSide sideCloneOpposite = sideClone.Opposite;
                 float2 weightsWeightAfterTurn = new(sideClone.Weight, sideCloneOpposite.Weight);
@@ -452,7 +453,7 @@ namespace Game.Territories
                 {
                     BattleActiveTrait traitClone = (BattleActiveTrait)trait.Finder.FindInBattle(terr);
                     BattleField targetClone = (BattleField)target.Finder.FindInBattle(terr);
-                    traitClone.TryUse(targetClone);
+                    _ = traitClone.TryUse(targetClone);
                 }
                 UseVirtual(UseAction, sidesWeight, out float2 deltas);
 
@@ -504,7 +505,7 @@ namespace Game.Territories
             BattleSide sideClone = _side.isMe ? terrClone.Player : terrClone.Enemy;
 
             useFunc?.Invoke(terrClone);
-            terrClone.LastPhase();
+            _ = terrClone.LastPhase();
 
             BattleSide sideCloneOpposite = sideClone.Opposite;
             float2 weightsWeightAfterTurn = new(sideClone.Weight, sideCloneOpposite.Weight);
@@ -531,8 +532,11 @@ namespace Game.Territories
 
         float ThisSideWeight_ScaledByStyle(BattleSide side, float weight)
         {
-            int gold = side.gold;
-            int ether = side.ether;
+            IEnumerable<ITableSleeveCard> cards = side.Sleeve;
+            int goldSum = cards.Sum(c => c.Data.price.currency.id == "gold" ? c.Price : 0);
+            int etherSum = cards.Sum(c => c.Data.price.currency.id == "ether" ? c.Price : 0);
+            int gold = ((int)side.Gold).ClampedMax(goldSum);
+            int ether = ((int)side.Ether).ClampedMax(etherSum);
             float goldScale  = gold  <= 0 ? 1 : (float)Math.Log(gold + Math.E);
             float etherScale = ether <= 0 ? 1 : ((float)Math.Log(ether + Math.E)) / 2f + 0.5f;
 

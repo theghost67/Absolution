@@ -40,7 +40,7 @@ namespace Game.Cards
             foreach (BattleField field in fields)
             {
                 BattleFieldCard fieldCard = field.Card;
-                if (fieldCard.price > 0 && fieldCard.strength > 0)
+                if (fieldCard.Price > 0 && fieldCard.Strength > 0)
                     continue;
 
                 await fieldCard.TryKill(BattleKillMode.Default, card);
@@ -50,7 +50,7 @@ namespace Game.Cards
                 BattleFieldCardDrawer drawer = fieldCard.Drawer;
                 drawer.CreateTextAsSpeech("НЕ НУЖЕН", Color.red);
             }
-            await card.Side.gold.AdjustValue(killedCardsCount, card);
+            await card.Side.Gold.AdjustValue(killedCardsCount, card);
         }
     }
 }

@@ -2,7 +2,7 @@
 {
     public class cSpider : FieldCard
     {
-        public cSpider() : base("spiderling_cocon")
+        public cSpider() : base("spider")
         {
             name = "Паук";
             desc = "Пушистый и злой комочек нашего паукообразного.";

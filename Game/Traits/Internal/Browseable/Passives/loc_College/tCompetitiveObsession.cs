@@ -3,6 +3,7 @@ using Game.Cards;
 using Game.Territories;
 using System;
 using UnityEngine;
+using static UnityEngine.UI.GridLayoutGroup;
 
 namespace Game.Traits
 {
@@ -13,11 +14,10 @@ namespace Game.Traits
     {
         const string ID = "competitive_obsession";
         const int PRIORITY = 0;
-        const float STRENGTH_REL_INCREASE_WHEN_WON = 0.01f;
-        const float HEALTH_REL_DECREASE_WHEN_LOST = 0.50f;
-        const string STRENGTH_REL_STORAGE_ID = ID + ":0";
-        const string HEALTH_REL_STORAGE_ID = ID + ":1";
-        int _ownerDeckGuid;
+        static readonly TraitStatFormula _strengthF = new(true, 0, 0.01f);
+        static readonly TraitStatFormula _healthF = new(true, 0, 0.3333f);
+        const string STRENGTH_STORAGE_ID = "0";
+        const string HEALTH_STORAGE_ID = "1";
 
         public tCompetitiveObsession() : base(ID)
         {
@@ -28,19 +28,17 @@ namespace Game.Traits
             tags = TraitTag.None;
             range = BattleRange.none;
         }
-        protected tCompetitiveObsession(tCompetitiveObsession other) : base(other) { _ownerDeckGuid = other._ownerDeckGuid; }
+        protected tCompetitiveObsession(tCompetitiveObsession other) : base(other) { }
         public override object Clone() => new tCompetitiveObsession(this);
 
         public override string DescRich(ITableTrait trait)
         {
-            float strengthEffect = STRENGTH_REL_INCREASE_WHEN_WON * 100 * trait.GetStacks();
-            float healthEffect = HEALTH_REL_DECREASE_WHEN_LOST * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После победы в сражении (П{PRIORITY})",
-                    $"навсегда увеличивает силу на <u>{strengthEffect}%</u>."),
+                    $"навсегда увеличивает силу на {_strengthF.Format(trait)}."),
                 new($"После поражения в сражении (П{PRIORITY})",
-                    $"навсегда уменьшает здоровье на <u>{healthEffect}%</u>."),
+                    $"навсегда уменьшает здоровье на {_healthF.Format(trait)}."),
                 new($"После установки владельца на поле (П{PRIORITY})",
                     $"применяет вышеуказанные бонусы к силе и здоровью."),
             });
@@ -57,8 +55,12 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
 
-            if (!trait.Side.isMe) return;
-            _ownerDeckGuid = trait.Owner.Data.Guid;
+            if (!trait.Side.isMe)
+            {
+                TraitStorage traitStorage = trait.Data.storage;
+                traitStorage[STRENGTH_STORAGE_ID] = UnityEngine.Random.Range(0, 20);
+                return;
+            }
 
             if (trait.WasAdded(e))
             {
@@ -83,39 +85,41 @@ namespace Game.Traits
             Trait traitData = trait.Data;
             TraitStorage traitStorage = traitData.storage;
 
-            bool hasStrengthEffect = traitStorage.TryGetValue(STRENGTH_REL_STORAGE_ID, out object strengthRel);
-            bool hasHealthEffect = traitStorage.TryGetValue(HEALTH_REL_STORAGE_ID, out object healthRel);
+            bool hasStrengthEffect = traitStorage.TryGetValue(STRENGTH_STORAGE_ID, out object strengthRel);
+            bool hasHealthEffect = traitStorage.TryGetValue(HEALTH_STORAGE_ID, out object healthRel);
             if (!hasStrengthEffect && !hasHealthEffect) return;
 
             await trait.AnimActivation();
-            await owner.strength.AdjustValueScale((float)strengthRel, trait);
-            await owner.health.AdjustValueScale((float)healthRel, trait);
+            await owner.Strength.AdjustValueScale((float)strengthRel, trait);
+            await owner.Health.AdjustValueScale((float)healthRel, trait);
         }
         async UniTask OnPlayerWon(object sender, EventArgs e)
         {
-            FieldCard ownerData = Player.Deck.fieldCards[_ownerDeckGuid];
-            if (ownerData == null) return;
+            BattleTerritory terr = (BattleTerritory)sender;
+            IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
+            if (trait == null) return;
 
-            PassiveTrait traitData = ownerData.traits.Passive(ID);
-            if (traitData == null) return;
+            Trait data = trait.Data;
+            TraitStorage traitStorage = data.storage;
+            if (traitStorage.TryGetValue(STRENGTH_STORAGE_ID, out object value))
+                 traitStorage[STRENGTH_STORAGE_ID] = ((float)value) + _strengthF.valuePerStack;
+            else traitStorage[STRENGTH_STORAGE_ID] = _strengthF.valuePerStack;
 
-            TraitStorage traitStorage = traitData.storage;
-            if (traitStorage.TryGetValue(STRENGTH_REL_STORAGE_ID, out object value))
-                 traitStorage[STRENGTH_REL_STORAGE_ID] = ((float)value) + STRENGTH_REL_INCREASE_WHEN_WON;
-            else traitStorage[STRENGTH_REL_STORAGE_ID] = STRENGTH_REL_INCREASE_WHEN_WON;
+            await trait.AnimActivation();
         }
         async UniTask OnPlayerLost(object sender, EventArgs e)
         {
-            FieldCard ownerData = Player.Deck.fieldCards[_ownerDeckGuid];
-            if (ownerData == null) return;
+            BattleTerritory terr = (BattleTerritory)sender;
+            IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
+            if (trait == null) return;
 
-            PassiveTrait traitData = ownerData.traits.Passive(ID);
-            if (traitData == null) return;
+            Trait data = trait.Data;
+            TraitStorage traitStorage = data.storage;
+            if (traitStorage.TryGetValue(HEALTH_STORAGE_ID, out object value))
+                 traitStorage[HEALTH_STORAGE_ID] = ((float)value) - _healthF.valuePerStack;
+            else traitStorage[HEALTH_STORAGE_ID] = -_healthF.valuePerStack;
 
-            TraitStorage traitStorage = traitData.storage;
-            if (traitStorage.TryGetValue(HEALTH_REL_STORAGE_ID, out object value))
-                 traitStorage[HEALTH_REL_STORAGE_ID] = ((float)value) - HEALTH_REL_DECREASE_WHEN_LOST;
-            else traitStorage[HEALTH_REL_STORAGE_ID] = -HEALTH_REL_DECREASE_WHEN_LOST;
+            await trait.AnimActivation();
         }
     }
 }

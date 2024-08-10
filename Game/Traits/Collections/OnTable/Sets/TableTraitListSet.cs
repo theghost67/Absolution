@@ -57,6 +57,11 @@ namespace Game.Traits
                  return new TableTraitListSet(this, cArgs);
             else return null;
         }
+
+        public virtual bool CanAdjustStacks()
+        {
+            return true;
+        }
         public void Clear(ITableEntrySource source)
         {
             _passives.Clear(source);
@@ -67,16 +72,16 @@ namespace Game.Traits
         {
             return SetStacks(TraitBrowser.GetTrait(id), stacks, source, entryId);
         }
-        public UniTask AdjustStacks(string id, int stacks, ITableEntrySource source, string entryId = null)
-        {
-            return AdjustStacks(TraitBrowser.GetTrait(id), stacks, source, entryId);
-        }
-
         public UniTask SetStacks(Trait trait, int stacks, ITableEntrySource source, string entryId = null)
         {
             if (trait.isPassive)
                  return _passives.AdjustStacks(trait.id, stacks - _passives[trait.id]?.Stacks ?? 0, source, entryId);
             else return _actives.AdjustStacks(trait.id, stacks - _actives[trait.id]?.Stacks ?? 0, source, entryId);
+        }
+
+        public UniTask AdjustStacks(string id, int stacks, ITableEntrySource source, string entryId = null)
+        {
+            return AdjustStacks(TraitBrowser.GetTrait(id), stacks, source, entryId);
         }
         public UniTask AdjustStacks(Trait trait, int stacks, ITableEntrySource source, string entryId = null)
         {

@@ -2,7 +2,7 @@
 {
     public class cFengMina : FieldCard
     {
-        public cFengMina() : base("feng_mina", "explosive_mine", "adrenaline")
+        public cFengMina() : base("feng_mine", "explosive_mine", "adrenaline")
         {
             name = "Фэнг Мина";
             desc = "Всемилюбимая жертва каждого убийцы. Возможно, что её вызывающий наряд привлекает этих маньяков. Но Фэнг и не против лишний раз побегать от них, " +

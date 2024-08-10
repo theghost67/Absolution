@@ -2,7 +2,7 @@
 {
     public class cGermanSausages : FieldCard
     {
-        public cGermanSausages() : base("sausages", "food_poisoning")
+        public cGermanSausages() : base("german_sausages", "food_poisoning", "meaty")
         {
             name = "Немецкие сосиски";
             desc = "Дас ис гуд сасиски - сказал один из немцев, перед тем как засунуть вторую в рот. " +

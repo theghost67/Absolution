@@ -15,29 +15,28 @@ namespace Game.Cards
     /// <summary>
     /// Класс, представляющий карту поля во время сражения, которая может инициировать своё действие на территории сражения.
     /// </summary>
-    public class BattleFieldCard : TableFieldCard, IBattleCard, IBattleWeighty
+    public class BattleFieldCard : TableFieldCard, IBattleCard, IBattleWeighty, IBattleKillable
     {
         const int MOXIE_PRIORITY_VALUE = 256;
 
         public IIdEventBoolAsync<TableFieldAttachArgs> OnFieldTryToAttach => _onFieldTryToAttach;   // before attached to a field (can be canceled)
-        public IIdEventVoidAsync<TableFieldAttachArgs> OnFieldPreAttached => _onFieldPreAttached;   // before prev card deleted (field = prev field)
-        public IIdEventVoidAsync<TableFieldAttachArgs> OnFieldPostAttached => _onFieldPostAttached; // after prev card deleted (field = new field)
+        public ITableEventVoid<TableFieldAttachArgs> OnFieldPreAttached => _onFieldPreAttached;   // before prev card deleted (field = prev field)
+        public ITableEventVoid<TableFieldAttachArgs> OnFieldPostAttached => _onFieldPostAttached; // after prev card deleted (field = new field)
 
-        public IIdEventVoidAsync<BattleKillAttemptArgs> OnPreKilled => _onPreKilled;                 // on health dropped to 0 or instant kill attempt [not ignoring events]
-        public IIdEventVoidAsync<BattleKillAttemptArgs> OnPostKilled => _onPostKilled;               // after the card was detatched from a field and before it's destroyed
-        public IIdEventVoidAsync<BattleKillAttemptArgs> OnEvadedBeingKilled => _onEvadedBeingKilled; // if card restored health or became unkillable
-        public IIdEventVoidAsync<BattleKillConfirmArgs> OnKillConfirmed => _onKillConfirmed;         // after 'PostKilled' event, raised in initiator (if not dead)
+        public ITableEventVoid<BattleKillAttemptArgs> OnPreKilled => _onPreKilled;                 // on health dropped to 0 or instant kill attempt [not ignoring events]
+        public ITableEventVoid<BattleKillAttemptArgs> OnPostKilled => _onPostKilled;               // after the card was detatched from a field and before it's destroyed
+        public ITableEventVoid<BattleKillAttemptArgs> OnEvadedBeingKilled => _onEvadedBeingKilled; // if card restored health or became unkillable
+        public ITableEventVoid<BattleKillConfirmArgs> OnKillConfirmed => _onKillConfirmed;         // after 'PostKilled' event, raised in initiator (if not dead)
 
-        public IIdEventVoidAsync<BattleInitiationSendArgs> OnInitiationPreSent => _onInitiationPreSent;     // before checking strength && InitiationIsPossible (can increase strength or set 'CanInitiate' to false)
-        public IIdEventVoidAsync<BattleInitiationSendArgs> OnInitiationPostSent => _onInitiationPostSent;   // after checked strength && InitiationIsPossible
-        public IIdEventVoidAsync<BattleInitiationRecvArgs> OnInitiationConfirmed => _onInitiationConfirmed; // after receiver succesfully received initiation (not dodged/canceled/blocked it etc.)
+        public ITableEventVoid<BattleInitiationSendArgs> OnInitiationPreSent => _onInitiationPreSent;     // before checking strength && InitiationIsPossible (can increase strength or set 'CanInitiate' to false)
+        public ITableEventVoid<BattleInitiationSendArgs> OnInitiationPostSent => _onInitiationPostSent;   // after checked strength && InitiationIsPossible
+        public ITableEventVoid<BattleInitiationRecvArgs> OnInitiationConfirmed => _onInitiationConfirmed; // after receiver succesfully received initiation (not dodged/canceled/blocked it etc.)
 
-        public IIdEventVoidAsync<BattleInitiationRecvArgs> OnInitiationPreReceived => _onInitiationPreReceived;   // before taking damage and calling 'OnInitiationConfirmed' from initiator
-        public IIdEventVoidAsync<BattleInitiationRecvArgs> OnInitiationPostReceived => _onInitiationPostReceived; // after taking damage and calling 'OnInitiationConfirmed' from initiator
+        public ITableEventVoid<BattleInitiationRecvArgs> OnInitiationPreReceived => _onInitiationPreReceived;   // before taking damage and calling 'OnInitiationConfirmed' from initiator
+        public ITableEventVoid<BattleInitiationRecvArgs> OnInitiationPostReceived => _onInitiationPostReceived; // after taking damage and calling 'OnInitiationConfirmed' from initiator
 
         public int  TurnAge  => _turnAge;
         public int  PhaseAge => _phaseAge;
-        public bool IgnoresCards => throw new NotSupportedException(); // TODO: implement (as counters)
         public bool IsKilled => _isKilled;
 
         public new BattleFieldCardDrawer Drawer => ((TableObject)this).Drawer as BattleFieldCardDrawer;
@@ -73,9 +72,9 @@ namespace Game.Cards
         }
 
         public int InitiationOrder => CalculateInitiationOrder();
-        public int InitiationPriority => moxie * MOXIE_PRIORITY_VALUE + PhaseAge;
+        public int InitiationPriority => Moxie * MOXIE_PRIORITY_VALUE + PhaseAge;
         public bool InitiationIsPossible => CanInitiate && !_isKilled;
-        
+
         readonly TableEventBool<TableFieldAttachArgs> _onFieldTryToAttach; 
         readonly TableEventVoid<TableFieldAttachArgs> _onFieldPreAttached;  
         readonly TableEventVoid<TableFieldAttachArgs> _onFieldPostAttached; 
@@ -98,7 +97,7 @@ namespace Game.Cards
 
         int _turnAge;
         int _phaseAge;
-        bool _isBeingKilled;
+        bool _killBlock;
         bool _isKilled;
 
         // less or 0 = true
@@ -140,7 +139,7 @@ namespace Game.Cards
 
             Territory.OnStartPhase.Add(_eventsGuid, OnStartPhase);
             Territory.OnNextPhase.Add(_eventsGuid, OnNextPhase);
-            health.OnPostSet.Add(_eventsGuid, OnHealthPostSet);
+            Health.OnPostSet.Add(_eventsGuid, OnHealthPostSet);
             TryOnInstantiatedAction(GetType(), typeof(BattleFieldCard));
         }
         protected BattleFieldCard(BattleFieldCard src, BattleFieldCardCloneArgs args) : base(src, args)
@@ -218,24 +217,30 @@ namespace Game.Cards
         }
         public async UniTask TryKill(BattleKillMode mode, ITableEntrySource source)
         {
-            if (_isBeingKilled) return;
+            if (_killBlock) return;
             if (_isKilled) return;
 
-            _isBeingKilled = true;
-            TableEventManager.Add();
+            _killBlock = true;
+            if (Health > 0)
+                await Health.SetValue(0, source);
+            _killBlock = false;
 
-            if (health > 0)
-                await health.SetValueDefault(0, source);
+            BattleKillAttemptArgs args = new(this, Field, mode, source);
+            if (args.handled)
+            {
+                await _onEvadedBeingKilled.Invoke(this, args);
+                return;
+            }
 
-            BattleKillAttemptArgs args = new(source, Field);
             Drawer?.transform.DOAShake();
             await _onPreKilled.Invoke(this, args);
+            if (_isKilled) return; // can be killed inside of the event
 
-            if ((!mode.HasFlag(BattleKillMode.IgnoreCanBeKilled) && !CanBeKilled) ||
-                (!mode.HasFlag(BattleKillMode.IgnoreHealthRestore) && health > 0))
+            args = new(this, Field, mode, source);
+            if (args.handled)
             {
-                _onEvadedBeingKilled.Invoke(this, args);
-                goto End;
+                await _onEvadedBeingKilled.Invoke(this, args);
+                return;
             }
 
             _isKilled = true;
@@ -246,21 +251,17 @@ namespace Game.Cards
 
             DestroyDrawer(false);
             Dispose();
-
-            End:
-            _isBeingKilled = false;
-            TableEventManager.Remove();
         }
+
         public override async UniTask<bool> CanBeAttachedToField(TableFieldAttachArgs e)
         {
             bool result = await base.CanBeAttachedToField(e);
             if (!result) return result;
             return await _onFieldTryToAttach.InvokeAND(this, e);
         }
-
         public BattleInitiationSendArgs CreateInitiation()
         {
-            int strengthPerTarget = (strength / (float)Range.splash.targetsCount).Ceiling();
+            int strengthPerTarget = (Strength / (float)Range.splash.targetsCount).Ceiling();
             return new BattleInitiationSendArgs(this, strengthPerTarget, topPriority: false, manualAim: Side.isMe);
         }
 
@@ -301,10 +302,9 @@ namespace Game.Cards
             return drawer;
         }
 
-        // used for debug-logging
         protected override async UniTask OnStatPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
         {
-            await base.OnPricePreSetBase_TOP(sender, e);
+            await base.OnStatPreSetBase_TOP(sender, e);
 
             TableStat stat = (TableStat)sender;
             BattleFieldCard card = (BattleFieldCard)stat.Owner;
@@ -475,7 +475,6 @@ namespace Game.Cards
             TableConsole.LogToFile("card", $"{senderName}: initiation: OnPostReceived: strength: {e.strength}, target: {receiverName}.");
             return UniTask.CompletedTask;
         }
-        // ----
 
         async UniTask SetObserveTargets(bool value)
         {
@@ -531,7 +530,7 @@ namespace Game.Cards
             if (_isKilled || Field == null)
                 return BattleWeight.none;
 
-            float absWeight = health + strength;
+            float absWeight = Health + Strength;
             float relWeight = 0;
 
             foreach (IBattleTraitListElement element in Traits)

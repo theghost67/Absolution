@@ -31,12 +31,16 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на любой вражеской карте",
-                    $"Удаляет все навыки у цели, понижает инициацию всех союзных карт, кроме себя, на {MOXIE_DECREASE_ABS} ед. Тратит один заряд."),
+                    $"Удаляет все навыки у цели, понижает инициативу всех союзных карт, кроме себя, на {MOXIE_DECREASE_ABS} ед. Тратит один заряд."),
             });
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(0, 0.16f);
+        }
+        public override float Points(FieldCard owner, int stacks)
+        {
+            return base.Points(owner, stacks) + PointsExponential(24, stacks);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -52,10 +56,10 @@ namespace Game.Traits
             BattleFieldCard target = (BattleFieldCard)e.target.Card;
             IEnumerable<BattleField> fields = owner.Territory.Fields(owner.Field.pos, TerritoryRange.ownerAllNotSelf).WithCard();
 
+            await trait.SetStacks(0, owner.Side);
             target.Traits.Clear(trait);
             foreach (BattleFieldCard card in fields.Select(f => f.Card))
-                card.moxie.AdjustValueDefault(-MOXIE_DECREASE_ABS, trait);
-            await trait.SetStacks(0, owner.Side);
+                await card.Moxie.AdjustValue(-MOXIE_DECREASE_ABS, trait);
         }
     }
 }

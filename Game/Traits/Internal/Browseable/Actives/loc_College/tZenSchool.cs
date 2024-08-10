@@ -10,8 +10,8 @@ namespace Game.Traits
     public class tZenSchool : ActiveTrait
     {
         const string ID = "zen_school";
-        const int STRENGTH_TO_HEALTH_ABS = 2;
-        const int COOLDOWN = 2;
+        static readonly TraitStatFormula _strengthF = new(false, 2, 0);
+        const int CD = 2;
 
         public tZenSchool() : base(ID)
         {
@@ -30,12 +30,12 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на любой союзной карте",
-                    $"перенаправляет всю силу цели в её здоровье: 1 ед. силы = {STRENGTH_TO_HEALTH_ABS} ед здоровья. Так же восстанавливает своё здоровье на то же значение. Перезарядка: {COOLDOWN} х."),
+                    $"перенаправляет всю силу цели в её здоровье: 1 ед. силы = {_strengthF.Format(trait)} здоровья. Так же восстанавливает своё здоровье на то же значение. Перезарядка: {CD} х."),
             });
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(0, 0.20f);
+            return new(result.Field.Card.Health * 2.25f, 0);
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -45,13 +45,14 @@ namespace Game.Traits
         {
             await base.OnUse(e);
 
+            ITableTrait trait = e.trait;
             BattleFieldCard card = (BattleFieldCard)e.target.Card;
-            int strength = card.strength;
+            int strength = card.Strength;
 
-            e.trait.Storage.turnsDelay += COOLDOWN;
-            await card.strength.AdjustValue(-strength, e.trait);
-            await card.health.AdjustValue(strength * 2, e.trait);
-            await e.trait.Owner.health.AdjustValue(strength, e.trait);
+            trait.Storage.turnsDelay += CD;
+            await card.Strength.AdjustValue(-strength, trait);
+            await card.Health.AdjustValue(strength * _strengthF.ValueInt(trait), trait);
+            await trait.Owner.Health.AdjustValue(strength, trait);
         }
     }
 }

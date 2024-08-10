@@ -30,7 +30,7 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"В начале следующего хода (П{PRIORITY})",
-                    $"Совершит свою атакующую инициацию <u>{effect}</u> раз(-а) подряд. Тратит все заряды."),
+                    $"Совершит свою атаку <u>{effect}</u> раз(-а) подряд. Тратит все заряды."),
             });
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -56,13 +56,11 @@ namespace Game.Traits
             int stacks = trait.GetStacks();
             await trait.AnimActivation();
 
+            BattleInitiationSendArgs[] initiations = new BattleInitiationSendArgs[stacks];
             for (int i = 0; i < stacks; i++)
-                trait.Territory.Initiations.Enqueue(trait.Owner.CreateInitiation());
+                initiations[i] = trait.Owner.CreateInitiation();
 
-            trait.Territory.Initiations.Run();
-            TableEventManager.Remove(); // do not await this event anymore (TableEventManager.AwaitAny will still work because of initiations queue)
-            await trait.Territory.Initiations.Await();
-            TableEventManager.Add(); // restore event await condition
+            territory.Initiations.EnqueueAndRun(initiations);
             await trait.SetStacks(0, trait);
         }
     }

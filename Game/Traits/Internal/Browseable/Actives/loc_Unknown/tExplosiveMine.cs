@@ -40,6 +40,10 @@ namespace Game.Traits
         {
             return new(0, 0.16f);
         }
+        public override float Points(FieldCard owner, int stacks)
+        {
+            return base.Points(owner, stacks) + PointsLinear(14, stacks);
+        }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -53,9 +57,9 @@ namespace Game.Traits
             BattleField target = (BattleField)e.target;
             FieldCard card = CardBrowser.NewField(CARD_ID);
 
+            await trait.SetStacks(0, trait.Side);
             card.traits.AdjustStacks(TRAIT_ID, trait.GetStacks());
             await trait.Territory.PlaceFieldCard(card, target, trait);
-            await trait.SetStacks(0, trait.Side);
         }
     }
 }

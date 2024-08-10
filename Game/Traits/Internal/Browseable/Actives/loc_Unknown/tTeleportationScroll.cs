@@ -1,8 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Game.Traits
 {
@@ -19,8 +17,8 @@ namespace Game.Traits
             desc = "ТП на мид.";
 
             rarity = Rarity.Epic;
-            tags = TraitTag.Static;
-            range = BattleRange.self;
+            tags = TraitTag.None;
+            range = new BattleRange(TerritoryRange.ownerAllNotSelf);
         }
         protected tTeleportationScroll(tTeleportationScroll other) : base(other) { }
         public override object Clone() => new tTeleportationScroll(this);
@@ -35,12 +33,12 @@ namespace Game.Traits
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(0, 0.16f);
+            return new(0, 0.12f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return base.IsUsable(e) && e.isInBattle && e.trait.Owner.Field != null;
+            return base.IsUsable(e) && e.isInBattle && e.target.Card == null && e.trait.Owner.Field != null;
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
@@ -49,8 +47,8 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField target = (BattleField)e.target;
             BattleFieldCard owner = trait.Owner;
-            await owner.TryAttachToField(target, trait);
             await trait.AdjustStacks(-1, owner.Side);
+            await owner.TryAttachToField(target, trait);
         }
     }
 }

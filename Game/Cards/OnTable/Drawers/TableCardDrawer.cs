@@ -323,7 +323,7 @@ namespace Game.Cards
 
         protected virtual int UpperLeftIconDisplayValue()
         {
-            return attached.price;
+            return attached.Price;
         }
         protected virtual int UpperRightIconDisplayValue() 
         {

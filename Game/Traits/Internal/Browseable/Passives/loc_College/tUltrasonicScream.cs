@@ -13,7 +13,7 @@ namespace Game.Traits
     {
         const string ID = "ultrasonic_scream";
         const int PRIORITY = 4;
-        const int MOXIE_DECREASE_PER_STACK = 1;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 1);
         static readonly TerritoryRange oppositeRange = TerritoryRange.oppositeTriple;
 
         public tUltrasonicScream() : base(ID)
@@ -30,16 +30,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = MOXIE_DECREASE_PER_STACK * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При смерти любой карты, кроме себя (П{PRIORITY})",
-                    $"издаст крайне неприятный крик в сторону всех карт рядом (напротив владельца), инициатива которых будет понижена на <u>{effect}</u> ед."),
+                    $"издаст крайне неприятный крик в сторону всех карт рядом (напротив владельца), инициатива которых будет понижена на {_moxieF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 80 * Mathf.Pow(stacks - 1, 2f);
+            return base.Points(owner, stacks) + PointsExponential(80, stacks);
         }
 
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
@@ -61,10 +60,10 @@ namespace Game.Traits
             BattleFieldCard[] cards = trait.Owner.Territory.Fields(trait.Owner.Field.pos, oppositeRange).WithCard().Select(f => f.Card).ToArray();
             if (cards.Length == 0) return;
 
-            int moxie = -MOXIE_DECREASE_PER_STACK * trait.GetStacks();
+            int value = (int)-_moxieF.Value(trait);
             await trait.AnimActivation();
             foreach (BattleFieldCard card in cards)
-                await card.moxie.AdjustValue(moxie, trait);
+                await card.Moxie.AdjustValue(value, trait);
         }
     }
 }

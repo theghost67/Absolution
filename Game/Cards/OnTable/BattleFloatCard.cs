@@ -2,6 +2,7 @@
 using Game.Sleeves;
 using Game.Territories;
 using MyBox;
+using System;
 using UnityEngine;
 
 namespace Game.Cards
@@ -54,10 +55,23 @@ namespace Game.Cards
             else return null;
         }
 
+        public async UniTask TryAttachToSideSleeve(BattleSide side, ITableEntrySource source)
+        {
+            if (this is not ITableSleeveCard sCard)
+                throw new InvalidCastException($"Card should implement {nameof(ITableSleeveCard)} interface to have the ability to be attached to sleeves.");
+            if (_side.Sleeve.Contains(sCard))
+                return;
+
+            _side.Sleeve.Remove(sCard);
+            _side = side;
+            _side.Sleeve.Add(sCard);
+            await UniTask.Delay((int)(ITableSleeveCard.PULL_DURATION * 1000));
+        }
         public UniTask TryUse()
         {
             return TryUse(new TableFloatCardUseArgs(this, _side.Territory));
         }
+
         protected override Drawer DrawerCreator(Transform parent)
         {
             BattleFloatCardDrawer drawer = new(this, parent);

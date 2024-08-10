@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -12,8 +11,8 @@ namespace Game.Traits
     {
         const string ID = "triptocainum";
         const int PRIORITY = 7;
-        const int COOLDOWN = 3;
-        const float DAMAGE_REL_INCREASE = 0.50f;
+        const int CD = 3;
+        static readonly TraitStatFormula _strengthF = new(true, 0.00f, 0.50f);
 
         public tTriptocainum() : base(ID)
         {
@@ -29,16 +28,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = DAMAGE_REL_INCREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании",
-                    $"Увеличивает силу владельца на <u>{effect}%</u>. Владелец умрёт (игнор. здоровья) сразу после совершения атаки (П{PRIORITY}). Перезарядка: 3 х."),
+                    $"Увеличивает силу владельца на {_strengthF.Format(trait)}. После каждой последующей атаки владельца (П{PRIORITY}), он окажется на пороге смерти (игнор. здоровья). Перезарядка: {CD} х."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 80 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(80, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -54,10 +52,10 @@ namespace Game.Traits
             await base.OnUse(e);
             IBattleTrait trait = (IBattleTrait)e.trait;
 
-            float strength = DAMAGE_REL_INCREASE * trait.GetStacks();
-            await trait.Owner.strength.AdjustValueScale(strength, trait);
+            float strength = _strengthF.Value(trait);
+            await trait.Owner.Strength.AdjustValueScale(strength, trait);
             trait.Owner.OnInitiationPostSent.Add(trait.GuidStr, OnInitiationPostSent);
-            trait.Storage.turnsDelay += COOLDOWN;
+            trait.Storage.turnsDelay += CD;
         }
 
         static async UniTask OnInitiationPostSent(object sender, BattleInitiationSendArgs e)

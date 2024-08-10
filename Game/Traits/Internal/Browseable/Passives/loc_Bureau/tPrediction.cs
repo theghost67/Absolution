@@ -14,7 +14,7 @@ namespace Game.Traits
     {
         const string ID = "prediction";
         const int PRIORITY = 4;
-        const int MOXIE_PER_STACK = 1;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 1);
 
         public tPrediction() : base(ID)
         {
@@ -30,11 +30,10 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            int effect = MOXIE_PER_STACK * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При появлении любой союзной карты на территории (П{PRIORITY})",
-                    $"увеличивает её инициативу на <u>{effect}</u>. Эффект пропадает в случае, если: заряды истощаются, карта перестаёт быть союзной или владелец погибает."),
+                    $"увеличивает её инициативу на {_moxieF.Format(trait)}. Эффект пропадает в случае, если: заряды истощаются, карта перестаёт быть союзной или владелец погибает."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
@@ -53,26 +52,25 @@ namespace Game.Traits
 
             await trait.AnimActivation();
             foreach (BattleFieldCard card in cards)
-                await card.moxie.AdjustValue(e.delta, trait);
+                await card.Moxie.AdjustValue(e.delta, trait);
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
             await base.OnTargetStateChanged(e);
-            IBattleTrait trait = (IBattleTrait)e.trait;
+            IBattleTrait trait = e.trait;
             if (trait == null) return;
 
-            int moxie = MOXIE_PER_STACK * trait.GetStacks();
             string guid = trait.GuidGen(e.target.Guid);
-
             if (e.canSeeTarget)
             {
+                int moxie = (int)_moxieF.Value(trait);
                 await trait.AnimDetectionOnSeen(e.target);
-                await e.target.moxie.AdjustValue(moxie, trait, guid);
+                await e.target.Moxie.AdjustValue(moxie, trait, guid);
             }
             else
             {
                 await trait.AnimDetectionOnUnseen(e.target);
-                await e.target.moxie.RevertValue(guid);
+                await e.target.Moxie.RevertValue(guid);
             }
         }
     }

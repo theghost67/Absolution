@@ -15,8 +15,7 @@ namespace Game.Traits
         const string ID = "summarizing";
         const int PRIORITY = 5;
         const string TRAIT_ID = "sentence";
-        const float DAMAGE_RECEIVED_RATIO_BASE = 1.00f;
-        const float DAMAGE_RECEIVED_RATIO_PER_STACK = 0.50f;
+        static readonly TraitStatFormula _ratioF = new(true, 0.50f, 0.50f);
 
         public tSummarizing() : base(ID)
         {
@@ -33,16 +32,15 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            float effect = (DAMAGE_RECEIVED_RATIO_BASE + DAMAGE_RECEIVED_RATIO_PER_STACK * trait.GetStacks()) * 100;
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После атаки на владельца (П{PRIORITY})",
-                    $"Увеличивает количество зарядов навыка <i>{traitName}</i> на {effect}% от силы атаки."),
+                    $"Увеличивает количество зарядов навыка <i>{traitName}</i> на {_ratioF.Format(trait)} от силы атаки."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(34, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -63,7 +61,7 @@ namespace Game.Traits
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
-            float ratio = DAMAGE_RECEIVED_RATIO_BASE + DAMAGE_RECEIVED_RATIO_PER_STACK * trait.GetStacks();
+            float ratio = _ratioF.Value(trait);
             int stacks = (e.strength * ratio).Ceiling();
             await owner.Traits.AdjustStacks(TRAIT_ID, stacks, trait);
         }

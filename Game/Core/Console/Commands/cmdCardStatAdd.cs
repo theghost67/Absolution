@@ -69,7 +69,7 @@ namespace Game
                     TableConsole.Log("Карта способности не имеет данной характеристики.", LogType.Error);
                     return;
                 }
-                card.price.AdjustValue(value, null);
+                card.Price.AdjustValue(value, null);
                 TableConsole.Log($"Характеристика ({id}) карты была изменена на {value} (от: null).", LogType.Log);
                 return;
             }
@@ -77,10 +77,10 @@ namespace Game
             TableFieldCard fieldCard = (TableFieldCard)card;
             TableStat stat = id switch
             {
-                "price" => fieldCard.price,
-                "moxie" => fieldCard.moxie,
-                "health" => fieldCard.health,
-                "strength" => fieldCard.strength,
+                "price" => fieldCard.Price,
+                "moxie" => fieldCard.Moxie,
+                "health" => fieldCard.Health,
+                "strength" => fieldCard.Strength,
                 _ => throw new System.NotSupportedException(),
             };
 

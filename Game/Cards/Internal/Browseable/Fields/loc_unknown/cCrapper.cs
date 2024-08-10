@@ -2,7 +2,7 @@
 {
     public class cCrapper : FieldCard
     {
-        public cCrapper() : base("crapper", "smelly_trapper")
+        public cCrapper() : base("crapper", "smelly_trapper 4")
         {
             name = "Крэппер";
             desc = "Младший брат всеми известного убийцы, использующего медвежьи капканы. К сожалению, для него капканов не осталось. " +

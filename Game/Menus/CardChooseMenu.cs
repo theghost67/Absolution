@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
+using Game.Environment;
 using Game.Palette;
 using GreenOne;
 using MyBox;
@@ -349,8 +350,8 @@ namespace Game.Menus
                 FieldCard[] genCards = new FieldCard[_cardsCount];
                 for (int i = 0; i < _cardsCount; i++)
                 {
-                    FieldCard srcCard = CardBrowser.Fields.GetWeightedRandom(c => c.frequency);
-                    FieldCard genCard = CardBrowser.NewField(srcCard.id).ShuffleMainStats().UpgradeWithTraitAdd(_cardPoints);
+                    string srcCardId = Traveler.fieldsFrequencies.GetWeightedRandom(c => c.Value).Key;
+                    FieldCard genCard = CardBrowser.NewField(srcCardId).ShuffleMainStats().UpgradeWithTraitAdd(_cardPoints);
                     genCards[i] = genCard;
                 }
                 return genCards;
@@ -360,8 +361,8 @@ namespace Game.Menus
                 FloatCard[] genCards = new FloatCard[_cardsCount];
                 for (int i = 0; i < _cardsCount; i++)
                 {
-                    FloatCard srcCard = CardBrowser.Floats.GetWeightedRandom(c => c.frequency);
-                    FloatCard genCard = CardBrowser.NewFloat(srcCard.id);
+                    string srcCardId = Traveler.floatsFrequencies.GetWeightedRandom(c => c.Value).Key;
+                    FloatCard genCard = CardBrowser.NewFloat(srcCardId);
                     genCards[i] = genCard;
                 }
                 return genCards;
@@ -415,7 +416,7 @@ namespace Game.Menus
             _animInProgress = false;
             SetColliders(true);
         }
-        async UniTask DeclineChoice() => ConfirmChoice(null);
+        async UniTask DeclineChoice() => await ConfirmChoice(null);
 
         public async UniTask ShowCards()
         {

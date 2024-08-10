@@ -2,6 +2,7 @@
 using GreenOne;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Game
 {
@@ -22,25 +23,28 @@ namespace Game
         {
             if (Count == 0) return true;
             bool result = true;
-
-            TableEventManager.Add();
+            TableEventManager.Add(Id);
             List<string> unsubbedIds = new(Count);
-
-            for (int i = 0; i < Count; i++)
+            try
             {
-                Subscriber sub = GetSub(i);
-                if (!sub.isSubscribed)
-                    unsubbedIds.Add(sub.id);
-                else if (!await sub.@delegate(sender, e))
+                for (int i = 0; i < Count; i++)
                 {
-                    result = false;
-                    goto End;
+                    Subscriber sub = GetSub(i);
+                    if (!sub.isSubscribed)
+                        unsubbedIds.Add(sub.id);
+                    else if (!await sub.@delegate(sender, e))
+                    {
+                        result = false;
+                        break;
+                    }
                 }
             }
-
-            End:
-            PostInvokeCleanUp(unsubbedIds);
-            TableEventManager.Remove();
+            catch (Exception ex) { throw ex; }
+            finally
+            {
+                PostInvokeCleanUp(unsubbedIds);
+                TableEventManager.Remove(Id);
+            }
             return result;
         }
         public async UniTask<bool> InvokeANDIncluding(object sender, EventArgs e, params string[] ids)
@@ -62,26 +66,28 @@ namespace Game
         {
             if (Count == 0) return true;
             bool result = false;
-
             List<string> unsubbedIds = new(Count);
-            TableEventManager.Add();
-
-            for (int i = 0; i < Count; i++)
+            TableEventManager.Add(Id);
+            try
             {
-                Subscriber sub = GetSub(i);
-                if (!sub.isSubscribed)
-                    unsubbedIds.Add(sub.id);
-                else if (await sub.@delegate(sender, e))
+                for (int i = 0; i < Count; i++)
                 {
-                    result = true;
-                    goto End;
+                    Subscriber sub = GetSub(i);
+                    if (!sub.isSubscribed)
+                        unsubbedIds.Add(sub.id);
+                    else if (await sub.@delegate(sender, e))
+                    {
+                        result = true;
+                        break;
+                    }
                 }
             }
-
-            End:
-            PostInvokeCleanUp(unsubbedIds);
-            TableEventManager.Remove();
-
+            catch (Exception ex) { throw ex; }
+            finally
+            {
+                PostInvokeCleanUp(unsubbedIds);
+                TableEventManager.Remove(Id);
+            }
             return result;
         }
         public async UniTask<bool> InvokeORIncluding(object sender, EventArgs e, params string[] ids)
@@ -118,26 +124,28 @@ namespace Game
         {
             if (Count == 0) return true;
             bool result = true;
-
-            TableEventManager.Add();
+            TableEventManager.Add(Id);
             List<string> unsubbedIds = new(Count);
-
-            for (int i = 0; i < Count; i++)
+            try
             {
-                Subscriber sub = GetSub(i);
-                if (!sub.isSubscribed)
-                    unsubbedIds.Add(sub.id);
-                else if (!await sub.@delegate(sender, e))
+                for (int i = 0; i < Count; i++)
                 {
-                    result = false;
-                    goto End;
+                    Subscriber sub = GetSub(i);
+                    if (!sub.isSubscribed)
+                        unsubbedIds.Add(sub.id);
+                    else if (!await sub.@delegate(sender, e))
+                    {
+                        result = false;
+                        break;
+                    }
                 }
             }
-
-            End:
-            PostInvokeCleanUp(unsubbedIds);
-            TableEventManager.Remove();
-
+            catch (Exception ex) { throw ex; }
+            finally
+            {
+                PostInvokeCleanUp(unsubbedIds);
+                TableEventManager.Remove(Id);
+            }
             return result;
         }
         public async UniTask<bool> InvokeANDIncluding(object sender, T e, params string[] ids)
@@ -159,26 +167,28 @@ namespace Game
         {
             if (Count == 0) return true;
             bool result = false;
-
             List<string> unsubbedIds = new(Count);
-            TableEventManager.Add();
-
-            for (int i = 0; i < Count; i++)
+            TableEventManager.Add(Id);
+            try
             {
-                Subscriber sub = GetSub(i);
-                if (!sub.isSubscribed)
-                    unsubbedIds.Add(sub.id);
-                else if (await sub.@delegate(sender, e))
+                for (int i = 0; i < Count; i++)
                 {
-                    result = true;
-                    goto End;
+                    Subscriber sub = GetSub(i);
+                    if (!sub.isSubscribed)
+                        unsubbedIds.Add(sub.id);
+                    else if (await sub.@delegate(sender, e))
+                    {
+                        result = true;
+                        break;
+                    }
                 }
             }
-
-            End:
-            PostInvokeCleanUp(unsubbedIds);
-            TableEventManager.Remove();
-
+            catch (Exception ex) { throw ex; }
+            finally
+            {
+                PostInvokeCleanUp(unsubbedIds);
+                TableEventManager.Remove(Id);
+            }
             return result;
         }
         public async UniTask<bool> InvokeORIncluding(object sender, T e, params string[] ids)

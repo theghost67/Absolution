@@ -67,9 +67,9 @@ namespace GreenOne
 
         public bool Add(string id, D @delegate, int priority = 0)
         {
-            if (id.StartsWith('_'))
-                throw new NotSupportedException("Action id must not start with \'_\' character.");
-            return AddBase(id, @delegate, priority);
+            if (id == null || id[0] != '_')
+                 return AddBase(id, @delegate, priority);
+            else throw new NotSupportedException("Action id must not start with \'_\' character.");
         }
         protected bool Add(IIdSubscriber<D> sub)
         {
@@ -81,6 +81,8 @@ namespace GreenOne
                 return false;
             if (priority > TOP_PRIORITY)
                 return false; // Delegate priority should not be greater than {TOP_PRIORITY}.
+
+            id ??= "_" + _idCounter++.ToString();
             foreach (Subscriber sub in _subs)
             {
                 if (sub.id == id)

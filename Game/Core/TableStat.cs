@@ -11,10 +11,12 @@ namespace Game
     /// </summary>
     public sealed class TableStat : ITableLoggable, ICloneableWithArgs, IDisposable
     {
-        public IIdEventVoidAsync<PreSetArgs> OnPreSet => _onPreSet;
-        public IIdEventVoidAsync<PostSetArgs> OnPostSet => _onPostSet;
+        public ITableEventVoid<PreSetArgs> OnPreSet => _onPreSet;
+        public ITableEventVoid<PostSetArgs> OnPostSet => _onPostSet;
 
+        public string Id => _id;
         public object Owner => _owner;
+
         public float PosValue => _posValue;
         public float PosScale => _posScale;
         public float NegValue => _negValue;
@@ -140,30 +142,22 @@ namespace Game
             else return 0;
         }
 
-        public UniTask SetValue(float value, ITableEntrySource source, string entryId = null)
-        {
-            return AdjustValue(value - _posValue - _negValue, source, entryId, false, false);
-        }
         public UniTask SetValueScale(float value, ITableEntrySource source, string entryId = null)
         {
             return AdjustValue(value - _posScale, source, entryId, true, false);
         }
-        public UniTask SetValueDefault(float value, ITableEntrySource source, string entryId = null)
+        public UniTask SetValue(float value, ITableEntrySource source, string entryId = null)
         {
-            return AdjustValue(value - _posValue, source, entryId, false, true);
+            return AdjustValue(value - (_posValue - _negValue), source, entryId, false, _id != "health");
         }
 
-        public UniTask AdjustValue(float value, ITableEntrySource source, string entryId = null)
-        {
-            return AdjustValue(value, source, entryId, false, false);
-        }
         public UniTask AdjustValueScale(float value, ITableEntrySource source, string entryId = null)
         {
             return AdjustValue(value, source, entryId, true, false);
         }
-        public UniTask AdjustValueDefault(float value, ITableEntrySource source, string entryId = null)
+        public UniTask AdjustValue(float value, ITableEntrySource source, string entryId = null)
         {
-            return AdjustValue(value, source, entryId, false, true);
+            return AdjustValue(value, source, entryId, false, _id != "health");
         }
 
         public UniTask RevertValue(string entryId)

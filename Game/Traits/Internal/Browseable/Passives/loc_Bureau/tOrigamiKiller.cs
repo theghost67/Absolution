@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -13,7 +12,7 @@ namespace Game.Traits
         const string ID = "origami_killer";
         const int PRIORITY = 6;
         const string CARD_ID = "origami";
-        const float DAMAGE_REL_INCREASE_PER_STACK = 0.33f;
+        static readonly TraitStatFormula _strengthF = new(true, 0.00f, 0.3333f);
 
         public tOrigamiKiller() : base(ID)
         {
@@ -31,16 +30,15 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            float effect = DAMAGE_REL_INCREASE_PER_STACK * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После смерти вражеской карты <i>{cardName}</i> от любого источника (П{PRIORITY})",
-                    $"увеличивает силу владельца на <u>{effect}%</u>."),
+                    $"увеличивает силу владельца на {_strengthF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 32 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(32, stacks);
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
@@ -59,7 +57,7 @@ namespace Game.Traits
             BattleFieldCard owner = trait.Owner;
 
             await trait.AnimActivation();
-            await owner.strength.AdjustValueScale(DAMAGE_REL_INCREASE_PER_STACK * trait.GetStacks(), trait);
+            await owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait);
         }
     }
 }

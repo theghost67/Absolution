@@ -12,8 +12,8 @@ namespace Game.Traits
     {
         const string ID = "search_in_archive";
         const string CARD_ID = "clues";
-        const int HEALTH_PER_STACK = 2;
-        static readonly TerritoryRange cardsSpawn = TerritoryRange.ownerDouble;
+        static readonly TraitStatFormula _healthF = new(false, 0, 2);
+        static readonly TerritoryRange _range = TerritoryRange.ownerDouble;
 
         public tSearchInArchive() : base(ID)
         {
@@ -30,17 +30,21 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            int effect = HEALTH_PER_STACK * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании",
-                    $"Создаёт рядом с собой карты {cardName} с <u>{effect}</u> ед. здоровья. Тратит все заряды."),
+                    $"Создаёт рядом с собой карты {cardName} с {_healthF.Format(trait)} здоровья. Тратит все заряды."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 10 * (stacks - 1);
+            return base.Points(owner, stacks) + PointsLinear(10, stacks);
         }
+        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
+        {
+            return new(0, 0.1f);
+        }
+
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
             return base.IsUsable(e) && e.isInBattle;
@@ -50,16 +54,16 @@ namespace Game.Traits
             await base.OnUse(e);
 
             IBattleTrait trait = (IBattleTrait)e.trait;
-            BattleField[] fields = trait.Territory.Fields(trait.Field.pos, cardsSpawn).WithoutCard().ToArray();
-            int health = HEALTH_PER_STACK * trait.GetStacks();
+            BattleField[] fields = trait.Territory.Fields(trait.Field.pos, _range).WithoutCard().ToArray();
+            int health = _healthF.ValueInt(trait);
 
+            await trait.SetStacks(0, trait.Side);
             foreach (BattleField field in fields)
             {
                 FieldCard card = CardBrowser.NewField(CARD_ID);
                 card.health = health;
                 await trait.Territory.PlaceFieldCard(card, field, trait);
             }
-            await trait.SetStacks(0, trait.Side);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Game.Traits
     public class tRecruitment : ActiveTrait
     {
         const string ID = "recruitment";
-        const int HEALTH_THRESHOLD_PER_STACK = 4;
+        static readonly TraitStatFormula _healthF = new(false, 0, 4);
 
         public tRecruitment() : base(ID)
         {
@@ -26,16 +26,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            int effect = HEALTH_THRESHOLD_PER_STACK * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на вражеской карте рядом",
-                    $"Переманивает цель на поле напротив неё, если её здоровье ≤ {effect} ед. и поле напротив свободно. Тратит все заряды."),
+                    $"Переманивает цель на поле напротив неё, если её здоровье ≤ {_healthF.Format(trait)}. и поле напротив свободно. Тратит все заряды."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 16 * (stacks - 1);
+            return base.Points(owner, stacks) + PointsLinear(16, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -47,7 +46,7 @@ namespace Game.Traits
             return base.IsUsable(e) && 
                 e.isInBattle && 
                 e.target.Card != null &&
-                e.target.Card.health <= e.trait.GetStacks() * HEALTH_THRESHOLD_PER_STACK && 
+                e.target.Card.Health <= _healthF.Value(e.trait) && 
                 e.target.Opposite.Card == null;
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
@@ -55,8 +54,8 @@ namespace Game.Traits
             await base.OnUse(e);
             IBattleTrait trait = (IBattleTrait)e.trait;
 
-            await e.target.Card.TryAttachToField(e.target.Opposite, trait);
             await trait.SetStacks(0, trait.Side);
+            await e.target.Card.TryAttachToField(e.target.Opposite, trait);
         }
     }
 }

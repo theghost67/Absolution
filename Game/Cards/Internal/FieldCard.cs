@@ -15,13 +15,13 @@ namespace Game.Cards
         public int moxie;
         public readonly TraitListSet traits;
 
-        public FieldCard(string id, params string[] startTraits) : base(id, isField: true) 
+        public FieldCard(string id, params string[] startTraitsIds) : base(id, isField: true) 
         {
             health = 1;
             strength = 0;
             moxie = 0;
             traits = new TraitListSet(this);
-            FillTraitListSet(startTraits);
+            FillTraitListSet(startTraitsIds);
         }
         protected FieldCard(SerializationDict dict) : base(dict)
         {

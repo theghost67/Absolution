@@ -16,7 +16,7 @@ namespace Game.Traits
         public tScope() : base(ID)
         {
             name = "Прицел";
-            desc = "";
+            desc = "Глубокий вдох и...";
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -31,6 +31,8 @@ namespace Game.Traits
             {
                 new($"При использовании на территории на вражеской карте рядом",
                     $"Перед каждой последующей атакой владельца (П{PRIORITY}), цель станет целью атаки."),
+                new($"При перемещении владельца (П{PRIORITY})",
+                    $"Деактивирует эффект данного навыка."),
             });
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -44,6 +46,7 @@ namespace Game.Traits
             BattleFieldCard owner = trait.Owner;
             trait.Storage[trait.GuidStr] = e.target.pos;
             owner.OnInitiationPreSent.Add(trait.GuidStr, OnOwnerInitiationPreSent, PRIORITY);
+            owner.OnFieldPostAttached.Add(trait.GuidStr, OnOwnerFieldPostAttached, PRIORITY);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -51,12 +54,19 @@ namespace Game.Traits
             if (!e.isInBattle) return;
 
             IBattleTrait trait = (IBattleTrait)e.trait;
-            if (!trait.WasRemoved(e)) return;
-
-            trait.Storage.Remove(trait.GuidStr);
-            trait.Owner.OnInitiationPreSent.Remove(trait.GuidStr);
+            if (trait.WasRemoved(e))
+                OnRemove(trait);
         }
 
+        static async UniTask OnOwnerFieldPostAttached(object sender, TableFieldAttachArgs e)
+        {
+            BattleFieldCard owner = (BattleFieldCard)sender;
+            IBattleTrait trait = owner.Traits.Any(ID);
+            if (trait == null) return;
+
+            await trait.AnimDeactivation();
+            OnRemove(trait);
+        }
         static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
@@ -69,6 +79,11 @@ namespace Game.Traits
 
             e.ClearReceivers();
             e.AddReceiver(field);
+        }
+        static void OnRemove(IBattleTrait trait)
+        {
+            trait.Storage.Remove(trait.GuidStr);
+            trait.Owner.OnInitiationPreSent.Remove(trait.GuidStr);
         }
     }
 }

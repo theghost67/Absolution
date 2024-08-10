@@ -16,8 +16,8 @@ namespace Game.Territories
         public const int WIDTH = TableCardDrawer.WIDTH;
         public const int HEIGHT = TableCardDrawer.HEIGHT;
 
-        static readonly new GameObject _prefab;
-        public readonly TableField attached;
+        public readonly new TableField attached;
+        static readonly GameObject _prefab;
 
         protected override SpriteRenderer SelectableRenderer => _spriteRenderer;
         readonly SpriteRenderer _spriteRenderer;

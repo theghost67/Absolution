@@ -6,6 +6,7 @@ using Game.Traits;
 using GreenOne;
 using MyBox;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -79,7 +80,7 @@ namespace Game.Territories
         public void Run()
         {
             if (!_isRunning && _list.Count != 0)
-                QueueLoop();
+                _ = QueueLoop();
         }
 
         public void EnqueueAndRun(params BattleInitiationSendArgs[] initiations)
@@ -88,8 +89,7 @@ namespace Game.Territories
         }
         public void EnqueueAndRun(IEnumerable<BattleInitiationSendArgs> initiations)
         {
-            foreach (BattleInitiationSendArgs sArgs in initiations)
-                _list.Add(sArgs);
+            Enqueue(initiations);
             Run();
         }
 
@@ -128,27 +128,27 @@ namespace Game.Territories
                     if (sArgs.Sender.IsKilled) return KILLED;
                     if (countReceivers && sArgs.Receivers.Count == 0)
                         return HANDLED;
-                    if (sArgs.handled || !sender.CanInitiate || sender.strength <= 0)
+                    if (sArgs.handled || !sender.CanInitiate || sender.Strength <= 0)
                         return HANDLED;
                     return NOT_HANDLED;
                 }
 
                 switch (TryHandleInitiation(false))
                 {
-                    case KILLED: await HideInitiationPreviews(sArgs); continue;
+                    case KILLED: continue;
                     case HANDLED: await AnimInitiationBlank(sArgs.Sender); continue;
                     case NOT_HANDLED: break;
                     default: throw new NotImplementedException();
                 }
 
                 await ShowInitiationPreview(sArgs.Sender, sArgs.strength, fieldIsSender: true).AsyncWaitForCompletion();
-                sArgs_InitDrawableEvents(sArgs);
+                sArgs_InitEvents(sArgs);
 
                 await sArgs.SelectReceivers();
-                await InvokeSendArgsEvent(sender.OnInitiationPreSent, sender, sArgs);
+                await InvokeSendArgsEvent(sArgs, isPreInvoke: true);
                 switch (TryHandleInitiation(true))
                 {
-                    case KILLED: continue;
+                    case KILLED: await HideInitiationPreviews(sArgs); continue;
                     case HANDLED: await AnimInitiationBlank(sArgs.Sender); continue;
                     case NOT_HANDLED: break;
                     default: throw new NotImplementedException();
@@ -157,14 +157,13 @@ namespace Game.Territories
                 await ShowInitiationPreviews(sArgs);
                 while (sArgs.Receivers.Count != 0)
                 {
-                    BattleField receiver = sArgs.ReceiversByPriority.First();
+                    BattleField receiver = sArgs.Receivers.Min();
                     if (TryHandleInitiation(true) == NOT_HANDLED)
                         await AnimInitiationToField(receiver, sArgs);
                     else break;
                     sArgs.RemoveReceiver(receiver);
                 }
-                if (!sArgs.Sender.IsKilled)
-                    await InvokeSendArgsEvent(sender.OnInitiationPostSent, sender, sArgs);
+                await InvokeSendArgsEvent(sArgs, isPreInvoke: false);
                 await HideInitiationPreviews(sArgs);
             }
 
@@ -195,23 +194,29 @@ namespace Game.Territories
             }
 
             BattleInitiationRecvArgs rArgs = new(field, sArgs);
-            rArgs_InitDrawableEvents(rArgs);
-            // can invoke OnInitiationPreReceived events here (if BattleField ever gets one)
+            rArgs_InitEvents(rArgs);
+            await InvokeRecvArgsEvent(rArgs, isPreInvoke: true);
 
             await AnimInitiationMove(sArgs, rArgs);
-            HideInitiationPreview(rArgs.Receiver, instantly: true);
-            OnInitiationReceivedByField(field, rArgs);
 
-            BattleFieldCard sender = sArgs.Sender;
-            await InvokeRecvArgsEvent(sender.OnInitiationConfirmed, sender, rArgs);
+            BattleFieldDrawer drawer = field.Drawer;
+            if (drawer != null)
+            {
+                drawer.transform.DOAShake();
+                drawer.CreateTextAsDamage(((float)rArgs.strength).Abs().Ceiling(), rArgs.strength < 0);
+            }
+
+            await field.health.AdjustValue(-rArgs.strength, rArgs.Sender);
+            await InvokeRecvArgsEvent(rArgs, isPreInvoke: false);
+            HideInitiationPreview(rArgs.Receiver, instantly: true);
         }
         async UniTask AnimInitiationToCard(BattleFieldCard card, BattleInitiationSendArgs sArgs)
         {
             if (card.IsKilled) return;
 
             BattleInitiationRecvArgs rArgs = new(card.Field, sArgs);
-            rArgs_InitDrawableEvents(rArgs);
-            await InvokeRecvArgsEvent(card.OnInitiationPreReceived, card, rArgs);
+            rArgs_InitEvents(rArgs);
+            await InvokeRecvArgsEvent(rArgs, isPreInvoke: true);
 
             if (rArgs.handled)
             {
@@ -225,12 +230,17 @@ namespace Game.Territories
             }
 
             await AnimInitiationMove(sArgs, rArgs);
-            HideInitiationPreview(rArgs.Receiver, instantly: true);
-            OnInitiationReceivedByCard(card, rArgs);
 
-            BattleFieldCard sender = sArgs.Sender;
-            await InvokeRecvArgsEvent(sArgs.Sender.OnInitiationConfirmed, sender, rArgs);
-            await InvokeRecvArgsEvent(card.OnInitiationPostReceived, card, rArgs);
+            BattleFieldCardDrawer drawer = card.Drawer;
+            if (drawer != null)
+            {
+                drawer.transform.DOAShake();
+                drawer.CreateTextAsDamage(((float)rArgs.strength).Abs().Ceiling(), rArgs.strength < 0);
+            }
+
+            await card.Health.AdjustValue(-rArgs.strength, rArgs.Sender);
+            await InvokeRecvArgsEvent(rArgs, isPreInvoke: false);
+            HideInitiationPreview(rArgs.Receiver, instantly: true);
         }
 
         UniTask ShowInitiationPreviews(BattleInitiationSendArgs sArgs)
@@ -459,8 +469,12 @@ namespace Game.Territories
         #endregion
 
         #region events
-        void sArgs_InitDrawableEvents(BattleInitiationSendArgs sArgs)
+        void sArgs_InitEvents(BattleInitiationSendArgs sArgs)
         {
+            // args' events do not clone, so there's no point using 'sender' parameter
+            sArgs.OnPreSent.Add(null, sArgs_OnInitiationPreSent);
+            sArgs.OnPostSent.Add(null, sArgs_OnInitiationPostSent);
+            sArgs.OnConfirmed.Add(null, sArgs_OnInitiationConfirmed);
             sArgs.OnReceiverAdded += sArgs_OnInitiationReceiverAdded;
             sArgs.OnReceiverRemoved += sArgs_OnInitiationReceiverRemoved;
             sArgs.OnStrengthChanged += sArgs_OnInitiationStrengthChanged;
@@ -481,70 +495,83 @@ namespace Game.Territories
             foreach (BattleField receiver in sArgs.Receivers)
                 UpdateInitiationPreview(receiver, strength);
         }
+        UniTask sArgs_OnInitiationPreSent(object sender, EventArgs e)
+        {
+            BattleInitiationSendArgs sArgs = (BattleInitiationSendArgs)sender;
+            return ((TableEventVoid<BattleInitiationSendArgs>)sArgs.Sender.OnInitiationPreSent).Invoke(sArgs.Sender, sArgs);
+        }
+        UniTask sArgs_OnInitiationPostSent(object sender, EventArgs e)
+        {
+            BattleInitiationSendArgs sArgs = (BattleInitiationSendArgs)sender;
+            return ((TableEventVoid<BattleInitiationSendArgs>)sArgs.Sender.OnInitiationPostSent).Invoke(sArgs.Sender, sArgs);
+        }
+        UniTask sArgs_OnInitiationConfirmed(object sender, BattleInitiationRecvArgs rArgs)
+        {
+            BattleInitiationSendArgs sArgs = (BattleInitiationSendArgs)sender;
+            return ((TableEventVoid<BattleInitiationRecvArgs>)sArgs.Sender.OnInitiationConfirmed).Invoke(sArgs.Sender, rArgs);
+        }
 
         // TODO: create arrow object that points to a new receiver
-        void rArgs_InitDrawableEvents(BattleInitiationRecvArgs rArgs)
+        void rArgs_InitEvents(BattleInitiationRecvArgs rArgs)
         {
+            rArgs.OnPreReceived.Add(null, rArgs_OnInitiationPreReceived);
+            rArgs.OnPostReceived.Add(null, rArgs_OnInitiationPostReceived);
             rArgs.OnReceiverChanged += rArgs_OnInitiationReceiverChanged;
             rArgs.OnStrengthChanged += rArgs_OnInitiationStrengthChanged;
         }
         void rArgs_OnInitiationReceiverChanged(object sender, BattleField receiver)
         {
             BattleInitiationRecvArgs rArgs = (BattleInitiationRecvArgs)sender;
-            RedirectInitiationPreview(rArgs.receiverDefault, rArgs.Receiver);
+            RedirectInitiationPreview(rArgs.ReceiverPrev, rArgs.Receiver);
         }
         void rArgs_OnInitiationStrengthChanged(object sender, int strength)
         {
             BattleInitiationRecvArgs rArgs = (BattleInitiationRecvArgs)sender;
-            UpdateInitiationPreview(rArgs.receiverDefault, strength);
+            UpdateInitiationPreview(rArgs.Receiver, strength);
         }
-        #endregion
-
-        #region IBattleEntities events
-        // probably not the best solution, but it is clean
-
-        void OnInitiationReceivedByField(BattleField field, BattleInitiationRecvArgs rArgs)
+        UniTask rArgs_OnInitiationPreReceived(object sender, EventArgs e)
         {
-            Drawer drawer = field.Drawer;
-            if (drawer != null)
+            BattleInitiationRecvArgs rArgs = (BattleInitiationRecvArgs)sender;
+            return ((TableEventVoid<BattleInitiationRecvArgs>)rArgs.Receiver.Card.OnInitiationPreReceived).Invoke(rArgs.Receiver.Card, rArgs);
+        }
+        UniTask rArgs_OnInitiationPostReceived(object sender, EventArgs e)
+        {
+            BattleInitiationRecvArgs rArgs = (BattleInitiationRecvArgs)sender;
+            return ((TableEventVoid<BattleInitiationRecvArgs>)rArgs.Receiver.Card.OnInitiationPostReceived).Invoke(rArgs.Receiver.Card, rArgs);
+        }
+
+        async UniTask InvokeSendArgsEvent(BattleInitiationSendArgs sArgs, bool isPreInvoke)
+        {
+            if (!sArgs.Sender.IsKilled)
             {
-                drawer.transform.DOAShake();
-                drawer.CreateTextAsDamage(((float)rArgs.strength).Abs().Ceiling(), rArgs.strength < 0);
+                if (isPreInvoke)
+                    await sArgs.OnPreSent.Invoke(sArgs, EventArgs.Empty);
+                else await sArgs.OnPostSent.Invoke(sArgs, EventArgs.Empty);
             }
-            field.health.AdjustValue(-rArgs.strength, rArgs.Sender);
+            await AwaitTweens();
         }
-        void OnInitiationReceivedByCard(BattleFieldCard card, BattleInitiationRecvArgs rArgs)
+        async UniTask InvokeRecvArgsEvent(BattleInitiationRecvArgs rArgs, bool isPreInvoke)
         {
-            Drawer drawer = card.Drawer;
-            if (drawer != null)
+            if (rArgs.Receiver.Card == null) return; // can be removed later if added same initiation events to BattleField class
+            if (!rArgs.Receiver.Card.IsKilled)
             {
-                drawer.transform.DOAShake();
-                drawer.CreateTextAsDamage(((float)rArgs.strength).Abs().Ceiling(), rArgs.strength < 0);
+                if (isPreInvoke)
+                    await rArgs.OnPreReceived.Invoke(rArgs, EventArgs.Empty);
+                else
+                {
+                    await rArgs.OnPostReceived.Invoke(rArgs, EventArgs.Empty);
+                    if (!rArgs.SenderArgs.Sender.IsKilled)
+                        await rArgs.SenderArgs.OnConfirmed.Invoke(rArgs.SenderArgs, rArgs);
+                }
             }
-            card.health.AdjustValue(-rArgs.strength, rArgs.Sender);
+            await AwaitTweens();
         }
 
-        UniTask InvokeSendArgsEvent(IIdEventVoidAsync<BattleInitiationSendArgs> @event, object sender, BattleInitiationSendArgs e)
+        async UniTask AwaitTweens()
         {
-            ((TableEventVoid<BattleInitiationSendArgs>)@event).Invoke(sender, e);
-            if (e.Sender.Drawer != null)
-                 return AwaitTweensAndEvents();
-            else return UniTask.CompletedTask;
-        }
-        UniTask InvokeRecvArgsEvent(IIdEventVoidAsync<BattleInitiationRecvArgs> @event, object sender, BattleInitiationRecvArgs e)
-        {
-            ((TableEventVoid<BattleInitiationRecvArgs>)@event).Invoke(sender, e);
-            if (e.Receiver.Drawer != null)
-                return AwaitTweensAndEvents();
-            else return UniTask.CompletedTask;
-        }
-
-        async UniTask AwaitTweensAndEvents()
-        {
-            while (TableEventManager.CanAwaitTableEvents()  ||
-                   TweenIsRunning(_iShowTween)              ||
-                   TweenIsRunning(_iUpdateTween)            || 
-                   TweenIsRunning(_iRedirectTween)          || 
+            while (TweenIsRunning(_iShowTween) ||
+                   TweenIsRunning(_iUpdateTween) ||
+                   TweenIsRunning(_iRedirectTween) ||
                    TweenIsRunning(_iHideTween))
                 await UniTask.Yield();
         }

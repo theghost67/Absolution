@@ -10,9 +10,9 @@ namespace Game.Traits
     /// </summary>
     public class tShootingPassion : PassiveTrait
     {
-        const string ID = "armored_tank";
-        const int PRIORITY = 5;
-        const float DAMAGE_REL_DECREASE = 0.50f;
+        const string ID = "shooting_passion";
+        const int PRIORITY = 6;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 1);
 
         public tShootingPassion() : base(ID)
         {
@@ -28,16 +28,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = DAMAGE_REL_DECREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"уменьшает силу атаки на <u>{effect}%</u>."),
+                new($"После убийства карты владельцем (П{PRIORITY})",
+                    $"увеличивает инициативу владельца на {_moxieF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(38, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -47,20 +46,19 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
-                trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived, PRIORITY);
+                trait.Owner.OnKillConfirmed.Add(trait.GuidStr, OnOwnerKillConfirmed, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
+                trait.Owner.OnKillConfirmed.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationRecvArgs e)
+        static async UniTask OnOwnerKillConfirmed(object sender, BattleKillConfirmArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
-            if (e.strength < 0) return;
 
             await trait.AnimActivation();
-            await e.strength.AdjustValueScale(-DAMAGE_REL_DECREASE * trait.GetStacks(), trait);
+            await owner.Moxie.AdjustValue(_moxieF.Value(trait), trait);
         }
     }
 }

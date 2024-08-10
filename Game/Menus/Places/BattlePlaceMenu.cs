@@ -171,7 +171,7 @@ namespace Game.Menus
             {
                 await base.OnPostKilledBase_TOP(sender, e);
                 pFieldCard card = (pFieldCard)sender;
-                await card.Side.ether.AdjustValue(1, _menu);
+                await card.Side.Ether.AdjustValue(1, _menu);
             }
 
             public bool CanTake()
@@ -231,7 +231,7 @@ namespace Game.Menus
                 Side.Purchase(this);
                 Drawer.SetSortingOrder(0);
                 Drawer.ChangePointer = false;
-                Territory.PlaceFieldCard(this, (BattleField)field, Side);
+                _ = Territory.PlaceFieldCard(this, (BattleField)field, Side);
             }
             public Tween OnPullOut(bool sleevePull)
             {
@@ -350,7 +350,7 @@ namespace Game.Menus
                     Drawer.IsSelected = false;
                 }
                 Side.Purchase(this);
-                Territory.PlaceFloatCard(this, Side);
+                _ = Territory.PlaceFloatCard(this, Side);
             }
             public Tween OnPullOut(bool sleevePull)
             {
@@ -427,7 +427,6 @@ namespace Game.Menus
             public pSide(BattlePlaceMenu menu, BattleTerritory territory, bool isMe) : base(territory, isMe)
             {
                 _menu = menu;
-                health.OnPostSet.Add(ID, _menu.OnPlayerHealthPostSet);
                 TryOnInstantiatedAction(GetType(), typeof(pSide));
             }
             protected pSide(pSide src, BattleSideCloneArgs args) : base(src, args)
@@ -467,6 +466,16 @@ namespace Game.Menus
             {
                 return 1;
             }
+
+            protected override async UniTask OnStatPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
+            {
+                TableStat stat = (TableStat)sender;
+                BattleSide side = (BattleSide)stat.Owner;
+                await base.OnStatPostSetBase_TOP(sender, e);
+                if (stat.Id != "health" || !side.isMe || side.Drawer == null) return;
+                float sideHealthRatio = (float)e.newStatValue / side.HealthAtStart;
+                _menu.SetDeathsDoorEffect(sideHealthRatio);
+            }
         }
         protected class pTerritory : BattleTerritory
         {
@@ -477,6 +486,8 @@ namespace Game.Menus
             public pTerritory(BattlePlaceMenu menu, bool playerMovesFirst, int sizeX) : base(playerMovesFirst, sizeX, menu.Transform) 
             {
                 _menu = menu;
+                OnPlayerWon.Add(null, _menu.OnPlayerWon);
+                OnPlayerLost.Add(null, _menu.OnPlayerLost);
                 TryOnInstantiatedAction(GetType(), typeof(pTerritory));
             }
             protected pTerritory(pTerritory src, BattleTerritoryCloneArgs args) : base(src, args)
@@ -508,58 +519,38 @@ namespace Game.Menus
                 return new pSide(_menu, territory: this, isMe: false);
             }
 
-            // NOTE: 'terr.DrawersAreNull' check is required to determine either this territory is a clone for AI (without drawers) or not (not the best solution)
+            // NOTE: 'terr.DrawersAreNull' check is required to determine either this territory is a clone for AI (without drawers) or not
             protected override async UniTask OnStartPhaseBase_TOP(object sender, EventArgs e)
             {
                 await base.OnStartPhaseBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
 
                 if (terr.DrawersAreNull)
-                    terr.NextPhase();
-                else VFX.CreateText($"ХОД {terr.Turn}", Color.white, Vector3.zero).DOATextPopUp(0.5f, onComplete: () => terr.NextPhase());
+                    await terr.NextPhase();
+                else
+                {
+                    await VFX.CreateText($"ХОД {terr.Turn}", Color.white, Vector3.zero).DOATextPopUp(0.5f).AsyncWaitForCompletion();
+                    await terr.NextPhase();
+                };
             }
             protected override async UniTask OnEnemyPhaseBase_TOP(object sender, EventArgs e)
             {
                 await base.OnEnemyPhaseBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
-                SidePlacePhase(terr, terr.Enemy);
+                await SidePlacePhase(terr, terr.Enemy);
             }
             protected override async UniTask OnPlayerPhaseBase_TOP(object sender, EventArgs e)
             {
                 await base.OnPlayerPhaseBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
-                SidePlacePhase(terr, terr.Player);
-            }
-            protected override async UniTask OnEndPhaseBase_TOP(object sender, EventArgs e)
-            {
-                await base.OnEndPhaseBase_TOP(sender, e);
+                await SidePlacePhase(terr, terr.Player);
             }
             protected override async UniTask OnNextPhaseBase_TOP(object sender, EventArgs e)
             {
                 await base.OnNextPhaseBase_TOP(sender, e);
                 if (_battleStarted) return;
-                Menu.WriteLogToCurrent("-- НАЧАЛО БОЯ -- ");
+                
                 _battleStarted = true;
-            }
-            protected override async UniTask OnPlayerWonBase_TOP(object sender, EventArgs e)
-            {
-                await base.OnPlayerWonBase_TOP(sender, e);
-                pTerritory terr = (pTerritory)sender;
-                if (terr.DrawersAreNull) return;
-
-                _menu.OnPlayerWon(sender, e);
-                Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ -- ");
-                Menu.WriteLogToCurrent("-- ИГРОК ПОБЕДИЛ -- ");
-            }
-            protected override async UniTask OnPlayerLostBase_TOP(object sender, EventArgs e)
-            {
-                await base.OnPlayerLostBase_TOP(sender, e);
-                pTerritory terr = (pTerritory)sender;
-                if (terr.DrawersAreNull) return;
-
-                _menu.OnPlayerLost(sender, e);
-                Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ -- ");
-                Menu.WriteLogToCurrent("-- ИГРОК ПРОИГРАЛ -- ");
             }
 
             async UniTask SidePlacePhase(pTerritory sender, BattleSide side)
@@ -569,12 +560,12 @@ namespace Game.Menus
                 //    (if this side moves first) to save some memory and CPU calculations
                 if (sender.DrawersAreNull) return;
 
-                side.gold.AdjustValue(1, _menu);
+                await side.Gold.AdjustValue(1, _menu);
                 await side.Sleeve.TakeMissingCards();
 
-                if (!side.isMe)
-                     side.ai.MakeTurn();
-                else _menu.SetPlayerControls(true);
+                if (side.isMe)
+                    _menu.SetPlayerControls(true);
+                else await side.ai.MakeTurn();
             }
         }
 
@@ -645,20 +636,24 @@ namespace Game.Menus
         }
 
         // TODO: rewrite
-        public void TryFlee()
+        public async void TryFlee()
         {
             if (!_territory?.PhaseSide?.isMe ?? true) return;
-            _territory.Conclude(true);
+            await _territory.TryConclude(true);
         }
-        public void TryEndTurn()
+        public async void TryEndTurn()
         {
             if (!_territory?.PhaseSide?.isMe ?? true) return;
             SetPlayerControls(false);
-            TableEventManager.AwaitAnyEvents().ContinueWith(_territory.NextPhase);
+            await TableEventManager.AwaitAnyEvents();
+            await _territory.NextPhase();
         }
 
-        async void OnPlayerWon(object sender, EventArgs e)
+        async UniTask OnPlayerWon(object sender, EventArgs e)
         {
+            BattleTerritory terr = (BattleTerritory)sender;
+            if (terr.DrawersAreNull) return;
+
             SetColliders(false);
             await UniTask.Delay(1000);
             #if DEMO
@@ -667,8 +662,11 @@ namespace Game.Menus
             await TransitFromThis();
             #endif
         }
-        async void OnPlayerLost(object sender, EventArgs e)
+        async UniTask OnPlayerLost(object sender, EventArgs e)
         {
+            BattleTerritory terr = (BattleTerritory)sender;
+            if (terr.DrawersAreNull) return;
+
             SetColliders(false);
             Traveler.TryStopTravel(complete: false);
             await VFX.CreateScreenBG(Color.clear, Transform).DOFade(1, 0.5f).AsyncWaitForCompletion();
@@ -677,16 +675,6 @@ namespace Game.Menus
             text.sortingOrder = 600;
             await UniTask.Delay(2000);
             Application.Quit();
-        }
-        UniTask OnPlayerHealthPostSet(object sender, TableStat.PostSetArgs e)
-        {
-            TableStat stat = (TableStat)sender;
-            BattleSide side = (BattleSide)stat.Owner;
-            float sideHealthRatio = (float)e.newStatValue / side.HealthAtStart;
-
-            if (side.isMe && side.Drawer != null)
-                SetDeathsDoorEffect(sideHealthRatio);
-            return UniTask.CompletedTask;
         }
 
         void SetDeathsDoorEffect(float sideHealthRatio)
@@ -754,11 +742,11 @@ namespace Game.Menus
         }
 
         #if DEMO
-        Menu demo_CreateCardChooseAndUpgrade(int cPointsPerCard, int cFieldChoices, int cFloatChoices, int cRerolls, int cCardsPerChoice, int uPointsLimit)
+        Menu demo_CreateCardChooseAndUpgrade(int cPointsPerCard, int cFieldChoices, int cFloatChoices, int cCardsPerChoice, int uPointsLimit)
         {
             if (cFieldChoices == 0 && cFloatChoices == 0)
                 return demo_CreateCardUpgrade(uPointsLimit);
-            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, cRerolls);
+            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, Global.rerollsAtStart - _demoDifficulty);
             menu.MenuWhenClosed = () => demo_CreateCardUpgrade(uPointsLimit);
             menu.OnClosed += menu.Destroy;
             return menu;
@@ -801,7 +789,7 @@ namespace Game.Menus
             }
             else demo_OnBattleEndBase();
         }
-        void demo_OnBattleEndBase()
+        async void demo_OnBattleEndBase()
         {
             int pointsPerCard = demo_DifficultyToLocStage(_demoDifficulty + 1);
             Traveler.DeckCardsCount(pointsPerCard, out int fieldCards, out int floatCards);
@@ -810,13 +798,12 @@ namespace Game.Menus
             int fieldsChoices = (fieldCards - _demoPrevFieldsCount).ClampedMin(1);
             int floatsChoices = _demoDifficulty >= 3 && _demoDifficulty < DEMO_DIFFICULTY_MID ? 1 : 0;
             int cardsPerChoice = (_demoDifficulty + 2).ClampedMax(5);
-            int rerolls = DEMO_DIFFICULTY_MAX - _demoDifficulty - 1;
 
             _demoPrevFieldsCount = fieldCards;
             _demoPrevFloatsCount = floatCards;
 
-            Menu menu = demo_CreateCardChooseAndUpgrade(pointsPerCard, fieldsChoices, floatsChoices, rerolls, cardsPerChoice, pointsLimit);
-            MenuTransit.Between(this, menu, ResetDeathsDoorEffect);
+            Menu menu = demo_CreateCardChooseAndUpgrade(pointsPerCard, fieldsChoices, floatsChoices, cardsPerChoice, pointsLimit);
+            await MenuTransit.Between(this, menu, ResetDeathsDoorEffect);
         }
         async void demo_OnBattleStart(bool firstOpening)
         {
@@ -833,7 +820,7 @@ namespace Game.Menus
             _demoLocStageForEnemy = (locStage * _demoDifficultyScale).Ceiling();
 
             _territory?.Dispose();
-            _territory = new pTerritory(this, playerMovesFirst: UnityEngine.Random.value > 0.5f, sizeX: 5);
+            _territory = new pTerritory(this, demo_DifficultyToPlayerIfFirst(_demoDifficulty), sizeX: 5);
             _territory.Enemy.ai.Style = (BattleAI.PlayStyle)UnityEngine.Random.Range(0, 3);
 
             SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
@@ -866,9 +853,13 @@ namespace Game.Menus
             await bgText.DOFade(0, 0.5f).SetDelay(1f).AsyncWaitForCompletion();
 
             bg.gameObject.Destroy();
-            _territory.NextPhase();
+            await _territory.NextPhase();
         }
 
+        static bool demo_DifficultyToPlayerIfFirst(int difficulty)
+        {
+            return difficulty % 2 != 0;
+        }
         static float demo_DifficultyToLocStageScale(int difficulty) => difficulty switch
         {
             1 => 0.80f,

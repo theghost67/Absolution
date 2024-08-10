@@ -22,8 +22,8 @@ namespace Game.Territories
         public override string TableNameDebug => $"{Menu.GetCurrent().Id}/territory+{GuidStr}";
         public bool DrawersAreNull => _fieldsDrawersAreNull;
 
-        public IIdEventVoidAsync<TableFieldAttachArgs> OnAnyCardAttachedToField => _onAnyCardAttachedToField;
-        public IIdEventVoidAsync<TableFieldAttachArgs> OnAnyCardDetatchedFromField => _onAnyCardDetatchedFromField;
+        public ITableEventVoid<TableFieldAttachArgs> OnAnyCardAttachedToField => _onAnyCardAttachedToField;
+        public ITableEventVoid<TableFieldAttachArgs> OnAnyCardDetatchedFromField => _onAnyCardDetatchedFromField;
         public int2 Grid => _grid;
         public Transform Transform => _transform;
         public Transform TransformForFields => _transformForFields;
@@ -214,14 +214,12 @@ namespace Game.Territories
         protected virtual UniTask OnAnyCardAttachedToFieldBase_TOP(object sender, TableFieldAttachArgs e)
         {
             TableTerritory terr = e.field.Territory;
-            terr._onAnyCardAttachedToField.Invoke(terr, e);
-            return UniTask.CompletedTask;
+            return terr._onAnyCardAttachedToField.Invoke(terr, e);
         }
         protected virtual UniTask OnAnyCardDetatchedFromFieldBase_TOP(object sender, TableFieldAttachArgs e)
         {
             TableTerritory terr = e.field.Territory;
-            terr._onAnyCardDetatchedFromField.Invoke(terr, e);
-            return UniTask.CompletedTask;
+            return terr._onAnyCardDetatchedFromField.Invoke(terr, e);
         }
 
         protected virtual TableField FieldCreator(int x, int y)

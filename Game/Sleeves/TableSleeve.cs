@@ -13,12 +13,15 @@ namespace Game.Sleeves
     /// </summary>
     public class TableSleeve : TableObject, ICloneableWithArgs, IEnumerable<ITableSleeveCard>
     {
+        public const int LIMIT = CardDeck.LIMIT + 8;
+
         public CardDeck Deck => _deck;
         public int Count => _cards.Count;
         public ITableSleeveCardsCollection Cards => _cards;
         public new TableSleeveDrawer Drawer => ((TableObject)this).Drawer as TableSleeveDrawer;
 
         public readonly bool isForMe;
+
         readonly CardDeck _deck;
         readonly HashSet<int> _takenCardsGuids;
         readonly ITableSleeveCardsCollection _cards;
@@ -68,17 +71,23 @@ namespace Game.Sleeves
             else return TakeCardsAnimated(count);
         }
 
-        public void Add(Card card)
+        public bool Add(Card card)
         {
-            Add(HoldingCardCreator(card));
+            if (Count < LIMIT)
+                 return Add(HoldingCardCreator(card));
+            else return false;
         }
-        public void Add(ITableSleeveCard card)
+        public bool Add(ITableSleeveCard card)
         {
-            if (card == null) return;
+            if (card == null) return false;
+            if (Count >= LIMIT) return false;
+
             if (_latestRemovedCardIndex != -1 && _latestRemovedCardIndex < _cards.Count && card == _latestRemovedCard)
                  _cards.Insert(card, _latestRemovedCardIndex);
             else _cards.Add(card);
+
             Drawer?.AddCardDrawer(card);
+            return true;
         }
         public bool Remove(ITableSleeveCard card)
         {

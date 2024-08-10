@@ -14,10 +14,9 @@ namespace Game.Sleeves
             if (!attached.isForMe)
                 MoveOutInstantly();
         }
-
         protected override bool UpdateUserInput()
         {
-            return base.UpdateUserInput() && attached.Side.isMe;
+            return base.UpdateUserInput() && (attached.Side.Drawer?.SleeveIsVisible ?? false);
         }
     }
 }

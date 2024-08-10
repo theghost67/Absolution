@@ -12,7 +12,7 @@ namespace Game.Traits
     {
         const string ID = "meaty";
         const int PRIORITY = 5;
-        const float HEALTH_REL_INCREASE = 0.25f;
+        static readonly TraitStatFormula _healthF = new(true, 0.00f, 0.25f);
 
         public tMeaty() : base(ID)
         {
@@ -28,16 +28,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = HEALTH_REL_INCREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"При появлении карты с навыком <i>Мясистый</i> рядом с владельцем (П{PRIORITY})",
-                    $"увеличивает здоровье владельца на <u>{effect}%</u>."),
+                new($"При появлении карты с навыком <i>{name}</i> рядом с владельцем (П{PRIORITY})",
+                    $"увеличивает здоровье владельца на {_healthF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(12, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -48,14 +47,14 @@ namespace Game.Traits
         {
             await base.OnTargetStateChanged(e);
 
-            IBattleTrait trait = (IBattleTrait)e.trait;
-            string entryId = $"{trait.Guid}/{e.target.Guid}";
+            IBattleTrait trait = e.trait;
+            string entryId = trait.GuidGen(e.target.Guid);
 
             if (e.target.Traits.Passive(ID) == null) return;
             if (e.canSeeTarget)
             {
                 await trait.AnimDetectionOnSeen(e.target);
-                await trait.Owner.health.AdjustValueScale(HEALTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
+                await trait.Owner.Health.AdjustValueScale(_healthF.Value(trait), trait, entryId);
             }
         }
     }

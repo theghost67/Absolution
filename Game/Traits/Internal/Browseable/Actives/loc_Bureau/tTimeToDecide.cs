@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game.Traits
@@ -12,9 +13,9 @@ namespace Game.Traits
     {
         const string ID = "time_to_decide";
         const string TRAIT_ID = "time_to_decide_machine";
-        const int MOXIE_ABS_INCREASE = 2;
-        const float HEALTH_REL_INCREASE = 0.50f;
-        const float STRENGTH_REL_INCREASE = 0.50f;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 2);
+        static readonly TraitStatFormula _healthIncF = new(true, 0.00f, 0.50f);
+        static readonly TraitStatFormula _strengthIncF = new(true, 0.00f, 0.50f);
 
         public tTimeToDecide() : base(ID)
         {
@@ -30,20 +31,18 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            int moxie = MOXIE_ABS_INCREASE * trait.GetStacks();
-            float health = HEALTH_REL_INCREASE * 100 * trait.GetStacks();
-            float strength = STRENGTH_REL_INCREASE * 100 * trait.GetStacks();
+            int stacks = trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на союзном поле",
-                    $"Становится девиантом, получая <u>{moxie}</u> ед. инициативы или вдвое больше, если на союзных полях есть карты с таким же навыком. Тратит все заряды."),
+                    $"Становится девиантом, получая {_moxieF.Format(trait, stacks)} инициативы или вдвое больше, если на союзных полях есть карты с таким же навыком. Тратит все заряды."),
                 new($"При использовании на вражеском поле",
-                    $"Остаётся машиной, получая бонус в <u>{health}%</u> к здоровью и <u>{strength}%</u> к силе. Вероятны негативные последствия. Тратит все заряды."),
+                    $"Остаётся машиной, получая бонус в {_healthIncF.Format(trait, stacks)} к здоровью и {_strengthIncF.Format(trait, stacks)} к силе. Вероятны негативные последствия. Тратит все заряды."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 160 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(160, stacks);
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -55,22 +54,32 @@ namespace Game.Traits
 
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
-
             bool isAllyField = e.target.IsMine();
+            int stacks = trait.GetStacks();
+
+            await trait.SetStacks(0, trait.Side);
             if (isAllyField)
             {
-                int moxie = MOXIE_ABS_INCREASE * trait.GetStacks();
-                await owner.moxie.AdjustValue(moxie, trait);
+                bool alliesHaveThisTrait = false;
+                IEnumerable<BattleField> fields = owner.Territory.Fields(owner.Field.pos, TerritoryRange.ownerAllNotSelf).WithCard();
+                foreach (BattleField field in fields)
+                {
+                    if (field.Card.Traits.Any(ID) == null) continue;
+                    alliesHaveThisTrait = true;
+                    break;
+                }
+
+                int moxie = _moxieF.ValueInt(trait, stacks);
+                if (alliesHaveThisTrait)
+                    moxie *= 2;
+                await owner.Moxie.AdjustValue(moxie, trait);
             }
             else
             {
-                float health = HEALTH_REL_INCREASE * trait.GetStacks();
-                float strength = STRENGTH_REL_INCREASE * trait.GetStacks();
-                await owner.health.AdjustValueScale(health, trait);
-                await owner.strength.AdjustValueScale(strength, trait);
+                await owner.Health.AdjustValueScale(_healthIncF.Value(trait, stacks), trait);
+                await owner.Strength.AdjustValueScale(_strengthIncF.Value(trait, stacks), trait);
                 await owner.Traits.AdjustStacks(TRAIT_ID, 1, trait);
             }
-            await trait.SetStacks(0, trait.Side);
         }
     }
 }

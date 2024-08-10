@@ -34,10 +34,15 @@ namespace Game
         public static Volume Volume => _volume;
         public static bool IsQuitting => _isQuitting;
 
+        // ---------- CONFIGURATION SETTINGS ----------
+
+        public static int rerollsAtStart = 10;
         public static bool writeConsoleLogs = true;
         public static bool shufflePrice = false;
         public static float soundVolumeScale = 1.0f; // set by player
         public static float musicVolumeScale = 1.0f; // in settings
+
+        // --------------------------------------------
 
         static readonly Color[] _palette = new Color[]
         {
@@ -70,11 +75,8 @@ namespace Game
 
             _errorsCount++;
             _errorTween.Restart();
-            UnityMainThreadDispatcher.Enqueue(() =>
-            {
-                ShowErrors();
-                TableConsole.LogToFile("global", condition);
-            });
+            TableConsole.LogToFile("global", condition);
+            UnityMainThreadDispatcher.Enqueue(ShowErrors);
         }
         static bool OnWantToQuit()
         {
@@ -99,7 +101,7 @@ namespace Game
         // TODO: remove
         Menu demo_CreateCardChoose(int stage)
         {
-            CardChooseMenu menu = new(stage, 4, 0, 3, 6);
+            CardChooseMenu menu = new(stage, 4, 0, 3, rerollsAtStart);
             menu.MenuWhenClosed = () => new BattlePlaceMenu();
             menu.OnClosed += menu.Destroy;
             return menu;

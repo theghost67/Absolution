@@ -2,6 +2,7 @@
 using Game.Cards;
 using Game.Territories;
 using UnityEngine;
+using Game.Effects;
 
 namespace Game.Traits
 {
@@ -63,9 +64,14 @@ namespace Game.Traits
         {
             if (Owner == null) return false;
             if (Side != by) return false;
-            if (_owner.Field != null)
-                _area.StartTargetAiming(AimFilter, AimFinished);
-            else TryUse(null);
+            if (Territory.PhaseSide != by) return false;
+            if (!IsReadyToUse())
+            {
+                if (_owner.Field != null)
+                    _owner.Drawer?.CreateTextAsSpeech("НЕТ ЦЕЛЕЙ", Color.red);
+                return false;
+            }
+            _area.StartTargetAiming(AimFilter, AimFinished);
             return true;
         }
 
@@ -82,6 +88,20 @@ namespace Game.Traits
             return trait.Data.OnTargetStateChanged(new BattleTraitTargetStateChangeArgs(trait, card, false));
         }
 
+        bool IsReadyToUse()
+        {
+            bool isUsable = _owner.Field == null && Data.IsUsable(new TableActiveTraitUseArgs(this, null));
+            if (!isUsable && _owner.Field != null)
+            {
+                foreach (BattleField possibleTarget in Territory.Fields(Owner.Field.pos, Range.potential))
+                {
+                    if (!Data.IsUsable(new TableActiveTraitUseArgs(this, possibleTarget))) continue;
+                    isUsable = true;
+                    break;
+                }
+            }
+            return isUsable;
+        }
         bool AimFilter(BattleField aimedField)
         {
             return Data.IsUsable(new TableActiveTraitUseArgs(this, aimedField));

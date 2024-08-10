@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -12,8 +11,8 @@ namespace Game.Traits
     {
         const string ID = "alco_rage";
         const int PRIORITY = 5;
-        const float HEALTH_ABS_RESTORE = 0.33f;
-        const int MOXIE_ABS_DECREASE_STATIC = 2;
+        static readonly TraitStatFormula _healthF = new(true, 0.00f, 0.33f);
+        static readonly TraitStatFormula _moxieF = new(false, 0, 2);
 
         public tAlcoRage() : base(ID)
         {
@@ -29,17 +28,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float healthEffect = HEALTH_ABS_RESTORE * 100 * trait.GetStacks();
-            float moxieEffect = MOXIE_ABS_DECREASE_STATIC;
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После убийства вражеской карты владельцем (П{PRIORITY})",
-                    $"Восстанавливает себе <u>{healthEffect}%</u> здоровья и уменьшает свою инициативу на {moxieEffect} ед."),
+                    $"Восстанавливает себе {_healthF.Format(trait)} здоровья и уменьшает свою инициативу на {_moxieF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 48 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(48, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -62,12 +59,12 @@ namespace Game.Traits
             if (e.victim.Side == owner.Side) return;
 
             int stacks = trait.GetStacks();
-            float health = owner.Data.health * HEALTH_ABS_RESTORE * stacks;
-            float moxie = -MOXIE_ABS_DECREASE_STATIC;
+            float health = owner.Data.health * _healthF.Value(trait, stacks);
+            float moxie = -_moxieF.Value(trait, stacks);
 
             await trait.AnimActivation();
-            await owner.health.AdjustValue(health, trait);
-            await owner.moxie.AdjustValue(moxie, trait);
+            await owner.Health.AdjustValue(health, trait);
+            await owner.Moxie.AdjustValue(moxie, trait);
         }
     }
 }

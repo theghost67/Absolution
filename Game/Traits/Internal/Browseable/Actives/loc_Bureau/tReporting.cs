@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -12,12 +11,11 @@ namespace Game.Traits
     {
         const string ID = "reporting";
         const string CARD_ID = "clues";
-        const int STACKS_DECREASE = 1;
 
         public tReporting() : base(ID)
         {
             name = "Составление рапорта";
-            desc = "Я ведь напишу куда надо.";
+            desc = "Я ведь напишу куда нужно.";
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -32,12 +30,12 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на любой вражеской карте",
-                    $"Устанавливает карту <i>{cardName}</i> на поле напротив цели, если поле напротив свободно. Тратит {STACKS_DECREASE} ед. зарядов."),
+                    $"Устанавливает карту <i>{cardName}</i> на поле напротив цели, если поле напротив свободно. Тратит один заряд."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks - 1, 1.6f);
+            return base.Points(owner, stacks) + PointsExponential(12, stacks, 1, 1.6f);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -56,8 +54,8 @@ namespace Game.Traits
             BattleField newCardField = (BattleField)e.target.Opposite;
             FieldCard newCard = CardBrowser.NewField(CARD_ID);
 
+            await trait.AdjustStacks(-1, trait.Side);
             await trait.Territory.PlaceFieldCard(newCard, newCardField, trait);
-            await trait.AdjustStacks(-STACKS_DECREASE, trait.Side);
         }
     }
 }

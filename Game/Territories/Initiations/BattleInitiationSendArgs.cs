@@ -17,9 +17,11 @@ namespace Game.Territories
 
         public BattleFieldCard Sender => _sender;
         public int Priority => topPriority ? int.MaxValue : _sender.InitiationPriority;
-
         public IReadOnlyList<BattleField> Receivers => _receivers;
-        public IReadOnlyList<BattleField> ReceiversByPriority => ReceiversSortedByPriority();
+
+        public readonly TableEventVoid OnPreSent;
+        public readonly TableEventVoid OnPostSent;
+        public readonly TableEventVoid<BattleInitiationRecvArgs> OnConfirmed;
 
         public readonly TableStat strength;
         public bool manualAim;
@@ -35,14 +37,18 @@ namespace Game.Territories
             if (sender.Field == null) 
                 throw new Exception("Initiation sender must have a field.");
 
-            _sender = sender;
-            _receivers = new List<BattleField>(receivers);
-
-            this.strength = new TableStat(nameof(this.strength), this, strength);
+            this.strength = new TableStat("strength", this, strength);
             this.strength.OnPostSet.Add("base", OnStrengthPostSet);
 
             this.manualAim = manualAim;
             this.topPriority = topPriority;
+
+            _sender = sender;
+            _receivers = new List<BattleField>(receivers);
+
+            OnPreSent = new TableEventVoid();
+            OnPostSent = new TableEventVoid();
+            OnConfirmed = new TableEventVoid<BattleInitiationRecvArgs>();
         }
         public int CompareTo(BattleInitiationSendArgs other)
         {
@@ -87,23 +93,6 @@ namespace Game.Territories
                 _receivers.Add(target);
         }
 
-        IReadOnlyList<BattleField> ReceiversSortedByPriority()
-        {
-            // by InitiationPriority (ascending)
-            List<BattleField> list = new(BattleTerritory.MAX_SIZE); 
-
-            IEnumerable<BattleField> thisSideReceiversWithoutCard = _receivers.Where(f => f.Card == null && f.Side == _sender.Side);
-            IEnumerable<BattleField> thisSideReceiversWithCard    = _receivers.Where(f =>  f.Card != null && f.Side == _sender.Side);
-            IEnumerable<BattleField> oppoSideReceiversWithoutCard = _receivers.Where(f => f.Card == null && f.Side != _sender.Side);
-            IEnumerable<BattleField> oppoSideReceiversWithCard    = _receivers.Where(f =>  f.Card != null && f.Side != _sender.Side);
-
-            list.AddRange(thisSideReceiversWithCard);
-            list.AddRange(oppoSideReceiversWithCard);
-            list.AddRange(thisSideReceiversWithoutCard);
-            list.AddRange(oppoSideReceiversWithoutCard);
-
-            return list;
-        }
         UniTask OnStrengthPostSet(object sender, TableStat.PostSetArgs e)
         {
             OnStrengthChanged?.Invoke(this, e.newStatValue);

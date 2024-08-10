@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -11,8 +10,9 @@ namespace Game.Traits
     public class tGrannyAlliance : PassiveTrait
     {
         const string ID = "granny_alliance";
+        const string CARD_ID = "granny";
         const int PRIORITY = 5;
-        const float STRENGTH_REL_INCREASE = 0.50f;
+        static readonly TraitStatFormula _strengthF = new(true, 0.00f, 0.50f);
 
         public tGrannyAlliance() : base(ID)
         {
@@ -28,16 +28,16 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = STRENGTH_REL_INCREASE * 100 * trait.GetStacks();
+            string cardName = CardBrowser.GetCard(CARD_ID).name;
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"При появлении карты <i>Бабуся</i> рядом с владельцем (П{PRIORITY})",
-                    $"увеличивает силу владельца на <u>{effect}%</u>, однако, при смерти одной из такой карт, владелец так же умрёт от инициатора."),
+                new($"При появлении карты <i>{cardName}</i> рядом с владельцем (П{PRIORITY})",
+                    $"увеличивает силу владельца на {_strengthF.Format(trait)}, однако, при смерти одной из такой карт, владелец так же умрёт от инициатора."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(20, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -48,21 +48,21 @@ namespace Game.Traits
         {
             await base.OnTargetStateChanged(e);
 
-            IBattleTrait trait = (IBattleTrait)e.trait;
-            string entryId = $"{trait.Guid}/{e.target.Guid}";
+            IBattleTrait trait = e.trait;
+            string entryId = trait.GuidGen(e.target.Guid);
 
-            if (e.target.Data.id != "granny") return;
+            if (e.target.Data.id != ID) return;
             if (e.canSeeTarget)
             {
                 e.target.OnPostKilled.Add(trait.GuidStr, OnTargetPostKilled, PRIORITY);
                 await trait.AnimDetectionOnSeen(e.target);
-                await trait.Owner.strength.AdjustValueScale(STRENGTH_REL_INCREASE * trait.GetStacks(), trait, entryId);
+                await trait.Owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait, entryId);
             }
             else
             {
                 e.target.OnPostKilled.Remove(trait.GuidStr);
                 await trait.AnimDetectionOnUnseen(e.target);
-                await trait.Owner.strength.RevertValueScale(entryId);
+                await trait.Owner.Strength.RevertValueScale(entryId);
             }
         }
 

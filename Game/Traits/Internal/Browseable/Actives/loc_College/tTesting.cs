@@ -12,8 +12,8 @@ namespace Game.Traits
     public class tTesting : ActiveTrait
     {
         const string ID = "testing";
-        const int MOXIE_THRESHOLD = 0;
-        const int DAMAGE = 9999;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 0);
+        static readonly TraitStatFormula _strengthF = new(false, 9999, 0);
         static readonly TerritoryRange targets = TerritoryRange.oppositeAll;
 
         public tTesting() : base(ID)
@@ -33,7 +33,8 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории",
-                    $"Тестирует карты все карты напротив владельца на прочность - если её инициатива ≤ {MOXIE_THRESHOLD}, ей будет нанесено {DAMAGE} ед. урона. Тратит все заряды."),
+                    $"Тестирует карты все карты напротив владельца на прочность - если её инициатива ≤ {_moxieF.Format(trait)}, " +
+                    $"ей будет нанесено {_strengthF.Format(trait)} ед. урона. Тратит все заряды."),
             });
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
@@ -51,13 +52,16 @@ namespace Game.Traits
 
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
+            int moxie = _moxieF.ValueInt(trait);
+            int strength = _strengthF.ValueInt(trait);
+
+            await trait.SetStacks(0, owner.Side);
             IEnumerable<BattleField> fields = owner.Territory.Fields(owner.Field.pos, targets).WithCard();
             foreach (BattleFieldCard card in fields.Select(f => f.Card))
             {
-                if (card.moxie <= MOXIE_THRESHOLD)
-                    await card.health.AdjustValue(-DAMAGE, owner);
+                if (card.Moxie <= moxie)
+                    await card.Health.AdjustValue(-strength, owner);
             }
-            await trait.SetStacks(0, owner.Side);
         }
     }
 }

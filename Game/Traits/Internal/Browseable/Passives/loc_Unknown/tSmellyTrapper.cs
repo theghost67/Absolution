@@ -1,7 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Game.Traits
 {
@@ -10,9 +12,10 @@ namespace Game.Traits
     /// </summary>
     public class tSmellyTrapper : PassiveTrait
     {
-        const string ID = "armored_tank";
-        const int PRIORITY = 5;
-        const float DAMAGE_REL_DECREASE = 0.50f;
+        const string ID = "smelly_trapper";
+        const string CARD_ID = "crap";
+        const int PRIORITY = 3;
+        static readonly TerritoryRange _range = TerritoryRange.ownerDouble;
 
         public tSmellyTrapper() : base(ID)
         {
@@ -28,16 +31,16 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = DAMAGE_REL_DECREASE * 100 * trait.GetStacks();
+            string cardName = CardBrowser.GetCard(CARD_ID).name;
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"уменьшает силу атаки на <u>{effect}%</u>."),
+                new($"В начале каждого хода (П{PRIORITY})",
+                    $"Расставляет рядом с владельцем карты <i>{cardName}</i> с единицей здоровья. Тратит по заряду за каждую установленную карту."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(12, stacks, 4);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -47,20 +50,30 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
-                trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived, PRIORITY);
+                trait.Territory.OnStartPhase.Add(trait.GuidStr, OnTerritoryStartPhase, PRIORITY);
             else if (trait.WasRemoved(e))
-                trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
+                trait.Territory.OnStartPhase.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationRecvArgs e)
+        async UniTask OnTerritoryStartPhase(object sender, EventArgs e)
         {
-            BattleFieldCard owner = (BattleFieldCard)sender;
-            IBattleTrait trait = owner.Traits.Any(ID);
+            BattleTerritory territory = (BattleTerritory)sender;
+            IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(territory);
             if (trait == null) return;
-            if (e.strength < 0) return;
+
+            BattleFieldCard owner = trait.Owner;
+            if (owner.Field == null) return;
+
+            BattleField[] fields = territory.Fields(owner.Field.pos, _range).WithoutCard().ToArray();
+            if (fields.Length == 0) return;
 
             await trait.AnimActivation();
-            await e.strength.AdjustValueScale(-DAMAGE_REL_DECREASE * trait.GetStacks(), trait);
+            foreach (BattleField field in fields)
+            {
+                FieldCard newCard = CardBrowser.NewField(CARD_ID);
+                await trait.AdjustStacks(-1, trait);
+                await territory.PlaceFieldCard(newCard, field, trait);
+            }
         }
     }
 }

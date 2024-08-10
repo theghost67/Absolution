@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -12,7 +11,7 @@ namespace Game.Traits
     {
         const string ID = "bricky_taste";
         const int PRIORITY = 2;
-        const int MOXIE_DECREASE = 2;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 2);
 
         public tBrickyTaste() : base(ID)
         {
@@ -28,16 +27,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            int effect = MOXIE_DECREASE * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После атаки/лечения на владельца (П{PRIORITY})",
-                    $"уменьшает инициативу инициатора на <u>{effect}</u> ед."),
+                    $"уменьшает инициативу инициатора на {_moxieF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(40, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -59,7 +57,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await e.Sender.moxie.AdjustValue(-MOXIE_DECREASE * trait.GetStacks(), trait);
+            await e.Sender.Moxie.AdjustValue(-_moxieF.Value(trait), trait);
         }
     }
 }

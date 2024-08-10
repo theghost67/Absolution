@@ -77,14 +77,14 @@ namespace Game.Territories
             _playerPrefab = Resources.Load<GameObject>("Prefabs/Territories/Player side");
             _enemyPrefab = Resources.Load<GameObject>("Prefabs/Territories/Enemy side");
 
-            _playerGoldPanelUnlockedSprite  = Resources.Load<Sprite>("Sprites/Menus/Player gold");
-            _playerGoldPanelLockedSprite    = Resources.Load<Sprite>("Sprites/Menus/Player gold locked");
-            _playerEtherPanelUnlockedSprite = Resources.Load<Sprite>("Sprites/Menus/Player ether");
-            _playerEtherPanelLockedSprite   = Resources.Load<Sprite>("Sprites/Menus/Player ether locked");
-            _enemyGoldPanelUnlockedSprite   = Resources.Load<Sprite>("Sprites/Menus/Enemy gold");
-            _enemyGoldPanelLockedSprite     = Resources.Load<Sprite>("Sprites/Menus/Enemy gold locked");
-            _enemyEtherPanelUnlockedSprite  = Resources.Load<Sprite>("Sprites/Menus/Enemy ether");
-            _enemyEtherPanelLockedSprite    = Resources.Load<Sprite>("Sprites/Menus/Enemy ether locked");
+            _playerGoldPanelUnlockedSprite  = Resources.Load<Sprite>("Sprites/Menus/battle/Player gold");
+            _playerGoldPanelLockedSprite    = Resources.Load<Sprite>("Sprites/Menus/battle/Player gold locked");
+            _playerEtherPanelUnlockedSprite = Resources.Load<Sprite>("Sprites/Menus/battle/Player ether");
+            _playerEtherPanelLockedSprite   = Resources.Load<Sprite>("Sprites/Menus/battle/Player ether locked");
+            _enemyGoldPanelUnlockedSprite   = Resources.Load<Sprite>("Sprites/Menus/battle/Enemy gold");
+            _enemyGoldPanelLockedSprite     = Resources.Load<Sprite>("Sprites/Menus/battle/Enemy gold locked");
+            _enemyEtherPanelUnlockedSprite  = Resources.Load<Sprite>("Sprites/Menus/battle/Enemy ether");
+            _enemyEtherPanelLockedSprite    = Resources.Load<Sprite>("Sprites/Menus/battle/Enemy ether locked");
         }
         public BattleSideDrawer(BattleSide side, Transform parent) : base(side, side.isMe ? _playerPrefab : _enemyPrefab, parent)
         {
@@ -99,9 +99,9 @@ namespace Game.Territories
             _goldText = _goldPanel.transform.Find<TextMeshPro>("Text");
             _etherText = _etherPanel.transform.Find<TextMeshPro>("Text");
 
-            side.health.OnPostSet.Add(_eventsGuid, OnHealthPostSet);
-            side.gold.OnPostSet.Add(_eventsGuid, OnGoldPostSet);
-            side.ether.OnPostSet.Add(_eventsGuid, OnEtherPostSet);
+            side.Health.OnPostSet.Add(_eventsGuid, OnHealthPostSet);
+            side.Gold.OnPostSet.Add(_eventsGuid, OnGoldPostSet);
+            side.Ether.OnPostSet.Add(_eventsGuid, OnEtherPostSet);
 
             if (!side.isMe)
             {
@@ -116,15 +116,15 @@ namespace Game.Territories
 
         public void RedrawHealth()
         {
-            RedrawHealth(attached.health, attached.HealthAtStart);
+            RedrawHealth(attached.Health, attached.HealthAtStart);
         }
         public void RedrawGold()
         {
-            RedrawGold(attached.gold);
+            RedrawGold(attached.Gold);
         }
         public void RedrawEther()
         {
-            RedrawEther(attached.ether);
+            RedrawEther(attached.Ether);
         }
 
         public void RedrawHealth(int current, int max)
@@ -147,9 +147,9 @@ namespace Game.Territories
         protected override void DestroyInstantly()
         {
             base.DestroyInstantly();
-            attached.health.OnPostSet.Remove(_eventsGuid);
-            attached.gold.OnPostSet.Remove(_eventsGuid);
-            attached.ether.OnPostSet.Remove(_eventsGuid);
+            attached.Health.OnPostSet.Remove(_eventsGuid);
+            attached.Gold.OnPostSet.Remove(_eventsGuid);
+            attached.Ether.OnPostSet.Remove(_eventsGuid);
         }
 
         UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
@@ -176,8 +176,8 @@ namespace Game.Territories
 
         void WealthSetActive(bool value)
         {
-            _goldText.gameObject.SetActive(value);
-            _etherText.gameObject.SetActive(value);
+            _goldPanel.gameObject.SetActive(value);
+            _etherPanel.gameObject.SetActive(value);
             if (attached.isMe)
             {
                 _goldPanel.sprite  = value ? _playerGoldPanelUnlockedSprite  : _playerGoldPanelLockedSprite;

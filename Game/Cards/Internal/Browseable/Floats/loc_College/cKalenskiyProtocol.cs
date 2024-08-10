@@ -43,10 +43,10 @@ namespace Game.Cards
                 BattleFieldCard fieldCard = field.Card;
                 string guid = Unique.NewGuidStr;
 
-                await fieldCard.moxie.AdjustValue(-fieldCard.moxie, card, guid);
-                float moxieDelta = fieldCard.moxie.EntryValue(guid);
+                await fieldCard.Moxie.AdjustValue(-fieldCard.Moxie, card, guid);
+                float moxieDelta = fieldCard.Moxie.EntryValue(guid);
                 float strengthRel = (-moxieDelta).ClampedMax(MAX_MOXIE_TO_STRENGTH) * MOXIE_TO_STRENGTH_REL;
-                await fieldCard.strength.AdjustValueScale(strengthRel, card);
+                await fieldCard.Strength.AdjustValueScale(strengthRel, card);
             }
         }
     }

@@ -18,19 +18,19 @@ namespace Game.Traits
         public static void Initialize()
         {
             /* --------------------------------- //
-            ||            ANY LOCATION           ||
+            ||            ANY LOCATION           || 6
             // --------------------------------- */
 
             AddPassive(new tEvasion());
             AddPassive(new tBlock());
+            AddPassive(new tWideSwing());
+            AddPassive(new tWideSwingPlus());
 
             AddActive(new tScope());
             AddActive(new tScopePlus());
 
-            // -----------------------------------
-
             /* --------------------------------- //
-            ||            LOC: COLLEGE           ||
+            ||            LOC: COLLEGE           || 21
             // --------------------------------- */
 
             AddPassive(new tArmoredTank());
@@ -50,6 +50,7 @@ namespace Game.Traits
             AddPassive(new tScholar());
             AddPassive(new tTactician());
             AddPassive(new tUltrasonicScream());
+
             AddPassive(new tUnpleasantScent());
 
             AddActive(new tLunchBreak());
@@ -58,10 +59,8 @@ namespace Game.Traits
             AddActive(new tWhiteBombing());
             AddActive(new tZenSchool());
 
-            // -----------------------------------
-
             /* --------------------------------- //
-            ||             LOC: BUREAU           ||
+            ||             LOC: BUREAU           || 25
             // --------------------------------- */
 
             AddPassive(new tAlcoRage());
@@ -82,20 +81,54 @@ namespace Game.Traits
             AddPassive(new tTimeToDecideMachine());
 
             AddActive(new tAlcoHeal());
+
             AddActive(new tOrderOfAttack());
             AddActive(new tOrderOfDefence());
             AddActive(new tOrigamiVictim());
             AddActive(new tRecruitment());
-
             AddActive(new tReporting());
+
             AddActive(new tSearchInArchive());
-  
             AddActive(new tTimeToDecide());
             AddActive(new tTriptocainum());
             AddActive(new tSentence());
             AddActive(new tWayOut());
 
-            // -----------------------------------
+            //===================================//
+            //     WITH NO SPECIFIC LOCATION     // 26
+            //===================================//
+
+            AddPassive(new tAdrenaline());
+            AddPassive(new tDeadlyCrit());
+            AddPassive(new tExplosive());
+            AddPassive(new tHeroesNeverDie());
+            AddPassive(new tObsessed());
+
+            AddPassive(new tOnLookout());
+            AddPassive(new tPlayWithVictim());
+            AddPassive(new tReflection());
+            AddPassive(new tRobbery());
+            AddPassive(new tSacrifice());
+
+            AddPassive(new tShootingPassion());
+            AddPassive(new tSmellyTrapper());
+            AddPassive(new tStalker());
+            AddPassive(new tTillDawn());
+            AddPassive(new tTurningPoint());
+
+            AddPassive(new tWeaver());
+            AddPassive(new tWeaving());
+
+            AddActive(new tDoofinator());
+            AddActive(new tEmpoweringBeam());
+            AddActive(new tExplosiveMine());
+            AddActive(new tHealingBeam());
+            AddActive(new tNerfTime());
+
+            AddActive(new tSelfDestruction());
+            AddActive(new tSprinter());
+            AddActive(new tTeleportationBag());
+            AddActive(new tTeleportationScroll());
         }
 
         public static PassiveTrait NewPassive(string id) => (PassiveTrait)GetPassive(id).CloneAsNew();

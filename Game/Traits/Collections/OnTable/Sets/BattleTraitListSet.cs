@@ -42,6 +42,11 @@ namespace Game.Traits
                 yield return element;
         }
 
+        public override bool CanAdjustStacks()
+        {
+            return !_owner.IsKilled && !_owner.IsDisposed;
+        }
+
         // next methods invoke only once in ctor:
         protected override TablePassiveTraitList PassivesCreator()
         {

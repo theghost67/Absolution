@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using GreenOne;
+using System;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
@@ -16,14 +17,12 @@ namespace Game.Effects
         static readonly GameObject _sprite;
         static readonly GameObject _text;
         static readonly GameObject _light;
-        static readonly GameObject _glitches;
 
         static VFX()
         {
             _sprite = Resources.Load<GameObject>("Prefabs/FX/Sprite");
             _text = Resources.Load<GameObject>("Prefabs/FX/Text");
             _light = Resources.Load<GameObject>("Prefabs/FX/Light");
-            _glitches = Resources.Load<GameObject>("Prefabs/FX/Glitches");
         }
 
         public static SpriteRenderer CreateSquare(Vector2 size, Vector3 pos, float scale = 1)
@@ -62,8 +61,8 @@ namespace Game.Effects
             return renderer;
         }
 
-        // TODO: DEPRECATED (create new Glitch Effect)
-        public async static UniTask CreateScreenGlitches()
+        // TODO: create new Glitch Effect
+        [Obsolete] public async static UniTask CreateScreenGlitches()
         {
             await UniTask.Delay(500);
             //var gameObject = GameObject.Instantiate(_glitches, Global.Root);

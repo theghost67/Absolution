@@ -15,10 +15,10 @@ namespace Game.Traits
     public class tUnscheduledTest : ActiveTrait
     {
         const string ID = "unscheduled_test";
-        const int MOXIE_THRESHOLD = 2;
-        const float STRENGTH_PER_STACK = 4f;
         const string IGNORED_TRAIT_ID = "scholar";
-        static readonly TerritoryRange targets = TerritoryRange.oppositeAll;
+        static readonly TraitStatFormula _moxieF = new(false, 2, 0);
+        static readonly TraitStatFormula _strengthF = new(false, 0, 4);
+        static readonly TerritoryRange _range = TerritoryRange.oppositeAll;
 
         public tUnscheduledTest() : base(ID)
         {
@@ -35,16 +35,16 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             string traitName = TraitBrowser.GetTrait(IGNORED_TRAIT_ID).name;
-            float effect = STRENGTH_PER_STACK * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории",
-                    $"тратит все заряды и испытывает каждую карту на территории напротив - если её инициатива < {MOXIE_THRESHOLD}. она получит <u>{effect}</u> ед. урона. Карты с навыком <i>{traitName}</i> не получают урона."),
+                    $"Тратит все заряды и испытывает каждую карту на территории напротив - если её инициатива ≤ {_moxieF.Format(trait)}." +
+                    $"Она получит {_strengthF.Format(trait)} урона. Карты с навыком <i>{traitName}</i> не получают урона."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + (12 * (stacks - 1));
+            return base.Points(owner, stacks) + PointsLinear(12, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -60,22 +60,23 @@ namespace Game.Traits
             await base.OnUse(e);
 
             IBattleTrait trait = (IBattleTrait)e.trait;
-            IEnumerable<BattleField> fields = trait.Owner.Territory.Fields(trait.Owner.Field.pos, targets).WithCard();
-            int strength = (STRENGTH_PER_STACK * trait.GetStacks()).Ceiling();
+            IEnumerable<BattleField> fields = trait.Owner.Territory.Fields(trait.Owner.Field.pos, _range).WithCard();
+            int moxie = _moxieF.ValueInt(trait);
+            int strength = _strengthF.ValueInt(trait);
 
+            await trait.SetStacks(0, trait.Side);
             foreach (BattleField field in fields)
             {
                 BattleFieldCard card = field.Card;
-                if (card.moxie >= MOXIE_THRESHOLD) continue;
+                if (card.Moxie > moxie) continue;
                 if (card.Traits.Passive("scholar") != null)
                 {
                     card.Drawer.CreateTextAsSpeech("Ученик", ColorPalette.CP.ColorCur);
                     continue;
                 }
                 card.Drawer.CreateTextAsSpeech($"Кол\n<size=50%>-{strength}", Color.red);
-                await card.health.AdjustValue(-strength, trait);
+                await card.Health.AdjustValue(-strength, trait);
             }
-            await trait.SetStacks(0, trait.Side);
         }
     }
 }

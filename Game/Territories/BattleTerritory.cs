@@ -23,21 +23,17 @@ namespace Game.Territories
         const int END_PHASE_INDEX = 3;
 
         // NOTE: do NOT add handlers to OnEndPhase outside of territories classes (it will have same effect as adding to OnStartPhase)
-        public IIdEventVoidAsync OnStartPhase => _onStartPhase;
-        public IIdEventVoidAsync OnEnemyPhase => _onEnemyPhase;
-        public IIdEventVoidAsync OnPlayerPhase => _onPlayerPhase;
-        public IIdEventVoidAsync OnEndPhase => _onEndPhase;
-        public IIdEventVoidAsync OnNextPhase => _onNextPhase;
-        public IIdEventVoidAsync OnPlayerWon => _onPlayerWon;
-        public IIdEventVoidAsync OnPlayerLost => _onPlayerLost;
+        public ITableEventVoid OnStartPhase => _onStartPhase;
+        public ITableEventVoid OnEnemyPhase => _onEnemyPhase;
+        public ITableEventVoid OnPlayerPhase => _onPlayerPhase;
+        public ITableEventVoid OnEndPhase => _onEndPhase;
+        public ITableEventVoid OnNextPhase => _onNextPhase; // invokes before any other phase event
+        public ITableEventVoid OnPlayerWon => _onPlayerWon;
+        public ITableEventVoid OnPlayerLost => _onPlayerLost;
 
-        public bool Concluded => _concluded;
+        public bool Concluded => _isConcluded;
         public bool PlayerMovesFirst => _playerMovesFirst;
-        public bool PhaseCycleEnabled
-        {
-            get => _phaseCycleEnabled;
-            set => _phaseCycleEnabled = value;
-        }
+        public bool PhaseCycleEnabled => _phaseCycleEnabled;
         public bool PhaseAwaitsPlayer => _currentPhaseCycleIndex == _playerPhaseCycleIndex;
         public BattleInitiationQueue Initiations => _initiations;
 
@@ -68,7 +64,10 @@ namespace Game.Territories
 
         BattleSide _player;
         BattleSide _enemy;
-        bool _concluded;
+
+        bool _isConcluding;
+        bool _isConcluded;
+
         bool _phaseCycleEnabled;
         int _phaseCyclesPassed;
         int _phasesPassed;
@@ -107,27 +106,11 @@ namespace Game.Territories
             _onPlayerWon.Add(_eventsGuid, OnPlayerWonBase_TOP, TableEventVoid.TOP_PRIORITY);
             _onPlayerLost.Add(_eventsGuid, OnPlayerLostBase_TOP, TableEventVoid.TOP_PRIORITY);
 
-            _phaseCycleEvents.Add(_onStartPhase);
-            if (_playerMovesFirst)
-            {
-                _phaseCycleEvents.Add(_onPlayerPhase);
-                _phaseCycleEvents.Add(_onEnemyPhase);
-            }
-            else
-            {
-                _phaseCycleEvents.Add(_onEnemyPhase);
-                _phaseCycleEvents.Add(_onPlayerPhase);
-            }
-            _phaseCycleEvents.Add(_onEndPhase);
-
+            FillPhaseEventsList();
             AddOnInstantiatedAction(GetType(), typeof(BattleTerritory), () =>
             {
                 _player = PlayerSideCreator();
-                _player.health.OnPostSet.Add(_eventsGuid, OnSideHealthPostSet);
-
                 _enemy = EnemySideCreator();
-                _enemy.health.OnPostSet.Add(_eventsGuid, OnSideHealthPostSet);
-
                 if (_player.isMe == _enemy.isMe)
                     throw new Exception($"BattleTerritory should contain only one side with {nameof(BattleSide.isMe)} set to 'true'.");
                 if (createFields)
@@ -158,19 +141,7 @@ namespace Game.Territories
             _phasesPassed = src._phasesPassed;
             _currentPhaseCycleIndex = src._currentPhaseCycleIndex;
 
-            _phaseCycleEvents.Add(_onStartPhase);
-            if (_playerMovesFirst)
-            {
-                _phaseCycleEvents.Add(_onPlayerPhase);
-                _phaseCycleEvents.Add(_onEnemyPhase);
-            }
-            else
-            {
-                _phaseCycleEvents.Add(_onEnemyPhase);
-                _phaseCycleEvents.Add(_onPlayerPhase);
-            }
-            _phaseCycleEvents.Add(_onEndPhase);
-
+            FillPhaseEventsList();
             _player = PlayerSideCloner(src._player, args);
             _enemy = EnemySideCloner(src._enemy, args);
             TryOnInstantiatedAction(GetType(), typeof(BattleTerritory));
@@ -207,12 +178,14 @@ namespace Game.Territories
         {
             return _currentPhaseCycleIndex == END_PHASE_INDEX;
         }
+        public BattleSide GetOppositeOf(BattleSide side)
+        {
+            return _player == side ? _enemy : _player;
+        }
 
         public async UniTask NextPhase()
         {
             if (!_phaseCycleEnabled) return;
-            TableEventManager.Add();
-
             _currentPhaseCycleIndex++;
             _phasesPassed++;
 
@@ -222,9 +195,11 @@ namespace Game.Territories
                 _phaseCyclesPassed++;
             }
 
+            if (_phaseCycleEvents.Count == 0)
+                throw new Exception();
+
             await _onNextPhase.Invoke(this, EventArgs.Empty);
             await _phaseCycleEvents[_currentPhaseCycleIndex].Invoke(this, EventArgs.Empty);
-            TableEventManager.Remove();
         }
         public async UniTask LastPhase()
         {
@@ -232,18 +207,21 @@ namespace Game.Territories
             for (int i = 0; i < repeats; i++)
                 await NextPhase();
         }
+        public async UniTask TryConclude(bool playerWon)
+        {
+            if (_isConcluding) return;
+            _isConcluding = true;
 
-        public async UniTask Conclude(bool playerWon)
-        {
-            if (_concluded) return;
-            _concluded = true;
-            if (playerWon)
-                 await _onPlayerWon.Invoke(this, EventArgs.Empty);
-            else await _onPlayerLost.Invoke(this, EventArgs.Empty);
-        }
-        public BattleSide GetOppositeOf(BattleSide side)
-        {
-            return _player == side ? _enemy : _player;
+            _phaseCycleEnabled = false; // blocks phase cycle (to block next turn start)
+            if (!_initiations.IsRunning)
+                await TryConcludeInternal(playerWon);
+            else _initiations.OnceComplete += (s, e) =>
+            {
+                TryConcludeInternal(playerWon);
+                if (_isConcluded) return;
+                _phaseCycleEnabled = true;
+                _ = NextPhase();
+            };
         }
         
         public UniTask<BattleFieldCard> PlaceFieldCard(FieldCard data, BattleField field, ITableEntrySource source)
@@ -285,10 +263,8 @@ namespace Game.Territories
                 else Menu.WriteLogToCurrent($"Установка карты {card.Data.name} на поле {field.TableName}.");
             }
 
-            TableEventManager.Add();
             TableConsole.LogToFile("terr", $"{TableNameDebug}: field card placement: id: {card.Data.id}, field: {field.TableNameDebug} (by: {sourceNameDebug}).");
             await card.TryAttachToField(field, source);
-            TableEventManager.Remove();
 
             if (card.Field != null)
                 return card;
@@ -311,10 +287,8 @@ namespace Game.Territories
                 else Menu.WriteLogToCurrent($"Использование карты {card.Data.name}.");
             }
 
-            TableEventManager.Add();
             TableConsole.LogToFile("terr", $"{TableNameDebug}: float card placement: id: {card.Data.id} (by: {sourceNameDebug}).");
             await card.TryUse();
-            TableEventManager.Remove();
 
             return card;
         }
@@ -466,77 +440,85 @@ namespace Game.Territories
             if (!terr.DrawersAreNull)
                 Menu.WriteLogToCurrent($"-- Ход {terr.Turn} (конец) --");
             TableConsole.LogToFile("terr", $"turn: {terr.Turn} (end)");
+
+            List<BattleInitiationSendArgs> initiations = new();
             foreach (BattleField field in terr.Fields().WithCard())
-                terr.Initiations.Enqueue(field.Card.CreateInitiation());
-            if (terr.Initiations.Count != 0)
-                 terr.Initiations.Run();
-            else terr.NextPhase();
-            return UniTask.CompletedTask;
+                initiations.Add(field.Card.CreateInitiation());
+
+            terr.Initiations.EnqueueAndRun(initiations);
+            return terr.Initiations.Await().ContinueWith(terr.NextPhase);
         }
         protected virtual UniTask OnNextPhaseBase_TOP(object sender, EventArgs e)
         {
-            BattleArea.StopTargetAiming();
+            BattleTerritory terr = (BattleTerritory)sender;
+            if (!terr.DrawersAreNull)
+            {
+                BattleArea.StopTargetAiming();
+                if (terr._phaseCyclesPassed == 0)
+                    Menu.WriteLogToCurrent("-- НАЧАЛО БОЯ -- ");
+            }
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnPlayerWonBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
+            if (!terr.DrawersAreNull)
+                Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ --\n-- ИГРОК ПОБЕДИЛ --");
             TableConsole.LogToFile("terr", $"{terr.TableNameDebug}: player won");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnPlayerLostBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
+            if (!terr.DrawersAreNull)
+                Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ --\n-- ИГРОК ПРОИГРАЛ --");
             TableConsole.LogToFile("terr", $"{terr.TableNameDebug}: player lost");
             return UniTask.CompletedTask;
         }
 
         protected virtual void OnInitiationsProcessingStartBase(object sender, EventArgs e) { }
-        protected virtual void OnInitiationsProcessingEndBase(object sender, EventArgs e)
-        {
-            BattleInitiationQueue queue = (BattleInitiationQueue)sender;
-            BattleTerritory terr = queue.Territory;
-            if (terr._currentPhaseCycleIndex == END_PHASE_INDEX)
-                terr.NextPhase();
-        }
-
-        UniTask OnSideHealthPostSet(object sender, TableStat.PostSetArgs e)
-        {
-            if (e.newStatValue > 0)
-                return UniTask.CompletedTask;
-
-            TableStat stat = (TableStat)sender;
-            BattleSide side = (BattleSide)stat.Owner;
-            BattleTerritory terr = side.Territory;
-
-            terr._phaseCycleEnabled = false; // blocks phase cycle (to block next turn start)
-            terr._initiations.OnceComplete += (s, e) =>
-            {
-                // unblocks phase cycle if none of the sides are dead
-                if (terr._player.health > 0 && terr._enemy.health > 0)
-                {
-                    terr._phaseCycleEnabled = true;
-                    terr.NextPhase();
-                    return;
-                }
-
-                terr.SetFieldsColliders(false);
-                terr.Conclude(terr._player.health > 0);
-            };
-            return UniTask.CompletedTask;
-        }
+        protected virtual void OnInitiationsProcessingEndBase(object sender, EventArgs e) { }
 
         BattleSide GetPhaseSide()
         {
-            if (_concluded || _currentPhaseCycleIndex == START_PHASE_INDEX || _currentPhaseCycleIndex == END_PHASE_INDEX)
+            if (_isConcluded || _currentPhaseCycleIndex == START_PHASE_INDEX || _currentPhaseCycleIndex == END_PHASE_INDEX)
                 return null;
             return _currentPhaseCycleIndex == _playerPhaseCycleIndex ? _player : _enemy;
         }
         BattleSide GetWaitingSide()
         {
-            if (_concluded || _currentPhaseCycleIndex == START_PHASE_INDEX || _currentPhaseCycleIndex == END_PHASE_INDEX)
+            if (_isConcluded || _currentPhaseCycleIndex == START_PHASE_INDEX || _currentPhaseCycleIndex == END_PHASE_INDEX)
                 return null;
             return _currentPhaseCycleIndex == _playerPhaseCycleIndex ? _enemy : _player;
+        }
+
+        UniTask TryConcludeInternal(bool playerWon)
+        {
+            bool anySideIsKilled = _player.IsKilled || _enemy.IsKilled;
+            if (!anySideIsKilled)
+                return UniTask.CompletedTask;
+            if (_isConcluded)
+                return UniTask.CompletedTask;
+
+            _isConcluded = true;
+            if (playerWon)
+                 return _onPlayerWon.Invoke(this, EventArgs.Empty);
+            else return _onPlayerLost.Invoke(this, EventArgs.Empty);
+        }
+        void FillPhaseEventsList()
+        {
+            _phaseCycleEvents.Add(_onStartPhase);
+            if (_playerMovesFirst)
+            {
+                _phaseCycleEvents.Add(_onPlayerPhase);
+                _phaseCycleEvents.Add(_onEnemyPhase);
+            }
+            else
+            {
+                _phaseCycleEvents.Add(_onEnemyPhase);
+                _phaseCycleEvents.Add(_onPlayerPhase);
+            }
+            _phaseCycleEvents.Add(_onEndPhase);
         }
     }
 }

@@ -13,8 +13,8 @@ namespace Game.Territories
     /// </summary>
     public sealed class BattleArea : ICloneableWithArgs, IDisposable
     {
-        public IIdEventVoidAsync<BattleFieldCard> OnCardSeen => _onCardSeen; // potential target detection
-        public IIdEventVoidAsync<BattleFieldCard> OnCardUnseen => _onCardUnseen;
+        public ITableEventVoid<BattleFieldCard> OnCardSeen => _onCardSeen; // potential target detection
+        public ITableEventVoid<BattleFieldCard> OnCardUnseen => _onCardUnseen;
 
         public static bool IsAnyAiming => _isAnyAiming;
         public bool IsAiming => _isAiming;
@@ -133,7 +133,7 @@ namespace Game.Territories
                     if (splashTarget.Card == null) continue;
                     BattleFieldCard splashTargetCard = splashTarget.Card;
                     BattleWeight splashTargetWeight = splashTargetCard.Weight;
-                    weights[i] += BattleWeight.Float(splashTargetCard.Side.health, splashTargetWeight);
+                    weights[i] += BattleWeight.Float(splashTargetCard.Side.Health, splashTargetWeight);
                 }
             }
 
@@ -205,32 +205,15 @@ namespace Game.Territories
         public void CreateTargetsHighlight()
         {
             if (_highlightedTargets != null) return;
-            if (Range.potential.targetIsSingle)
-            {
-                _highlightedTargets = _possibleTargets.SelectMany(arr => arr);
-                foreach (BattleField target in _highlightedTargets)
-                    target.Drawer?.AnimShowCovering();
-            }
-            else
-            {
-                _highlightedTargets = _potentialTargets;
-                foreach (BattleField field in _highlightedTargets)
-                    field.Drawer?.AnimShowOutline();
-            }
+            _highlightedTargets = _potentialTargets;
+            foreach (BattleField field in _highlightedTargets)
+                field.Drawer?.AnimShowOutline();
         }
         public void DestroyTargetsHighlight()
         {
             if (_highlightedTargets == null) return;
-            if (Range.potential.targetIsSingle)
-            {
-                foreach (BattleField target in _highlightedTargets)
-                    target.Drawer?.AnimHideCovering();
-            }
-            else
-            {
-                foreach (BattleField field in _highlightedTargets)
-                    field.Drawer?.AnimHideOutline();
-            }
+            foreach (BattleField field in _highlightedTargets)
+                field.Drawer?.AnimHideOutline();
             _highlightedTargets = null;
         }
 
@@ -318,11 +301,13 @@ namespace Game.Territories
             if (isInRange)
             {
                 _observingCards.Add(target);
+                await TableEventManager.AwaitInitiationQueue();
                 await _onCardSeen.Invoke(this, target);
             }
             else
             {
                 _observingCards.Remove(target);
+                await TableEventManager.AwaitInitiationQueue();
                 await _onCardUnseen.Invoke(this, target);
             }
         }
@@ -335,14 +320,10 @@ namespace Game.Territories
             void OnMouseEnter(object sender, DrawerMouseEventArgs e)
             {
                 fieldDrawer.AnimShowSelection();
-                foreach (BattleField splashField in splashTargets)
-                    splashField.Drawer.AnimShowCovering();
             };
             void OnMouseLeave(object sender, DrawerMouseEventArgs e)
             {
                 fieldDrawer.AnimHideSelection();
-                foreach (BattleField splashField in splashTargets)
-                    splashField.Drawer.AnimHideCovering();
             }
             void OnMouseClick(object sender, DrawerMouseEventArgs e)
             {
@@ -365,7 +346,6 @@ namespace Game.Territories
             {
                 fieldDrawer.AnimHideSelection();
                 fieldDrawer.AnimHideOutline();
-                fieldDrawer.AnimHideCovering();
 
                 fieldDrawer.OnMouseEnter -= OnMouseEnter;
                 fieldDrawer.OnMouseLeave -= OnMouseLeave;
@@ -406,28 +386,17 @@ namespace Game.Territories
 
             BattleArea area = observer.Area;
             if (area.CanObserve())
-                 return area.CheckObserveStateFor(field.Card);
+                 return area.CheckObserveStateFor((BattleFieldCard)e.card);
             else return UniTask.CompletedTask;
         }
-
-        // finds all fields after they were cloned
         void Clone_OnTerrFieldsReady(BattleArea src, BattleTerritory terr)
         {
+            // finds all fields after they were cloned
             if (observingPoint.Field == null) return;
-            //if (src.observer is Cards.IBattleCard card)
-            //     TableConsole.LogToFile($"Finding targets of BattleArea that belongs to: {card.Data.name}");
-            //else if (src.observer is Traits.IBattleTrait trait)
-            //    TableConsole.LogToFile($"Finding targets of BattleArea that belongs to: {trait.Owner.Data.name}->{trait.Data.name}");
 
             List<BattleFieldCard> srcObservingCards = src._observingCards;
             BattleField[] srcPotentialTargets = src._potentialTargets;
             BattleField[][] srcPossibleTargets = src._possibleTargets;
-
-            if (srcPotentialTargets == null)
-            {
-                Debug.LogError($"src (BattleArea) potential targets were null.\nObserver name: {src.observer.TableNameDebug}, Observing point name: {src.observingPoint.TableNameDebug}.");
-                return;
-            }
 
             _observingCards = new List<BattleFieldCard>(srcObservingCards.Count);
             _potentialTargets = new BattleField[srcPotentialTargets.Length];

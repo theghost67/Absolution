@@ -9,7 +9,7 @@ namespace Game.Environment
     public sealed class TableLocationPlaceDrawer : Drawer
     {
         static readonly GameObject _prefab;
-        public readonly TableLocationPlace attached;
+        public readonly new TableLocationPlace attached;
         readonly SpriteRenderer _spriteRenderer;
 
         static TableLocationPlaceDrawer()

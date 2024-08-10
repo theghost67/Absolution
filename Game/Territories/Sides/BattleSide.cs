@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
+using Game.Effects;
 using Game.Environment;
 using Game.Sleeves;
 using GreenOne;
@@ -7,18 +8,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 namespace Game.Territories
 {
     /// <summary>
     /// Класс, содержащий и отображающий данные об одной из сторон, находящейся на территории сражения.
     /// </summary>
-    public class BattleSide : TableObject, ITableEntrySource, ICloneableWithArgs, IEquatable<BattleSide>
+    public class BattleSide : TableObject, IBattleKillable, ITableEntrySource, ICloneableWithArgs, IEquatable<BattleSide>
     {
         public BattleTerritory Territory => _territory;
         public BattleSide Opposite => _territory.GetOppositeOf(this);
         public TableFinder Finder => _finder;
+
         public new BattleSideDrawer Drawer => ((TableObject)this).Drawer as BattleSideDrawer;
+        public ITableEventVoid<BattleKillAttemptArgs> OnDeathsDoor => _onDeathsDoor;
 
         public override string TableName => isMe ? Player.Name : "Противник";
         public override string TableNameDebug => isMe ? "player" : "enemy";
@@ -31,23 +35,42 @@ namespace Game.Territories
         public int GoldAtStart => _goldAtStart;
         public int EtherAtStart => _etherAtStart;
 
+        public bool IsKilled => _isKilled;
+        public bool CanBeKilled
+        {
+            get => _canBeKilledCounter >= 0;
+            set
+            {
+                if (value)
+                    _canBeKilledCounter++;
+                else _canBeKilledCounter--;
+            }
+        }
+
         public readonly bool isMe;
         public readonly BattleAI ai;
-        public readonly TableStat health;
-        public readonly TableStat gold;
-        public readonly TableStat ether;
+        public TableStat Health => _health;
+        public TableStat Gold => _gold;
+        public TableStat Ether => _ether;
+
+        readonly TableStat _health;
+        readonly TableStat _gold;
+        readonly TableStat _ether;
 
         readonly BattleSideFinder _finder;
         readonly BattleTerritory _territory;
-        readonly int _fieldsYIndex;
-        readonly string _eventsGuid;
+        readonly TableEventVoid<BattleKillAttemptArgs> _onDeathsDoor;
 
+        readonly int _fieldsYIndex;
         readonly int _healthAtStart;
         readonly int _goldAtStart;
         readonly int _etherAtStart;
 
         CardDeck _deck;
         BattleSleeve _sleeve;
+        int _canBeKilledCounter;
+        bool _isKilled;
+        bool _killBlock;
 
         public BattleSide(BattleTerritory territory, bool isMe) : base(territory.Transform)
         {
@@ -56,25 +79,26 @@ namespace Game.Territories
 
             _finder = new BattleSideFinder(this);
             _territory = territory;
+            _onDeathsDoor = new TableEventVoid<BattleKillAttemptArgs>();
             _fieldsYIndex = isMe ? BattleTerritory.PLAYER_FIELDS_Y : BattleTerritory.ENEMY_FIELDS_Y;
-            _eventsGuid = this.GuidGen(1);
             _deck = DeckCreator();
 
             _healthAtStart = HealthAtStartFunc();
             _goldAtStart = GoldAtStartFunc();
             _etherAtStart = EtherAtStartFunc();
 
-            health = new TableStat(nameof(health), this, _healthAtStart);
-            health.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);
-            health.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP);
+            _health = new TableStat("health", this, _healthAtStart);
+            _health.OnPreSet.Add(null, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _health.OnPostSet.Add(null, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _health.OnPostSet.Add(null, OnHealthPostSet);
 
-            gold = new TableStat(nameof(gold), this, _goldAtStart);
-            gold.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);
-            gold.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP);
+            _gold = new TableStat("gold", this, _goldAtStart);
+            _gold.OnPreSet.Add(null, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _gold.OnPostSet.Add(null, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
 
-            ether = new TableStat(nameof(ether), this, _etherAtStart);
-            ether.OnPreSet.Add(_eventsGuid, OnStatPreSetBase_TOP);
-            ether.OnPostSet.Add(_eventsGuid, OnStatPostSetBase_TOP);
+            _ether = new TableStat("ether", this, _etherAtStart);
+            _ether.OnPreSet.Add(null, OnStatPreSetBase_TOP, TableEventVoid.TOP_PRIORITY);
+            _ether.OnPostSet.Add(null, OnStatPostSetBase_TOP, TableEventVoid.TOP_PRIORITY);
 
             AddOnInstantiatedAction(GetType(), typeof(BattleSide), () => CreateSleeve(Drawer?.transform));
         }
@@ -85,6 +109,8 @@ namespace Game.Territories
 
             _finder = new BattleSideFinder(this);
             _territory = args.srcSideTerritoryClone;
+            _onDeathsDoor = (TableEventVoid<BattleKillAttemptArgs>)src._onDeathsDoor.Clone();
+
             _fieldsYIndex = src._fieldsYIndex;
             _deck = DeckCloner(src._deck);
             _sleeve = SleeveCloner(src._sleeve, args);
@@ -94,9 +120,9 @@ namespace Game.Territories
             _etherAtStart = src._etherAtStart;
 
             TableStatCloneArgs statCArgs = new(this, args.terrCArgs);
-            health = (TableStat)src.health.Clone(statCArgs);
-            gold = (TableStat)src.gold.Clone(statCArgs);
-            ether = (TableStat)src.ether.Clone(statCArgs);
+            _health = (TableStat)src._health.Clone(statCArgs);
+            _gold = (TableStat)src._gold.Clone(statCArgs);
+            _ether = (TableStat)src._ether.Clone(statCArgs);
 
             TryOnInstantiatedAction(GetType(), typeof(BattleSide));
         }
@@ -108,12 +134,12 @@ namespace Game.Territories
         public override void Dispose()
         {
             base.Dispose();
-            health.OnPreSet.Clear();
-            health.OnPostSet.Clear();
-            gold.OnPreSet.Clear();
-            gold.OnPostSet.Clear();
-            ether.OnPreSet.Clear();
-            ether.OnPostSet.Clear();
+            _health.OnPreSet.Clear();
+            _health.OnPostSet.Clear();
+            _gold.OnPreSet.Clear();
+            _gold.OnPostSet.Clear();
+            _ether.OnPreSet.Clear();
+            _ether.OnPostSet.Clear();
         }
         public virtual object Clone(CloneArgs args)
         {
@@ -161,8 +187,8 @@ namespace Game.Territories
         {
             if (card == null) return false;
             if (card.price.currency == CardBrowser.GetCurrency("gold"))
-                 return gold >= card.price.value;
-            else return ether >= card.price.value;
+                 return _gold >= card.price.value;
+            else return _ether >= card.price.value;
         }
 
         public int GetCurrencyDifference(ITableCard card)
@@ -173,8 +199,8 @@ namespace Game.Territories
         {
             if (card == null) return 0;
             if (card.price.currency == CardBrowser.GetCurrency("gold"))
-                return card.price.value - gold;
-            else return card.price.value - ether;
+                return card.price.value - _gold;
+            else return card.price.value - _ether;
         }
 
         public void Purchase(ITableCard card)
@@ -185,8 +211,27 @@ namespace Game.Territories
         {
             if (card == null) return;
             if (card.price.currency == CardBrowser.GetCurrency("gold"))
-                 gold.AdjustValue(-card.price.value, this);
-            else ether.AdjustValue(-card.price.value, this);
+                 _gold.AdjustValue(-card.price.value, this);
+            else _ether.AdjustValue(-card.price.value, this);
+        }
+
+        public async UniTask TryKill(BattleKillMode mode, ITableEntrySource source)
+        {
+            if (_killBlock) return;
+            if (_isKilled) return;
+
+            _killBlock = true;
+            if (_health > 0)
+                await _health.SetValue(0, source);
+            _killBlock = false;
+
+            BattleKillAttemptArgs args = new(this, null, mode, source);
+            Drawer?.transform.DOAShake();
+            await _onDeathsDoor.Invoke(this, args);
+            if (_health > 0 || args.handled) return;
+
+            _isKilled = true;
+            await _territory.TryConclude(!isMe);
         }
 
         protected virtual int HealthAtStartFunc() => (_deck.Points / 4).Ceiling();
@@ -259,12 +304,21 @@ namespace Game.Territories
             side.Sleeve?.DestroyDrawer(Drawer?.IsDestroyed ?? true);
         }
 
+        UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
+        {
+            if (e.newStatValue > 0)
+                return UniTask.CompletedTask;
+
+            TableStat stat = (TableStat)sender;
+            BattleSide side = (BattleSide)stat.Owner;
+            return side.TryKill(BattleKillMode.Default, e.source);
+        }
         float CalculateWeight()
         {
-            if (health <= 0)
+            if (_isKilled)
                 return -int.MaxValue;
             IEnumerable<BattleWeight> weights = Fields().WithCard().Select(f => f.Card.Weight);
-            return BattleWeight.Float(health, weights);
+            return BattleWeight.Float(_health, weights);
         }
     }
 }

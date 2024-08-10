@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using System;
 using UnityEngine;
 
 namespace Game.Traits
@@ -30,12 +31,12 @@ namespace Game.Traits
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"Отменяет данную инициацию на владельца. Тратит один заряд."),
+                    $"Отменяет данную атаку на владельца. Тратит один заряд."),
             });
         }
-        public override float Points(FieldCard owner, int stacks)
+        public override BattleWeight Weight(IBattleTrait trait)
         {
-            return base.Points(owner, stacks) + 120 * Mathf.Pow(stacks - 1, 2);
+            return new(0, (float)(1 + (Math.E * Math.Log(Math.Pow(trait.GetStacks(), 2) - 1) / 10)));
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -57,8 +58,8 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            e.handled = true;
             await trait.AdjustStacks(-1, trait);
+            e.handled = true;
         }
     }
 }

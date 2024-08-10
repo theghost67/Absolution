@@ -18,7 +18,7 @@ namespace Game.Traits
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
-            range = new BattleRange(TerritoryRange.ownerDouble);
+            range = new BattleRange(TerritoryRange.ownerAllNotSelf);
         }
         protected tSprinter(tSprinter other) : base(other) { }
         public override object Clone() => new tSprinter(this);
@@ -27,13 +27,17 @@ namespace Game.Traits
         {
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"При использовании на территории на пустом союзном поле рядом",
+                new($"При использовании на территории на пустом союзном поле",
                     $"Перемещает владельца на указанное поле. Тратит один заряд."),
             });
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(0, 0.10f);
+        }
+        public override float Points(FieldCard owner, int stacks)
+        {
+            return base.Points(owner, stacks) + PointsExponential(24, stacks);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -47,8 +51,8 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField target = (BattleField)e.target;
             BattleFieldCard owner = trait.Owner;
-            await owner.TryAttachToField(target, trait);
             await trait.AdjustStacks(-1, owner.Side);
+            await owner.TryAttachToField(target, trait);
         }
     }
 }

@@ -55,9 +55,9 @@ namespace Game.Traits
         {
             TableActiveTraitUseArgs e = new(this, target);
             if (!_data.IsUsable(e)) return;
-            TableEventManager.Add();
+            TableEventManager.Add(-Guid);
             await _data.OnUse(e);
-            TableEventManager.Remove();
+            TableEventManager.Remove(-Guid);
         }
         public bool IsUsable(TableActiveTraitUseArgs e)
         {

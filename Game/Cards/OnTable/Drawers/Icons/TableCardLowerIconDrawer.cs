@@ -60,7 +60,7 @@ namespace Game.Cards
             _textMesh.color = color;
         }
 
-        public void RedrawText(int value)
+        void RedrawText(int value)
         {
             if (!_hasValue)
             {

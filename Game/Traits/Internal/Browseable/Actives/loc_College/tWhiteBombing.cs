@@ -2,7 +2,6 @@
 using Game.Cards;
 using Game.Territories;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -12,8 +11,9 @@ namespace Game.Traits
     public class tWhiteBombing : ActiveTrait
     {
         const string ID = "white_bombing";
-        const string SPAWN_CARD_ID = "pigeon_litter";
-        const string SPAWN_TRAIT_ID = "unpleasant_scent";
+        const string CARD_ID = "pigeon_litter";
+        const string TRAIT_ID = "unpleasant_scent";
+        static readonly TraitStatFormula _stacksMoxieF = new(false, 0, 1);
 
         public tWhiteBombing() : base(ID)
         {
@@ -29,19 +29,20 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            string traitName = TraitBrowser.GetTrait(SPAWN_TRAIT_ID).name;
-            int effect = trait.GetStacks();
+            string cardName = CardBrowser.GetCard(CARD_ID).name;
+            string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
+            string format = _stacksMoxieF.Format(trait);
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на союзном поле",
-                    $"тратит все заряды, создаёт на всех пустых полях своей территории карты <i>Голубиный помёт</i>. Карты будут иметь <u>{effect}</u> зарядов навыка <i>{traitName}</i>."),
+                    $"тратит все заряды, создаёт на всех пустых полях своей территории карты <i>{cardName}</i>. Карты будут иметь {format} зарядов навыка <i>{traitName}</i>."),
                 new($"При использовании на территории на вражеском поле",
-                    $"тратит все заряды, инициатива всех карт на территории напротив будет уменьшена на <u>{effect}</u> ед."),
+                    $"тратит все заряды, инициатива всех карт на территории напротив будет уменьшена на {format}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(12, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -60,13 +61,14 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             bool usedOnOwnerSide = target.Side.isMe;
 
+            await trait.SetStacks(0, trait.Side);
             if (usedOnOwnerSide)
             {
                 IEnumerable<BattleField> fields = trait.Side.Fields().WithoutCard();
                 foreach (BattleField field in fields)
                 {
-                    FieldCard card = CardBrowser.NewField(SPAWN_CARD_ID);
-                    card.traits.Passives.AdjustStacks(SPAWN_TRAIT_ID, trait.GetStacks());
+                    FieldCard card = CardBrowser.NewField(CARD_ID);
+                    card.traits.Passives.AdjustStacks(TRAIT_ID, _stacksMoxieF.ValueInt(trait));
                     await trait.Side.Territory.PlaceFieldCard(card, field, trait.Side);
                 }
             }
@@ -74,10 +76,8 @@ namespace Game.Traits
             {
                 IEnumerable<BattleField> fields = trait.Side.Opposite.Fields().WithCard();
                 foreach (BattleField field in fields)
-                    await field.Card.moxie.AdjustValue(-trait.GetStacks(), trait);
+                    await field.Card.Moxie.AdjustValue(-_stacksMoxieF.ValueInt(trait), trait);
             }
-
-            await trait.SetStacks(0, trait.Side);
         }
     }
 }

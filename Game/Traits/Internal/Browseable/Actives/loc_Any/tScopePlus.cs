@@ -16,7 +16,7 @@ namespace Game.Traits
         public tScopePlus() : base(ID)
         {
             name = "Прицел+";
-            desc = "";
+            desc = "Глубокий вдох и... Ещё один глубокий вдох и...";
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;

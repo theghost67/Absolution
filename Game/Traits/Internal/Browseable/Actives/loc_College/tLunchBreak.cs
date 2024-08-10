@@ -10,8 +10,8 @@ namespace Game.Traits
     public class tLunchBreak : ActiveTrait
     {
         const string ID = "lunch_break";
-        const int HEALTH_ABS_INCREASE = 1;
-        const int COOLDOWN = 1;
+        static readonly TraitStatFormula _healthF = new(false, 0, 1);
+        const int CD = 1;
 
         public tLunchBreak() : base(ID)
         {
@@ -27,22 +27,18 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            int effect = HEALTH_ABS_INCREASE * trait.GetStacks();
+            string healthF = _healthF.Format(trait);
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"При использовании на территории на карте рядом",
-                    $"Лечит цель на <u>{effect}</u> ед. Перезарядка: {COOLDOWN} х."),
+                    $"Лечит цель на <u>{healthF}</u> ед. Перезарядка: {CD} х."),
                 new($"При использовании на территории на поле рядом",
-                    $"Лечит сторону, которая владеет этим полем, на <u>{effect}</u> ед. Перезарядка: {COOLDOWN} х."),
+                    $"Лечит сторону, которая владеет этим полем, на <u>{healthF}</u> ед. Перезарядка: {CD} х."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 6 * (stacks - 1);
-        }
-        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
-        {
-            return BattleWeight.none;
+            return base.Points(owner, stacks) + PointsLinear(6, stacks);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -56,10 +52,12 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField target = (BattleField)e.target;
 
-            trait.Storage.turnsDelay += COOLDOWN;
+            trait.Storage.turnsDelay += CD;
+            int health = (int)_healthF.Value(trait);
+
             if (target.Card != null)
-                 await target.Card.health.AdjustValue(HEALTH_ABS_INCREASE * trait.GetStacks(), trait);
-            else await target.health.AdjustValue(HEALTH_ABS_INCREASE * trait.GetStacks(), trait);
+                 await target.Card.Health.AdjustValue(health, trait);
+            else await target.health.AdjustValue(health, trait);
         }
     }
 }

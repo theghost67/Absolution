@@ -164,5 +164,18 @@ namespace Game.Traits
                  return 2f / Mathf.Pow(2, delay);
             else return 2f;
         }
+
+        protected static float PointsLinear(float perStack, int stacks, int freeStacks = 1)
+        {
+            if (stacks > freeStacks)
+                return perStack * (stacks - freeStacks);
+            else return 0;
+        }
+        protected static float PointsExponential(float perStack, int stacks, int freeStacks = 1, float f = 2)
+        {
+            if (stacks > freeStacks)
+                return perStack * Mathf.Pow(f, stacks - freeStacks);
+            else return 0;
+        }
     }
 }

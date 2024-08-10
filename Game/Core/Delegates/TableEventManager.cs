@@ -1,6 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace Game
 {
@@ -10,24 +12,61 @@ namespace Game
     /// </summary>
     public static class TableEventManager
     {
-        static int _runningCount;
-        public static void Add()
+        public static bool debug;
+        static readonly HashSet<int> _set = new();
+
+        static float _targetTimeIncrease = 8f;
+        static float _targetTime = _targetTimeIncrease;
+        static float _time;
+
+        static TableEventManager() 
         {
-            _runningCount++;
+            Global.OnFixedUpdate += OnFixedUpdate;
         }
-        public static void Remove()
+        static void OnFixedUpdate()
         {
-            if (_runningCount > 0)
-                _runningCount--;
+            if (!debug) return;
+            _time += UnityEngine.Time.fixedDeltaTime;
+            if (_time < _targetTime) return;
+            _targetTime += _targetTimeIncrease;
+            if (_set.Count == 0)
+            {
+                UnityEngine.Debug.Log($"ADD/REM: CLEAR, COUNT: {Count()}");
+                return;
+            }
+            string str = "";
+            foreach (int id in _set)
+                str += $"{id}, ";
+            UnityEngine.Debug.LogError($"ADD/REM MISMATCH, COUNT: {Count()}, PAIR NOT FOUND FOR NEXT IDS:\n{str}");
         }
-        public static void Reset()
+
+        public static void Add(int id)
         {
-            _runningCount = 0;
+            int currentThreadId = Thread.CurrentThread.ManagedThreadId;
+            if (currentThreadId != PlayerLoopHelper.MainThreadId)
+                return;
+
+            _set.Add(id);
+            if (debug)
+                UnityEngine.Debug.Log($"ADD ID: {id}, COUNT: {Count()}");
         }
+        public static void Remove(int id)
+        {
+            int currentThreadId = Thread.CurrentThread.ManagedThreadId;
+            if (currentThreadId != PlayerLoopHelper.MainThreadId)
+                return;
+
+            if (!debug)
+                _set.Remove(id);
+            else if (!_set.Remove(id))
+                 UnityEngine.Debug.LogError($"REM ID NOT FOUND: {id}, COUNT: {Count()}");
+            else UnityEngine.Debug.Log($"REM ID: {id}, COUNT: {Count()}");
+        }
+        public static int Count() => _set.Count;
 
         public static bool CanAwaitTableEvents()
         {
-            return _runningCount != 0;
+            return _set.Count > 0;
         }
         public static bool CanAwaitTableCardQueue()
         {
@@ -39,17 +78,8 @@ namespace Game
         }
         public static bool CanAwaitAnyEvents()
         {
-            return CanAwaitTableEvents() || CanAwaitTableCardQueue() || CanAwaitInitiationQueue();
+            return (CanAwaitTableEvents() || CanAwaitTableCardQueue() || CanAwaitInitiationQueue());
         }
-
-        // NOTE: can await initiation queue inside of the table event
-        // TODO: try use without TableEventManager Adds/Removes?
-        /* EXAMPLE:
-           trait.Territory.Initiations.Run();
-           TableEventManager.Remove(); // TableEventManager.AwaitAnyEvents will still work because of initiations queue
-           await trait.Territory.Initiations.Await();
-           TableEventManager.Add(); // restore event await condition
-        */
 
         public static async UniTask AwaitTableEvents()
         {

@@ -28,8 +28,8 @@ namespace Game.Traits
         {
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед любой инициацией владельца (П{PRIORITY})",
-                    $"отменяет инициацию на цель, если у неё есть навык <i>{name}</i>."),
+                new($"Перед любой атакой владельца (П{PRIORITY})",
+                    $"отменяет атаку на цель, если у неё есть навык <i>{name}</i>."),
             });
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

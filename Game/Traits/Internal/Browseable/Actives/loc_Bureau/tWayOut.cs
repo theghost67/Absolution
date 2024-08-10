@@ -42,8 +42,8 @@ namespace Game.Traits
             BattleFieldCard owner = trait.Owner;
             BattleSide ownerSide = owner.Side;
 
-            await owner.TryAttachToSideSleeve(ownerSide, trait);
             await trait.SetStacks(0, trait.Side);
+            await owner.TryAttachToSideSleeve(ownerSide, trait);
         }
     }
 }

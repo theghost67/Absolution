@@ -9,7 +9,7 @@ namespace Game.Traits
     public interface ITableTraitList : ITableObject, IReadOnlyList<ITableTraitListElement>, ICloneableWithArgs
     {
         public IIdEventBoolAsync<TableTraitStacksTryArgs> OnStacksTryToChange { get; } // before trait added/removed (can be canceled)
-        public IIdEventVoidAsync<TableTraitStacksSetArgs> OnStacksChanged { get; }   // after trait added/removed
+        public ITableEventVoid<TableTraitStacksSetArgs> OnStacksChanged { get; }   // after trait added/removed
         public TableTraitListSet Set { get; }
 
         public ITableTraitListElement this[string id] => GetElement(id);

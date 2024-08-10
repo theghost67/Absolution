@@ -6,6 +6,7 @@
     public interface ITableCard : ITableObject, ITableEntrySource, ICloneableWithArgs
     {
         public Card Data { get; }
+        public TableStat Price { get; }
         public new TableCardDrawer Drawer { get; }
         Drawer ITableObject.Drawer => Drawer;
     }

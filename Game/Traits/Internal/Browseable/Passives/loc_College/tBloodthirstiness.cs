@@ -12,7 +12,7 @@ namespace Game.Traits
     {
         const string ID = "bloodthirstiness";
         const int PRIORITY = 5;
-        const float STRENGTH_REL_INCREASE = 0.25f;
+        static readonly TraitStatFormula _strengthF = new(true, 0, 0.25f);
 
         public tBloodthirstiness() : base(ID)
         {
@@ -28,16 +28,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = STRENGTH_REL_INCREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После убийства карты владельцем (П{PRIORITY})",
-                    $"увеличивает силу владельца на <u>{effect}%</u>."),
+                    $"увеличивает силу владельца на {_strengthF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 6 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(20, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -59,7 +58,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await owner.strength.AdjustValueScale(STRENGTH_REL_INCREASE * trait.GetStacks(), trait);
+            await owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait);
         }
     }
 }

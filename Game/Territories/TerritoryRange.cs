@@ -8,7 +8,7 @@ namespace Game.Territories
     /// <summary>
     /// Структура, позволяющая выделить игровые поля из всей игровой территории.
     /// </summary>
-    [Serializable] public readonly struct TerritoryRange : IEquatable<TerritoryRange>, ISerializable, ICloneable
+    public readonly struct TerritoryRange : IEquatable<TerritoryRange>, ICloneable
     {
         public const int MAX_WIDTH = TableTerritory.MAX_WIDTH;
         public const int MAX_HEIGHT = TableTerritory.MAX_HEIGHT;
@@ -91,10 +91,15 @@ namespace Game.Territories
             return GetHashCode() == other.GetHashCode();
         }
 
-        public int2[] OverlapMiddlePos(bool inverted = false)
+        public int2[] OverlapFromPlayerPos()
         {
-            return Overlap(new int2(2, inverted ? 1 : 0));
+            return Overlap(new int2(2, BattleTerritory.PLAYER_FIELDS_Y));
         }
+        public int2[] OverlapFromEnemyPos()
+        {
+            return Overlap(new int2(2, BattleTerritory.ENEMY_FIELDS_Y));
+        }
+
         public int2[] Overlap(int2 centerPos)
         {
             return Overlap(centerPos, pos => true);

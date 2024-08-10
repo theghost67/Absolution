@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -10,57 +9,39 @@ namespace Game.Traits
     /// </summary>
     public class tTurningPoint : PassiveTrait
     {
-        const string ID = "armored_tank";
-        const int PRIORITY = 5;
-        const float DAMAGE_REL_DECREASE = 0.50f;
+        const string ID = "turning_point";
+        const int PRIORITY = 7;
 
         public tTurningPoint() : base(ID)
         {
             name = "Переломный момент";
             desc = "Персонал класса D, подойдите ближе к аномалии.";
 
-            rarity = Rarity.Rare;
-            tags = TraitTag.None;
-            range = BattleRange.none;
+            rarity = Rarity.Epic;
+            tags = TraitTag.Static;
+            range = new BattleRange(TerritoryRange.oppositeSingle, PRIORITY);
         }
         protected tTurningPoint(tTurningPoint other) : base(other) { }
         public override object Clone() => new tTurningPoint(this);
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = DAMAGE_REL_DECREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
-                new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"уменьшает силу атаки на <u>{effect}%</u>."),
+                new($"При появлении карты напротив владельца (П{PRIORITY})",
+                    $"Если инициатива цели будет меньше, чем инициатива владельца, цель сразу получит урон, равный силе владельца."),
             });
         }
-        public override float Points(FieldCard owner, int stacks)
+        public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
-            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
-        }
-        public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
-        { 
-            await base.OnStacksChanged(e);
-            if (!e.isInBattle) return;
+            await base.OnTargetStateChanged(e);
+            if (!e.canSeeTarget) return;
 
-            IBattleTrait trait = (IBattleTrait)e.trait;
+            BattleFieldCard owner = e.trait.Owner;
+            if (e.target.Moxie >= owner.Moxie) return;
 
-            if (trait.WasAdded(e))
-                trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived, PRIORITY);
-            else if (trait.WasRemoved(e))
-                trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
-        }
-
-        static async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationRecvArgs e)
-        {
-            BattleFieldCard owner = (BattleFieldCard)sender;
-            IBattleTrait trait = owner.Traits.Any(ID);
-            if (trait == null) return;
-            if (e.strength < 0) return;
-
-            await trait.AnimActivation();
-            await e.strength.AdjustValueScale(-DAMAGE_REL_DECREASE * trait.GetStacks(), trait);
+            await e.trait.AnimDetectionOnSeen(e.target);
+            await e.target.Health.AdjustValue(-owner.Strength, e.trait);
         }
     }
 }

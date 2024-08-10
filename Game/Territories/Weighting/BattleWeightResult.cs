@@ -3,9 +3,9 @@
 namespace Game.Territories
 {
     /// <summary>
-    /// Класс, представляющий результат взвешивания какого-либо действия относительно сущности типа <typeparamref name="T"/> во время боя.
+    /// Абстрактный класс, представляющий результат взвешивания какого-либо действия относительно сущности типа <typeparamref name="T"/> во время боя.
     /// </summary>
-    public class BattleWeightResult<T> : IBattleWeightResult, IComparable<BattleWeightResult<T>>, IEquatable<BattleWeightResult<T>> where T : IBattleObject
+    public abstract class BattleWeightResult<T> : IBattleWeightResult, IComparable<BattleWeightResult<T>>, IEquatable<BattleWeightResult<T>> where T : IBattleObject
     {
         public T Entity => entity;
         public BattleField Field => field;

@@ -13,7 +13,7 @@ namespace Game.Traits
     {
         const string ID = "tactician";
         const int PRIORITY = 4;
-        const int MOXIE_INCREASE = 1;
+        static readonly TraitStatFormula _moxieF = new(false, 0, 1);
 
         public tTactician() : base(ID)
         {
@@ -29,16 +29,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = MOXIE_INCREASE * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"В начале хода на территории (П{PRIORITY})",
-                    $"увеличивает инициативу владельца на <u>{effect}</u> ед."),
+                    $"увеличивает инициативу владельца на {_moxieF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 12 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(32, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -60,7 +59,7 @@ namespace Game.Traits
             if (trait.Owner.Field == null) return;
 
             await trait.AnimActivation();
-            await trait.Owner.moxie.AdjustValue(MOXIE_INCREASE * trait.GetStacks(), trait);
+            await trait.Owner.Moxie.AdjustValue(_moxieF.Value(trait), trait);
         }
     }
 }

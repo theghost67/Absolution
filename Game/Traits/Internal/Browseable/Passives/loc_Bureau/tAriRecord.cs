@@ -13,7 +13,7 @@ namespace Game.Traits
         const string ID = "ari_record";
         const int PRIORITY = 5;
         const string TRAIT_ID = "evasion";
-        const int TRAITS_PER_STACK = 1;
+        static readonly TraitStatFormula _traitsF = new(false, 0, 1);
 
         public tAriRecord() : base(ID)
         {
@@ -30,11 +30,10 @@ namespace Game.Traits
         public override string DescRich(ITableTrait trait)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            int traitStacks = TRAITS_PER_STACK * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После смерти союзной карты рядом с владельцем (П{PRIORITY})",
-                    $"Даёт владельцу навык <i>{traitName}</i> с <u>{traitStacks}</u> зарядами."),
+                    $"Даёт владельцу навык <i>{traitName}</i> с {_traitsF.Format(trait)} зарядами."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
@@ -44,7 +43,7 @@ namespace Game.Traits
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
             await base.OnTargetStateChanged(e);
-            IBattleTrait trait = (IBattleTrait)e.trait;
+            IBattleTrait trait = e.trait;
 
             if (e.canSeeTarget)
                  e.target.OnPostKilled.Add(trait.GuidStr, OnTargetPostKilled, PRIORITY);
@@ -59,7 +58,7 @@ namespace Game.Traits
             if (trait == null) return;
             if (trait.Owner.Field == null) return;
 
-            int stacks = TRAITS_PER_STACK * trait.GetStacks();
+            int stacks = (int)_traitsF.Value(trait);
             await trait.AnimActivation();
             await trait.Owner.Traits.AdjustStacks(TRAIT_ID, stacks, trait);
         }

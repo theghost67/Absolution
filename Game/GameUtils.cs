@@ -130,8 +130,16 @@ namespace Game
             return stacks <= 0 && stacks - delta > 0;
         }
 
-        // TODO: implement all anims
-        public static async UniTask AnimActivation(this ITableTrait trait)
+        public static UniTask AnimActivation(this TableActiveTraitUseArgs e)
+        {
+            return AnimActivation(e.trait, e.target);
+        }
+        public static UniTask AnimDeactivation(this TableActiveTraitUseArgs e)
+        {
+            return AnimDeactivation(e.trait, e.target);
+        }
+
+        public static async UniTask AnimActivation(this ITableTrait trait, TableField target = null)
         {
             if (trait == null || trait.Owner == null)
                 return;
@@ -141,10 +149,10 @@ namespace Game
                 return;
 
             Menu.WriteLogToCurrent($"{trait.TableName}: навык активируется!");
-            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueActivation(trait, true));
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueActivation(trait, target, true));
             await trait.Owner.Drawer.queue.Await();
         }
-        public static async UniTask AnimDeactivation(this ITableTrait trait)
+        public static async UniTask AnimDeactivation(this ITableTrait trait, TableField target = null)
         {
             if (trait == null || trait.Owner == null)
                 return;
@@ -154,12 +162,10 @@ namespace Game
                 return;
 
             Menu.WriteLogToCurrent($"{trait.TableName}: навык деактивируется.");
-            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueActivation(trait, false));
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueActivation(trait, target, false));
             await trait.Owner.Drawer.queue.Await();
         }
 
-        // TODO: implement stackable anims (by checking transform child)
-        // if detected multiple targets, duration still equals to 1.0f
         public static async UniTask AnimDetectionOnSeen(this ITableTrait trait, BattleFieldCard seenCard)
         {
             if (trait == null || trait.Owner == null)
@@ -170,7 +176,7 @@ namespace Game
                 return;
 
             Menu.WriteLogToCurrent($"{trait.TableName}: карта обнаружена.");
-            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, seenCard.LastField.pos, true));
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, seenCard.LastField, true));
             await trait.Owner.Drawer.queue.Await();
         }
         public static async UniTask AnimDetectionOnUnseen(this ITableTrait trait, BattleFieldCard unseenCard)
@@ -183,8 +189,13 @@ namespace Game
                 return;
 
             Menu.WriteLogToCurrent($"{trait.TableName}: карта потеряна.");
-            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, unseenCard.LastField.pos, false));
+            trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, unseenCard.LastField, false));
             await trait.Owner.Drawer.queue.Await();
+        }
+
+        public static void SetCooldown(this ITableTrait trait, int cooldown)
+        {
+            trait.Storage.turnsDelay = cooldown;
         }
         #endregion
 
@@ -246,7 +257,9 @@ namespace Game
                 statColor = Color.red;
             else statColor = Color.white;
 
-            return $"{stat.ToString().Colored(statColor)} ({stat.PosValue.Rounded(2)} * {(stat.PosScale * 100).Rounded(2)}% - {stat.NegValue.Rounded(2)})";
+            if (stat.Id == "health")
+                 return $"{stat.ToString().Colored(statColor)} ({stat.PosValue.Rounded(2)} * {(stat.PosScale * 100).Rounded(2)}% - {stat.NegValue.Rounded(2)})";
+            else return $"{stat.ToString().Colored(statColor)} ({stat.PosValue.Rounded(2)} * {(stat.PosScale * 100).Rounded(2)}%)";
         }
         public static Color GetSideColor(this BattleSide side)
         {

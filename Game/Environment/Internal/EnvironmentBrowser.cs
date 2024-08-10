@@ -35,7 +35,7 @@ namespace Game.Environment
                     "hysteric",
                     "barbarian",
                     "bread",
-                    "sausages",
+                    "german_sausages",
 
                     "cyber_cutlet",
                     "pigeon",
@@ -49,9 +49,8 @@ namespace Game.Environment
                     "principals_office",
                     "canteen",
 
-                    // NEXT CARDS DO NOT BELONG TO THIS LOCATION
-                    // TODO: move to other locations
-
+                    
+                    // NEXT CARDS DO NOT BELONG TO THIS LOCATION (TODO: move to other locations)
                     "hitman",
                     "vanga",
                     "anderson",
@@ -69,16 +68,48 @@ namespace Game.Environment
                     "carl",
                     "archivist",
                     "general_p",
+
+
+                    //"crap",
+                    "crapper",
+                    "dj",
+                    "doof",
+                    "feng_mine",
+
+                    "killer_of_fun",
+                    "meg_tomat",
+                    "mine",
+                    "myers",
+                    "myers_mirror",
+
+                    "phantom",
+                    "satanist",
+                    "scp_106",
+                    "scp_173",
+                    "spider",
+
+                    //"spider_cocon",
+                    "spiderling",
+                    "terrorist",
+                    "widow",
+                    "mercy",
+                    "dallas",
                 },
                 floatCards = new string[]
                 {
-                    "kotovs_syndrome",
-                    "kalenskiy_protocol",
-                    "vavulization",
-                    "delete_due_to_uselessness",
+                    //"kotovs_syndrome",
+                    //"kalenskiy_protocol",
+                    //"vavulization",
+                    //"delete_due_to_uselessness",
 
-                    // NEXT CARDS DO NOT BELONG TO THIS LOCATION
-                    // TODO: move to other locations
+
+                    // NEXT CARDS DO NOT BELONG TO THIS LOCATION (TODO: move to other locations)
+                    "code_interception",
+                    "satellite_surveillance",
+
+
+                    "object_of_obsession",
+                    "until_dawn",
                 },
                 places = new string[]
                 {

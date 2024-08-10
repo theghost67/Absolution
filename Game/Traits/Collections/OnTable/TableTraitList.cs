@@ -15,7 +15,7 @@ namespace Game.Traits
     {
         public int Count => _list.Count;
         public IIdEventBoolAsync<TableTraitStacksTryArgs> OnStacksTryToChange => _onStacksTryToChange;
-        public IIdEventVoidAsync<TableTraitStacksSetArgs> OnStacksChanged => _onStacksChanged;
+        public ITableEventVoid<TableTraitStacksSetArgs> OnStacksChanged => _onStacksChanged;
         public TableTraitListSet Set => _set;
 
         readonly TableTraitListSet _set;
@@ -77,9 +77,10 @@ namespace Game.Traits
         }
         public async UniTask AdjustStacks(string id, int stacks, ITableEntrySource source, string entryId = null)
         {
-            if (stacks == 0) return;
+            if (stacks == 0 || !_set.CanAdjustStacks()) return;
             TableTraitStacksTryArgs listArgs = new(id, stacks, source);
             if (!await _onStacksTryToChange.InvokeAND(this, listArgs)) return;
+            if (stacks == 0 || !_set.CanAdjustStacks()) return;
 
             stacks = listArgs.delta;
             ITableTraitListElement element = AdjustInternal(listArgs);

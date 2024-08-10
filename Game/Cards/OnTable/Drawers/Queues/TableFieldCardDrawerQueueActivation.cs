@@ -6,6 +6,7 @@ using GreenOne;
 using TMPro;
 using UnityEngine;
 using MyBox;
+using Game.Territories;
 
 namespace Game.Cards
 {
@@ -15,16 +16,17 @@ namespace Game.Cards
         const float ACTIVATION_DUR_DISPLAY = 1.00f;
         const float ACTIVATION_DUR_DISAPPEAR = 0.50f;
 
-        // can be set to false (i.e. deactivated)
-        public readonly bool activated;
+        public readonly TableField target;
+        public readonly bool activated; // can be set to false (i.e. deactivated)
         static readonly GameObject _activationPrefab;
 
         static TableFieldCardDrawerQueueActivation()
         {
             _activationPrefab = Resources.Load<GameObject>("Prefabs/Traits/Trait activation");
         }
-        public TableFieldCardDrawerQueueActivation(ITableTrait trait, bool activated) : base(trait)
+        public TableFieldCardDrawerQueueActivation(ITableTrait trait, TableField target, bool activated) : base(trait)
         {
+            this.target = target;
             this.activated = activated;
         }
 
@@ -59,7 +61,9 @@ namespace Game.Cards
             prefabHeader.color = color1;
             prefabIcon.color = color1;
             prefabSubheader.color = color1;
+
             trait.Owner.Drawer.AnimHighlightOutline(1);
+            target?.Drawer.AnimShowSelection();
 
             void OnColorTweenUpdate(Color c)
             {
@@ -83,6 +87,7 @@ namespace Game.Cards
 
             await UniTask.Delay((int)(ACTIVATION_DUR_DISAPPEAR * 1000));
 
+            target?.Drawer.AnimHideSelection();
             prefab.Destroy();
         }
     }

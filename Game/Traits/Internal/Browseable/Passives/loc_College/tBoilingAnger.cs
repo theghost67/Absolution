@@ -13,7 +13,7 @@ namespace Game.Traits
     {
         const string ID = "boiling_anger";
         const int PRIORITY = 5;
-        const float STRENGTH_REL_INCREASE = 0.25f;
+        static readonly TraitStatFormula _strengthF = new(true, 0, 0.25f);
 
         public tBoilingAnger() : base(ID)
         {
@@ -29,16 +29,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = STRENGTH_REL_INCREASE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"В начале хода на территории (П{PRIORITY})",
-                    $"увеличивает силу владельца на <u>{effect}%</u>."),
+                    $"увеличивает силу владельца на {_strengthF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 30 * Mathf.Pow(stacks - 1, 2f);
+            return base.Points(owner, stacks) + PointsExponential(30, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -60,7 +59,7 @@ namespace Game.Traits
             if (trait.Owner.Field == null) return;
 
             await trait.AnimActivation();
-            await trait.Owner.strength.AdjustValueScale(STRENGTH_REL_INCREASE * trait.GetStacks(), trait);
+            await trait.Owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait);
         }
     }
 }

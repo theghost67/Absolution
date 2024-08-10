@@ -33,10 +33,6 @@ namespace Game.Traits
                     $"Наносит цели урон, равный количеству зарядов навыка. Тратит все заряды."),
             });
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
-        }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(result.Entity.GetStacks(), 0);
@@ -54,9 +50,9 @@ namespace Game.Traits
             BattleFieldCard target = (BattleFieldCard)e.target.Opposite.Card;
 
             int damage = e.trait.GetStacks();
-            target.Drawer.CreateTextAsSpeech($"Приговор\n<size=50%>-{damage}", Color.red);
-            await target.health.AdjustValue(-damage, trait);
             await trait.SetStacks(0, trait.Side);
+            target.Drawer.CreateTextAsSpeech($"Приговор\n<size=50%>-{damage}", Color.red);
+            await target.Health.AdjustValue(-damage, trait);
         }
     }
 }

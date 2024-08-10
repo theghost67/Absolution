@@ -2,7 +2,7 @@
 {
     public class cMoshev : FieldCard
     {
-        public cMoshev() : base("moshev", "armored_tank", "tactician")
+        public cMoshev() : base("moshev", "armored_tank", "meaty", "tactician")
         {
             name = "Мошев";
             desc = "То время, когда он хотел захватить человечество путём вавулизации, также известной как проект \"Вавулов-2\", запомнит каждый. " +

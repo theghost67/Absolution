@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using System;
 using UnityEngine;
 
 namespace Game.Traits
@@ -35,11 +36,7 @@ namespace Game.Traits
         }
         public override BattleWeight Weight(IBattleTrait trait)
         {
-            return new(0, Mathf.Log(4, 3 + trait.GetStacks()));
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return base.Points(owner, stacks) + 60 * Mathf.Pow(stacks - 1, 2);
+            return new(0, (float)(1 + (Math.E * Math.Log(Math.Pow(trait.GetStacks(), 2) - 1) / 10)));
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -61,7 +58,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await e.strength.SetValueDefault(0, trait);
+            await e.strength.SetValue(0, trait);
         }
     }
 }

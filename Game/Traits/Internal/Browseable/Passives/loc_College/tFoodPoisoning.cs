@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -12,7 +11,7 @@ namespace Game.Traits
     {
         const string ID = "food_poisoning";
         const int PRIORITY = 5;
-        const float HP_STR_DECREASE_SCALE = 1f;
+        static readonly TraitStatFormula _healthF = new(true, 0.50f, 0.50f);
 
         public tFoodPoisoning() : base(ID)
         {
@@ -28,16 +27,15 @@ namespace Game.Traits
 
         public override string DescRich(ITableTrait trait)
         {
-            float effect = HP_STR_DECREASE_SCALE * 100 * trait.GetStacks();
             return DescRichBase(trait, new TraitDescChunk[]
             {
                 new($"После смерти владельца (П{PRIORITY})",
-                    $"уменьшает силу и здоровье инициатора на <u>{effect}%</u>."),
+                    $"уменьшает силу и здоровье инициатора на {_healthF.Format(trait)}."),
             });
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 20 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(24, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -60,11 +58,11 @@ namespace Game.Traits
 
             BattleFieldCard killer = e.source.AsBattleFieldCard();
             if (killer == null) return;
-            float relDecrease = -HP_STR_DECREASE_SCALE * trait.GetStacks();
 
+            float value = _healthF.Value(trait);
             await trait.AnimActivation();
-            await killer.strength.AdjustValueScale(relDecrease, trait);
-            await killer.health.AdjustValueScale(relDecrease, trait);
+            await killer.Strength.AdjustValueScale(value, trait);
+            await killer.Health.AdjustValueScale(value, trait);
         }
     }
 }
