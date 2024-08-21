@@ -34,7 +34,7 @@ namespace Game.Effects
             get => _musicVolumeScale;
             set
             {
-                if (value < 0 || value > 1)
+                if (value < 0) // TODO: set max limit to 1
                     throw new ArgumentOutOfRangeException("value");
                 _musicVolumeScale = value;
                 foreach (MusicSource source in _musicSources)
@@ -314,6 +314,10 @@ namespace Game.Effects
                     await UniTask.Yield();
                 else break;
             }
+        }
+        public static void ResetMusicMixes()
+        {
+            _musicMixes.Clear();
         }
         public static void StopMusic()
         {

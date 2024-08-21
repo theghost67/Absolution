@@ -4,6 +4,7 @@ using Game.Effects;
 using Game.Territories;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 namespace Game.Traits
 {
@@ -31,19 +32,22 @@ namespace Game.Traits
         protected tWeaving(tWeaving other) : base(other) { }
         public override object Clone() => new tWeaving(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            string formula = _statsF.Format(trait);
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале каждого хода, пока владелец жив (П{PRIORITY})",
-                    $"Выдаёт карту <i>{cardName}</i>. Карта будет иметь {CARD_PRICE} ед. стоимости, {CARD_MOXIE} ед. инициативы, <u>{formula}</u> здоровья и <u>{formula}</u> силы."),
-            });
+            return $"<color>В начале хода (П{PRIORITY})</color>\nДаёт стороне-владельцу карту <nobr><color><u>{cardName}</u></color></nobr>. Тратит все заряды.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            int formula = _statsF.ValueInt(args.stacks);
+            int[] stats = new int[] { CARD_PRICE, CARD_MOXIE, formula, formula };
+
+            return new DescLinkCollection()
+            { new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = stats } };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsLinear(12, stacks);
+            return base.Points(owner, stacks) + PointsLinear(8, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -66,10 +70,12 @@ namespace Game.Traits
 
             BattleFieldCard owner = trait.Owner;
             if (owner.Field == null) return;
-            await trait.AnimActivation();
 
             FieldCard newCard = CardBrowser.NewField(CARD_ID);
-            int formula = (int)_statsF.Value(trait);
+            int formula = _statsF.ValueInt(trait.GetStacks());
+
+            await trait.AnimActivation();
+            await trait.SetStacks(0, trait);
 
             newCard.price = new CardPrice(CardBrowser.GetCurrency("gold"), CARD_PRICE);
             newCard.moxie = CARD_MOXIE;

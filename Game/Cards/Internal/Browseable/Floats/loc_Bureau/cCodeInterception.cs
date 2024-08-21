@@ -16,16 +16,21 @@ namespace Game.Cards
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 4);
-            frequency = 1.00f;
         }
         protected cCodeInterception(cCodeInterception other) : base(other) { }
         public override object Clone() => new cCodeInterception(this);
 
-        public override string DescRich(ITableCard card)
+        protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return DescRichBase(card, $"Создаёт карты <i>{cardName}</i> напротив каждой вражеской карты (если поле напротив сводобно). " +
-                                      $"Здоровье карты будет равняться сумме здоровья и силы карты напротив.");
+            return $"Создаёт карты <u>{cardName}</u> напротив каждой вражеской карты (если поле напротив сводобно). " +
+                   $"Здоровье карты будет равняться сумме здоровья и силы карты напротив.";
+        }
+        public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
+        {
+            int[] stats = new int[] { 0, 0, -1, 0 };
+            return new DescLinkCollection()
+            { new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = stats } };
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

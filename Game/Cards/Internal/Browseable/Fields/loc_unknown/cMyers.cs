@@ -10,7 +10,6 @@
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
-            frequency = 1.00f;
         }
         protected cMyers(cMyers other) : base(other) { }
         public override object Clone() => new cMyers(this);

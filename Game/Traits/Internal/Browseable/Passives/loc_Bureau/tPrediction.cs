@@ -28,17 +28,14 @@ namespace Game.Traits
         protected tPrediction(tPrediction other) : base(other) { }
         public override object Clone() => new tPrediction(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При появлении любой союзной карты на территории (П{PRIORITY})",
-                    $"увеличивает её инициативу на {_moxieF.Format(trait)}. Эффект пропадает в случае, если: заряды истощаются, карта перестаёт быть союзной или владелец погибает."),
-            });
+            return $"<color>При появлении любой союзной карты на территории (П{PRIORITY})</color>\n" +
+                   $"увеличивает инициативу цели на {_moxieF.Format(args.stacks, true)}. Эффект пропадает в случае, если: заряды истощаются, карта перестаёт быть союзной или владелец погибает.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 40 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(24, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -63,7 +60,7 @@ namespace Game.Traits
             string guid = trait.GuidGen(e.target.Guid);
             if (e.canSeeTarget)
             {
-                int moxie = (int)_moxieF.Value(trait);
+                int moxie = (int)_moxieF.Value(e.traitStacks);
                 await trait.AnimDetectionOnSeen(e.target);
                 await e.target.Moxie.AdjustValue(moxie, trait, guid);
             }

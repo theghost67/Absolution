@@ -27,17 +27,14 @@ namespace Game.Traits
         protected tReflection(tReflection other) : base(other) { }
         public override object Clone() => new tReflection(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После атаки на владельца (П{PRIORITY})",
-                    $"Атакует атакующего в ответ с силой, равной {_strengthF.Format(trait)} от атаки."),
-            });
+            return $"<color>После атаки на владельца (П{PRIORITY})</color>\n" +
+                   $"Атакует атакующего в ответ с силой, равной {_strengthF.Format(args.stacks)} от атаки.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(30, stacks);
+            return base.Points(owner, stacks) + PointsExponential(18, stacks, 1, 1.5f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -61,7 +58,7 @@ namespace Game.Traits
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
-            int strength = (e.strength * _strengthF.Value(trait)).Rounded();
+            int strength = (e.Strength * _strengthF.Value(trait.GetStacks())).Rounded();
             BattleInitiationSendArgs initiation = new(owner, strength, true, false, e.Sender.Field);
             await trait.AnimActivation();
             owner.Territory.Initiations.EnqueueAndRun(initiation);

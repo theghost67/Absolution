@@ -3,11 +3,11 @@ using GreenOne.Console;
 using System.Linq;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
-    public class cmdDeckCardAdd : Command
+    public class cmdDeckCard : Command
     {
-        const string ID = "deck_card_add";
+        const string ID = "deckcard";
         const string DESC = "создаёт и добавляет карту в колоду игрока";
 
         class IdArg : CommandArg
@@ -43,7 +43,7 @@ namespace Game
             }
         }
 
-        public cmdDeckCardAdd() : base(ID, DESC) { }
+        public cmdDeckCard() : base(ID, DESC) { }
 
         protected override void Execute(CommandArgInputDict args)
         {

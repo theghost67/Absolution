@@ -10,7 +10,6 @@
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
-            frequency = 1.00f;
         }
         protected cCyberCutlet(cCyberCutlet other) : base(other) { }
         public override object Clone() => new cCyberCutlet(this);

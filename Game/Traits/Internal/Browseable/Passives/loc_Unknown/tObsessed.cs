@@ -26,13 +26,10 @@ namespace Game.Traits
         protected tObsessed(tObsessed other) : base(other) { }
         public override object Clone() => new tObsessed(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"Перед атакой владельца в конце хода (П{PRIORITY})",
-                    $"Меняет цель атаки на вражескую карту с наибольшим количеством здоровья. Тратит все заряды."),
-            });
+            return $"<color>Перед атакой владельца (П{PRIORITY})</color>\n" +
+                   $"Меняет цель атаки на вражескую карту с наибольшим количеством здоровья. Тратит все заряды.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -42,12 +39,12 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
-                trait.Owner.OnInitiationPreSent.Add(trait.GuidStr, OnOwnerInitiationPreReceived, PRIORITY);
+                trait.Owner.OnInitiationPreSent.Add(trait.GuidStr, OnOwnerInitiationPreSent, PRIORITY);
             else if (trait.WasRemoved(e))
                 trait.Owner.OnInitiationPreSent.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationSendArgs e)
+        static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
             if (owner.IsKilled || owner.Field == null) return;

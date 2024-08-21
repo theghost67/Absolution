@@ -10,7 +10,7 @@
         public bool WeightIsEnough(BattleWeightResult<T> result)
         {
             BattleWeight weightThreshold = WeightDeltaUseThreshold(result);
-            if (weightThreshold.Equals(BattleWeight.none))
+            if (weightThreshold.Equals(BattleWeight.zero))
                 return true;
             if (weightThreshold.relative >= 0 && result.WeightDeltaRel >= weightThreshold.relative)
                 return true;

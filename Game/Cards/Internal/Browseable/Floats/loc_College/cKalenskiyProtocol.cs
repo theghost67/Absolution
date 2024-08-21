@@ -17,15 +17,14 @@ namespace Game.Cards
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
-            frequency = 1.00f;
         }
         protected cKalenskiyProtocol(cKalenskiyProtocol other) : base(other) { }
         public override object Clone() => new cKalenskiyProtocol(this);
 
-        public override string DescRich(ITableCard card)
+        protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return DescRichBase(card, $"Переносит инициативу всех карт на своей территории в их силу: -1 ед. инициативы в +{MOXIE_TO_STRENGTH_REL * 100}% силы. " +
-                                      $"Перенос более {MAX_MOXIE_TO_STRENGTH} инициативы не даёт бонус к силе.");
+            return $"Переносит инициативу всех карт на своей территории в их силу: -1 ед. инициативы в +{MOXIE_TO_STRENGTH_REL * 100}% силы. " +
+                   $"Перенос более {MAX_MOXIE_TO_STRENGTH} инициативы не даёт бонус к силе.";
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

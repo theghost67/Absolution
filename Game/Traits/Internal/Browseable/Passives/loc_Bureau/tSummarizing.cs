@@ -1,9 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
-using Game.Effects;
 using Game.Territories;
 using GreenOne;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -23,24 +21,26 @@ namespace Game.Traits
             desc = "Приговор может быть смертельнее всякого оружия.";
 
             rarity = Rarity.Rare;
-            tags = TraitTag.Static;
+            tags = TraitTag.None;
             range = new BattleRange(TerritoryRange.oppositeSingle);
         }
         protected tSummarizing(tSummarizing other) : base(other) { }
         public override object Clone() => new tSummarizing(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После атаки на владельца (П{PRIORITY})",
-                    $"Увеличивает количество зарядов навыка <i>{traitName}</i> на {_ratioF.Format(trait)} от силы атаки."),
-            });
+            return $"<color>После атаки на владельца (П{PRIORITY})</color>\n" +
+                   $"Увеличивает количество зарядов навыка <nobr><color><u>{traitName}</u></color></nobr> на {_ratioF.Format(args.stacks)} от силы атаки.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true } };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(34, stacks);
+            return base.Points(owner, stacks) + PointsExponential(10, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -61,8 +61,8 @@ namespace Game.Traits
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
-            float ratio = _ratioF.Value(trait);
-            int stacks = (e.strength * ratio).Ceiling();
+            float ratio = _ratioF.Value(trait.GetStacks());
+            int stacks = (e.Strength * ratio).Ceiling();
             await owner.Traits.AdjustStacks(TRAIT_ID, stacks, trait);
         }
     }

@@ -14,7 +14,6 @@ using MyBox;
 using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 namespace Game.Menus
@@ -27,11 +26,9 @@ namespace Game.Menus
         const string ID = "battle";
 
         static readonly GameObject _prefab = Resources.Load<GameObject>("Prefabs/Menus/Places/Battle");
-        public TableTerritory Territory => _territory;
+        public BattleTerritory Territory => _territory;
         public override string LinkedMusicMixId => ID;
-
         public int DemoDifficulty { get => _demoDifficulty; set => _demoDifficulty = value; }
-        public bool PlayerControlsEnabled { get; private set; }
 
         #if DEMO
         const int DEMO_DIFFICULTY_MIN = 1;
@@ -130,18 +127,23 @@ namespace Game.Menus
 
         readonly Drawer _turnButton;
         readonly Drawer _fleeButton;
-
         readonly TextMeshPro _logTextMesh;
         readonly TextMeshPro _descTextMesh;
+
+        bool _territoryEndTurnIsPending;
         pTerritory _territory;
         SquaresBackground _bg;
         Sequence _deathsDoorSequence;
+        Tween _beatTween;
+
+        TableTerritory IMenuWithTerritory.Territory => _territory;
 
         protected class pFieldCard : BattleFieldCard, IBattleSleeveCard
         {
             public BattleSleeve Sleeve => Side.Sleeve;
             public ITableSleeveCard AsInSleeve => this;
             readonly BattlePlaceMenu _menu;
+            bool _endTurnDropBlockIsActive; // will not allow to take/place cards after turn button was clicked
 
             public pFieldCard(BattlePlaceMenu menu, FieldCard data, BattleSide side) : base(data, side)
             {
@@ -161,6 +163,7 @@ namespace Game.Menus
             }
             protected override Drawer DrawerCreator(Transform parent)
             {
+                if (Territory.DrawersAreNull) return null;
                 Drawer drawer = base.DrawerCreator(parent);
                 drawer.OnMouseEnter += OnDrawerMouseEnter;
                 drawer.OnMouseLeave += OnDrawerMouseLeave;
@@ -176,10 +179,8 @@ namespace Game.Menus
 
             public bool CanTake()
             {
-                bool result = BattleArea.IsAnyAiming;
-                if (!result && Side.isMe && _menu._territory.PhaseAwaitsPlayer)
-                    result = Side.CanAfford(this);
-
+                if (BattleArea.IsAnyAiming) return false;
+                bool result = Side.isMe && Side.CanAfford(this) && _menu._territory.IsPlayerPhase() && !_endTurnDropBlockIsActive;
                 if (!result)
                     Drawer.transform.DOAShake();
                 return result;
@@ -197,7 +198,7 @@ namespace Game.Menus
 
             public bool CanPullOut()
             {
-                return Side.CanAfford(this);
+                return Side.isMe && Side.CanAfford(this);
             }
             public bool CanPullIn()
             {
@@ -207,31 +208,38 @@ namespace Game.Menus
             public void OnTake()
             {
                 AsInSleeve.OnTakeBase();
-                _menu.SetPlayerControls(false);
                 _menu._territory.SetCardsColliders(false);
                 SetFieldsHighlight(true);
             }
             public void OnReturn()
             {
                 AsInSleeve.OnReturnBase();
-                _menu.SetPlayerControls(true);
                 _menu._territory.SetFieldsColliders(true);
                 SetFieldsHighlight(false);
             }
-            public void OnDropOn(TableField field)
+            public void OnDropOn(TableSleeveCardDropArgs e)
             {
-                AsInSleeve.OnDropOnBase(field);
+                AsInSleeve.OnDropOnBase(e);
                 if (Side.isMe)
                 {
-                    _menu.SetPlayerControls(true);
                     _menu._territory.SetFieldsColliders(true);
                     Drawer.IsSelected = false;
                     SetFieldsHighlight(false);
                 }
+                if (Drawer.IsFlipped)
+                    Drawer.FlipY();
+
+                if (!e.isPreview)
+                    _endTurnDropBlockIsActive = _menu._territoryEndTurnIsPending;
+                else
+                {
+                    _endTurnDropBlockIsActive = false;
+                    return;
+                }
+
                 Side.Purchase(this);
-                Drawer.SetSortingOrder(0);
                 Drawer.ChangePointer = false;
-                _ = Territory.PlaceFieldCard(this, (BattleField)field, Side);
+                _ = Territory.PlaceFieldCard(this, (BattleField)e.field, Side);
             }
             public Tween OnPullOut(bool sleevePull)
             {
@@ -246,20 +254,21 @@ namespace Game.Menus
             {
                 foreach (BattleField field in Side.Fields().WithoutCard())
                 {
-                    if (value) field.Drawer.SetCollider(true);
+                    if (value) field.Drawer.ColliderEnabled = true;
                     field.Drawer.SetHighlight(value);
                 }
             }
             void OnDrawerMouseEnter(object sender, DrawerMouseEventArgs e)
             {
                 BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
-
+                if (!Side.isMe) return;
                 if (Sleeve.Contains(this) && !Side.CanAfford(this))
                     drawer.priceIcon.RedrawColor(Color.red);
             }
             void OnDrawerMouseLeave(object sender, DrawerMouseEventArgs e)
             {
                 BattleFieldCardDrawer drawer = (BattleFieldCardDrawer)sender;
+                if (!Side.isMe) return;
                 drawer.priceIcon.RedrawColor();
             }
             void OnDrawerMouseClickLeft(object sender, DrawerMouseEventArgs e)
@@ -275,6 +284,7 @@ namespace Game.Menus
             public BattleSleeve Sleeve => Side.Sleeve;
             public ITableSleeveCard AsInSleeve => this;
             readonly BattlePlaceMenu _menu;
+            bool _endTurnDropBlockIsActive; // will not allow to take/place cards after turn button was clicked
 
             public pFloatCard(BattlePlaceMenu menu, FloatCard data, BattleSide side) : base(data, side)
             { 
@@ -294,6 +304,7 @@ namespace Game.Menus
             }
             protected override Drawer DrawerCreator(Transform parent)
             {
+                if (Territory.DrawersAreNull) return null;
                 Drawer drawer = base.DrawerCreator(parent);
                 drawer.OnMouseEnter += OnDrawerMouseEnter;
                 drawer.OnMouseLeave += OnDrawerMouseLeave;
@@ -302,10 +313,8 @@ namespace Game.Menus
 
             public bool CanTake()
             {
-                bool result = BattleArea.IsAnyAiming;
-                if (!result && Side.isMe && _menu._territory.PhaseAwaitsPlayer)
-                    result = Side.CanAfford(this);
-
+                if (BattleArea.IsAnyAiming) return false;
+                bool result = Side.isMe && Side.CanAfford(this) && _menu._territory.IsPlayerPhase() && !_endTurnDropBlockIsActive;
                 if (!result)
                     Drawer.transform.DOAShake();
                 return result;
@@ -321,7 +330,7 @@ namespace Game.Menus
 
             public bool CanPullOut()
             {
-                return Side.CanAfford(this);
+                return Side.isMe && Side.CanAfford(this);
             }
             public bool CanPullIn()
             {
@@ -331,25 +340,34 @@ namespace Game.Menus
             public void OnTake()
             {
                 AsInSleeve.OnTakeBase();
-                _menu.SetPlayerControls(false);
                 _menu._territory.SetCardsColliders(false);
             }
             public void OnReturn()
             {
                 AsInSleeve.OnReturnBase();
-                _menu.SetPlayerControls(true);
                 _menu._territory.SetFieldsColliders(true);
             }
-            public void OnDropOn(TableField field)
+            public void OnDropOn(TableSleeveCardDropArgs e)
             {
-                AsInSleeve.OnDropOnBase(field);
+                AsInSleeve.OnDropOnBase(e);
                 if (Side.isMe)
                 {
-                    _menu.SetPlayerControls(true);
                     _menu._territory.SetFieldsColliders(true);
                     Drawer.IsSelected = false;
                 }
+                if (Drawer.IsFlipped)
+                    Drawer.FlipY();
+
+                if (!e.isPreview)
+                    _endTurnDropBlockIsActive = _menu._territoryEndTurnIsPending;
+                else
+                {
+                    _endTurnDropBlockIsActive = false;
+                    return;
+                }
+
                 Side.Purchase(this);
+                Drawer.ChangePointer = false;
                 _ = Territory.PlaceFloatCard(this, Side);
             }
             public Tween OnPullOut(bool sleevePull)
@@ -396,10 +414,12 @@ namespace Game.Menus
 
             protected override ITableSleeveCard HoldingCardCreator(Card data)
             {
-                ITableSleeveCard card;
+                IBattleSleeveCard card;
                 if (data.isField)
                      card = new pFieldCard(_menu, (FieldCard)data, Side);
                 else card = new pFloatCard(_menu, (FloatCard)data, Side);
+                if (!card.Side.isMe)
+                     card.Drawer?.FlipY();
                 return card;
             }
             protected override ITableSleeveCard HoldingCardCloner(ITableSleeveCard src, TableSleeveCloneArgs args)
@@ -427,6 +447,8 @@ namespace Game.Menus
             public pSide(BattlePlaceMenu menu, BattleTerritory territory, bool isMe) : base(territory, isMe)
             {
                 _menu = menu;
+                if (PlayerConfig.psychoMode)
+                    Health.OnPreSet.Add(null, PsychoModeOnHealthPreSet);
                 TryOnInstantiatedAction(GetType(), typeof(pSide));
             }
             protected pSide(pSide src, BattleSideCloneArgs args) : base(src, args)
@@ -455,7 +477,7 @@ namespace Game.Menus
             protected override int HealthAtStartFunc()
             {
                 if (isMe)
-                     return _demoLocStageForPlayer * 2;
+                     return PlayerConfig.psychoMode ? 1 : _demoLocStageForPlayer * 2;
                 else return (_demoLocStageForEnemy * 2 * 1 + ((_demoDifficultyScale - 1) * 2)).Ceiling();
             }
             protected override int GoldAtStartFunc()
@@ -469,19 +491,24 @@ namespace Game.Menus
 
             protected override async UniTask OnStatPostSetBase_TOP(object sender, TableStat.PostSetArgs e)
             {
+                await base.OnStatPostSetBase_TOP(sender, e);
                 TableStat stat = (TableStat)sender;
                 BattleSide side = (BattleSide)stat.Owner;
-                await base.OnStatPostSetBase_TOP(sender, e);
-                if (stat.Id != "health" || !side.isMe || side.Drawer == null) return;
+                if (!side.isMe || stat.Id != "health" || side.Drawer == null) return;
                 float sideHealthRatio = (float)e.newStatValue / side.HealthAtStart;
                 _menu.SetDeathsDoorEffect(sideHealthRatio);
+            }
+            UniTask PsychoModeOnHealthPreSet(object sender, TableStat.PreSetArgs e)
+            {
+                if (e.deltaValue > 0)
+                    e.handled = true;
+                return UniTask.CompletedTask;
             }
         }
         protected class pTerritory : BattleTerritory
         {
-            public bool BattleStarted => _battleStarted;
+            public bool BattleStarted => PhasesPassed != 0;
             readonly BattlePlaceMenu _menu;
-            bool _battleStarted;
 
             public pTerritory(BattlePlaceMenu menu, bool playerMovesFirst, int sizeX) : base(playerMovesFirst, sizeX, menu.Transform) 
             {
@@ -524,14 +551,8 @@ namespace Game.Menus
             {
                 await base.OnStartPhaseBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
-
-                if (terr.DrawersAreNull)
-                    await terr.NextPhase();
-                else
-                {
+                if (!terr.DrawersAreNull)
                     await VFX.CreateText($"ХОД {terr.Turn}", Color.white, Vector3.zero).DOATextPopUp(0.5f).AsyncWaitForCompletion();
-                    await terr.NextPhase();
-                };
             }
             protected override async UniTask OnEnemyPhaseBase_TOP(object sender, EventArgs e)
             {
@@ -545,13 +566,6 @@ namespace Game.Menus
                 pTerritory terr = (pTerritory)sender;
                 await SidePlacePhase(terr, terr.Player);
             }
-            protected override async UniTask OnNextPhaseBase_TOP(object sender, EventArgs e)
-            {
-                await base.OnNextPhaseBase_TOP(sender, e);
-                if (_battleStarted) return;
-                
-                _battleStarted = true;
-            }
 
             async UniTask SidePlacePhase(pTerritory sender, BattleSide side)
             {
@@ -561,18 +575,24 @@ namespace Game.Menus
                 if (sender.DrawersAreNull) return;
 
                 await side.Gold.AdjustValue(1, _menu);
-                await side.Sleeve.TakeMissingCards();
-
-                if (side.isMe)
+                await side.Sleeve.TakeMissingCards(!(side.Drawer?.SleeveIsVisible ?? false));
+                if (side.isMe && !side.ai.IsEnabled)
                     _menu.SetPlayerControls(true);
-                else await side.ai.MakeTurn();
+            }
+        }
+        protected class pButtonDrawer : Drawer 
+        {
+            public pButtonDrawer(BattlePlaceMenu menu, string buttonName) : base(null, menu.Transform.Find<SpriteRenderer>(buttonName)) { }
+            protected override bool CanBeSelected()
+            {
+                return base.CanBeSelected() && !ITableSleeveCard.IsHoldingAnyCard;
             }
         }
 
         public BattlePlaceMenu() : base(ID, _prefab)
         {
-            _turnButton = new Drawer(null, Transform.Find<SpriteRenderer>("Turn button"));
-            _fleeButton = new Drawer(null, Transform.Find<SpriteRenderer>("Flee button"));
+            _turnButton = new pButtonDrawer(this, "Turn button");
+            _fleeButton = new pButtonDrawer(this, "Flee button");
 
             _logTextMesh = Transform.Find<TextMeshPro>("Log window/Text");
             _descTextMesh = Transform.Find<TextMeshPro>("Desc window/Text");
@@ -602,28 +622,6 @@ namespace Game.Menus
             SetFleeState(false);
         }
 
-        public override void Open()
-        {
-            base.Open();
-            #if DEMO
-            demo_OnBattleStart(_demoDifficulty == 0);
-            SFX.OnBeat += OnBeat;
-            #else
-            _territory.NextPhase();
-            #endif
-        }
-        public override void Close()
-        {
-            base.Close();
-            SFX.OnBeat -= OnBeat;
-        }
-        public override void SetColliders(bool value)
-        {
-            base.SetColliders(value);
-            SetPlayerControls(value && (_territory?.BattleStarted ?? false));
-            _territory?.SetFieldsColliders(value);
-        }
-
         public override void WriteLog(string text)
         {
             base.WriteLog(text);
@@ -635,18 +633,85 @@ namespace Game.Menus
             _descTextMesh.text = text;
         }
 
-        // TODO: rewrite
-        public async void TryFlee()
+        public void SetPlayerControls(bool value)
         {
-            if (!_territory?.PhaseSide?.isMe ?? true) return;
-            await _territory.TryConclude(true);
+            if (_territory == null) return;
+            if (_territory.DrawersAreNull) return;
+
+            SetBellState(value);
+            SetFleeState(value);
+
+            _territory.Player.Sleeve.Drawer.PullIn();
+            _territory.Enemy.Sleeve.Drawer.PullIn();
         }
-        public async void TryEndTurn()
+        public void Skip(bool force)
         {
-            if (!_territory?.PhaseSide?.isMe ?? true) return;
+            // TODO: remove this function
+            if (_territory == null) return;
+            if (_territory.DrawersAreNull) return;
+
+            if (force)
+                _ = OnPlayerWon(_territory, EventArgs.Empty);
+            else
+            {
+                BattleSide side = _territory.Enemy;
+                side.Health.OnPreSet.Add(null, async (s, e) => e.deltaValue = -side.HealthAtStart);
+                _ = side.Health.AdjustValue(1, null);
+            }
+        }
+
+        void TryFlee()
+        {
+            _territoryEndTurnIsPending = true;
             SetPlayerControls(false);
-            await TableEventManager.AwaitAnyEvents();
-            await _territory.NextPhase();
+            PlayerQueue.Enqueue(new PlayerAction()
+            {
+                conditionFunc = TerritoryPlayerActionsCondition,
+                successFunc = () => _ = _territory.TryConclude(),
+                abortFunc = TerritoryPlayerActionsAbort,
+            });
+        }
+        void TryEndTurn()
+        {
+            _territoryEndTurnIsPending = true;
+            SetPlayerControls(false);
+            PlayerQueue.Enqueue(new PlayerAction()
+            {
+                conditionFunc = TerritoryPlayerActionsCondition,
+                successFunc = () => _ = _territory.NextPhase(),
+                abortFunc = TerritoryPlayerActionsAbort,
+            });
+        }
+
+        protected override void Open()
+        {
+            base.Open();
+            #if DEMO
+            demo_OnBattleStart(_demoDifficulty == 0);
+            _beatTween = DOVirtual.DelayedCall(1f, demo_BeatTweenUpdate).SetLoops(-1, LoopType.Restart);
+            #else
+            _territory.NextPhase();
+            #endif
+        }
+        protected override void Close()
+        {
+            base.Close();
+            _beatTween.Kill();
+        }
+        protected override void SetCollider(bool value)
+        {
+            base.SetCollider(value);
+            SetPlayerControls(value && (_territory?.BattleStarted ?? false));
+            _territory?.SetFieldsColliders(value);
+        }
+
+        bool TerritoryPlayerActionsCondition()
+        {
+            return !_territory.IsConcluded;
+        }
+        void TerritoryPlayerActionsAbort()
+        {
+            SetPlayerControls(true);
         }
 
         async UniTask OnPlayerWon(object sender, EventArgs e)
@@ -654,8 +719,7 @@ namespace Game.Menus
             BattleTerritory terr = (BattleTerritory)sender;
             if (terr.DrawersAreNull) return;
 
-            SetColliders(false);
-            await UniTask.Delay(1000);
+            SetCollider(false);
             #if DEMO
             demo_OnBattleEnd();
             #else
@@ -667,14 +731,12 @@ namespace Game.Menus
             BattleTerritory terr = (BattleTerritory)sender;
             if (terr.DrawersAreNull) return;
 
-            SetColliders(false);
-            Traveler.TryStopTravel(complete: false);
-            await VFX.CreateScreenBG(Color.clear, Transform).DOFade(1, 0.5f).AsyncWaitForCompletion();
-            TextMeshPro text = VFX.CreateText("КОНЕЦ", Color.red, Transform);
-            text.transform.DOAShake();
-            text.sortingOrder = 600;
-            await UniTask.Delay(2000);
-            Application.Quit();
+            SetCollider(false);
+            #if DEMO
+            demo_OnBattleEnd();
+            #else
+            
+            #endif
         }
 
         void SetDeathsDoorEffect(float sideHealthRatio)
@@ -686,9 +748,10 @@ namespace Game.Menus
             float pitchTo = ratio == 0 ? 0 : 1f - 0.1f * (1f - ratio);
 
             float volumeFrom = SFX.MusicVolumeScale;
-            float volumeTo = 1f - 0.33f * (1f - ratio);
+            float volumeTo = 1f - 0.20f * (1f - ratio);
 
             Global.Volume.profile.TryGet(out ColorAdjustments component);
+            component.saturation.overrideState = true;
             component.saturation.value = -100 * (1f - ratio);
 
             _deathsDoorSequence.Kill();
@@ -716,28 +779,28 @@ namespace Game.Menus
             });
             _deathsDoorSequence.Play();
         }
-
-        void SetPlayerControls(bool value)
+        void ResetDeathsDoorEffectInstantly(bool resetSaturation = true, bool resetPitch = true, bool resetVolume = true)
         {
-            PlayerControlsEnabled = value;
-            SetBellState(value);
-            SetFleeState(value);
-
-            if (_territory == null) return;
-            BattleSleeveDrawer playerSleeve = _territory.Player.Sleeve.Drawer;
-            if (playerSleeve != null) playerSleeve.CanPullOut = value;
-            BattleSleeveDrawer enemySleeve = _territory.Enemy.Sleeve.Drawer;
-            if (enemySleeve != null) enemySleeve.CanPullOut = value;
+            if (resetSaturation)
+            {
+                Global.Volume.profile.TryGet(out ColorAdjustments component);
+                component.saturation.value = 0;
+            }
+            if (resetPitch)
+                SFX.MusicPitchScale = 1f;
+            if (resetVolume)
+                SFX.MusicVolumeScale = 1f;
         }
+
         void SetBellState(bool value)
         {
-            _turnButton.SetCollider(value);
+            _turnButton.ColliderEnabled = value;
             _turnButton.gameObject.GetComponent<SpriteRenderer>().color = value ? Color.white : Color.white.WithAlpha(0.5f);
         }
         void SetFleeState(bool value)
         {
             value = false; // TODO: remove
-            _fleeButton.SetCollider(value);
+            _fleeButton.ColliderEnabled = value;
             _fleeButton.gameObject.GetComponent<SpriteRenderer>().color = value ? Color.white : Color.white.WithAlpha(0.5f);
         }
 
@@ -746,61 +809,74 @@ namespace Game.Menus
         {
             if (cFieldChoices == 0 && cFloatChoices == 0)
                 return demo_CreateCardUpgrade(uPointsLimit);
-            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, Global.rerollsAtStart - _demoDifficulty);
+            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, PlayerConfig.rerollsAtStart - _demoDifficulty);
             menu.MenuWhenClosed = () => demo_CreateCardUpgrade(uPointsLimit);
-            menu.OnClosed += menu.Destroy;
+            menu.OnClosed += menu.TryDestroy;
             return menu;
         }
         Menu demo_CreateCardUpgrade(int uPointsLimit)
         {
             CardUpgradeMenu menu = new(Player.Deck, uPointsLimit);
             menu.MenuWhenClosed = () => this;
-            menu.OnClosed += menu.Destroy;
+            menu.OnClosed += menu.TryDestroy;
             return menu;
         }
 
         async void demo_OnBattleEnd()
         {
-            if (_demoDifficulty == DEMO_DIFFICULTY_MID)
+            Global.OnUpdate -= demo_SpeedUpUpdate;
+            DOTween.timeScale = 1f;
+
+            if (Territory.Player.Health <= 0)
+            {
+                Traveler.TryStopTravel(complete: false);
+                await VFX.CreateScreenBG(Color.clear, Transform).DOFade(1, 0.5f).AsyncWaitForCompletion();
+                TextMeshPro text = VFX.CreateText($"КОНЕЦ\n<size=50%>время: {demo_TimeSpanFormat()}\n\n[Enter] главное меню\n[Shift+Esc] сдаться", Color.white, Transform);
+                text.transform.DOAShake();
+                text.sortingOrder = 600;
+                Global.OnUpdate += demo_EndChoiceOnUpdate;
+                SFX.StopMusic();
+            }
+            else if (_demoDifficulty == DEMO_DIFFICULTY_MID)
             {
                 SpriteRenderer bg = VFX.CreateScreenBG(Color.clear, Transform);
                 bg.name = "Black bg";
                 await bg.DOFade(1, 0.5f).AsyncWaitForCompletion();
-                TextMeshPro text = VFX.CreateText($"КОНЕЦ?\n<size=50%>[ENTER] начать хардкор\n[ESC]: сбежать", Color.white, Transform);
+                TextMeshPro text = VFX.CreateText($"ФИНАЛ?\n<size=50%>время: {demo_TimeSpanFormat()}\n\n<size=50%>[Enter] начать хардкор\n[Shift+Esc] сбежать", Color.white, Transform);
                 text.sortingOrder = 410;
                 text.transform.DOAShake();
                 text.name = "Black text";
-                Global.OnUpdate += demo_choice_OnUpdate;
+                Global.OnUpdate += demo_StageFiveChoiceOnUpdate;
             }
             else if (_demoDifficulty == DEMO_DIFFICULTY_MAX)
             {
                 SpriteRenderer bg = VFX.CreateScreenBG(Color.clear, Transform);
                 bg.name = "Black bg";
                 await bg.DOFade(1, 0.5f).AsyncWaitForCompletion();
-                TimeSpan span = DateTime.Now - _demoStartTime;
-                int minutes = span.Minutes;
-                int seconds = span.Seconds;
-                string minutesStr = minutes < 10 ? "0" + minutes : minutes.ToString();
-                string secondsStr = seconds < 10 ? "0" + seconds : seconds.ToString();
-                TextMeshPro text = VFX.CreateText($"ФИНАЛ\n<size=50%>время: {minutesStr}:{secondsStr}", Color.white, Transform);
+                string headerStr = PlayerConfig.psychoMode ? "ФИНАЛ" : "ФИНАЛ НА ПСИХЕ";
+                TextMeshPro text = VFX.CreateText($"{headerStr}\n<size=50%>время: {demo_TimeSpanFormat()}\n\n[Enter] главное меню\n[Shift+Esc] уйти красиво", Color.white, Transform);
                 text.sortingOrder = 410;
                 text.transform.DOAShake();
                 text.name = "Black text";
+                Global.OnUpdate += demo_EndChoiceOnUpdate;
             }
             else demo_OnBattleEndBase();
         }
         async void demo_OnBattleEndBase()
         {
-            int pointsPerCard = demo_DifficultyToLocStage(_demoDifficulty + 1);
-            Traveler.DeckCardsCount(pointsPerCard, out int fieldCards, out int floatCards);
-            int pointsLimit = fieldCards * pointsPerCard;
+            //int fieldCards = Player.Deck.fieldCards.Count;
+            //int floatCards = Player.Deck.floatCards.Count;
 
-            int fieldsChoices = (fieldCards - _demoPrevFieldsCount).ClampedMin(1);
-            int floatsChoices = _demoDifficulty >= 3 && _demoDifficulty < DEMO_DIFFICULTY_MID ? 1 : 0;
+            int pointsPerCard = demo_DifficultyToLocStage(_demoDifficulty + 1);
+            Traveler.DeckCardsCount(pointsPerCard, out int fieldCardsRecommended, out int floatCardsRecommended);
+            int pointsLimit = fieldCardsRecommended * pointsPerCard;
+
+            int fieldsChoices = (fieldCardsRecommended - _demoPrevFieldsCount).ClampedMin(1);
+            int floatsChoices = _demoDifficulty >= 3 && _demoDifficulty <= DEMO_DIFFICULTY_MID ? 1 : 0;
             int cardsPerChoice = (_demoDifficulty + 2).ClampedMax(5);
 
-            _demoPrevFieldsCount = fieldCards;
-            _demoPrevFloatsCount = floatCards;
+            _demoPrevFieldsCount = fieldCardsRecommended;
+            _demoPrevFloatsCount = floatCardsRecommended;
 
             Menu menu = demo_CreateCardChooseAndUpgrade(pointsPerCard, fieldsChoices, floatsChoices, cardsPerChoice, pointsLimit);
             await MenuTransit.Between(this, menu, ResetDeathsDoorEffect);
@@ -822,6 +898,7 @@ namespace Game.Menus
             _territory?.Dispose();
             _territory = new pTerritory(this, demo_DifficultyToPlayerIfFirst(_demoDifficulty), sizeX: 5);
             _territory.Enemy.ai.Style = (BattleAI.PlayStyle)UnityEngine.Random.Range(0, 3);
+            //_territory.Enemy.Drawer.SleeveIsVisible = true; // TODO: remove
 
             SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
             await UniTask.Delay(500);
@@ -852,6 +929,7 @@ namespace Game.Menus
             bg.DOFade(0, 0.5f);
             await bgText.DOFade(0, 0.5f).SetDelay(1f).AsyncWaitForCompletion();
 
+            Global.OnUpdate += demo_SpeedUpUpdate;
             bg.gameObject.Destroy();
             await _territory.NextPhase();
         }
@@ -882,15 +960,35 @@ namespace Game.Menus
             7 => 56,
             _ => throw new NotSupportedException(),
         };
-
-        void demo_choice_OnUpdate()
+        static string demo_TimeSpanFormat()
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
-                Application.Quit();
+            TimeSpan span = DateTime.Now - _demoStartTime;
+            int minutes = span.Minutes;
+            int seconds = span.Seconds;
+            string minutesStr = minutes < 10 ? "0" + minutes : minutes.ToString();
+            string secondsStr = seconds < 10 ? "0" + seconds : seconds.ToString();
+            return $"{minutesStr}:{secondsStr}";
+        }
+
+        void demo_EndChoiceOnUpdate()
+        {
             if (!Input.GetKeyDown(KeyCode.Return))
                 return;
 
-            Global.OnUpdate -= demo_choice_OnUpdate;
+            Global.OnUpdate -= demo_EndChoiceOnUpdate;
+            _demoDifficulty = 0;
+            SFX.ResetMusicMixes();
+            SFX.MusicVolumeScale = 2f;
+            ResetDeathsDoorEffectInstantly(resetVolume: false);
+            OnClosed += TryDestroy;
+            MenuTransit.Between(this, Global.Menu);
+        }
+        void demo_StageFiveChoiceOnUpdate()
+        {
+            if (!Input.GetKeyDown(KeyCode.Return))
+                return;
+
+            Global.OnUpdate -= demo_StageFiveChoiceOnUpdate;
             demo_OnBattleEndBase();
             DOVirtual.DelayedCall(1, () =>
             {
@@ -898,11 +996,17 @@ namespace Game.Menus
                 Transform.Find("Black bg").gameObject.Destroy();
             });
         }
-        void OnBeat(BeatInfo info)
+        void demo_SpeedUpUpdate()
         {
-            if (info.beat.intensity <= 0) return;
-            _bg.lightUpDuration = info.beatMap.BpmScale * 2;
-            _bg.LightUpSquares(info.beat.intensity);
+            if (Input.GetKeyDown(KeyCode.LeftShift))
+                DOTween.timeScale = 3f;
+            else if (Input.GetKeyUp(KeyCode.LeftShift))
+                DOTween.timeScale = 1f;
+        }
+        void demo_BeatTweenUpdate()
+        {
+            if (!IsOpened) return;
+            _bg.LightUpSquares(1);
         }
         #endif
     }

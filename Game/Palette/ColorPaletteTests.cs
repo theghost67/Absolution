@@ -32,7 +32,7 @@ namespace Game.Palette
                     colors[i] = Utils.HexToColor(_inputFields[i].text);
 
                 for (int i = 0; i < colors.Length; i++)
-                    ColorPalette.All[i].ColorAll = colors[i];
+                    ColorPalette.Current = colors;
             }
             catch { }
         }

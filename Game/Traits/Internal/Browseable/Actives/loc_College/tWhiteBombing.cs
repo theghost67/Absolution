@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using Microsoft.SqlServer.Server;
 using System.Collections.Generic;
 
 namespace Game.Traits
@@ -27,18 +28,21 @@ namespace Game.Traits
         protected tWhiteBombing(tWhiteBombing other) : base(other) { }
         public override object Clone() => new tWhiteBombing(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            string format = _stacksMoxieF.Format(trait);
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на союзном поле",
-                    $"тратит все заряды, создаёт на всех пустых полях своей территории карты <i>{cardName}</i>. Карты будут иметь {format} зарядов навыка <i>{traitName}</i>."),
-                new($"При использовании на территории на вражеском поле",
-                    $"тратит все заряды, инициатива всех карт на территории напротив будет уменьшена на {format}."),
-            });
+            string format = _stacksMoxieF.Format(args.stacks);
+            return $"<color>При использовании на союзном поле</color>\nТратит все заряды, создаёт на всех пустых полях своей территории карты <nobr><color><u>{cardName}</u></color></nobr>.\n\n" +
+                   $"<color>При использовании на вражеском поле</color>\nТратит все заряды, инициатива всех карт на территории напротив будет уменьшена на {format}.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            TraitStacksPair[] traits = new TraitStacksPair[] { new(TRAIT_ID, args.stacks) };
+            return new DescLinkCollection()
+            { 
+                new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = CardDescriptiveArgs.normalStats, linkTraits = traits },
+                new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true, stacks = traits[0].stacks },
+            };
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -59,7 +63,7 @@ namespace Game.Traits
 
             BattleField target = (BattleField)e.target;
             IBattleTrait trait = (IBattleTrait)e.trait;
-            bool usedOnOwnerSide = target.Side.isMe;
+            bool usedOnOwnerSide = trait.Side.isMe == target.Side.isMe;
 
             await trait.SetStacks(0, trait.Side);
             if (usedOnOwnerSide)
@@ -68,7 +72,7 @@ namespace Game.Traits
                 foreach (BattleField field in fields)
                 {
                     FieldCard card = CardBrowser.NewField(CARD_ID);
-                    card.traits.Passives.AdjustStacks(TRAIT_ID, _stacksMoxieF.ValueInt(trait));
+                    card.traits.Passives.AdjustStacks(TRAIT_ID, _stacksMoxieF.ValueInt(e.traitStacks));
                     await trait.Side.Territory.PlaceFieldCard(card, field, trait.Side);
                 }
             }
@@ -76,7 +80,7 @@ namespace Game.Traits
             {
                 IEnumerable<BattleField> fields = trait.Side.Opposite.Fields().WithCard();
                 foreach (BattleField field in fields)
-                    await field.Card.Moxie.AdjustValue(-_stacksMoxieF.ValueInt(trait), trait);
+                    await field.Card.Moxie.AdjustValue(-_stacksMoxieF.ValueInt(e.traitStacks), trait);
             }
         }
     }

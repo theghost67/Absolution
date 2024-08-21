@@ -26,6 +26,14 @@ namespace Game.Palette
         public static IPaletteColorInfo CP => GetInfo(5); // Passive
         public static IPaletteColorInfo CA => GetInfo(6); // Active
         public static IPaletteColorInfo[] All => _instanceColorInfos;
+        public static Color[] Current 
+        {
+            set
+            {
+                for (int i = 0; i < _instanceColorInfos.Length; i++)
+                    _instanceColorInfos[i].Color = value[i];
+            }
+        }
 
         static ColorInfo[] _instanceColorInfos;
         static List<Material> _instanceLinkedMaterials;
@@ -41,7 +49,7 @@ namespace Game.Palette
             public string Hex => _colorCur.ToHex();
             public Color ColorDef { get => _colorDef; set => SetColorDef(value); }
             public Color ColorCur { get => _colorCur; set => SetColorCur(value); }
-            public Color ColorAll { set { SetColorDef(value); SetColorCur(value); } }
+            public Color Color { set => SetColorAll(value); }
 
             private readonly int _index;
             private Color _colorDef;
@@ -76,6 +84,11 @@ namespace Game.Palette
                 return _colorCurTween;
             }
 
+            private void SetColorAll(Color value)
+            {
+                SetColorDef(value);
+                SetColorCur(value);
+            }
             private void SetColorDef(Color value)
             {
                 _colorDef = value;

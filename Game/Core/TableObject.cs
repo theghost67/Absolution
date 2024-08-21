@@ -65,6 +65,8 @@ namespace Game
                 return false;
 
             _drawer = DrawerCreator(parent);
+            if (_drawer == null) return false;
+
             OnDrawerCreated?.Invoke(this, EventArgs.Empty);
             return true;
         }
@@ -77,6 +79,8 @@ namespace Game
                 return false;
 
             _drawer.TryDestroy(instantly);
+            if (!_drawer.IsDestroying) return false;
+
             OnDrawerDestroyed?.Invoke(this, EventArgs.Empty);
             _drawer = null;
             return true;

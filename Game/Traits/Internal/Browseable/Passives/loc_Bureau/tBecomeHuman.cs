@@ -28,14 +28,16 @@ namespace Game.Traits
         protected tBecomeHuman(tBecomeHuman other) : base(other) { }
         public override object Clone() => new tBecomeHuman(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(OBS_CARD_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При появлении карты <i>{cardName}</i> на союзной стороне (П{PRIORITY})",
-                    $"Увеличивает свою силу на {_strengthF.Format(trait)} и инициативу на {_moxieF.Format(trait)}."),
-            });
+            return $"<color>При появлении карты <nobr><u>{cardName}</u></nobr> на союзной стороне (П{PRIORITY})</color>\n" +
+                   $"Увеличивает свою силу на {_strengthF.Format(args.stacks)} и инициативу на {_moxieF.Format(args.stacks, true)}.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new CardDescriptiveArgs(OBS_CARD_ID) };
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
@@ -48,8 +50,8 @@ namespace Game.Traits
             if (e.canSeeTarget)
             {
                 await trait.AnimDetectionOnSeen(e.target);
-                await owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait, guid);
-                await owner.Moxie.AdjustValue(_moxieF.Value(trait), trait, guid);
+                await owner.Strength.AdjustValueScale(_strengthF.Value(e.traitStacks), trait, guid);
+                await owner.Moxie.AdjustValue(_moxieF.Value(e.traitStacks), trait, guid);
             }
             else
             {

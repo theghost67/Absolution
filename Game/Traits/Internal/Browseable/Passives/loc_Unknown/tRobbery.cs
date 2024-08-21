@@ -12,7 +12,7 @@ namespace Game.Traits
     {
         const string ID = "robbery";
         const int PRIORITY = 7;
-        static readonly TraitStatFormula _goldF = new(false, 1, 0);
+        static readonly TraitStatFormula _goldF = new(false, 0, 1);
         static readonly TraitStatFormula _moxieF = new(false, 3, 0);
 
         public tRobbery() : base(ID)
@@ -27,17 +27,14 @@ namespace Game.Traits
         protected tRobbery(tRobbery other) : base(other) { }
         public override object Clone() => new tRobbery(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После убийства карты владельцем (П{PRIORITY})",
-                    $"Даёт {_goldF.Format(trait)} золота стороне-владельцу и понижает инициативу на {_moxieF.Format(trait)}. Тратит один заряд."),
-            });
+            return $"<color>После убийства карты владельцем (П{PRIORITY})</color>\n" +
+                   $"Даёт {_goldF.Format(args.stacks)} золота стороне-владельцу и понижает инициативу владельца на {_moxieF.Format(args.stacks, true)}. Тратит один заряд.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(50, stacks);
+            return base.Points(owner, stacks) + PointsExponential(24, stacks, 1);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -58,10 +55,11 @@ namespace Game.Traits
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
+            int stacks = trait.GetStacks();
             await trait.AnimActivation();
             await trait.AdjustStacks(-1, trait);
-            await owner.Side.Gold.AdjustValue(_goldF.Value(trait), trait);
-            await owner.Moxie.AdjustValue(-_moxieF.Value(trait), trait);
+            await owner.Side.Gold.AdjustValue(_goldF.Value(stacks), trait);
+            await owner.Moxie.AdjustValue(-_moxieF.Value(stacks), trait);
         }
     }
 }

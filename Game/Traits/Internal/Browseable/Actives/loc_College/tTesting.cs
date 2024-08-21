@@ -28,14 +28,10 @@ namespace Game.Traits
         protected tTesting(tTesting other) : base(other) { }
         public override object Clone() => new tTesting(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории",
-                    $"Тестирует карты все карты напротив владельца на прочность - если её инициатива ≤ {_moxieF.Format(trait)}, " +
-                    $"ей будет нанесено {_strengthF.Format(trait)} ед. урона. Тратит все заряды."),
-            });
+            return $"<color>При использовании</color>\nТестирует карты все карты напротив владельца на прочность - " +
+                   $"если её инициатива ≤ {_moxieF.Format(args.stacks)}, ей будет нанесено {_strengthF.Format(args.stacks)} урона. Тратит все заряды.";
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -52,8 +48,8 @@ namespace Game.Traits
 
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard owner = trait.Owner;
-            int moxie = _moxieF.ValueInt(trait);
-            int strength = _strengthF.ValueInt(trait);
+            int moxie = _moxieF.ValueInt(e.traitStacks);
+            int strength = _strengthF.ValueInt(e.traitStacks);
 
             await trait.SetStacks(0, owner.Side);
             IEnumerable<BattleField> fields = owner.Territory.Fields(owner.Field.pos, targets).WithCard();

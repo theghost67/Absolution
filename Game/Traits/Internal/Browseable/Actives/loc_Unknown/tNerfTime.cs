@@ -12,7 +12,7 @@ namespace Game.Traits
     public class tNerfTime : ActiveTrait
     {
         const string ID = "nerf_time";
-        const int MOXIE_DECREASE_ABS = 2;
+        static readonly TraitStatFormula _moxieF = new(false, 2, 0);
 
         public tNerfTime() : base(ID)
         {
@@ -26,13 +26,10 @@ namespace Game.Traits
         protected tNerfTime(tNerfTime other) : base(other) { }
         public override object Clone() => new tNerfTime(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на любой вражеской карте",
-                    $"Удаляет все навыки у цели, понижает инициативу всех союзных карт, кроме себя, на {MOXIE_DECREASE_ABS} ед. Тратит один заряд."),
-            });
+            return $"<color>При использовании на любой вражеской карте</color>\n" +
+                   $"Удаляет все навыки у цели, понижает инициативу всех союзных карт, кроме себя, на {_moxieF.Format(args.stacks, true)}. Тратит один заряд.";
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -40,7 +37,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(24, stacks);
+            return base.Points(owner, stacks) + PointsExponential(16, stacks);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -58,8 +55,10 @@ namespace Game.Traits
 
             await trait.SetStacks(0, owner.Side);
             target.Traits.Clear(trait);
+
+            int moxie = _moxieF.ValueInt(e.traitStacks);
             foreach (BattleFieldCard card in fields.Select(f => f.Card))
-                await card.Moxie.AdjustValue(-MOXIE_DECREASE_ABS, trait);
+                await card.Moxie.AdjustValue(-moxie, trait);
         }
     }
 }

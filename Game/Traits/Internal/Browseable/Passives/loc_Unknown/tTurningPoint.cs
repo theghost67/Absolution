@@ -24,13 +24,10 @@ namespace Game.Traits
         protected tTurningPoint(tTurningPoint other) : base(other) { }
         public override object Clone() => new tTurningPoint(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При появлении карты напротив владельца (П{PRIORITY})",
-                    $"Если инициатива цели будет меньше, чем инициатива владельца, цель сразу получит урон, равный силе владельца."),
-            });
+            return $"<color>При появлении карты напротив владельца (П{PRIORITY})</color>\n" +
+                   $"Если инициатива цели будет меньше, чем инициатива владельца, цель сразу получит урон, равный силе владельца.";
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {

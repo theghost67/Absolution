@@ -23,13 +23,9 @@ namespace Game.Traits
         protected tSprinter(tSprinter other) : base(other) { }
         public override object Clone() => new tSprinter(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на пустом союзном поле",
-                    $"Перемещает владельца на указанное поле. Тратит один заряд."),
-            });
+            return $"<color>При использовании на пустом союзном поле</color>\nПеремещает владельца на указанное поле. Тратит один заряд.";
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -37,7 +33,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(24, stacks);
+            return base.Points(owner, stacks) + PointsExponential(12, stacks, 1, 1.8f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

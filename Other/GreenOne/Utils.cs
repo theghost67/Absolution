@@ -66,6 +66,13 @@ namespace GreenOne
         #endregion
 
         #region Extensions
+        public static T TryGetValue<T>(this IReadOnlyList<T> list, int index)
+        {
+            if (index >= 0 && index < list.Count)
+                 return list[index];
+            else return default;
+        }
+
         public static void InsertionSort<T>(this IList<T> list, T value) where T : IComparable<T>
         {
             for (int i = 0; i < list.Count; i++)

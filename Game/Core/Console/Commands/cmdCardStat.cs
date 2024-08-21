@@ -1,13 +1,14 @@
 ﻿using Game.Cards;
+using Game.Menus;
 using GreenOne.Console;
 using System.Linq;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
-    public class cmdCardStatAdd : Command
+    public class cmdCardStat : Command
     {
-        const string ID = "card_stat_add";
+        const string ID = "cardstat";
         const string DESC = "добавляет значение к характеристике наведённой карты";
 
         class IdArg : CommandArg
@@ -42,11 +43,11 @@ namespace Game
             }
         }
 
-        public cmdCardStatAdd() : base(ID, DESC) { }
+        public cmdCardStat() : base(ID, DESC) { }
 
         protected override void Execute(CommandArgInputDict args)
         {
-            if (TableEventManager.CanAwaitAnyEvents())
+            if (TableEventManager.CountAll() != 0)
             {
                 TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
                 return;
@@ -69,8 +70,8 @@ namespace Game
                     TableConsole.Log("Карта способности не имеет данной характеристики.", LogType.Error);
                     return;
                 }
-                card.Price.AdjustValue(value, null);
-                TableConsole.Log($"Характеристика ({id}) карты была изменена на {value} (от: null).", LogType.Log);
+                card.Price.AdjustValue(value, Menu.GetCurrent());
+                TableConsole.Log($"Характеристика ({id}) карты была изменена на {value} (от: меню).", LogType.Log);
                 return;
             }
 
@@ -84,8 +85,8 @@ namespace Game
                 _ => throw new System.NotSupportedException(),
             };
 
-            stat.AdjustValue(value, null);
-            TableConsole.Log($"Характеристика ({id}) карты была изменена на {value} (от: null).", LogType.Log);
+            stat.AdjustValue(value, Menu.GetCurrent());
+            TableConsole.Log($"Характеристика ({id}) карты была изменена на {value} (от: меню).", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

@@ -20,18 +20,14 @@ namespace Game.Traits
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
-            range = BattleRange.self;
+            range = new BattleRange(TerritoryRange.oppositeSingle);
         }
         protected tSentence(tSentence other) : base(other) { }
         public override object Clone() => new tSentence(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории",
-                    $"Наносит цели урон, равный количеству зарядов навыка. Тратит все заряды."),
-            });
+            return $"<color>При использовании на вражеской карте напротив</color>\nНаносит цели урон, равный количеству зарядов навыка. Тратит все заряды.";
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -40,16 +36,16 @@ namespace Game.Traits
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return base.IsUsable(e) && e.isInBattle && e.target.Opposite.Card != null;
+            return base.IsUsable(e) && e.isInBattle && e.target.Card != null;
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
             await base.OnUse(e);
 
             IBattleTrait trait = (IBattleTrait)e.trait;
-            BattleFieldCard target = (BattleFieldCard)e.target.Opposite.Card;
+            BattleFieldCard target = (BattleFieldCard)e.target.Card;
 
-            int damage = e.trait.GetStacks();
+            int damage = e.traitStacks;
             await trait.SetStacks(0, trait.Side);
             target.Drawer.CreateTextAsSpeech($"Приговор\n<size=50%>-{damage}", Color.red);
             await target.Health.AdjustValue(-damage, trait);

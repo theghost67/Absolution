@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
     public class cmdData : Command
     {
@@ -17,7 +17,7 @@ namespace Game
                 ProcessStartInfo info = new(Application.persistentDataPath) { UseShellExecute = true };
                 Process.Start(info);
             }
-            catch { TableConsole.Log("Не удалось запустить процесс.", LogType.Error); }
+            catch { TableConsole.Log($"Не удалось запустить папку с данными (путь: {Application.persistentDataPath})", LogType.Error); }
         }
     }
 }

@@ -25,23 +25,6 @@ namespace Game.Cards
             _textMesh = transform.Find<TextMeshPro>("Text");
         }
 
-        public override void SetSortingOrder(int value, bool asDefault = false)
-        {
-            base.SetSortingOrder(value, asDefault);
-            int overlapOrder = value + 1;
-            _textMesh.sortingOrder = overlapOrder;
-        }
-        public override void SetAlpha(float value)
-        {
-            base.SetAlpha(value);
-            _textMesh.SetAlpha(value);
-        }
-        public override void SetColor(Color value)
-        {
-            base.SetColor(value);
-            _textMesh.color = value;
-        }
-
         public override void RedrawValueAsNull()
         {
             _textTween.Kill();
@@ -58,6 +41,18 @@ namespace Game.Cards
         public override void RedrawColor(Color color)
         {
             _textMesh.color = color;
+        }
+
+        protected override void SetSortingOrder(int value)
+        {
+            base.SetSortingOrder(value);
+            int overlapOrder = value + 1;
+            _textMesh.sortingOrder = overlapOrder;
+        }
+        protected override void SetColor(Color value)
+        {
+            base.SetColor(value);
+            _textMesh.color = value;
         }
 
         void RedrawText(int value)

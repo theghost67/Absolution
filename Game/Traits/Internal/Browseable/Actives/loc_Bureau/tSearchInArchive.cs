@@ -27,14 +27,16 @@ namespace Game.Traits
         protected tSearchInArchive(tSearchInArchive other) : base(other) { }
         public override object Clone() => new tSearchInArchive(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании",
-                    $"Создаёт рядом с собой карты {cardName} с {_healthF.Format(trait)} здоровья. Тратит все заряды."),
-            });
+            return $"<color>При использовании</color>\nСоздаёт рядом с собой карты <nobr><color><u>{cardName}</u></color></nobr>. Тратит все заряды.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            int[] stats = new int[] { 0, 0, _healthF.ValueInt(args.stacks), 0 };
+            return new DescLinkCollection()
+            { new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = stats } };
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -55,12 +57,13 @@ namespace Game.Traits
 
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField[] fields = trait.Territory.Fields(trait.Field.pos, _range).WithoutCard().ToArray();
-            int health = _healthF.ValueInt(trait);
+            int health = _healthF.ValueInt(e.traitStacks);
 
             await trait.SetStacks(0, trait.Side);
             foreach (BattleField field in fields)
             {
                 FieldCard card = CardBrowser.NewField(CARD_ID);
+                card.traits.Clear();
                 card.health = health;
                 await trait.Territory.PlaceFieldCard(card, field, trait);
             }

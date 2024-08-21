@@ -7,7 +7,7 @@ namespace Game
     /// </summary>
     public interface ITableEntrySource : IUnique, ITableFindable, ITableLoggable { }
 
-    /*  NOTE: 'pre' events shouldn't apply if source == null (as it's an internal action)
+    /*  NOTE: source should be null only if it's a dispose or an internal action (like territory's continuous attach)
 
         Most common entry sources:
         0. null
@@ -26,6 +26,6 @@ namespace Game
            do NOT modify menu if TableTerritory.DrawersAreNull (i.e. source should be READ-ONLY)
 
         Try to handle all common source in events in switch expression with pattern-matching
-        Also you can use properties Trait.isPassive and Card.isField
+        Also you can use Trait.isPassive and Card.isField
     */
 }

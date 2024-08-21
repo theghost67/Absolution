@@ -10,8 +10,9 @@ namespace Game.Territories
     /// </summary>
     public readonly struct BattleWeight : IEquatable<BattleWeight>
     {
-        public static readonly BattleWeight none = new(0, 0);
-        public static readonly BattleWeight negative = new(-1, -1);
+        public static readonly BattleWeight one = new(1, 0);
+        public static readonly BattleWeight zero = new(0, 0);
+        public static readonly BattleWeight negative = new(-1, 0);
 
         public readonly float absolute;
         public readonly float relative;

@@ -25,13 +25,9 @@ namespace Game.Traits
         protected tLookOfDespair(tLookOfDespair other) : base(other) { }
         public override object Clone() => new tLookOfDespair(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При появлении карты напротив владельца (П{PRIORITY})",
-                    $"уменьшает её инициативу на {_moxieF.Format(trait)}."),
-            });
+            return $"<color>При появлении карты напротив владельца (П{PRIORITY})</color>\nУменьшает её инициативу на {_moxieF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -48,7 +44,7 @@ namespace Game.Traits
             if (e.canSeeTarget)
             {
                 await trait.AnimDetectionOnSeen(e.target);
-                await e.target.Moxie.AdjustValue(-_moxieF.Value(trait), trait, entryId);
+                await e.target.Moxie.AdjustValue(-_moxieF.Value(e.traitStacks), trait, entryId);
             }
             else
             {

@@ -25,17 +25,13 @@ namespace Game.Traits
         protected tFoodPoisoning(tFoodPoisoning other) : base(other) { }
         public override object Clone() => new tFoodPoisoning(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После смерти владельца (П{PRIORITY})",
-                    $"уменьшает силу и здоровье инициатора на {_healthF.Format(trait)}."),
-            });
+            return $"<color>После смерти владельца (П{PRIORITY})</color>\nУменьшает силу и здоровье атакующего на {_healthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(24, stacks);
+            return base.Points(owner, stacks) + PointsExponential(20, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -59,7 +55,7 @@ namespace Game.Traits
             BattleFieldCard killer = e.source.AsBattleFieldCard();
             if (killer == null) return;
 
-            float value = _healthF.Value(trait);
+            float value = -_healthF.Value(trait.GetStacks());
             await trait.AnimActivation();
             await killer.Strength.AdjustValueScale(value, trait);
             await killer.Health.AdjustValueScale(value, trait);

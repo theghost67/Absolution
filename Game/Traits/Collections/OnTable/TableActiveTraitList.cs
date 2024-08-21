@@ -38,7 +38,7 @@ namespace Game.Traits
                 return element;
             }
 
-            TableActiveTrait trait = new(TraitBrowser.NewActive(e.id), Set.Owner, null);
+            TableActiveTrait trait = new(Set.Owner.Data.traits.Actives[e.id]?.Trait ?? TraitBrowser.NewActive(e.id), Set.Owner, null);
             element = new TableActiveTraitListElement(this, trait, e.delta);
             return element;
         }

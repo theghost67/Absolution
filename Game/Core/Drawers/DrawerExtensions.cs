@@ -8,13 +8,13 @@ namespace Game
     {
         public static Tweener DOColor(this Drawer drawer, Color value, float duration)
         {
-            Tweener tween = DOVirtual.Color(drawer.Color, value, duration, c => drawer.SetColor(c));
+            Tweener tween = DOVirtual.Color(drawer.Color, value, duration, c => drawer.Color = c);
             tween.SetTarget(drawer);
             return tween;
         }
         public static Tweener DOFade(this Drawer drawer, float value, float duration)
         {
-            Tweener tween = DOVirtual.Float(drawer.Alpha, value, duration, a => drawer.SetAlpha(a));
+            Tweener tween = DOVirtual.Float(drawer.Alpha, value, duration, a => drawer.Alpha = a);
             tween.SetTarget(drawer);
             return tween;
         }

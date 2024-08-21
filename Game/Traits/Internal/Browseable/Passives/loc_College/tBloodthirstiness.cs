@@ -26,13 +26,9 @@ namespace Game.Traits
         protected tBloodthirstiness(tBloodthirstiness other) : base(other) { }
         public override object Clone() => new tBloodthirstiness(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После убийства карты владельцем (П{PRIORITY})",
-                    $"увеличивает силу владельца на {_strengthF.Format(trait)}."),
-            });
+            return $"<color>После убийства карты владельцем (П{PRIORITY})</color>\nУвеличивает силу владельца на {_strengthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -58,7 +54,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait);
+            await owner.Strength.AdjustValueScale(_strengthF.Value(trait.GetStacks()), trait);
         }
     }
 }

@@ -129,7 +129,9 @@ namespace Game.Territories
 
         public void RedrawHealth(int current, int max)
         {
-            _healthText.text = $"{current}/{max}";
+            if (attached.isMe && PlayerConfig.psychoMode)
+                 _healthText.text = $"<color=red>ПСИХ";
+            else _healthText.text = $"{current}/{max}";
         }
         public void RedrawGold(int value)
         {

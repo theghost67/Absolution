@@ -35,8 +35,7 @@ namespace Game.Cards
         public ITableEventVoid<BattleInitiationRecvArgs> OnInitiationPreReceived => _onInitiationPreReceived;   // before taking damage and calling 'OnInitiationConfirmed' from initiator
         public ITableEventVoid<BattleInitiationRecvArgs> OnInitiationPostReceived => _onInitiationPostReceived; // after taking damage and calling 'OnInitiationConfirmed' from initiator
 
-        public int  TurnAge  => _turnAge;
-        public int  PhaseAge => _phaseAge;
+        public int PhaseAge => _phaseAge;
         public bool IsKilled => _isKilled;
 
         public new BattleFieldCardDrawer Drawer => ((TableObject)this).Drawer as BattleFieldCardDrawer;
@@ -95,7 +94,6 @@ namespace Game.Cards
         BattleSide _side;
         BattleArea _area;
 
-        int _turnAge;
         int _phaseAge;
         bool _killBlock;
         bool _isKilled;
@@ -176,17 +174,17 @@ namespace Game.Cards
             base.Dispose();
             _area.Dispose();
 
-            OnFieldTryToAttach.Dispose();
-            OnFieldPreAttached.Dispose();
-            OnFieldPostAttached.Dispose();
-            OnPreKilled.Dispose();
-            OnPostKilled.Dispose();
-            OnKillConfirmed.Dispose();
-            OnInitiationPreSent.Dispose();
-            OnInitiationPostSent.Dispose();
-            OnInitiationConfirmed.Dispose();
-            OnInitiationPreReceived.Dispose();
-            OnInitiationPostReceived.Dispose();
+            _onFieldTryToAttach.Dispose();
+            _onFieldPreAttached.Dispose();
+            _onFieldPostAttached.Dispose();
+            _onPreKilled.Dispose();
+            _onPostKilled.Dispose();
+            _onKillConfirmed.Dispose();
+            _onInitiationPreSent.Dispose();
+            _onInitiationPostSent.Dispose();
+            _onInitiationConfirmed.Dispose();
+            _onInitiationPreReceived.Dispose();
+            _onInitiationPostReceived.Dispose();
 
             Territory.OnStartPhase.Remove(_eventsGuid);
             Territory.OnNextPhase.Remove(_eventsGuid);
@@ -297,9 +295,7 @@ namespace Game.Cards
         }
         protected override Drawer DrawerCreator(Transform parent)
         {
-            BattleFieldCardDrawer drawer = new(this, parent);
-            drawer.SetSortingOrder(10, asDefault: true);
-            return drawer;
+            return new BattleFieldCardDrawer(this, parent) { SortingOrderDefault = 10 };
         }
 
         protected override async UniTask OnStatPreSetBase_TOP(object sender, TableStat.PreSetArgs e)
@@ -330,7 +326,7 @@ namespace Game.Cards
         protected virtual UniTask<bool> OnFieldTryToAttachBase_TOP(object sender, TableFieldAttachArgs e)
         {
             BattleFieldCard card = (BattleFieldCard)sender;
-            string cardNameDebug = card.TableNameDebug;
+            string cardNameDebug = card?.TableNameDebug;
             string fieldNameDebug = e.field?.TableNameDebug;
             string sourceNameDebug = e.source?.TableNameDebug;
 
@@ -433,7 +429,7 @@ namespace Game.Cards
                 else receiversNames += $", {receiver.TableNameDebug}";
             }
 
-            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPreSent: strength: {e.strength}{manualStr}, targets: {receiversNames}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPreSent: strength: {e.Strength}{manualStr}, targets: {receiversNames}.");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnInitiationPostSentBase_TOP(object sender, BattleInitiationSendArgs e)
@@ -448,7 +444,7 @@ namespace Game.Cards
                 else receiversNames += $", {receiver.TableNameDebug}";
             }
 
-            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPostSent: strength: {e.strength}{manualStr}, targets: {receiversNames}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPostSent: strength: {e.Strength}{manualStr}, targets: {receiversNames}.");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnInitiationConfirmedBase_TOP(object sender, BattleInitiationRecvArgs e)
@@ -456,7 +452,7 @@ namespace Game.Cards
             string senderName = e.Sender.TableNameDebug;
             string receiverName = e.Receiver.TableNameDebug;
 
-            TableConsole.LogToFile("card", $"{senderName}: initiation: OnConfirmed: strength: {e.strength}, target: {receiverName}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnConfirmed: strength: {e.Strength}, target: {receiverName}.");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnInitiationPreReceivedBase_TOP(object sender, BattleInitiationRecvArgs e)
@@ -464,7 +460,7 @@ namespace Game.Cards
             string senderName = e.Sender.TableNameDebug;
             string receiverName = e.Receiver.TableNameDebug;
 
-            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPreReceived: strength: {e.strength}, target: {receiverName}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPreReceived: strength: {e.Strength}, target: {receiverName}.");
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnInitiationPostReceivedBase_TOP(object sender, BattleInitiationRecvArgs e)
@@ -472,7 +468,7 @@ namespace Game.Cards
             string senderName = e.Sender.TableNameDebug;
             string receiverName = e.Receiver.TableNameDebug;
 
-            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPostReceived: strength: {e.strength}, target: {receiverName}.");
+            TableConsole.LogToFile("card", $"{senderName}: initiation: OnPostReceived: strength: {e.Strength}, target: {receiverName}.");
             return UniTask.CompletedTask;
         }
 
@@ -510,12 +506,12 @@ namespace Game.Cards
             if (card.Field == null || card._isKilled)
                 return;
 
-            card._turnAge++;
+            card.TurnAge++;
             foreach (ITableTraitListElement element in card.Traits)
             {
-                TableTraitStorage storage = element.Trait.Storage;
-                storage.turnsDelay--;
-                storage.turnsPassed++;
+                ITableTrait trait = element.Trait;
+                trait.TurnDelay--;
+                trait.TurnAge++;
             }
         }
 
@@ -528,9 +524,9 @@ namespace Game.Cards
         BattleWeight CalculateWeight()
         {
             if (_isKilled || Field == null)
-                return BattleWeight.none;
+                return BattleWeight.zero;
 
-            float absWeight = Health + Strength;
+            float absWeight = ((int)Health).ClampedMin(0) + ((int)Strength).ClampedMin(0) * 2;
             float relWeight = 0;
 
             foreach (IBattleTraitListElement element in Traits)

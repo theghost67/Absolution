@@ -13,7 +13,7 @@ namespace Game.Traits
     /// <summary>
     /// Абстрактный базовый класс для данных игровых навыков.
     /// </summary>
-    public abstract class Trait : Unique, ISerializable, ICloneable
+    public abstract class Trait : Unique, IDescriptive, ISerializable, ICloneable
     {
         public readonly string id;
         public readonly bool isPassive; // used to remove 'is' type checks as there are only two derived types (PassiveTrait and ActiveTrait)
@@ -28,13 +28,14 @@ namespace Game.Traits
         public readonly TraitStorage storage;
 
         protected TableFinder TraitFinder => _traitFinder; // use to find attached ITableTrait on TableTerritory/BattleTerritory
-        TableFinder _traitFinder;                          // in event handlers subscribed in OnStacksChanged() method
+        private TableFinder _traitFinder;                  // in event handlers subscribed in OnStacksChanged (or other) fucntions
 
         public Trait(string id, bool isPassive) : base()
         {
             this.id = id;
             this.isPassive = isPassive;
             this.spritePath = $"Sprites/Traits/Icons/{id}";
+            this.frequency = 1f;
 
             range = BattleRange.none;
             storage = new TraitStorage(this);
@@ -58,11 +59,25 @@ namespace Game.Traits
             _traitFinder = other._traitFinder;
         }
 
-        // special characters: ≤ ≥ « »
-        public virtual string DescRich(ITableTrait trait)
+        public bool Equals(Trait other)
         {
-            return DescRichBase(trait, Array.Empty<TraitDescChunk>());
+            return id == other.id;
         }
+        public SerializationDict Serialize()
+        {
+            // TODO[IMPORTANT]: finish trait serialization
+            throw new NotImplementedException();
+        }
+
+        public abstract TableTrait CreateOnTable(Transform parent);
+        public abstract object Clone();
+        public object CloneAsNew()
+        {
+            Trait clone = (Trait)Clone();
+            clone.GiveNewGuid();
+            return clone;
+        }
+
         public virtual BattleWeight Weight(IBattleTrait trait)   // used to increase weight in battle above default value, 1 absolute weight = 1 hp
         {
             return default;
@@ -85,86 +100,95 @@ namespace Game.Traits
             return UniTask.CompletedTask;
         }
 
-        public bool Equals(Trait other)
+        public string DescDynamic(TraitDescriptiveArgs args)
         {
-            return id == other.id;
+            string contentsFormat = DescContentsFormat(args);
+            string internalFormat = DescInternalFormat(args, contentsFormat);
+            return internalFormat;
         }
-        public SerializationDict Serialize()
+        public virtual DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {
-            // TODO[IMPORTANT]: finish trait serialization
-            throw new NotImplementedException();
-        }
+            // used to show multiple tooltips on mouse over
+            // link type (to card/to trait) will be determined by value type
 
-        public abstract TableTrait CreateOnTable(Transform parent);
-        public abstract object Clone();
-        public object CloneAsNew()
-        {
-            Trait clone = (Trait)Clone();
-            clone.GiveNewGuid();
-            return clone;
-        }
+            // key = id link
+            // value = args passed to AnyBrowser.Get(id).DescDynamic() function
 
-        protected static string DescRichBase(ITableTrait trait, TraitDescChunk[] descChunks)
+            return DescLinkCollection.empty;
+        }
+        protected virtual string DescContentsFormat(TraitDescriptiveArgs args)
         {
+            // main block for description, can use args.custom created from DescParamsCreator here
+            return "";
+        }
+        protected virtual object[] DescCustomParams()
+        {
+            return Array.Empty<object>();
+        }
+        private string DescInternalFormat(TraitDescriptiveArgs args, string contents)
+        {
+            if (args.stacks <= 0 || args.isCard)
+                throw new ArgumentException(nameof(args));
+
             StringBuilder sb = new();
-            Trait data = trait.Data;
-            string headColorHex = data.isPassive ? ColorPalette.CP.Hex : ColorPalette.CA.Hex;
+            sb.Append($"<size=150%>{name} x{args.stacks}</size>\n<i>");
 
-            sb.Append($"<size=150%>{data.name} x{trait.GetStacks()}</size>\n<i>");
-            switch (data.rarity)
+            string headColorHex = isPassive ? ColorPalette.CP.Hex : ColorPalette.CA.Hex;
+            contents = contents.Replace("<color>", $"<color={headColorHex}>");
+
+            switch (rarity)
             {
                 case Rarity.None: sb.Append("Обычный"); break;
                 case Rarity.Rare: sb.Append("Редкий"); break;
                 case Rarity.Epic: sb.Append("Особый"); break;
                 default: throw new NotSupportedException();
             }
-            if (data.isPassive)
+
+            if (isPassive)
                  sb.Append(" пассивный навык</i>\n\n");
             else sb.Append(" активный навык</i>\n\n");
 
-            for (int i = 0; i < descChunks.Length; i++)
-            {
-                TraitDescChunk descChunk = descChunks[i];
-                if (i != 0)
-                     sb.Append($"\n\n<color={headColorHex}>{descChunk.header}</color>\n{descChunk.contents}");
-                else sb.Append($"<color={headColorHex}>{descChunk.header}</color>\n{descChunk.contents}");
-            }
+            sb.Append(contents);
+            if (args.linkFormat) return sb.ToString();
+            if (contents != "") 
+                sb.Append("\n\n");
 
-            string colorHex = ColorPalette.C3.Hex;
-            if (descChunks.Length != 0)
-                 sb.Append($"\n\n<color={colorHex}>");
-            else sb.Append($"<color={colorHex}>");
-            bool hasTurnText = false;
+            sb.Append($"<color={ColorPalette.C3.Hex}>");
+            bool extraLine = false;
 
-            int turnsPassed = trait.Storage.turnsPassed;
+            int turnsPassed = args.turnAge;
             if (turnsPassed > 0)
             {
                 sb.Append($"Навык наложен: {turnsPassed} х. назад\n");
-                hasTurnText = true;
+                extraLine = true;
             }
-
-            int turnsDelay = trait.Storage.turnsDelay;
+            int turnsDelay = args.turnsDelay;
             if (turnsDelay > 0)
             {
                 sb.Append($"Навык перезаряжается: {turnsDelay} х.\n");
-                hasTurnText = true;
+                extraLine = true;
+            }
+            if (args.linksAreAvailable)
+            {
+                sb.Append("Удерживайте ALT для подробностей.\n");
+                extraLine = true;
             }
 
-            if (string.IsNullOrEmpty(data.desc))
+            if (string.IsNullOrEmpty(desc))
                 return sb.ToString();
+            if (extraLine)
+                sb.Append('\n');
 
-            if (hasTurnText)
-                 sb.Append($"\n<i>«{data.desc}»");
-            else sb.Append($"<i>«{data.desc}»");
+            sb.Append($"<i>«{desc}»");
             return sb.ToString();
         }
+
         protected static float TurnDelayToWeightMod(float delay)
         {
             if (delay > 0)
                  return 2f / Mathf.Pow(2, delay);
             else return 2f;
         }
-
         protected static float PointsLinear(float perStack, int stacks, int freeStacks = 1)
         {
             if (stacks > freeStacks)
@@ -174,8 +198,21 @@ namespace Game.Traits
         protected static float PointsExponential(float perStack, int stacks, int freeStacks = 1, float f = 2)
         {
             if (stacks > freeStacks)
-                return perStack * Mathf.Pow(f, stacks - freeStacks);
+                return perStack * Mathf.Pow(f, stacks - freeStacks - 1);
             else return 0;
+        }
+
+        string IDescriptive.DescDynamic(DescriptiveArgs args)
+        {
+            return DescDynamic((TraitDescriptiveArgs)args);
+        }
+        DescLinkCollection IDescriptive.DescLinks(DescriptiveArgs args)
+        {
+            return DescLinks((TraitDescriptiveArgs)args);
+        }
+        object[] IDescriptive.DescCustomParams()
+        {
+            return DescCustomParams();
         }
     }
 }

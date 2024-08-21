@@ -9,7 +9,6 @@
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);
-            frequency = 1.00f;
         }
         protected cViktorovich(cViktorovich other) : base(other) { }
         public override object Clone() => new cViktorovich(this);

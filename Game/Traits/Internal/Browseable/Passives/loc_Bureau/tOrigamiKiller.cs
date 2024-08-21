@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using static UnityEngine.GraphicsBuffer;
 
 namespace Game.Traits
 {
@@ -22,27 +23,29 @@ namespace Game.Traits
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
-            range = new BattleRange(TerritoryRange.oppositeAll);
+            range = new BattleRange(TerritoryRange.allNotSelf);
         }
         protected tOrigamiKiller(tOrigamiKiller other) : base(other) { }
         public override object Clone() => new tOrigamiKiller(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После смерти вражеской карты <i>{cardName}</i> от любого источника (П{PRIORITY})",
-                    $"увеличивает силу владельца на {_strengthF.Format(trait)}."),
-            });
+            return $"<color>После смерти любой карты <nobr><u>{cardName}</u></nobr> от любого источника (П{PRIORITY})</color>\n" +
+                   $"увеличивает силу владельца на {_strengthF.Format(args.stacks, true)}.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection() { new CardDescriptiveArgs(CARD_ID) };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(32, stacks);
+            return base.Points(owner, stacks) + PointsExponential(18, stacks, 1, 1.6f);
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
             await base.OnTargetStateChanged(e);
+            if (e.target.Data.id != CARD_ID) return;
             if (e.canSeeTarget)
                  e.target.OnPostKilled.Add(e.trait.GuidStr, OnTargetPostKilled, PRIORITY);
             else e.target.OnPostKilled.Remove(e.trait.GuidStr);
@@ -51,13 +54,12 @@ namespace Game.Traits
         async UniTask OnTargetPostKilled(object sender, BattleKillAttemptArgs e)
         {
             BattleFieldCard target = (BattleFieldCard)sender;
-            if (target.Data.id != CARD_ID) return;
             IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(target.Territory);
             if (trait == null) return;
             BattleFieldCard owner = trait.Owner;
 
             await trait.AnimActivation();
-            await owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait);
+            await owner.Strength.AdjustValueScale(_strengthF.Value(trait.GetStacks()), trait);
         }
     }
 }

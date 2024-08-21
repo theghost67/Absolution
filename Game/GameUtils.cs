@@ -6,7 +6,6 @@ using Game.Traits;
 using GreenOne;
 using MyBox;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace Game
@@ -16,17 +15,6 @@ namespace Game
     /// </summary>
     public static class GameUtils
     {
-        #region descriptions
-        public static string DescRich(this ITableCard card)
-        {
-            return card.Data.DescRich(card);
-        }
-        public static string DescRich(this ITableTrait trait)
-        {
-            return trait.Data.DescRich(trait);
-        }
-        #endregion
-
         #region guids
         // these methods generate guids for object's event handlers and collections
         // you can use 'num' as you like (separate events base subs from derived subs or if you subscribe multiple handlers from one object to one event)
@@ -89,7 +77,7 @@ namespace Game
 
         public static bool WasAdded(this ITableTrait trait, TableTraitStacksSetArgs e)
         {
-            return WasTraitAdded(trait.GetStacks(), e.delta);
+            return WasTraitAdded(e.traitStacks, e.delta);
         }
         public static bool WasAdded(this ITableTrait trait, in int stacksDelta)
         {
@@ -106,7 +94,7 @@ namespace Game
 
         public static bool WasRemoved(this ITableTrait trait, TableTraitStacksSetArgs e)
         {
-            return WasTraitRemoved(trait.GetStacks(), e.delta);
+            return WasTraitRemoved(e.traitStacks, e.delta);
         }
         public static bool WasRemoved(this ITableTrait trait, in int stacksDelta)
         {
@@ -195,7 +183,14 @@ namespace Game
 
         public static void SetCooldown(this ITableTrait trait, int cooldown)
         {
-            trait.Storage.turnsDelay = cooldown;
+            if (trait == null) return;
+            trait.TurnDelay = cooldown;
+        }
+        public static bool IsOnCooldown(this ITableTrait trait)
+        {
+            if (trait != null)
+                 return trait.TurnDelay > 0;
+            else throw new System.NullReferenceException();
         }
         #endregion
 

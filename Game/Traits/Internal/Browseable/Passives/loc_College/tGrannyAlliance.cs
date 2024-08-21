@@ -26,14 +26,11 @@ namespace Game.Traits
         protected tGrannyAlliance(tGrannyAlliance other) : base(other) { }
         public override object Clone() => new tGrannyAlliance(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При появлении карты <i>{cardName}</i> рядом с владельцем (П{PRIORITY})",
-                    $"увеличивает силу владельца на {_strengthF.Format(trait)}, однако, при смерти одной из такой карт, владелец так же умрёт от инициатора."),
-            });
+            return $"<color>При появлении карты <nobr>{cardName}</nobr> рядом с владельцем (П{PRIORITY})</color>\nУвеличивает силу владельца на {_strengthF.Format(args.stacks)}, " +
+                    "однако, при смерти одной из такой карт, владелец так же умрёт от атакующего.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -56,7 +53,7 @@ namespace Game.Traits
             {
                 e.target.OnPostKilled.Add(trait.GuidStr, OnTargetPostKilled, PRIORITY);
                 await trait.AnimDetectionOnSeen(e.target);
-                await trait.Owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait, entryId);
+                await trait.Owner.Strength.AdjustValueScale(_strengthF.Value(e.traitStacks), trait, entryId);
             }
             else
             {
@@ -71,6 +68,7 @@ namespace Game.Traits
             BattleFieldCard observingCard = (BattleFieldCard)sender;
             BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(observingCard.Territory);
             if (trait == null) return;
+            await trait.AnimActivation();
             await trait.Owner.TryKill(BattleKillMode.Default, e.source);
         }
     }

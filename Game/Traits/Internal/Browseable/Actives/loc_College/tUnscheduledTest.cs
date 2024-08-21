@@ -17,7 +17,7 @@ namespace Game.Traits
         const string ID = "unscheduled_test";
         const string IGNORED_TRAIT_ID = "scholar";
         static readonly TraitStatFormula _moxieF = new(false, 2, 0);
-        static readonly TraitStatFormula _strengthF = new(false, 0, 4);
+        static readonly TraitStatFormula _strengthF = new(false, 0, 2);
         static readonly TerritoryRange _range = TerritoryRange.oppositeAll;
 
         public tUnscheduledTest() : base(ID)
@@ -32,19 +32,20 @@ namespace Game.Traits
         protected tUnscheduledTest(tUnscheduledTest other) : base(other) { }
         public override object Clone() => new tUnscheduledTest(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(IGNORED_TRAIT_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории",
-                    $"Тратит все заряды и испытывает каждую карту на территории напротив - если её инициатива ≤ {_moxieF.Format(trait)}." +
-                    $"Она получит {_strengthF.Format(trait)} урона. Карты с навыком <i>{traitName}</i> не получают урона."),
-            });
+            return $"<color>При использовании</color>\nТратит все заряды и испытывает каждую карту на территории напротив - " +
+                   $"если её инициатива ≤ {_moxieF.Format(args.stacks)}, она получит {_strengthF.Format(args.stacks)} урона. Карты с навыком <u>{traitName}</u> не получают урона.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new TraitDescriptiveArgs(IGNORED_TRAIT_ID) };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsLinear(12, stacks);
+            return base.Points(owner, stacks) + PointsLinear(6, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -61,8 +62,8 @@ namespace Game.Traits
 
             IBattleTrait trait = (IBattleTrait)e.trait;
             IEnumerable<BattleField> fields = trait.Owner.Territory.Fields(trait.Owner.Field.pos, _range).WithCard();
-            int moxie = _moxieF.ValueInt(trait);
-            int strength = _strengthF.ValueInt(trait);
+            int moxie = _moxieF.ValueInt(e.traitStacks);
+            int strength = _strengthF.ValueInt(e.traitStacks);
 
             await trait.SetStacks(0, trait.Side);
             foreach (BattleField field in fields)

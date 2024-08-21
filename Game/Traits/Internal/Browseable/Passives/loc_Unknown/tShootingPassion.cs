@@ -26,17 +26,14 @@ namespace Game.Traits
         protected tShootingPassion(tShootingPassion other) : base(other) { }
         public override object Clone() => new tShootingPassion(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После убийства карты владельцем (П{PRIORITY})",
-                    $"увеличивает инициативу владельца на {_moxieF.Format(trait)}."),
-            });
+            return $"<color>После убийства карты владельцем (П{PRIORITY})</color>\n" +
+                   $"увеличивает инициативу владельца на {_moxieF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(38, stacks);
+            return base.Points(owner, stacks) + PointsExponential(20, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -57,8 +54,9 @@ namespace Game.Traits
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
 
+            int stacks = trait.GetStacks();
             await trait.AnimActivation();
-            await owner.Moxie.AdjustValue(_moxieF.Value(trait), trait);
+            await owner.Moxie.AdjustValue(_moxieF.Value(stacks), trait);
         }
     }
 }

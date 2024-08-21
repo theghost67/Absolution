@@ -18,20 +18,15 @@ namespace Game.Traits
             desc = "Приказ получен, выдвигаюсь на позицию.";
 
             rarity = Rarity.Epic;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = BattleRange.none;
         }
         protected tOrderOfAttackWait(tOrderOfAttackWait other) : base(other) { }
         public override object Clone() => new tOrderOfAttackWait(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            float effect = trait.GetStacks();
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале следующего хода (П{PRIORITY})",
-                    $"Совершит свою атаку <u>{effect}</u> раз(-а) подряд. Тратит все заряды."),
-            });
+            return $"<color>В начале следующего хода (П{PRIORITY})</color>\nСовершит свою атаку. Тратит все заряды.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -55,13 +50,12 @@ namespace Game.Traits
 
             int stacks = trait.GetStacks();
             await trait.AnimActivation();
+            await trait.SetStacks(0, trait);
 
             BattleInitiationSendArgs[] initiations = new BattleInitiationSendArgs[stacks];
             for (int i = 0; i < stacks; i++)
                 initiations[i] = trait.Owner.CreateInitiation();
-
             territory.Initiations.EnqueueAndRun(initiations);
-            await trait.SetStacks(0, trait);
         }
     }
 }

@@ -25,13 +25,10 @@ namespace Game.Traits
         protected tScopePlus(tScopePlus other) : base(other) { }
         public override object Clone() => new tScopePlus(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на любой вражеской карте",
-                    $"Перед каждой последующей атакой владельца (П{PRIORITY}), цель станет целью атаки."),
-            });
+            return $"<color>При использовании на любой вражеской карте</color>\nПеред каждой последующей атакой владельца (П{PRIORITY}), <i>цель</i> станет целью атаки.\n\n" +
+                   $"<color>При перемещении владельца (П{PRIORITY})</color>\nДеактивирует эффект данного навыка.";
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -44,6 +41,7 @@ namespace Game.Traits
             BattleFieldCard owner = trait.Owner;
             trait.Storage[trait.GuidStr] = e.target.pos;
             owner.OnInitiationPreSent.Add(trait.GuidStr, OnOwnerInitiationPreSent, PRIORITY);
+            owner.OnFieldPostAttached.Add(trait.GuidStr, OnOwnerFieldPostAttached, PRIORITY);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -51,12 +49,19 @@ namespace Game.Traits
             if (!e.isInBattle) return;
 
             IBattleTrait trait = (IBattleTrait)e.trait;
-            if (!trait.WasRemoved(e)) return;
-
-            trait.Storage.Remove(trait.GuidStr);
-            trait.Owner.OnInitiationPreSent.Remove(trait.GuidStr);
+            if (trait.WasRemoved(e))
+                OnRemove(trait);
         }
 
+        static async UniTask OnOwnerFieldPostAttached(object sender, TableFieldAttachArgs e)
+        {
+            BattleFieldCard owner = (BattleFieldCard)sender;
+            IBattleTrait trait = owner.Traits.Any(ID);
+            if (trait == null) return;
+
+            await trait.AnimDeactivation();
+            OnRemove(trait);
+        }
         static async UniTask OnOwnerInitiationPreSent(object sender, BattleInitiationSendArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
@@ -69,6 +74,11 @@ namespace Game.Traits
 
             e.ClearReceivers();
             e.AddReceiver(field);
+        }
+        static void OnRemove(IBattleTrait trait)
+        {
+            trait.Storage.Remove(trait.GuidStr);
+            trait.Owner.OnInitiationPreSent.Remove(trait.GuidStr);
         }
     }
 }

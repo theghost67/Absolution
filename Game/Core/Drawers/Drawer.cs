@@ -5,13 +5,11 @@ using MyBox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 namespace Game
 {
-    // NOTES: call SetCollider/SetSortingOrder/SetAlpha/SetColor
-    // right after drawer creation (outside of the Drawer and it's derived classes) to ensure it's displaying data correctly
-
     /// <summary>
     /// Класс, позволяющий пользователю взаимодействовать с объектом, используя его <see cref="BoxCollider2D"/>.
     /// </summary>
@@ -19,6 +17,9 @@ namespace Game
     {
         public static IEnumerable<Drawer> SelectedDrawers => Behaviour.SelectedDrawers;
         public static bool InAnySelected => Behaviour.IsAnySelected;
+
+        public bool IsDestroying => _isDestroying;
+        public bool IsDestroyed => _isDestroyed;
 
         public bool IsSelected 
         {
@@ -41,13 +42,43 @@ namespace Game
                     Pointer.Redraw();
             }
         }
-        public bool ColliderEnabled => _colliderEnabled;
+        public bool ColliderEnabled
+        {
+            get => _colliderEnabled;
+            set { if (ColliderEnabled != value) SetCollider(value); }
+        }
+        public Vector2 ColliderSize
+        {
+            get => _colliderSize;
+            set { if (ColliderSize != value) SetColliderSize(value); }
+        }
 
-        public bool IsDestroying => _isDestroying;
-        public bool IsDestroyed => _isDestroyed;
+        public int SortingOrder
+        {
+            get => _sortingOrder;
+            set { if (SortingOrder != value) SetSortingOrder(value); }
+        }
+        public int SortingOrderDefault
+        {
+            get => _sortingDefault;
+            set 
+            {
+                if (SortingOrderDefault != value) 
+                    SetSortingOrderDefault(value);
+                SortingOrder = value;
+            }
+        }
 
-        public float Alpha => _color.a;
-        public Color Color => _color;
+        public float Alpha
+        {
+            get => _color.a;
+            set { if (Alpha != value) SetAlpha(value); }
+        }
+        public Color Color
+        {
+            get => _color;
+            set { if (Color != value) SetColor(value); }
+        }
 
         public event DrawerMouseEventHandler OnMouseEnter;
         public event DrawerMouseEventHandler OnMouseHover;
@@ -65,9 +96,11 @@ namespace Game
 
         readonly BoxCollider2D _collider;
         readonly Behaviour _behaviour;
-        readonly bool _colliderExists;
 
+        HorizontalAlignmentOptions _tooltipAlign;
         Func<string> _tooltipFunc;
+
+        Vector2 _colliderSize;
         Color _color;
         int _sortingOrder;
         int _sortingDefault;
@@ -75,7 +108,6 @@ namespace Game
         bool _blocksSelection;
         bool _changePointer;
         bool _colliderEnabled;
-
         bool _isDestroying;
         bool _isDestroyed;
 
@@ -171,10 +203,10 @@ namespace Game
                 foreach (Behaviour b in _aliveBehaviours)
                 {
                     Drawer drawer = b._drawer;
-                    if (!drawer._colliderExists) continue;
+                    if (drawer._collider == null) continue;
                     if (b._destroyed) continue;
 
-                    bool colliderEnabled = b._active && drawer._colliderEnabled;
+                    bool colliderEnabled = b._active && drawer.ColliderEnabled;
                     if (!colliderEnabled && !b._overlappedBefore) continue;
 
                     bool overlapsNow = colliderEnabled && drawer._collider.OverlapPoint(e.position);
@@ -185,8 +217,8 @@ namespace Game
                     if (!overlapsNow)
                     {
                         if (!b._selected) continue;
-                        b.RemoveFromSelected();
-                        b.HandleMouseEvents(e);
+                        b.TryRemoveFromSelected();
+                        b.TryHandleMouseEvents(e);
                         continue;
                     }
 
@@ -215,11 +247,11 @@ namespace Game
                     b._mouseLeft = mLeft;
 
                     if (mEntered)
-                        b.AddToSelected();
+                        b.TryAddToSelected();
                     else if (mLeft)
                     {
-                        b.RemoveFromSelected();
-                        b.HandleMouseEvents(e);
+                        b.TryRemoveFromSelected();
+                        b.TryHandleMouseEvents(e);
                     }
                 }
 
@@ -227,20 +259,21 @@ namespace Game
                 for (int i = 0; i < _selectedBehaviours.Count; i++)
                 {
                     Behaviour b = _selectedBehaviours[i];
-                    b.HandleMouseEvents(e);
+                    b.TryHandleMouseEvents(e);
                     if (!b._selected) i--; // has been removed from the list
                 }
                 _ptrLastPos = e.position;
             }
             static int BehaviourComparer(Behaviour x, Behaviour y) => x.CompareTo(y);
 
-            void AddToSelected()
+            void TryAddToSelected()
             {
+                if (!_drawer.CanBeSelected()) return;
                 _selected = true;
                 _selectedBehaviours.Add(this);
                 // events handled in foreach loop (for _selectedBehaviours)
             }
-            void RemoveFromSelected()
+            void TryRemoveFromSelected()
             {
                 if (_selected)
                 {
@@ -251,11 +284,11 @@ namespace Game
                 _selected = false;
                 _selectedBehaviours.Remove(this);
             }
-            void HandleMouseEvents(DrawerMouseEventArgs e)
+            void TryHandleMouseEvents(DrawerMouseEventArgs e)
             {
                 if (_drawer == null || _destroyed || _drawer._isDestroyed) return;
                 if (_selected && !_drawer._collider.OverlapPoint(e.position)) // will sometimes occur (why?)
-                    RemoveFromSelected();
+                    TryRemoveFromSelected();
 
                 if (_mouseEntered)
                     _drawer.OnMouseEnter.Invoke(_drawer, e);
@@ -264,7 +297,7 @@ namespace Game
                 if (_mouseLeft)
                     _drawer.OnMouseLeave.Invoke(_drawer, e);
 
-                if (!_selected || !_drawer._colliderEnabled) return;
+                if (!_selected || !_drawer.ColliderEnabled) return;
                 if (!_mouseClickHandled && e.isAnyDown)
                 {
                     e.handled = false;
@@ -283,11 +316,8 @@ namespace Game
             // can be used to force mouse leave & mouse enter invoke
             void Reselect()
             {
-                if (!_selected) return;
-                Vector2 pos = Pointer.Position;
-                DrawerMouseEventArgs args = new(pos, Vector2.zero, Input.GetMouseButtonDown(0), Input.GetMouseButtonDown(1), Input.mouseScrollDelta.y);
-                _drawer.OnMouseLeave.Invoke(_drawer, args);
-                _drawer.OnMouseEnter.Invoke(_drawer, args);
+                _overlappingBehaviours.Remove(this);
+                TryRemoveFromSelected();
             }
             void Deselect()
             {
@@ -295,8 +325,7 @@ namespace Game
                 Vector2 pos = Pointer.Position;
                 DrawerMouseEventArgs args = new(pos, Vector2.zero, Input.GetMouseButtonDown(0), Input.GetMouseButtonDown(1), Input.mouseScrollDelta.y);
                 _drawer.OnMouseLeave.Invoke(_drawer, args);
-                _overlappedBehaviours.Remove(this);
-                RemoveFromSelected();
+                TryRemoveFromSelected();
             }
 
             void Start()
@@ -342,13 +371,14 @@ namespace Game
             gameObject = transform.gameObject;
             this.attached = attached ?? gameObject;
 
+            _tooltipAlign = HorizontalAlignmentOptions.Center;
             _collider = transform.GetComponent<BoxCollider2D>();
-            _colliderExists = _collider != null;
-            _colliderEnabled = _colliderExists && _collider.enabled;
+            _colliderSize = _collider == null ? default : _collider.size;
+            _color = Color.white;
 
             _changePointer = false;
             _blocksSelection = true;
-            _color = Color.white;
+            _colliderEnabled = _collider == null || _collider.enabled;
 
             OnMouseScroll += OnMouseScrollBase;
             OnMouseEnter += OnMouseEnterBase;
@@ -390,37 +420,10 @@ namespace Game
             DestroyAnimated();
         }
 
-        public virtual void SetColliderSize(Vector2 size)
+        public void SetTooltipAlign(HorizontalAlignmentOptions align)
         {
-            _collider.size = size;
+            _tooltipAlign = align;
         }
-        public virtual void SetCollider(bool value)
-        {
-            if (_colliderExists)
-                _collider.enabled = value;
-            _colliderEnabled = value;
-        }
-        public virtual void SetSortingOrder(int value, bool asDefault = false)
-        {
-            _sortingOrder = value;
-            if (asDefault)
-                _sortingDefault = value;
-        }
-        public virtual void SetAlpha(float value)
-        { 
-            // keeps components' colors
-            _color = _color.WithAlpha(value);
-            if (SetActiveStateOnAlphaSet())
-                gameObject.SetActive(value != 0);
-        }
-        public virtual void SetColor(Color value)
-        { 
-            // ignores components' alpha levels
-            _color = value;
-            if (SetActiveStateOnAlphaSet())
-                gameObject.SetActive(value.a != 0);
-        }
-
         public void SetTooltip(string str)
         {
             _tooltipFunc = () => str;
@@ -430,19 +433,39 @@ namespace Game
             _tooltipFunc = func;
         }
 
-        public int GetSortingOrder()
+        public void SetSortingAsTop()
         {
-            return _sortingOrder;
+            SetSortingOrder(512);
         }
-        public int GetSortingOrderDefault()
+        public void SetSortingAsDefault()
         {
-            return _sortingDefault;
+            SetSortingOrder(_sortingDefault);
         }
 
-        public void SetSortingAsTop() => SetSortingOrder(512);
-        public void SetSortingAsDefault() => SetSortingOrder(_sortingDefault);
+        protected virtual void SetColliderSize(Vector2 size)
+        {
+            _colliderSize = size;
+            if (_collider != null)
+                _collider.size = size;
+        }
+        protected virtual void SetCollider(bool value)
+        {
+            _colliderEnabled = value;
+            if (_collider != null)
+                _collider.enabled = value;
+        }
+        protected virtual void SetSortingOrder(int value)
+        {
+            _sortingOrder = value;
+        }
+        protected virtual void SetColor(Color value)
+        {
+            // ignores components' alpha levels
+            _color = value;
+            if (SetActiveStateOnAlphaSet())
+                gameObject.SetActive(value.a != 0);
+        }
 
-        // TODO[QoL]: add custom DestroyAnimated methods for cards, traits, fields etc.
         protected virtual void DestroyInstantly()
         {
             OnDestroy?.Invoke(this, EventArgs.Empty);
@@ -463,13 +486,13 @@ namespace Game
 
         protected virtual bool SetActiveStateOnAlphaSet() => true;
         protected virtual bool HandleMouseEventsAfterClick() => _blocksSelection;
-        // after event handled, noone will get mouse event calls of this type (mouse click & scroll for now)
+        protected virtual bool CanBeSelected() => true;
 
         protected virtual void OnMouseScrollBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseEnterBase(object sender, DrawerMouseEventArgs e) 
         {
-            if (_tooltipFunc != null)
-                Tooltip.Show(_tooltipFunc());
+            if (_tooltipFunc == null) return;
+            Tooltip.ShowAligned(_tooltipAlign, _tooltipFunc());
         }
         protected virtual void OnMouseHoverBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e) 
@@ -482,5 +505,16 @@ namespace Game
         protected virtual void OnEnableBase(object sender, EventArgs e) { }
         protected virtual void OnDisableBase(object sender, EventArgs e) { }
         protected virtual void OnDestroyBase(object sender, EventArgs e) { }
+
+        private void SetSortingOrderDefault(int value)
+        {
+            SetSortingOrder(value);
+            _sortingDefault = value;
+        }
+        private void SetAlpha(float value)
+        {
+            // keeps components' colors
+            SetColor(_color.WithAlpha(value));
+        }
     }
 }

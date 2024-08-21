@@ -25,6 +25,7 @@ namespace Game.Cards
         public TableField Field => _field;
         public TableField LastField => _lastField;
         public TableTraitListSet Traits => _traits;
+        public int FieldsAttachments => _fieldsAttachments;
 
         readonly FieldCard _data;
         readonly TableFieldCardFinder _finder;
@@ -37,6 +38,7 @@ namespace Game.Cards
         TableField _field;
         TableField _lastField;
         TableTraitListSet _traits;
+        int _fieldsAttachments;
 
         public TableFieldCard(FieldCard data, Transform parent) : base(data, parent)
         {
@@ -134,25 +136,24 @@ namespace Game.Cards
                     await Field.DetatchCard(e.source);
                 _field = e.field;
                 _lastField = _field;
+                _fieldsAttachments++;
                 await _field.AttachCard(this, e.source);
             }
         }
         protected override Drawer DrawerCreator(Transform parent)
         {
-            TableFieldCardDrawer drawer = new(this, parent);
-            drawer.SetSortingOrder(10, asDefault: true);
-            return drawer;
+            return new TableFieldCardDrawer(this, parent) { SortingOrderDefault = 10 };
         }
 
         protected override void OnDrawerCreatedBase(object sender, EventArgs e)
         {
             TableFieldCard owner = (TableFieldCard)sender;
-            owner.Traits.CreateDrawer(owner.Drawer.transform);
+            owner._traits.CreateDrawer(owner.Drawer.transform);
         }
         protected override void OnDrawerDestroyedBase(object sender, EventArgs e)
         {
             TableFieldCard owner = (TableFieldCard)sender;
-            owner.Traits.DestroyDrawer(Drawer?.IsDestroyed ?? true);
+            owner._traits.DestroyDrawer(owner.Drawer?.IsDestroyed ?? true);
         }
     }
 }

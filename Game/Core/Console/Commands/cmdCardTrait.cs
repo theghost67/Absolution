@@ -1,14 +1,15 @@
 ﻿using Game.Cards;
+using Game.Menus;
 using Game.Traits;
 using GreenOne.Console;
 using System.Linq;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
-    public class cmdCardTraitAdd : Command
+    public class cmdCardTrait : Command
     {
-        const string ID = "card_trait_add";
+        const string ID = "cardtrait";
         const string DESC = "добавляет значение к зарядам навыка наведённой карты";
 
         class IdArg : CommandArg
@@ -42,23 +43,23 @@ namespace Game
             }
         }
 
-        public cmdCardTraitAdd() : base(ID, DESC) { }
+        public cmdCardTrait() : base(ID, DESC) { }
 
         protected override void Execute(CommandArgInputDict args)
         {
-            if (TableEventManager.CanAwaitAnyEvents())
+            if (TableEventManager.CountAll() != 0)
             {
                 TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
                 return;
             }
             TableCardDrawer drawer = (TableCardDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is TableCardDrawer);
-            TableCard card = drawer.attached;
             if (drawer == null)
             {
                 TableConsole.Log("Наведите курсор на карту, значение зарядов навыка которой нужно изменить.", LogType.Error);
                 return;
             }
 
+            TableCard card = drawer.attached;
             string id = args["id"].input;
             int value = args["value"].ValueAs<int>();
 
@@ -71,9 +72,9 @@ namespace Game
             TableFieldCard fieldCard = (TableFieldCard)card;
             Trait trait = TraitBrowser.GetTrait(id);
             if (trait.isPassive)
-                 fieldCard.Traits.Passives.AdjustStacks(id, value, null);
-            else fieldCard.Traits.Actives.AdjustStacks(id, value, null);
-            TableConsole.Log($"Заряды навыка ({id}) карты были изменена на {value} (от: null).", LogType.Log);
+                 _ = fieldCard.Traits.Passives.AdjustStacks(id, value, Menu.GetCurrent());
+            else _ = fieldCard.Traits.Actives.AdjustStacks(id, value, Menu.GetCurrent());
+            TableConsole.Log($"Заряды навыка ({id}) карты были изменена на {value} (от: меню).", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

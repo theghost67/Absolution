@@ -26,17 +26,14 @@ namespace Game.Traits
         protected tStalker(tStalker other) : base(other) { }
         public override object Clone() => new tStalker(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После атаки владельца (П{PRIORITY})",
-                    $"Если владелец не атаковал цель ранее, увеличивает свою силу на {_strengthF.Format(trait)}."),
-            });
+            return $"<color>После атаки владельца (П{PRIORITY})</color>\n" +
+                   $"Если владелец не атаковал цель ранее, увеличивает свою силу на {_strengthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(40, stacks);
+            return base.Points(owner, stacks) + PointsExponential(20, stacks, 1, 1.8f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -58,9 +55,10 @@ namespace Game.Traits
             if (trait == null) return;
             if (trait.Storage.ContainsKey(e.Receiver.GuidStr)) return;
 
+            int stacks = trait.GetStacks();
             trait.Storage.TryAdd(e.Receiver.GuidStr, null);
             await trait.AnimActivation();
-            await owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait);
+            await owner.Strength.AdjustValueScale(_strengthF.Value(stacks), trait);
         }
     }
 }

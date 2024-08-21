@@ -14,7 +14,7 @@ namespace Game.Territories
 
         public BattleInitiationSendArgs SenderArgs { get; }
         public BattleFieldCard Sender { get; }
-
+        public TableStat Strength { get; } // does not matter if ReceiverChanged (will redirect attack, creating a new RecvArgs from new receiver)
         public BattleField Receiver 
         {
             get => _receiver; 
@@ -30,12 +30,11 @@ namespace Game.Territories
                 OnReceiverChanged?.Invoke(this, value);
             }
         }
-        public BattleField ReceiverPrev => _receiverPrev;
+        public BattleField ReceiverPrev => _receiverPrev; // internal use
 
         public readonly TableEventVoid OnPreReceived;
         public readonly TableEventVoid OnPostReceived;
 
-        public readonly TableStat strength; // does not matter if ReceiverChanged (will redirect attack, creating a new RecvArgs from new receiver)
         public bool handled;
 
         BattleField _receiver;
@@ -46,8 +45,8 @@ namespace Game.Territories
             SenderArgs = sArgs;
             Sender = sArgs.Sender;
 
-            strength = new TableStat("strength", this, sArgs.strength);
-            strength.OnPostSet.Add(null, OnStrengthPostSet);
+            Strength = new TableStat("strength", this, sArgs.Strength);
+            Strength.OnPostSet.Add(null, OnStrengthPostSet);
             Receiver = receiver;
 
             OnPreReceived = new TableEventVoid();

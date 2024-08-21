@@ -9,13 +9,15 @@ namespace Game.Traits
     {
         public readonly IBattleTrait trait;
         public readonly BattleFieldCard target;
+        public readonly int traitStacks;
         public readonly bool canSeeTarget;
 
         public BattleTraitTargetStateChangeArgs(IBattleTrait trait, BattleFieldCard target, bool state)
         {
             this.trait = trait;
             this.target = target;
-            this.canSeeTarget = state;
+            traitStacks = trait.GetStacks();
+            canSeeTarget = state;
         }
     }
 }

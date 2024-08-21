@@ -16,6 +16,9 @@ namespace Game.Traits
         public Trait Data { get; }
         public TableTraitStorage Storage { get; }
 
+        public int TurnAge { get; set; }
+        public int TurnDelay { get; set; }
+
         public new TableTraitDrawer Drawer { get; }
         Drawer ITableObject.Drawer => Drawer;
 

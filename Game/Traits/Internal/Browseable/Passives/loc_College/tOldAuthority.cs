@@ -24,13 +24,9 @@ namespace Game.Traits
         protected tOldAuthority(tOldAuthority other) : base(other) { }
         public override object Clone() => new tOldAuthority(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"Перед любой атакой владельца (П{PRIORITY})",
-                    $"отменяет атаку на цель, если у неё есть навык <i>{name}</i>."),
-            });
+            return $"<color>Перед любой атакой владельца (П{PRIORITY})</color>\nОтменяет атаку на цель, если у неё есть навык <i>{name}</i>.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

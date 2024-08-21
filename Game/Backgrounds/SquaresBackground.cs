@@ -154,6 +154,11 @@ namespace Game.Backgrounds
             LightUpSquares(SQUARE_LIGHT_UP_COUNT);
             _squareLightUpDelay = SQUARE_LIGHT_UP_DELAY;
         }
+        void OnDestroy()
+        {
+            ColorPalette.OnPaletteChanged -= OnColorPaletteChanged;
+            _initialized = false;
+        }
 
         int2 GetVisibleSquaresRangeX()
         {

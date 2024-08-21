@@ -13,6 +13,7 @@ namespace Game.Cards
         public new TableCardDrawer Drawer => ((TableObject)this).Drawer as TableCardDrawer;
         public virtual TableFinder Finder => null;
 
+        public int TurnAge { get => -1; set { return; } }
         public override string TableName => Data.name;
         public override string TableNameDebug => $"{Data.id}[?]+{GuidStr}";
 

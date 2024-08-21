@@ -10,7 +10,6 @@
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 3);
-            frequency = 1.00f;
         }
         protected cWidow(cWidow other) : base(other) { }
         public override object Clone() => new cWidow(this);

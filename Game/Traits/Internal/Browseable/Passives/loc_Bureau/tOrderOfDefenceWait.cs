@@ -12,6 +12,7 @@ namespace Game.Traits
         const string ID = "order_of_defence_wait";
         const int PRIORITY = 4;
         const string TRAIT_ID = "block";
+        static readonly TraitStatFormula _stacksF = new(false, 0, 1);
 
         public tOrderOfDefenceWait() : base(ID)
         {
@@ -25,15 +26,16 @@ namespace Game.Traits
         protected tOrderOfDefenceWait(tOrderOfDefenceWait other) : base(other) { }
         public override object Clone() => new tOrderOfDefenceWait(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            float traitStacks = trait.GetStacks();
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале следующего хода (П{PRIORITY})",
-                    $"Наложит на себя <i>{traitName}</i> с {traitStacks} зарядами. Тратит все заряды."),
-            });
+            return $"<color>В начале следующего хода (П{PRIORITY})</color>\n" +
+                    $"Даст владельцу <u>{traitName}</u> с {_stacksF.Format(args.stacks)} зарядов. Тратит все заряды.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true, stacks = args.stacks } };
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -57,8 +59,8 @@ namespace Game.Traits
 
             int stacks = trait.GetStacks();
             await trait.AnimActivation();
-            await trait.Owner.Traits.AdjustStacks(TRAIT_ID, stacks, trait);
             await trait.SetStacks(0, trait);
+            await trait.Owner.Traits.AdjustStacks(TRAIT_ID, stacks, trait);
         }
     }
 }

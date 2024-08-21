@@ -3,11 +3,11 @@ using Game.Territories;
 using GreenOne.Console;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
-    public class cmdSideStatAdd : Command
+    public class cmdSideStat : Command
     {
-        const string ID = "side_stat_add";
+        const string ID = "sidestat";
         const string DESC = "добавляет значение к характеристике стороны";
 
         class IdArg : CommandArg
@@ -53,11 +53,11 @@ namespace Game
             };
         }
 
-        public cmdSideStatAdd() : base(ID, DESC) { }
+        public cmdSideStat() : base(ID, DESC) { }
 
         protected override void Execute(CommandArgInputDict args)
         {
-            if (TableEventManager.CanAwaitAnyEvents())
+            if (TableEventManager.CountAll() != 0)
             {
                 TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
                 return;
@@ -81,8 +81,8 @@ namespace Game
                 _ => throw new System.NotSupportedException(),
             };
 
-            stat.AdjustValue(value, null);
-            TableConsole.Log($"Значение характеристики ({id}) стороны было изменено на {value} (от: null).", LogType.Log);
+            stat.AdjustValue(value, menu);
+            TableConsole.Log($"Значение характеристики ({id}) стороны было изменено на {value} (от: меню).", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

@@ -26,14 +26,11 @@ namespace Game.Traits
         protected tDoofinator(tDoofinator other) : base(other) { }
         public override object Clone() => new tDoofinator(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на карте рядом",
-                    $"Если инициатива цели ≤ {_moxieF.Format(trait)}, она превратится в карту {cardName} с такими же характеристиками, как у владельца. Тратит один заряд."),
-            });
+            return $"<color>При использовании на вражеской карте рядом</color>\n" +
+                   $"Если инициатива цели ≤ {_moxieF.Format(args.stacks)}, она превратится в карту {cardName} с такими же характеристиками, как у владельца. Тратит один заряд.";
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -41,13 +38,13 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(16, stacks, 2);
+            return base.Points(owner, stacks) + PointsExponential(16, stacks, 2, 1.6f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
             return base.IsUsable(e) && e.isInBattle && e.target.Card != null 
-                && e.trait.Owner.Field != null && e.target.Card.Moxie > _moxieF.Value(e.trait);
+                && e.trait.Owner.Field != null && e.target.Card.Moxie <= _moxieF.Value(e.traitStacks);
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {

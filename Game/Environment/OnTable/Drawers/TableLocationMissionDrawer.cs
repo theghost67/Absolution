@@ -34,13 +34,13 @@ namespace Game.Environment
             transform.Find<TextMeshPro>("Threat").text = $"Ур. угрозы: {_attachedData.threatLevel.richName} ({_attachedData.location.stage} ед.)";
         }
 
-        public override void SetCollider(bool value)
+        protected override void SetCollider(bool value)
         {
-            _buttonDrawer.SetCollider(value);
+            _buttonDrawer.ColliderEnabled = value;
         }
-        public override void SetSortingOrder(int value, bool asDefault = false)
+        protected override void SetSortingOrder(int value)
         {
-            _buttonDrawer.SetSortingOrder(value, asDefault);
+            _buttonDrawer.SortingOrder = value;
         }
     }
 }

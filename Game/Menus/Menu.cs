@@ -32,8 +32,16 @@ namespace Game.Menus
 
         public bool IsDestroyed => _isDestroyed;
         public bool IsOpened => _isOpened;
-        public bool ColliderEnabled => _colliderEnabled;
-        public int SortingOrder => _sortingOrder;
+        public bool ColliderEnabled
+        {
+            get => _colliderEnabled;
+            set { if (!_isDestroyed && _colliderEnabled != value) SetCollider(value); }
+        }
+        public int SortingOrder
+        {
+            get => _sortingOrder;
+            set { if (!_isDestroyed && _sortingOrder != value) SetSortingOrder(value); }
+        }
         public int OpenDepth => _openDepth;
         public int FullDepth => _fullDepth;
         public virtual string LinkedMusicMixId => null; // see AudioBrowser
@@ -179,27 +187,43 @@ namespace Game.Menus
             return MenuTransit.Between(this, MenuWhenClosed() ?? GetCurrent().GetPrevious());
         }
 
+        public void TryOpen()
+        {
+            if (_isDestroyed) return;
+            if (!_isOpened)
+                Open();
+        }
+        public void TryClose()
+        {
+            if (_isDestroyed) return;
+            if (_isOpened)
+                Close();
+        }
+        public void TryDestroy()
+        {
+            if (_isDestroyed) return;
+            Destroy();
+        }
+
         public virtual void OnTransitStart(bool isFromThis)
         {
             if (!isFromThis)
-                 SFX.PlayMusicMix(LinkedMusicMixId);
-            else SetColliders(false);
+                SFX.PlayMusicMix(LinkedMusicMixId);
+            else ColliderEnabled = false;
         }
         public virtual void OnTransitMiddle(bool isFromThis)
         {
             if (!isFromThis)
-                SetColliders(false);
+                ColliderEnabled = false;
         }
         public virtual void OnTransitEnd(bool isFromThis)
         {
             if (!isFromThis)
-                SetColliders(true);
+                ColliderEnabled = true;
         }
 
-        public virtual void Open()
+        protected virtual void Open()
         {
-            if (_isOpened) return;
-
             _isOpened = true;
             _openDepth = _openList.Count;
             _openList.Add(this);
@@ -209,7 +233,7 @@ namespace Game.Menus
             OnOpened?.Invoke();
             OnAnyOpened?.Invoke();
         }
-        public virtual void Close()
+        protected virtual void Close()
         {
             if (!_isOpened) return;
             _isOpened = false;
@@ -225,7 +249,7 @@ namespace Game.Menus
             OnClosed?.Invoke();
             OnAnyClosed?.Invoke();
         }
-        public virtual void Destroy()
+        protected virtual void Destroy()
         {
             if (_isDestroyed) return;
             _isDestroyed = true;
@@ -248,7 +272,7 @@ namespace Game.Menus
         }
         public virtual void WriteDesc(string text) { }
 
-        public virtual void SetColliders(bool value) => _colliderEnabled = value;
-        public virtual void SetSortingOrder(int value) => _sortingOrder = value;
+        protected virtual void SetCollider(bool value) => _colliderEnabled = value;
+        protected virtual void SetSortingOrder(int value) => _sortingOrder = value;
     }
 }

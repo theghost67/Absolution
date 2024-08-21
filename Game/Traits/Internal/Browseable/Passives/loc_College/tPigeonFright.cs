@@ -22,23 +22,24 @@ namespace Game.Traits
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
-            frequency = 0.12f;
         }
         protected tPigeonFright(tPigeonFright other) : base(other) { }
         public override object Clone() => new tPigeonFright(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(SPAWN_CARD_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"если есть свободное поле слева или справа от владельца, тратит один заряд и перемещается на это поле, оставляя на прошлом месте карту <i>{cardName}</i>.")
-            });
+            return $"<color>Перед атакой на владельца (П{PRIORITY})</color>\nЕсли есть свободное поле слева или справа от владельца, " +
+                   $"тратит один заряд и перемещается на это поле, оставляя на прошлом месте карту <u>{cardName}</u>.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection() 
+            { new CardDescriptiveArgs(SPAWN_CARD_ID) { linkFormat = true, linkStats = CardDescriptiveArgs.normalStats } };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(12, stacks);
+            return base.Points(owner, stacks) + PointsExponential(12, stacks, 1, 1.25f);
         }
         public override UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -61,7 +62,7 @@ namespace Game.Traits
             if (trait == null) return;
             if (owner.Field == null) return;
 
-            BattleField[] fields = trait.Territory.Fields(owner.Field.pos, _range).ToArray();
+            BattleField[] fields = trait.Territory.Fields(owner.Field.pos, _range).WithoutCard().ToArray();
             if (fields.Length == 0) return;
 
             FieldCard spawnCardData = CardBrowser.NewField(SPAWN_CARD_ID);
@@ -72,7 +73,8 @@ namespace Game.Traits
             await trait.AdjustStacks(-1, e.Sender);
 
             await owner.TryAttachToField(fields.First(), trait);
-            await owner.Territory.PlaceFieldCard(spawnCardData, prevField, trait.Side);
+            if (prevField.Card == null)
+                await owner.Territory.PlaceFieldCard(spawnCardData, prevField, trait.Side);
         }
     }
 }

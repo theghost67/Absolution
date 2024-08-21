@@ -1,4 +1,5 @@
-﻿using GreenOne;
+﻿using Game.Console;
+using GreenOne;
 using GreenOne.Console;
 using System;
 using System.Collections.Generic;
@@ -32,18 +33,23 @@ namespace Game
 
         public static void Initialize()
         {
-            Commands.Add(new cmdCardStatAdd());
-            Commands.Add(new cmdCardTraitAdd());
+            Commands.Add(new cmdAiStage());
+            Commands.Add(new cmdAiTest());
+            Commands.Add(new cmdCardGod());
+            Commands.Add(new cmdCardStat());
+            Commands.Add(new cmdCardTrait());
             Commands.Add(new cmdData());
-            Commands.Add(new cmdDeckCardAdd());
+            Commands.Add(new cmdDeckCard());
+            Commands.Add(new cmdDeckGen());
             Commands.Add(new cmdHelp());
             Commands.Add(new cmdMove());
-            Commands.Add(new cmdSideCardAdd());
+            Commands.Add(new cmdPointsTest());
+            Commands.Add(new cmdSideCard());
             Commands.Add(new cmdSideCardPlace());
-            Commands.Add(new cmdSideStatAdd());
+            Commands.Add(new cmdSideStat());
             Commands.Add(new cmdSkip());
 
-            _filePath = Application.persistentDataPath + "/console.log";
+            _filePath = Application.persistentDataPath + "/Console.log";
             _fileStream = new(_filePath);
 
             _consoleObject = Global.Root.Find("CORE/Console").gameObject;
@@ -58,7 +64,7 @@ namespace Game
         public static void LogToFile(string module, string text)
         {
             text = $"[{module}] {text}";
-            if (OnLogToFile?.Invoke(text) ?? !Global.writeConsoleLogs) return;
+            if (OnLogToFile?.Invoke(text) ?? false) return;
             _fileQueuedLogs.Enqueue(text);
         }
         public static void LogToFile(string module, IReadOnlyList<string> texts)
@@ -66,7 +72,7 @@ namespace Game
             for (int i = 0; i < texts.Count; i++)
             {
                 string text = $"[{module}] {texts[i]}";
-                if (OnLogToFile?.Invoke(text) ?? !Global.writeConsoleLogs) continue;
+                if (OnLogToFile?.Invoke(text) ?? false) continue;
                 _fileQueuedLogs.Enqueue(text);
             }
         }
@@ -89,6 +95,7 @@ namespace Game
             catch (ComplexArgException) { Log($"Ошибка обработки аргумента как комплексного (с указанием \"\").", LogType.Error); }
             catch (NamedArgException) { Log($"Ошибка обработки аргумента как именнованного (с указанием =).", LogType.Error); }
 
+            LogToFile("console", line);
             _latestCommands.Add(line);
             _commandIndex = _latestCommands.Count;
 

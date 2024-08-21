@@ -27,18 +27,20 @@ namespace Game.Traits
         protected tAriRecord(tAriRecord other) : base(other) { }
         public override object Clone() => new tAriRecord(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После смерти союзной карты рядом с владельцем (П{PRIORITY})",
-                    $"Даёт владельцу навык <i>{traitName}</i> с {_traitsF.Format(trait)} зарядами."),
-            });
+            return $"<color>После смерти союзной карты рядом с владельцем (П{PRIORITY})</color>\n" +
+                   $"Даёт владельцу навык <u>{traitName}</u> с {_traitsF.Format(args.stacks)} зарядами.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true, stacks = _traitsF.ValueInt(args.stacks) } };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + 120 * Mathf.Pow(stacks - 1, 2);
+            return base.Points(owner, stacks) + PointsExponential(40, stacks);
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
@@ -58,7 +60,7 @@ namespace Game.Traits
             if (trait == null) return;
             if (trait.Owner.Field == null) return;
 
-            int stacks = (int)_traitsF.Value(trait);
+            int stacks = _traitsF.ValueInt(trait.GetStacks());
             await trait.AnimActivation();
             await trait.Owner.Traits.AdjustStacks(TRAIT_ID, stacks, trait);
         }

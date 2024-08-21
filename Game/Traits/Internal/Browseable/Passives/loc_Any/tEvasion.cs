@@ -26,13 +26,9 @@ namespace Game.Traits
         protected tEvasion(tEvasion other) : base(other) { }
         public override object Clone() => new tEvasion(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"Отменяет данную атаку на владельца. Тратит один заряд."),
-            });
+            return $"<color>Перед атакой на владельца (П{PRIORITY})</color>\nОтменяет данную атаку на владельца. Тратит один заряд.";
         }
         public override BattleWeight Weight(IBattleTrait trait)
         {

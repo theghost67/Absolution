@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MyBox;
+using System.Collections.Generic;
 
 namespace Game.Effects
 {
@@ -17,11 +18,21 @@ namespace Game.Effects
 
         public static void Initialize() 
         {
-            Music[] battleMix = new Music[] { new mWhereTheWorldEnds(), new mForget() };
+            Music[] mainMenuMix = new Music[] { new mDevour() };
+            AddMusicMix("main", mainMenuMix);
+
+            Music[] battleMix = new Music[] { new mWhereTheWorldEnds(), new mForget(), new mEyesThroat() };
             AddMusicMix("battle", battleMix);
 
             Music[] peaceMix = new Music[] { new m9thDimension(), new mFloatingPoint() };
             AddMusicMix("peace", peaceMix);
+        }
+        public static void Shuffle()
+        {
+            string[] keys = new string[_musicMixes.Count];
+            _musicMixes.Keys.CopyTo(keys, 0);
+            foreach (string key in keys)
+                _musicMixes[key] = (Music[])_musicMixes[key].Shuffle();
         }
 
         public static Music[] GetMusicMix(string id)

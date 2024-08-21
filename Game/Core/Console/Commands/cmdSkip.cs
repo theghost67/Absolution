@@ -2,7 +2,7 @@
 using GreenOne.Console;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
     public class cmdSkip : Command
     {
@@ -39,7 +39,7 @@ namespace Game
 
         protected override void Execute(CommandArgInputDict args)
         {
-            if (TableEventManager.CanAwaitAnyEvents())
+            if (TableEventManager.CountAll() != 0)
             {
                 TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
                 return;
@@ -51,12 +51,8 @@ namespace Game
             }
 
             int stage = (int)(args.ContainsKey(StageArg.ID) ? args[StageArg.ID].value : SKIP_CUR);
-            if (stage == SKIP_FORCE)
-            {
-                menu.TryFlee();
-                TableConsole.Log($"Сражение пропущено принудительно [может вызвать ошибки].", LogType.Log);
-                return;
-            }
+            bool forceSkip = stage == SKIP_FORCE;
+
             if (stage != SKIP_CUR)
             {
                 if (stage <= menu.DemoDifficulty)
@@ -66,14 +62,10 @@ namespace Game
                 }
                 else menu.DemoDifficulty = stage - 1;
             }
-            if (!menu.PlayerControlsEnabled)
-            {
-                TableConsole.Log("В данный момент сражения пропуск невозможен, так как управление игрока заблокировано.", LogType.Error);
-                return;
-            }
 
-            menu.TryFlee();
-            TableConsole.Log($"Сражение пропущено.", LogType.Log);
+            menu.Skip(forceSkip);
+            string output = forceSkip ? $"Сражение пропущено принудительно (может вызвать ошибки)." : "Сражение пропущено.";
+            TableConsole.Log(output, LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[] { new StageArg(this) };
     }

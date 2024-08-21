@@ -112,7 +112,7 @@ namespace Game.Cards
             AddField(new cDj());
             AddField(new cDoof());
 
-            AddField(new cFengMina());
+            AddField(new cFengMine());
             AddField(new cKillerOfFun());
             AddField(new cMegTomat());
             AddField(new cMercy());
@@ -171,7 +171,7 @@ namespace Game.Cards
 
         public static FieldCard ShuffleMainStats(this FieldCard card)
         {
-            if (Global.shufflePrice)
+            if (PlayerConfig.shufflePrice)
                 card.price.value = Random.Range(0, 6);
             card.moxie = Random.Range(0, 6);
             return card;

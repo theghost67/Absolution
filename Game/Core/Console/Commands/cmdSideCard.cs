@@ -5,11 +5,11 @@ using GreenOne.Console;
 using System.Linq;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
-    public class cmdSideCardAdd : Command
+    public class cmdSideCard : Command
     {
-        const string ID = "side_card_add";
+        const string ID = "sidecard";
         const string DESC = "создаёт и добавляет карту в рукав";
 
         class IdArg : CommandArg
@@ -57,11 +57,11 @@ namespace Game
             };
         }
 
-        public cmdSideCardAdd() : base(ID, DESC) { }
+        public cmdSideCard() : base(ID, DESC) { }
 
         protected override void Execute(CommandArgInputDict args)
         {
-            if (TableEventManager.CanAwaitAnyEvents())
+            if (TableEventManager.CountAll() != 0)
             {
                 TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
                 return;
@@ -80,11 +80,13 @@ namespace Game
             if (card.isField)
                 ((FieldCard)card).UpgradeWithTraitAdd(points);
 
+            bool result;
             if (isPlayerSide)
-                 territory.Player.Sleeve.Add(card);
-            else territory.Enemy.Sleeve.Add(card);
-
-            TableConsole.Log($"Карта {id} создана и выдана в рукав.", LogType.Log);
+                 result = territory.Player.Sleeve.Add(card);
+            else result = territory.Enemy.Sleeve.Add(card);
+            if (result)
+                TableConsole.Log($"Карта {id} создана и выдана в рукав.", LogType.Log);
+            else TableConsole.Log($"Не удалось выдать карту в рукав. Вероятно, из-за полной руки.", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

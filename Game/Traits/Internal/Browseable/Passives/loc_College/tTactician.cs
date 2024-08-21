@@ -2,7 +2,6 @@
 using Game.Cards;
 using Game.Territories;
 using System;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -27,17 +26,13 @@ namespace Game.Traits
         protected tTactician(tTactician other) : base(other) { }
         public override object Clone() => new tTactician(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале хода на территории (П{PRIORITY})",
-                    $"увеличивает инициативу владельца на {_moxieF.Format(trait)}."),
-            });
+            return $"<color>В начале хода на территории (П{PRIORITY})</color>\nУвеличивает инициативу владельца на {_moxieF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(32, stacks);
+            return base.Points(owner, stacks) + PointsExponential(20, stacks, 1);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -59,7 +54,7 @@ namespace Game.Traits
             if (trait.Owner.Field == null) return;
 
             await trait.AnimActivation();
-            await trait.Owner.Moxie.AdjustValue(_moxieF.Value(trait), trait);
+            await trait.Owner.Moxie.AdjustValue(_moxieF.Value(trait.GetStacks()), trait);
         }
     }
 }

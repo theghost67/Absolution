@@ -25,26 +25,6 @@ namespace Game.Cards
             _chunks = ChunksArrayFilledWithChildren(transform.Find("Chunks"));
         }
 
-        public override void SetSortingOrder(int value, bool asDefault = false)
-        {
-            base.SetSortingOrder(value, asDefault);
-            int overlapOrder = value + 1;
-            foreach (SpriteRenderer chunk in _chunks)
-                chunk.sortingOrder = overlapOrder;
-        }
-        public override void SetAlpha(float value)
-        {
-            base.SetAlpha(value);
-            foreach (SpriteRenderer chunk in _chunks)
-                chunk.SetAlpha(value);
-        }
-        public override void SetColor(Color value)
-        {
-            base.SetColor(value);
-            foreach (SpriteRenderer chunk in _chunks)
-                chunk.color = value;
-        }
-
         public override void RedrawValueAsNull()
         {
             RedrawChunks(0);
@@ -61,6 +41,20 @@ namespace Game.Cards
         {
             foreach (SpriteRenderer chunk in _chunks)
                 chunk.color = color;
+        }
+
+        protected override void SetSortingOrder(int value)
+        {
+            base.SetSortingOrder(value);
+            int overlapOrder = value + 1;
+            foreach (SpriteRenderer chunk in _chunks)
+                chunk.sortingOrder = overlapOrder;
+        }
+        protected override void SetColor(Color value)
+        {
+            base.SetColor(value);
+            foreach (SpriteRenderer chunk in _chunks)
+                chunk.color = value;
         }
 
         void RedrawChunks(int value)

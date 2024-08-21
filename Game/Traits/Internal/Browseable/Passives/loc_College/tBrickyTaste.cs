@@ -25,17 +25,13 @@ namespace Game.Traits
         protected tBrickyTaste(tBrickyTaste other) : base(other) { }
         public override object Clone() => new tBrickyTaste(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После атаки/лечения на владельца (П{PRIORITY})",
-                    $"уменьшает инициативу инициатора на {_moxieF.Format(trait)}."),
-            });
+            return $"<color>После атаки/лечения на владельца (П{PRIORITY})</color>\nУменьшает инициативу атакующего на {_moxieF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(40, stacks);
+            return base.Points(owner, stacks) + PointsExponential(24, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -57,7 +53,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await e.Sender.Moxie.AdjustValue(-_moxieF.Value(trait), trait);
+            await e.Sender.Moxie.AdjustValue(-_moxieF.Value(trait.GetStacks()), trait);
         }
     }
 }

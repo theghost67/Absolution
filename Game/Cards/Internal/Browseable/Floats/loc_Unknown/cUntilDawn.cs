@@ -1,7 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Territories;
+using Game.Traits;
 using System;
-using System.Linq;
 
 namespace Game.Cards
 {
@@ -9,7 +9,7 @@ namespace Game.Cards
     {
         const string ID = "until_dawn";
         const string TRAIT_ID = "till_dawn";
-        static readonly TerritoryRange _range = TerritoryRange.all;
+        const int PRIORITY = 1;
         string _eventGuid;
         TableFinder _sideFinder;
 
@@ -20,15 +20,19 @@ namespace Game.Cards
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
-            frequency = 1.00f;
         }
         protected cUntilDawn(cUntilDawn other) : base(other) { }
         public override object Clone() => new cUntilDawn(this);
 
-        public override string DescRich(ITableCard card)
+        protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return DescRichBase(card, $"В начале следующего хода, все карты на территории, которые пережили прошлый ход, " +
-                                      $"восстанавливают 33% здоровья и получают 2 ед. инициативы.");
+            string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
+            return $"До следующего хода, все карты на территории (П{PRIORITY}) получают навык <u>{traitName}</u>.";
+        }
+        public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true } };
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {
@@ -46,7 +50,7 @@ namespace Game.Cards
             _eventGuid = card.GuidStr;
             _sideFinder = side.Finder;
 
-            terr.ContinuousAttachHandler_Add(_eventGuid, ContinuousAttach_Add);
+            terr.ContinuousAttachHandler_Add(_eventGuid, ContinuousAttach_Add, PRIORITY);
             terr.OnStartPhase.Add(_eventGuid, OnStartPhase);
         }
 
@@ -60,13 +64,17 @@ namespace Game.Cards
         {
             BattleTerritory terr = (BattleTerritory)sender;
             BattleSide side = (BattleSide)_sideFinder.FindInBattle(terr);
-            return e.card.Traits.AdjustStacks(TRAIT_ID, 1, side);
+            if (e.card.FieldsAttachments == 1 || e.source == null)
+                return e.card.Traits.AdjustStacks(TRAIT_ID, 1, side);
+            else return UniTask.CompletedTask;
         }
         UniTask ContinuousAttach_Remove(object sender, TableFieldAttachArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             BattleSide side = (BattleSide)_sideFinder.FindInBattle(terr);
-            return e.card.Traits.AdjustStacks(TRAIT_ID, -1, side);
+            if (e.card.FieldsAttachments == 1 || e.source == null)
+                return e.card.Traits.AdjustStacks(TRAIT_ID, -1, side);
+            else return UniTask.CompletedTask;
         }
     }
 }

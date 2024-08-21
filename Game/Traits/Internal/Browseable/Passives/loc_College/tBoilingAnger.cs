@@ -27,13 +27,9 @@ namespace Game.Traits
         protected tBoilingAnger(tBoilingAnger other) : base(other) { }
         public override object Clone() => new tBoilingAnger(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале хода на территории (П{PRIORITY})",
-                    $"увеличивает силу владельца на {_strengthF.Format(trait)}."),
-            });
+            return $"<color>В начале хода на территории (П{PRIORITY})</color>\nУвеличивает силу владельца на {_strengthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -59,7 +55,7 @@ namespace Game.Traits
             if (trait.Owner.Field == null) return;
 
             await trait.AnimActivation();
-            await trait.Owner.Strength.AdjustValueScale(_strengthF.Value(trait), trait);
+            await trait.Owner.Strength.AdjustValueScale(_strengthF.Value(trait.GetStacks()), trait);
         }
     }
 }

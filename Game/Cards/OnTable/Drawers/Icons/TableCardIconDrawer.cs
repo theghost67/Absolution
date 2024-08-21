@@ -1,5 +1,4 @@
-﻿using MyBox;
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace Game.Cards
@@ -22,28 +21,23 @@ namespace Game.Cards
             BlocksSelection = false;
         }
 
-        public override void SetSortingOrder(int value, bool asDefault = false)
-        {
-            base.SetSortingOrder(value, asDefault);
-            _renderer.sortingOrder = value + 1;
-        }
-        public override void SetColor(Color value)
-        {
-            base.SetColor(value);
-            _renderer.color = value;
-        }
-        public override void SetAlpha(float value)
-        {
-            base.SetAlpha(value);
-            _renderer.SetAlpha(value);
-        }
-
         public abstract void RedrawValueAsNull();
         public abstract void RedrawValue();
         public abstract void RedrawValue(int value);
 
         public abstract void RedrawColor();
         public abstract void RedrawColor(Color color);
+
+        protected override void SetSortingOrder(int value)
+        {
+            base.SetSortingOrder(value);
+            _renderer.sortingOrder = value + 1;
+        }
+        protected override void SetColor(Color value)
+        {
+            base.SetColor(value);
+            _renderer.color = value;
+        }
 
         public void RedrawSprite(Sprite sprite)
         {

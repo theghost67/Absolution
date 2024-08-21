@@ -6,6 +6,8 @@ namespace Game.Cards
 {
     public class cVavulization : FloatCard
     {
+        const string CARD_ID = "vavulov";
+
         public cVavulization() : base("vavulization")
         {
             name = "Вавулизация";
@@ -14,14 +16,19 @@ namespace Game.Cards
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 5);
-            frequency = 1.00f;
         }
         protected cVavulization(cVavulization other) : base(other) { }
         public override object Clone() => new cVavulization(this);
 
-        public override string DescRich(ITableCard card)
+        protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return DescRichBase(card, "Превращает всех противников в карту <i>Вавулов</i>. Карта может защититься от превращения, если только её нельзя убить.");
+            string cardName = CardBrowser.GetCard(CARD_ID).name;
+            return $"Превращает всех противников в карту <u>{cardName}</u> (без навыков). Карта может защититься от превращения, если только её нельзя убить.";
+        }
+        public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = CardDescriptiveArgs.normalStats } };
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {
@@ -39,8 +46,10 @@ namespace Game.Cards
             {
                 BattleFieldCard fieldCard = field.Card;
                 await fieldCard.TryKill(BattleKillMode.IgnoreHealthRestore, card);
-                if (fieldCard.IsKilled)
-                    await territory.PlaceFieldCard(CardBrowser.NewField("vavulov"), field, card);
+                if (!fieldCard.IsKilled) continue;
+                FieldCard cardData = CardBrowser.NewField(CARD_ID);
+                cardData.traits.Clear();
+                await territory.PlaceFieldCard(cardData, field, card);
             }
         }
     }

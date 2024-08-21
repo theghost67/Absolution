@@ -26,13 +26,9 @@ namespace Game.Traits
         protected tEmpoweringBeam(tEmpoweringBeam other) : base(other) { }
         public override object Clone() => new tEmpoweringBeam(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на карте рядом",
-                    $"Увеличивает силу цели на {_strengthF.Format(trait)}. Все лучи уходят на перезарядку: {CD} х."),
-            });
+            return $"<color>При использовании на союзной карте рядом</color>\nУвеличивает силу цели на {_strengthF.Format(args.stacks, true)}. Все лучи уходят на перезарядку: {CD} х.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -40,7 +36,7 @@ namespace Game.Traits
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(_strengthF.Value(result.Entity));
+            return new(_strengthF.Value(result.Entity.GetStacks()) * 1.2f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -55,11 +51,10 @@ namespace Game.Traits
             IBattleTrait trait2 = trait1.Owner.Traits.Any(OTHER_BEAM_ID);
             BattleFieldCard card = (BattleFieldCard)e.target.Card;
 
-            trait1.Storage.turnsDelay += CD;
-            if (trait2 != null)
-                trait2.Storage.turnsDelay += CD;
+            trait1.SetCooldown(CD);
+            trait2.SetCooldown(CD);
 
-            await card.Strength.AdjustValue(_strengthF.Value(trait1), trait1);
+            await card.Strength.AdjustValue(_strengthF.Value(e.traitStacks), trait1);
         }
     }
 }

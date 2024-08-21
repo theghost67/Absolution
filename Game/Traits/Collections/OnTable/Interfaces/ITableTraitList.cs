@@ -19,8 +19,8 @@ namespace Game.Traits
         public UniTask AdjustStacks(string id, int stacks, ITableEntrySource source, string entryId);
         public UniTask RevertStacks(string id, string entryId);
 
-        public void AdjustStacksByOwnerList(TraitList dataList);
-        public void Clear(ITableEntrySource source);
+        public UniTask AdjustStacksByOwnerList(TraitList dataList);
+        public UniTask Clear(ITableEntrySource source);
 
         ITableTraitListElement IReadOnlyList<ITableTraitListElement>.this[int index] => this[index];
 

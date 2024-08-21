@@ -5,11 +5,11 @@ using GreenOne.Console;
 using System.Linq;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
     public class cmdSideCardPlace : Command
     {
-        const string ID = "side_card_place";
+        const string ID = "sidecardplace";
         const string DESC = "создаёт и устанавливает карту на наведённое поле сражения";
 
         class IdArg : CommandArg
@@ -48,7 +48,7 @@ namespace Game
 
         protected override void Execute(CommandArgInputDict args)
         {
-            if (TableEventManager.CanAwaitAnyEvents())
+            if (TableEventManager.CountAll() != 0)
             {
                 TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
                 return;

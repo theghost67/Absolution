@@ -29,20 +29,12 @@ namespace Game
         public static event Action OnSlowUpdate;  // 10/s
         public static event Action<bool> OnFocus;
 
+        public static Color[] Palette => _palette;
+        public static MainMenu Menu => _menu;
         public static Transform Root => _root;
         public static Camera Camera => _camera;
         public static Volume Volume => _volume;
         public static bool IsQuitting => _isQuitting;
-
-        // ---------- CONFIGURATION SETTINGS ----------
-
-        public static int rerollsAtStart = 10;
-        public static bool writeConsoleLogs = true;
-        public static bool shufflePrice = false;
-        public static float soundVolumeScale = 1.0f; // set by player
-        public static float musicVolumeScale = 1.0f; // in settings
-
-        // --------------------------------------------
 
         static readonly Color[] _palette = new Color[]
         {
@@ -55,6 +47,8 @@ namespace Game
             Utils.HexToColor("#00ffff"),
             Utils.HexToColor("#ffff00"),
         };
+
+        static MainMenu _menu;
         static Transform _root;
         static Camera _camera;
         static Volume _volume;
@@ -97,22 +91,23 @@ namespace Game
         {
             _errorGameObject.SetActive(false);
         }
-
-        // TODO: remove
-        Menu demo_CreateCardChoose(int stage)
+        static void UpdateCameraSize()
         {
-            CardChooseMenu menu = new(stage, 4, 0, 3, rerollsAtStart);
-            menu.MenuWhenClosed = () => new BattlePlaceMenu();
-            menu.OnClosed += menu.Destroy;
-            return menu;
+            float aspectCurrent = (float)Screen.width / Screen.height;
+            float size = 540;
+            if (aspectCurrent < ASPECT_RATIO)
+                 size *= ASPECT_RATIO / aspectCurrent;
+            _camera.orthographicSize = size;
         }
 
-        void Start()
+        void Awake()
         {
             _root = transform.root;
             _camera = Camera.main;
             _volume = _camera.GetComponent<Volume>();
-
+        }
+        void Start()
+        {
             _errorTween = DOVirtual.DelayedCall(5, HideErrors);
             _errorGameObject = _root.Find("CORE/Errors").gameObject;
             _errorTextMesh = _errorGameObject.Find<TextMeshPro>("Text");
@@ -124,6 +119,7 @@ namespace Game
             DOTween.onWillLog = OnTweenLog;
             //Time.fixedDeltaTime = 1 / 20f;
 
+            UpdateCameraSize();
             TraitBrowser.Initialize();
             CardBrowser.Initialize();
             EnvironmentBrowser.Initialize();
@@ -132,25 +128,18 @@ namespace Game
 
             Player.Load();
             SaveSystem.LoadAll();
-            for (int i = 0; i < _palette.Length; i++)
-                ColorPalette.All[i].ColorAll = _palette[i];
+            for (int i = 0; i < ColorPalette.All.Length; i++)
+                ColorPalette.Current = _palette;
 
-            // --------- TODO: remove ---------
-            Traveler.TryStartTravel(new LocationMission(EnvironmentBrowser.Locations["college"]));
-            DOVirtual.DelayedCall(0.8f, () => VFX.CreateScreenBG(Color.black).DOFade(0, 10).SetEase(Ease.InQuad));
-            MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
-            //#if UNITY_EDITOR
-            //MenuTransit.Between(null, new BattlePlaceMenu());
-            //         #else
-            //MenuTransit.Between(null, demo_CreateCardChoose(EnvironmentBrowser.Locations["college"].stage));
-            //#endif
-            // --------------------------------
+            VFX.CreateScreenBG(Color.black).DOFade(0, 10).SetEase(Ease.InQuad);
+            SFX.PlayMusicMix("main");
+            _menu = new MainMenu();
+            _menu.TryOpen();
         }
         void Update()
         {
             if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Escape))
                 Application.Quit();
-
             OnUpdate?.Invoke();
         }
         void FixedUpdate()
@@ -164,6 +153,7 @@ namespace Game
         }
         void OnApplicationFocus(bool focus)
         {
+            if (focus) UpdateCameraSize();
             OnFocus?.Invoke(focus);
         }
     }

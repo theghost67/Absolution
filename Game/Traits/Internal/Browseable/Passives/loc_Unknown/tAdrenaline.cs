@@ -15,7 +15,7 @@ namespace Game.Traits
         public tAdrenaline() : base(ID)
         {
             name = "Адреналин";
-            desc = "Последний рывок до финиша.";
+            desc = "Последний рывок до выхода.";
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -24,13 +24,10 @@ namespace Game.Traits
         protected tAdrenaline(tAdrenaline other) : base(other) { }
         public override object Clone() => new tAdrenaline(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"Перед смертью владельца (П{PRIORITY})",
-                    $"Восстанавливает здоровье владельца до 1 единицы. Тратит все заряды."),
-            });
+            return $"<color>Перед смертью владельца (П{PRIORITY})</color>\n" +
+                   $"Восстанавливает здоровье владельца до 1 единицы. Тратит все заряды.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

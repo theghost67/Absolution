@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Territories;
+using Game.Traits;
 using System;
 using System.Linq;
 
@@ -21,14 +22,19 @@ namespace Game.Cards
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
-            frequency = 1.00f;
         }
         protected cObjectOfObsession(cObjectOfObsession other) : base(other) { }
         public override object Clone() => new cObjectOfObsession(this);
 
-        public override string DescRich(ITableCard card)
+        protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return DescRichBase(card, $"На следующем ходу все союзные карты будут атаковать вражескую карту с наибольшим количеством здоровья (П{PRIORITY}).");
+            string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
+            return $"До следующего хода, все союзные карты на территории (П{PRIORITY}) получают навык <u>{traitName}</u>.";
+        }
+        public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true } };
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {
@@ -46,7 +52,7 @@ namespace Game.Cards
             _eventGuid = card.GuidStr;
             _sideFinder = side.Finder;
 
-            terr.ContinuousAttachHandler_Add(_eventGuid, ContinuousAttach_Add);
+            terr.ContinuousAttachHandler_Add(_eventGuid, ContinuousAttach_Add, PRIORITY);
             terr.OnNextPhase.Add(_eventGuid, OnNextPhase);
         }
 
@@ -61,7 +67,8 @@ namespace Game.Cards
         {
             BattleTerritory terr = (BattleTerritory)sender;
             BattleSide side = (BattleSide)_sideFinder.FindInBattle(terr);
-            if (_range.OverlapFromPlayerPos().Contains(e.field.pos)) // owner side
+            bool isInRange = _range.OverlapFromPlayerPos().Contains(e.field.pos);
+            if (isInRange && (e.card.FieldsAttachments == 1 || e.source == null))
                  return e.card.Traits.AdjustStacks(TRAIT_ID, 1, side);
             else return UniTask.CompletedTask;
         }
@@ -69,8 +76,9 @@ namespace Game.Cards
         {
             BattleTerritory terr = (BattleTerritory)sender;
             BattleSide side = (BattleSide)_sideFinder.FindInBattle(terr);
-            if (_range.OverlapFromPlayerPos().Contains(e.field.pos)) // owner side
-                 return e.card.Traits.AdjustStacks(TRAIT_ID, -1, side);
+            bool isInRange = _range.OverlapFromPlayerPos().Contains(e.field.pos);
+            if (isInRange && (e.card.FieldsAttachments == 1 || e.source == null))
+                return e.card.Traits.AdjustStacks(TRAIT_ID, -1, side);
             else return UniTask.CompletedTask;
         }
     }

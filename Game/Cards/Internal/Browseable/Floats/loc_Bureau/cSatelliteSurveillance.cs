@@ -14,15 +14,14 @@ namespace Game.Cards
                    "Параллельно ведутся работы над техникой для орбитального удара, но это уже совсем другая история.";
 
             rarity = Rarity.Rare;
-            price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
-            frequency = 1.00f;
+            price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);
         }
         protected cSatelliteSurveillance(cSatelliteSurveillance other) : base(other) { }
         public override object Clone() => new cSatelliteSurveillance(this);
 
-        public override string DescRich(ITableCard card)
+        protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return DescRichBase(card, "Раскрывает золото, эфир и руку противника до конца боя.");
+            return "Раскрывает руку противника до конца боя. Если рука противника уже раскрыта, раскрывает его золото и эфир.";
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {
@@ -35,8 +34,10 @@ namespace Game.Cards
             BattleFloatCard card = (BattleFloatCard)e.card;
             BattleSide opposite = card.Side.Opposite;
 
-            opposite.Drawer.SleeveIsVisible = true;
-            opposite.Drawer.WealthIsVisible = true;
+            if (opposite.Drawer == null) return;
+            if (!opposite.Drawer.SleeveIsVisible)
+                 opposite.Drawer.SleeveIsVisible = true;
+            else opposite.Drawer.WealthIsVisible = true;
         }
     }
 }

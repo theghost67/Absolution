@@ -1,4 +1,5 @@
-﻿using DG.Tweening;
+﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Game.Cards;
 using GreenOne;
 using MyBox;
@@ -13,8 +14,9 @@ namespace Game.Sleeves
     /// </summary>
     public class TableSleeveDrawer : Drawer
     {
-        const int SORT_ORDER_START_VALUE = 32;
+        const int SORT_ORDER_START_VALUE = 100;
         const int SORT_ORDER_PER_CARD = 8;
+        const float ANIM_DURATION = 0.33f;
 
         public bool CanPullOut
         {
@@ -24,8 +26,6 @@ namespace Game.Sleeves
                 _canPullOut = value;
                 if (!_canPullOut && _isPulledOut)
                     PullIn();
-
-                SetCollider(_canPullOut);
             }
         }
         public bool IsPulledOut => _isPulledOut;
@@ -34,9 +34,8 @@ namespace Game.Sleeves
         public readonly new TableSleeve attached;
         static readonly AlignSettings _alignSettings;
 
-        HashSet<Tween> _cardsTweens;
+        readonly HashSet<int> _shownCardsGuids; // used to play special animation on add
         Tween _posYTween;
-
         float _normalPosY;
         float _moveOutPosY;
         bool _canPullOut;
@@ -51,7 +50,7 @@ namespace Game.Sleeves
         {
             attached = sleeve;
 
-            _cardsTweens = new HashSet<Tween>();
+            _shownCardsGuids = new HashSet<int>();
             _normalPosY  = sleeve.isForMe ? -2.16f : 2.16f;
             _moveOutPosY = sleeve.isForMe ? -2.40f : 2.40f;
             _canPullOut = true;
@@ -67,47 +66,55 @@ namespace Game.Sleeves
             TableCardDrawer drawer = card.Drawer;
             if (drawer == null || drawer.IsDestroying) return;
 
-            bool colliderState = ColliderEnabled;
-            if (drawer.ColliderEnabled != colliderState)
-                drawer.SetCollider(colliderState);
-
+            drawer.ColliderEnabled = ColliderEnabled;
             drawer.transform.SetParent(transform);
-            UpdateCardsPosAndOrderInstantly();
-
             TableSleeveCardComponent component = drawer.gameObject.GetOrAddComponent<TableSleeveCardComponent>();
             if (!component.Enabled)
                 component.Attach(drawer);
+
+            if (!gameObject.activeInHierarchy)
+            {
+                UpdateCardsPosAndOrderInstantly();
+                return;
+            }
+
+            UpdateCardsPosAndOrderAnimated();
+            _shownCardsGuids.Add(card.Guid);
         }
         public void RemoveCardDrawer(ITableSleeveCard card)
         {
             TableCardDrawer drawer = card.Drawer;
             if (drawer == null || drawer.IsDestroying) return;
 
+            if (!ColliderEnabled) drawer.ColliderEnabled = true;
             drawer.transform.SetParent(transform.parent, worldPositionStays: true);
-            UpdateCardsPosAndOrderInstantly();
+            UpdateCardsPosAndOrderAnimated();
+            _shownCardsGuids.Remove(card.Guid);
 
             if (drawer.gameObject.TryGetComponent(out TableSleeveCardComponent component))
                 component.Detatch();
         }
 
         // can be pulled by user (see OnUpdate method)
-        public void PullOut()
+        public virtual void PullOut()
         {
+            if (_isPulledOut) return;
             _isPulledOut = true;
             _isMovedOut = false;
 
             gameObject.SetActive(true);
             foreach (ITableSleeveCard card in attached)
-                _cardsTweens.Add(card.OnPullOut(true));
+                card.OnPullOut(true);
         }
-        public void PullIn()
+        public virtual void PullIn()
         {
+            if (!_isPulledOut) return;
             _isPulledOut = false;
             _isMovedOut = false;
 
             gameObject.SetActive(true);
             foreach (ITableSleeveCard card in attached)
-                _cardsTweens.Add(card.OnPullIn(true));
+                card.OnPullIn(true);
         }
 
         public void MoveIn()
@@ -147,11 +154,11 @@ namespace Game.Sleeves
             gameObject.SetActive(false);
         }
 
-        public override void SetCollider(bool value)
+        protected override void SetCollider(bool value)
         {
             base.SetCollider(value);
             foreach (ITableSleeveCard card in attached)
-                card.Drawer.SetCollider(value);
+                card.Drawer.ColliderEnabled = value;
         }
         protected override void DestroyInstantly()
         {
@@ -180,42 +187,39 @@ namespace Game.Sleeves
             card.DestroyDrawer(instantly);
         }
 
-        // TODO: implement 'animated' method (fix 'x' tweening)
-        void UpdateCardsPosAndOrderAnimated()
+        UniTask UpdateCardsPosAndOrderAnimated()
         {
-            if (IsDestroying) return;
-            SetCollider(false);
-
+            if (IsDestroying) return UniTask.CompletedTask;
             const int THRESHOLD = 3;
             const float DISTANCE = TableCardDrawer.WIDTH - TableCardDrawer.WIDTH * 0.25f;
 
             int cardsCount = attached.Count;
-            Vector3[] cardsOldPos = new Vector3[cardsCount].FillBy(i => attached[i].Drawer.transform.position);
+            Vector3[] cardsPositions = attached.Select(c => c.Drawer.transform.localPosition).ToArray();
+            Tween lastTween = null;
 
             if (transform.childCount > THRESHOLD)
                 _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
             else _alignSettings.distance.x = DISTANCE;
 
-            foreach (Tween tween in _cardsTweens)
-                tween.Kill();
-
-            _alignSettings.ApplyTo(i => attached[i].Drawer.transform, cardsCount);
-            Tween lastTween = null;
-            for (int i = 0; i < cardsCount; i++) 
+            DOTween.Kill(attached.Guid);
+            _alignSettings.ApplyTo(attached.Select(c => c.Drawer.transform).ToArray());
+            for (int i = 0; i < attached.Count; i++)
             {
                 ITableSleeveCard card = attached[i];
-                TableCardDrawer drawer = card.Drawer;
-                Vector3 newPos = drawer.transform.position;
-
-                drawer.SetSortingOrder(SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD, asDefault: true);
-                drawer.transform.position = cardsOldPos[i];
-                DOVirtual.Float(0, 1, ITableSleeveCard.PULL_DURATION, v =>
+                float newPosX = card.Drawer.transform.localPosition.x;
+                card.Drawer.SortingOrderDefault = SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD;
+                if (_shownCardsGuids.Contains(card.Guid))
                 {
-                    newPos.y = transform.position.y;
-                    drawer.transform.position = Vector3.Lerp(cardsOldPos[i], newPos, v);
-                });
+                    card.Drawer.transform.localPosition = cardsPositions[i];
+                    lastTween = card.Drawer.transform.DOLocalMoveX(newPosX, ANIM_DURATION).SetEase(Ease.OutQuad).SetId(attached.Guid);
+                }
+                else // plays 'add' animation
+                {
+                    card.Drawer.transform.localPosition = new Vector3(newPosX, _moveOutPosY);
+                    lastTween = card.Drawer.transform.DOLocalMoveY(0, ANIM_DURATION).SetEase(Ease.OutQuad);
+                }
             }
-            lastTween.OnComplete(() => SetCollider(true));
+            return lastTween.AsyncWaitForCompletion();
         }
         void UpdateCardsPosAndOrderInstantly()
         {
@@ -230,15 +234,10 @@ namespace Game.Sleeves
                 _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
             else _alignSettings.distance.x = DISTANCE;
 
-            foreach (Tween tween in _cardsTweens)
-                tween.Kill();
-
+            DOTween.Kill(attached.Guid);
             _alignSettings.ApplyTo(i => attached[i].Drawer.transform, cardsCount);
             for (int i = 0; i < cardsCount; i++)
-            {
-                ITableSleeveCard card = attached[i];
-                card.Drawer.SetSortingOrder(SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD, asDefault: true);
-            }
+                attached[i].Drawer.SortingOrderDefault = SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD;
         }
 
         void OnMovedOut()
@@ -255,9 +254,6 @@ namespace Game.Sleeves
             if (!UpdateUserInput()) return;
             if (Input.GetKeyDown(KeyCode.Tab))
             {
-                if (attached.Any(c => c.Drawer.IsSelected))
-                    return;
-
                 if (_isPulledOut)
                      PullIn();
                 else PullOut();

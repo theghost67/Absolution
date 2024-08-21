@@ -24,17 +24,14 @@ namespace Game.Traits
         protected tRecruitment(tRecruitment other) : base(other) { }
         public override object Clone() => new tRecruitment(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на вражеской карте рядом",
-                    $"Переманивает цель на поле напротив неё, если её здоровье ≤ {_healthF.Format(trait)}. и поле напротив свободно. Тратит все заряды."),
-            });
+            return $"<color>При использовании на вражеской карте рядом</color>\n" +
+                   $"Переманивает цель на поле напротив неё, если её здоровье ≤ {_healthF.Format(args.stacks)} и поле напротив свободно. Тратит все заряды.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsLinear(16, stacks);
+            return base.Points(owner, stacks) + PointsLinear(12, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -46,7 +43,7 @@ namespace Game.Traits
             return base.IsUsable(e) && 
                 e.isInBattle && 
                 e.target.Card != null &&
-                e.target.Card.Health <= _healthF.Value(e.trait) && 
+                e.target.Card.Health <= _healthF.Value(e.traitStacks) && 
                 e.target.Opposite.Card == null;
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)

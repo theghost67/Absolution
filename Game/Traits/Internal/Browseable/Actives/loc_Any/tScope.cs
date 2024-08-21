@@ -25,15 +25,10 @@ namespace Game.Traits
         protected tScope(tScope other) : base(other) { }
         public override object Clone() => new tScope(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на вражеской карте рядом",
-                    $"Перед каждой последующей атакой владельца (П{PRIORITY}), цель станет целью атаки."),
-                new($"При перемещении владельца (П{PRIORITY})",
-                    $"Деактивирует эффект данного навыка."),
-            });
+            return $"<color>При использовании на вражеской карте рядом</color>\nПеред каждой последующей атакой владельца (П{PRIORITY}), <i>цель</i> станет целью атаки.\n\n" +
+                   $"<color>При перемещении владельца (П{PRIORITY})</color>\nДеактивирует эффект данного навыка.";
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {

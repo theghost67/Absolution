@@ -25,14 +25,16 @@ namespace Game.Traits
         protected tOrigamiMark(tOrigamiMark other) : base(other) { }
         public override object Clone() => new tOrigamiMark(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После смерти владельца (П{PRIORITY})",
-                    $"создаёт на месте владельца карту <i>{cardName}</i>. Не сработает, если владелец уже является данной картой."),
-            });
+            return $"<color>После смерти владельца (П{PRIORITY})</color>\n" +
+                   $"Создаст на месте владельца карту <u>{cardName}</u>. Не сработает, если владелец уже является данной картой.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = CardDescriptiveArgs.normalStats } };
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

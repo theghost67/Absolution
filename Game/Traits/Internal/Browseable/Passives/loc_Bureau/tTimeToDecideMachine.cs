@@ -24,13 +24,10 @@ namespace Game.Traits
         protected tTimeToDecideMachine(tTimeToDecideMachine other) : base(other) { }
         public override object Clone() => new tTimeToDecideMachine(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале хода (П{PRIORITY})",
-                    $"переходит на вражеское поле напротив, если оно не занято. Тратит все заряды."),
-            });
+            return $"<color>В начале хода (П{PRIORITY})</color>\n" +
+                   $"Переходит на вражеское поле напротив и тратит все заряды, если поле не занято.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

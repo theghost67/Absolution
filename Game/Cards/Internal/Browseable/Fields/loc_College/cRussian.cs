@@ -10,7 +10,6 @@
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
-            frequency = 1.00f;
         }
         protected cRussian(cRussian other) : base(other) { }
         public override object Clone() => new cRussian(this);

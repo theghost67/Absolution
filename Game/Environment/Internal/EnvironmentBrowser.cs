@@ -61,10 +61,10 @@ namespace Game.Environment
                     "agent_of_beholder",
                     "norman",
                     "shelbi",
-                    //"origami",
+                    "origami",
 
                     "harry",
-                    "clues",
+                    //"clues",
                     "carl",
                     "archivist",
                     "general_p",
@@ -78,7 +78,7 @@ namespace Game.Environment
 
                     "killer_of_fun",
                     "meg_tomat",
-                    "mine",
+                    //"mine",
                     "myers",
                     "myers_mirror",
 
@@ -86,7 +86,7 @@ namespace Game.Environment
                     "satanist",
                     "scp_106",
                     "scp_173",
-                    "spider",
+                    //"spider",
 
                     //"spider_cocon",
                     "spiderling",

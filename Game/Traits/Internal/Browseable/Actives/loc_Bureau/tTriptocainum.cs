@@ -26,17 +26,14 @@ namespace Game.Traits
         protected tTriptocainum(tTriptocainum other) : base(other) { }
         public override object Clone() => new tTriptocainum(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании",
-                    $"Увеличивает силу владельца на {_strengthF.Format(trait)}. После каждой последующей атаки владельца (П{PRIORITY}), он окажется на пороге смерти (игнор. здоровья). Перезарядка: {CD} х."),
-            });
+            return $"<color>При использовании</color>\n" +
+                   $"Увеличивает силу владельца на {_strengthF.Format(args.stacks, true)}. После каждой последующей атаки владельца (П{PRIORITY}), он окажется на пороге смерти (игнор. здоровья). Перезарядка: {CD} х.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(80, stacks);
+            return base.Points(owner, stacks) + PointsExponential(20, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -52,10 +49,10 @@ namespace Game.Traits
             await base.OnUse(e);
             IBattleTrait trait = (IBattleTrait)e.trait;
 
-            float strength = _strengthF.Value(trait);
+            float strength = _strengthF.Value(e.traitStacks);
             await trait.Owner.Strength.AdjustValueScale(strength, trait);
             trait.Owner.OnInitiationPostSent.Add(trait.GuidStr, OnInitiationPostSent);
-            trait.Storage.turnsDelay += CD;
+            trait.SetCooldown(CD);
         }
 
         static async UniTask OnInitiationPostSent(object sender, BattleInitiationSendArgs e)

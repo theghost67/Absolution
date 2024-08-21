@@ -25,13 +25,10 @@ namespace Game.Traits
         protected tCrosseyedShooter(tCrosseyedShooter other) : base(other) { }
         public override object Clone() => new tCrosseyedShooter(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"Перед атакой владельца (П{PRIORITY})",
-                    $"Атакует вражеские поля слева/справа по очереди (сначала левое, потом правое, затем снова левое и так далее)."),
-            });
+            return $"<color>Перед атакой владельца (П{PRIORITY})</color>\n" +
+                   $"Атакует вражеские поля слева/справа по очереди (сначала левое, потом правое, затем снова левое и так далее).";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

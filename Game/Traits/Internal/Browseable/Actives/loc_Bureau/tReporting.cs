@@ -24,18 +24,20 @@ namespace Game.Traits
         protected tReporting(tReporting other) : base(other) { }
         public override object Clone() => new tReporting(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на любой вражеской карте",
-                    $"Устанавливает карту <i>{cardName}</i> на поле напротив цели, если поле напротив свободно. Тратит один заряд."),
-            });
+            return $"<color>При использовании на любой вражеской карте</color>\n" +
+                   $"Устанавливает карту <u>{cardName}</u> на поле напротив цели, если поле напротив свободно. Тратит один заряд.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = CardDescriptiveArgs.normalStats } };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(12, stacks, 1, 1.6f);
+            return base.Points(owner, stacks) + PointsExponential(8, stacks, 1, 1.25f);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

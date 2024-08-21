@@ -25,14 +25,16 @@ namespace Game.Traits
         protected tOrigamiVictim(tOrigamiVictim other) : base(other) { }
         public override object Clone() => new tOrigamiVictim(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на любой вражеской карте",
-                    $"Объявляет её следующей жертвой Мастера Оригами и накладывает навык <i>{traitName}</i>. Перезарядка: {CD} х."),
-            });
+            return $"<color>При использовании на любой вражеской карте</color>\n" +
+                   $"Накладывает на цель навык <u>{traitName}</u>. Перезарядка: {CD} х.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true } };
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -45,7 +47,7 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard target = (BattleFieldCard)e.target.Card;
 
-            trait.Storage.turnsDelay += CD;
+            trait.SetCooldown(CD);
             await target.Traits.AdjustStacks(TRAIT_ID, 1, trait);
         }
     }

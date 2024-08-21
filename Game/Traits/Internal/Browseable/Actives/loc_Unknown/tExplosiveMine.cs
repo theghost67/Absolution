@@ -12,11 +12,12 @@ namespace Game.Traits
         const string ID = "explosive_mine";
         const string TRAIT_ID = "explosive";
         const string CARD_ID = "mine";
+        static readonly TraitStatFormula _stacksF = new(false, 0, 1);
 
         public tExplosiveMine() : base(ID)
         {
             name = "Фугасная мина";
-            desc = "Пора создать себе нового друга!";
+            desc = "Бесишься?";
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -25,20 +26,25 @@ namespace Game.Traits
         protected tExplosiveMine(tExplosiveMine other) : base(other) { }
         public override object Clone() => new tExplosiveMine(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            int stacks = trait.GetStacks();
-            return DescRichBase(trait, new TraitDescChunk[]
+            return $"<color>При использовании на пустом союзном поле</color>\nСоздаёт карту <nobr><color><u>{cardName}</u></color></nobr> на указанном поле. Тратит все заряды.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            TraitStacksPair[] traits = new TraitStacksPair[]
+            { new(TRAIT_ID, _stacksF.ValueInt(args.stacks)) };
+
+            return new DescLinkCollection()
             {
-                new($"При использовании на территории на пустом союзном поле",
-                    $"Создаёт карту <i>{cardName}</i> с {stacks} зарядами навыка <i>{traitName}</i>. Тратит все заряды."),
-            });
+                new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = CardDescriptiveArgs.normalStats, linkTraits = traits },
+                new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true, stacks = traits[0].stacks }
+            };
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(0, 0.16f);
+            return new(result.Entity.GetStacks() * 4, 0.16f);
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -58,7 +64,7 @@ namespace Game.Traits
             FieldCard card = CardBrowser.NewField(CARD_ID);
 
             await trait.SetStacks(0, trait.Side);
-            card.traits.AdjustStacks(TRAIT_ID, trait.GetStacks());
+            card.traits.AdjustStacks(TRAIT_ID, _stacksF.ValueInt(e.traitStacks));
             await trait.Territory.PlaceFieldCard(card, target, trait);
         }
     }

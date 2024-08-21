@@ -91,7 +91,7 @@ namespace Game.Menus
             public static void OnUpdate()
             {
                 if (_selected != null && Input.GetKeyDown(KeyCode.Escape))
-                    _selected.Deselect(false);
+                    _ = _selected.Deselect(false);
             }
 
             public bool CanTake() => false;
@@ -102,7 +102,7 @@ namespace Game.Menus
 
             public void OnTake() => AsInSleeve.OnTakeBase();
             public void OnReturn() => AsInSleeve.OnReturnBase();
-            public void OnDropOn(TableField field) => AsInSleeve.OnDropOnBase(field);
+            public void OnDropOn(TableSleeveCardDropArgs e) => AsInSleeve.OnDropOnBase(e);
             public Tween OnPullOut(bool sleevePull)
             {
                 if (_selected != this)
@@ -169,12 +169,12 @@ namespace Game.Menus
                 _stats[3] = new StrengthStatToUpgrade(_menu, this, Drawer.strengthIcon);
                 int index = 4;
                 foreach (Trait trait in Data.traits.Select(e => e.Trait))
-                    _stats[index++] = new TraitStatToUpgrade(_menu, this, Drawer.Traits.elements[trait.id]);
+                    _stats[index++] = new TraitStatToUpgrade(_menu, this, Drawer.Traits.queue[trait.id]);
                 foreach (StatToUpgrade stat in _stats)
                     stat.OnGraded += delta => _menu.OnAnyStatGraded(delta);
 
                 Drawer.ChangePointer = true;
-                Drawer.OnMouseClick += (s, e) => { if (_selected != this) Select(); };
+                Drawer.OnMouseClick += (s, e) => { if (_selected != this) _ = Select(); };
             }
             protected override void OnDrawerDestroyedBase(object sender, EventArgs e)
             {
@@ -192,7 +192,7 @@ namespace Game.Menus
                     AnimPosUp(to);
                 });
                 seq.AppendInterval(ANIM_DURATION);
-                seq.OnComplete(() => Drawer.SetCollider(true));
+                seq.OnComplete(() => Drawer.ColliderEnabled = true);
 
                 return seq.Play();
             }
@@ -206,7 +206,7 @@ namespace Game.Menus
                     AnimPosDown(to);
                 });
                 seq.AppendInterval(ANIM_DURATION);
-                seq.OnComplete(() => Drawer.SetCollider(true));
+                seq.OnComplete(() => Drawer.ColliderEnabled = true);
 
                 return seq.Play();
             }
@@ -245,11 +245,11 @@ namespace Game.Menus
                 //Sleeve.Remove(this);
 
                 foreach (ITableSleeveCard sleeveCard in _sleeve)
-                    sleeveCard.Drawer.SetCollider(false);
+                    sleeveCard.Drawer.ColliderEnabled = false;
 
                 _selected?.Deselect(true);
                 _selected = this;
-                _selected.Drawer.SetSortingOrder(10, asDefault: true);
+                _selected.Drawer.SortingOrder = 10;
                 _menu.OnSelectedChanged?.Invoke();
 
                 Vector3 from = prevPos;
@@ -257,7 +257,7 @@ namespace Game.Menus
                 await AnimCardSelect(from, to).AsyncWaitForCompletion();
 
                 foreach (ITableSleeveCard sleeveCard in _sleeve)
-                    sleeveCard.Drawer.SetCollider(true);
+                    sleeveCard.Drawer.ColliderEnabled = true;
 
                 Sleeve.Drawer.CanPullOut = true;
             }
@@ -265,7 +265,7 @@ namespace Game.Menus
             {
                 if (Drawer == null || Drawer.IsDestroying) return;
 
-                Drawer.SetSortingOrder(_defaultSorting, asDefault: true);
+                Drawer.SetSortingAsDefault();
                 _selected = null;
                 //Sleeve.Add(this); // moves Drawer.transform
 
@@ -274,7 +274,7 @@ namespace Game.Menus
                     _menu.OnSelectedChanged?.Invoke();
                     Sleeve.Drawer.CanPullOut = false;
                     foreach (ITableSleeveCard sleeveCard in _sleeve)
-                        sleeveCard.Drawer.SetCollider(false);
+                        sleeveCard.Drawer.ColliderEnabled = false;
                 }
 
                 Vector3 from = Vector3.zero;
@@ -285,7 +285,7 @@ namespace Game.Menus
                 {
                     Sleeve.Drawer.CanPullOut = true;
                     foreach (ITableSleeveCard sleeveCard in _sleeve)
-                        sleeveCard.Drawer.SetCollider(true);
+                        sleeveCard.Drawer.ColliderEnabled = true;
                 }
             }
         }
@@ -422,10 +422,10 @@ namespace Game.Menus
                     return;
 
                 card.AnimHighlightAsUpgrade();
-                menu.SetColliders(false);
+                menu.SetCollider(false);
                 await Upgrade(upgradeTimes);
                 OnGraded?.Invoke(upgradePointsDelta);
-                menu.SetColliders(true);
+                menu.SetCollider(true);
                 statDrawer.IsSelected = true; // force mouse enter invoke
             }
             async void OnMouseClickRight(object sender, DrawerMouseEventArgs e)
@@ -439,10 +439,10 @@ namespace Game.Menus
                 if (downgradePointsDelta > 0 && menu._pointsAvailable - downgradePointsDelta < -9999) return;
 
                 card.AnimHighlightAsDowngrade();
-                menu.SetColliders(false);
+                menu.SetCollider(false);
                 await Downgrade(downgradeTimes);
                 OnGraded?.Invoke(downgradePointsDelta);
-                menu.SetColliders(true);
+                menu.SetCollider(true);
                 statDrawer.IsSelected = true; // force mouse enter invoke
             }
         }
@@ -634,12 +634,17 @@ namespace Game.Menus
             {
                 int times = GetUserGradeTimes();
                 _element.AdjustStacksInternal(times);
-                menu.WriteUpgradedState(_element.Trait.DescRich());
+
+                string desc = _element.Trait.DescDynamicWithLinks(out string[] descLinksTexts);
+                menu.WriteUpgradedState(desc);
+                Tooltip.ShowLinks(descLinksTexts);
+
                 _element.AdjustStacksInternal(-times);
             }
             void OnMouseLeave(object sender, DrawerMouseEventArgs e)
             {
                 menu.WriteUpgradedState("");
+                Tooltip.Hide();
             }
         }
 
@@ -650,8 +655,9 @@ namespace Game.Menus
                 const string TEXT = "Нажмите ЛКМ или ПКМ по иконке характеристики, чтобы увеличить или уменьшить её значение. " +
                                     "Нажатие мышью на навык изменит изначальное количество его зарядов. " +
                                     "Зажатие клавиш Ctrl/Shift увеличит количество совершаемых улучшений за раз. " +
-                                    "Доступные характеристики для изменения:\n- Стоимость\n- Инициатива\n- Здоровье\n- Сила\n- Заряды навыков";
+                                    "\n\nДоступные характеристики для изменения:\n- Инициатива\n- Здоровье\n- Сила";
                 SetTooltip(TEXT);
+                SetTooltipAlign(HorizontalAlignmentOptions.Right);
             }
         }
         class ResetAllButtonDrawer : ButtonDrawer
@@ -712,10 +718,10 @@ namespace Game.Menus
                 if (CardToUpgrade.Selected == null) return;
                 textMesh.text = _normalText;
             }
-            protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
+            protected override async void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
             {
                 if (CardToUpgrade.Selected == null || !e.isLmbDown) return;
-                CardToUpgrade.Selected.TryReset();
+                await CardToUpgrade.Selected.TryReset();
                 textMesh.text = _normalText;
             }
 
@@ -767,7 +773,7 @@ namespace Game.Menus
             _sleeve.TakeMissingCards(true);
 
             foreach (CardToUpgrade card in _sleeve.Cast<CardToUpgrade>())
-                card.SetDefaults(card.Drawer.transform.position, card.CurrentPoints, card.Drawer.GetSortingOrder());
+                card.SetDefaults(card.Drawer.transform.position, card.CurrentPoints, card.Drawer.SortingOrder);
 
             _resetAllButton = new ResetAllButtonDrawer(this);
             _resetThisButton = new ResetThisButtonDrawer(this);
@@ -799,32 +805,33 @@ namespace Game.Menus
             UpgradeInfoHide();
         }
 
-        public override void Open()
+        public override void WriteDesc(string text)
+        {
+            base.WriteDesc(text);
+            WriteCurrentState(text);
+        }
+
+        protected override void Open()
         {
             base.Open();
             Global.OnUpdate += OnUpdate;
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Play();
         }
-        public override void Close()
+        protected override void Close()
         {
             base.Close();
             Global.OnUpdate -= OnUpdate;
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Kill();
         }
-        public override void SetColliders(bool value)
+        protected override void SetCollider(bool value)
         {
-            base.SetColliders(value);
-            _infoButton.SetCollider(value);
-            _resetAllButton.SetCollider(value);
-            _resetThisButton.SetCollider(value);
-            _finishButton.SetCollider(value);
-        }
-        public override void WriteDesc(string text)
-        {
-            base.WriteDesc(text);
-            WriteCurrentState(text);
+            base.SetCollider(value);
+            _infoButton.ColliderEnabled = value;
+            _resetAllButton.ColliderEnabled = value;
+            _resetThisButton.ColliderEnabled = value;
+            _finishButton.ColliderEnabled = value;
         }
 
         void WriteCurrentState(string desc)

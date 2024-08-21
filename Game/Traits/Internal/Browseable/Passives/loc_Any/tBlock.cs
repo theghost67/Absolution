@@ -26,13 +26,9 @@ namespace Game.Traits
         protected tBlock(tBlock other) : base(other) { }
         public override object Clone() => new tBlock(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"Уменьшает количество своих зарядов на 1 и силу атаки до нуля."),
-            });
+            return $"<color>Перед атакой на владельца (П{PRIORITY})</color>\nУменьшает количество своих зарядов на 1 и силу атаки до нуля.";
         }
         public override BattleWeight Weight(IBattleTrait trait)
         {
@@ -58,7 +54,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await e.strength.SetValue(0, trait);
+            await e.Strength.SetValue(0, trait);
         }
     }
 }

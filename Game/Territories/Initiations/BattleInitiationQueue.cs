@@ -29,7 +29,6 @@ namespace Game.Territories
         public bool IsRunning => _isRunning;
         public BattleTerritory Territory => _territory;
         public int Count => _list.Count;
-        public float SpeedScale => _speedScale; // TODO: implement 'set' (set time scale for each active tween)
 
         public event EventHandler OnStarted;
         public event EventHandler OnEnded;
@@ -52,7 +51,6 @@ namespace Game.Territories
         Tween _iUpdateTween;
         Tween _iRedirectTween;
         Tween _iHideTween;
-        float _speedScale;
         bool _isRunning;
 
         static BattleInitiationQueue()
@@ -70,7 +68,9 @@ namespace Game.Territories
         {
             _territory = territory;
             _list = new List<BattleInitiationSendArgs>(BattleTerritory.MAX_SIZE);
-            _speedScale = 1;
+
+            OnStarted += (s, e) => TableEventManager.Add("initiations", territory.Guid);
+            OnEnded += (s, e) => TableEventManager.Remove("initiations", territory.Guid);
         }
 
         public void Dispose()
@@ -115,7 +115,7 @@ namespace Game.Territories
             const int NOT_HANDLED = 1;
 
             _isRunning = true;
-            OnStarted?.Invoke(this, EventArgs.Empty);
+            OnStarted.Invoke(this, EventArgs.Empty);
 
             while (_list.Count != 0)
             {
@@ -128,7 +128,7 @@ namespace Game.Territories
                     if (sArgs.Sender.IsKilled) return KILLED;
                     if (countReceivers && sArgs.Receivers.Count == 0)
                         return HANDLED;
-                    if (sArgs.handled || !sender.CanInitiate || sender.Strength <= 0)
+                    if (sArgs.handled || !sender.CanInitiate || sArgs.Strength <= 0)
                         return HANDLED;
                     return NOT_HANDLED;
                 }
@@ -141,7 +141,7 @@ namespace Game.Territories
                     default: throw new NotImplementedException();
                 }
 
-                await ShowInitiationPreview(sArgs.Sender, sArgs.strength, fieldIsSender: true).AsyncWaitForCompletion();
+                await ShowInitiationPreview(sArgs.Sender, sArgs.Strength, fieldIsSender: true).AsyncWaitForCompletion();
                 sArgs_InitEvents(sArgs);
 
                 await sArgs.SelectReceivers();
@@ -159,9 +159,15 @@ namespace Game.Territories
                 {
                     BattleField receiver = sArgs.Receivers.Min();
                     if (TryHandleInitiation(true) == NOT_HANDLED)
+                    {
                         await AnimInitiationToField(receiver, sArgs);
-                    else break;
-                    sArgs.RemoveReceiver(receiver);
+                        sArgs.RemoveReceiver(receiver);
+                    }
+                    else
+                    {
+                        await HideInitiationPreviews(sArgs);
+                        break;
+                    }
                 }
                 await InvokeSendArgsEvent(sArgs, isPreInvoke: false);
                 await HideInitiationPreviews(sArgs);
@@ -171,7 +177,7 @@ namespace Game.Territories
                 await UniTask.Delay((int)(ANIM_DURATION_HALF * 1000));
 
             _isRunning = false;
-            OnEnded?.Invoke(this, EventArgs.Empty);
+            OnEnded.Invoke(this, EventArgs.Empty);
 
             OnceComplete?.Invoke(this, EventArgs.Empty);
             OnceComplete = null;
@@ -203,10 +209,10 @@ namespace Game.Territories
             if (drawer != null)
             {
                 drawer.transform.DOAShake();
-                drawer.CreateTextAsDamage(((float)rArgs.strength).Abs().Ceiling(), rArgs.strength < 0);
+                drawer.CreateTextAsDamage(((float)rArgs.Strength).Abs().Ceiling(), rArgs.Strength < 0);
             }
 
-            await field.health.AdjustValue(-rArgs.strength, rArgs.Sender);
+            await field.health.AdjustValue(-rArgs.Strength, rArgs.Sender);
             await InvokeRecvArgsEvent(rArgs, isPreInvoke: false);
             HideInitiationPreview(rArgs.Receiver, instantly: true);
         }
@@ -235,10 +241,10 @@ namespace Game.Territories
             if (drawer != null)
             {
                 drawer.transform.DOAShake();
-                drawer.CreateTextAsDamage(((float)rArgs.strength).Abs().Ceiling(), rArgs.strength < 0);
+                drawer.CreateTextAsDamage(((float)rArgs.Strength).Abs().Ceiling(), rArgs.Strength < 0);
             }
 
-            await card.Health.AdjustValue(-rArgs.strength, rArgs.Sender);
+            await card.Health.AdjustValue(-rArgs.Strength, rArgs.Sender);
             await InvokeRecvArgsEvent(rArgs, isPreInvoke: false);
             HideInitiationPreview(rArgs.Receiver, instantly: true);
         }
@@ -248,13 +254,11 @@ namespace Game.Territories
             if (sArgs.Sender.Drawer == null)
                 return UniTask.CompletedTask;
 
-            sArgs.Sender.OnPostKilled.Add("init_preview", (s, e) => HideInitiationPreviews(sArgs));
-
             Tween lastTargetTween = null;
             foreach (BattleField target in sArgs.Receivers)
-                lastTargetTween = ShowInitiationPreview(target, sArgs.strength, fieldIsSender: false);
+                lastTargetTween = ShowInitiationPreview(target, sArgs.Strength, fieldIsSender: false);
 
-            Tween senderTween = ShowInitiationPreview(sArgs.Sender, sArgs.strength, fieldIsSender: true);
+            Tween senderTween = ShowInitiationPreview(sArgs.Sender, sArgs.Strength, fieldIsSender: true);
             if (senderTween != null && !senderTween.IsComplete())
                  return senderTween.AsyncWaitForCompletion();
             else return lastTargetTween.AsyncWaitForCompletion();
@@ -264,10 +268,12 @@ namespace Game.Territories
             if (sArgs.Sender.Drawer == null)
                 return UniTask.CompletedTask;
 
-            sArgs.Sender.OnPostKilled.Remove("init_preview");
-
-            // preview is hidden once received by target or when the initiation is handled 
-            return HideInitiationPreview(sArgs.Sender, instantly: false).AsyncWaitForCompletion();
+            Tween lastTween = null;
+            foreach (BattleField target in sArgs.Receivers)
+                lastTween ??= HideInitiationPreview(target, instantly: false);
+            
+            lastTween ??= HideInitiationPreview(sArgs.Sender, instantly: false);
+            return lastTween.AsyncWaitForCompletion();
         }
 
         UniTask AnimInitiationMove(BattleInitiationSendArgs sArgs, BattleInitiationRecvArgs rArgs)
@@ -281,7 +287,7 @@ namespace Game.Territories
             GameObject iInMovePrefab = GameObject.Instantiate(_initiationInMovePrefab, Global.Root);
             Transform iInMoveTransform = iInMovePrefab.transform;
             TextMeshPro iInMoveText = iInMoveTransform.Find<TextMeshPro>("Text");
-            int strength = sArgs.strength; 
+            int strength = sArgs.Strength; 
 
             iInMoveTransform.position = from;
             iInMoveText.text = strength.Abs().ToString();
@@ -302,7 +308,7 @@ namespace Game.Territories
             SpriteRenderer iBlankBg = iBlankPrefab.Find<SpriteRenderer>("Bg");
 
             iBlankTransform.localScale = Vector3.one * 1.35f;
-            iBlankBg.DOColor(iBlankBg.color.WithAlpha(0), ANIM_DURATION).SetEase(Ease.InQuad);
+            iBlankBg.DOFade(0, ANIM_DURATION).SetEase(Ease.InQuad);
 
             Tween tween = iBlankTransform.DOScale(Vector3.one, ANIM_DURATION).SetEase(Ease.OutCubic).OnComplete(iBlankPrefab.Destroy);
             return tween.AsyncWaitForCompletion();
@@ -322,7 +328,7 @@ namespace Game.Territories
                  cardDrawer = objAsCard.Drawer;
             else cardDrawer = ((BattleField)obj).Card?.Drawer;
 
-            TableTraitListSetDrawerElementsCollection elements = cardDrawer?.Traits?.elements;
+            TableTraitListSetDrawerElementsQueue elements = cardDrawer?.Traits?.queue;
             if (cardDrawer != null && elements != null)
             {
                 bool showBg = cardDrawer.IsSelected ? elements.IsEmpty : !elements.IsRunning;
@@ -399,27 +405,25 @@ namespace Game.Territories
             if (instantly)
             {
                 previewTransform.gameObject.Destroy();
+                ResetDrawer(obj.Drawer);
                 return null;
             }
 
             BattleFieldCardDrawer cardDrawer;
             if (obj is BattleFieldCard objAsCard)
-                cardDrawer = objAsCard.Drawer;
+                 cardDrawer = objAsCard.Drawer;
             else cardDrawer = ((BattleField)obj).Card?.Drawer;
 
-            TableTraitListSetDrawerElementsCollection elements = cardDrawer?.Traits?.elements;
-            if (cardDrawer != null && elements != null)
-            {
-                bool hideBg = cardDrawer.IsSelected ? elements.IsEmpty : !elements.IsRunning;
-                if (hideBg) cardDrawer.HideBg();
-            }
-
+            ResetDrawer(cardDrawer);
             previewTransform.gameObject.name = "Initiation (hiding)";
             TextMeshPro previewText = previewTransform.Find<TextMeshPro>("Text");
             SpriteRenderer previewBg = previewTransform.Find<SpriteRenderer>("Bg");
 
-            DOVirtual.Float(1, 0, DURATION, v => SetPreviewTextAlpha(previewText, v)).SetEase(Ease.InCubic);
-            DOVirtual.Float(1, 0, DURATION, v => SetPreviewBgPosAndColor(previewBg, v)).SetEase(Ease.InCubic);
+            DOVirtual.Float(1, 0, DURATION, v =>
+            {
+                SetPreviewTextAlpha(previewText, v);
+                SetPreviewBgPosAndColor(previewBg, v);
+            }).SetEase(Ease.InCubic);
 
             _iHideTween = previewText.transform.DOScale(Vector3.one * 0.5f, DURATION).SetEase(Ease.InCubic).OnComplete(previewTransform.gameObject.Destroy);
             return _iHideTween;
@@ -466,6 +470,23 @@ namespace Game.Territories
                  previewText.color = Color.green.WithAlpha(previewText.color.a);
             else previewText.color = Color.red.WithAlpha(previewText.color.a);
         }
+
+        static void ResetDrawer(TableFieldCardDrawer drawer)
+        {
+            if (drawer == null) return;
+            if (drawer.IsSelected)
+                 drawer.IsSelected = true;
+            else if (!drawer.queue.IsRunning && !drawer.Traits.queue.IsRunning)
+                drawer.HideBg();
+        }
+        static void ResetDrawer(Drawer drawer)
+        {
+            if (drawer == null) return;
+            if (drawer is TableFieldCardDrawer cardDrawer)
+                ResetDrawer(cardDrawer);
+            else if (drawer.IsSelected)
+                drawer.IsSelected = true;
+        }
         #endregion
 
         #region events
@@ -482,7 +503,7 @@ namespace Game.Territories
         void sArgs_OnInitiationReceiverAdded(object sender, BattleField receiver)
         {
             BattleInitiationSendArgs sArgs = (BattleInitiationSendArgs)sender;
-            ShowInitiationPreview(receiver, sArgs.strength, false);
+            ShowInitiationPreview(receiver, sArgs.Strength, false);
         }
         void sArgs_OnInitiationReceiverRemoved(object sender, BattleField receiver)
         {
@@ -542,27 +563,25 @@ namespace Game.Territories
 
         async UniTask InvokeSendArgsEvent(BattleInitiationSendArgs sArgs, bool isPreInvoke)
         {
-            if (!sArgs.Sender.IsKilled)
+            if (isPreInvoke)
+                await sArgs.OnPreSent.Invoke(sArgs, EventArgs.Empty);
+            else
             {
-                if (isPreInvoke)
-                    await sArgs.OnPreSent.Invoke(sArgs, EventArgs.Empty);
-                else await sArgs.OnPostSent.Invoke(sArgs, EventArgs.Empty);
+                if (!sArgs.Sender.IsKilled)
+                    await sArgs.OnPostSent.Invoke(sArgs, EventArgs.Empty);
             }
             await AwaitTweens();
         }
         async UniTask InvokeRecvArgsEvent(BattleInitiationRecvArgs rArgs, bool isPreInvoke)
         {
             if (rArgs.Receiver.Card == null) return; // can be removed later if added same initiation events to BattleField class
-            if (!rArgs.Receiver.Card.IsKilled)
+            if (isPreInvoke)
+                await rArgs.OnPreReceived.Invoke(rArgs, EventArgs.Empty);
+            else
             {
-                if (isPreInvoke)
-                    await rArgs.OnPreReceived.Invoke(rArgs, EventArgs.Empty);
-                else
-                {
-                    await rArgs.OnPostReceived.Invoke(rArgs, EventArgs.Empty);
-                    if (!rArgs.SenderArgs.Sender.IsKilled)
-                        await rArgs.SenderArgs.OnConfirmed.Invoke(rArgs.SenderArgs, rArgs);
-                }
+                await rArgs.OnPostReceived.Invoke(rArgs, EventArgs.Empty);
+                if (!rArgs.SenderArgs.Sender.IsKilled)
+                    await rArgs.SenderArgs.OnConfirmed.Invoke(rArgs.SenderArgs, rArgs);
             }
             await AwaitTweens();
         }

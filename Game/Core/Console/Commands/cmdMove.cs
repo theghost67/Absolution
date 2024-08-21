@@ -6,7 +6,7 @@ using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
     public class cmdMove : Command
     {
@@ -44,7 +44,7 @@ namespace Game
 
         protected override void Execute(CommandArgInputDict args)
         {
-            if (TableEventManager.CanAwaitAnyEvents())
+            if (TableEventManager.CountAll() != 0)
             {
                 TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
                 return;
@@ -67,8 +67,8 @@ namespace Game
             BattleFieldCard fieldCard = drawer.attached;
             if (field.Card == null)
             {
-                fieldCard.TryAttachToField(field, null);
-                TableConsole.Log($"Карта была перемещена на новое поле (от: null).", LogType.Log);
+                _ = fieldCard.TryAttachToField(field, menu);
+                TableConsole.Log($"Карта была перемещена на новое поле (от: меню).", LogType.Log);
             }
             else TableConsole.Log($"Карта на данном поле уже установлена.", LogType.Error);
         }

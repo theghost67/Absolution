@@ -17,12 +17,12 @@ namespace Game.Traits
         {
             return new TableActiveTrait(this, null, parent);
         }
-        public virtual BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result) => BattleWeight.none;
+        public virtual BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result) => BattleWeight.zero;
 
         public virtual bool IsUsableInSleeve() => false;
         public virtual bool IsUsable(TableActiveTraitUseArgs e)
         {
-            bool cooldown = e.trait.Storage.turnsDelay > 0;
+            bool cooldown = e.trait.IsOnCooldown();
             if (cooldown) return false;
 
             bool usedInSleeve = (e.target == null) == IsUsableInSleeve();

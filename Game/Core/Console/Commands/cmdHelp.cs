@@ -2,7 +2,7 @@
 using System.Linq;
 using UnityEngine;
 
-namespace Game
+namespace Game.Console
 {
     public class cmdHelp : Command
     {

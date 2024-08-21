@@ -26,15 +26,10 @@ namespace Game.Traits
         protected tHeroesNeverDie(tHeroesNeverDie other) : base(other) { }
         public override object Clone() => new tHeroesNeverDie(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"На пороге смерти стороны-владельца (П{PRIORITY})",
-                    $"Если находится на территории, жертвует владельцем, передавая всё его здоровье стороне. Тратит все заряды."),
-                new($"Постоянный эффект в бою",
-                    $"Уменьшает силу на {_strengthF.Format(trait)}."),
-            });
+            return $"<color>На пороге смерти стороны-владельца (П{PRIORITY})</color>\nЕсли находится на территории, жертвует владельцем, передавая всё его здоровье стороне-владельцу. Тратит все заряды.\n\n" +
+                   $"<color>Постоянный эффект в бою</color>\nУменьшает силу на {_strengthF.Format(args.stacks, true)}.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -46,7 +41,7 @@ namespace Game.Traits
             {
                 string guid = trait.GuidGen(trait.Owner.Guid);
                 trait.Side.OnDeathsDoor.Add(trait.GuidStr, OnSideDeathsDoor, PRIORITY);
-                await trait.Owner.Strength.AdjustValueScale(-_strengthF.Value(trait), trait, guid);
+                await trait.Owner.Strength.AdjustValueScale(-_strengthF.Value(e.traitStacks), trait, guid);
             }
             else if (trait.WasRemoved(e))
             {

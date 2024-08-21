@@ -14,7 +14,7 @@ namespace Game.Traits
     {
         const string ID = "explosive";
         const int PRIORITY = 4;
-        const int STRENGTH_ABS_PER_STACK = 1;
+        static readonly TraitStatFormula _strengthF = new(false, 0, 1);
         static readonly TerritoryRange _range = TerritoryRange.oppositeTriple;
 
         public tExplosive() : base(ID)
@@ -29,18 +29,14 @@ namespace Game.Traits
         protected tExplosive(tExplosive other) : base(other) { }
         public override object Clone() => new tExplosive(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            float effect = STRENGTH_ABS_PER_STACK * trait.GetStacks();
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После смерти владельца (П{PRIORITY})",
-                    $"Наносит рядомстоящим вражеским картам <u>{effect}</u> ед. урона."),
-            });
+            return $"<color>После смерти владельца (П{PRIORITY})</color>\n" +
+                   $"Наносит рядомстоящим вражеским картам {_strengthF.Format(args.stacks)} урона.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsLinear(14, stacks);
+            return base.Points(owner, stacks) + PointsLinear(6, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -62,11 +58,12 @@ namespace Game.Traits
             if (trait == null) return;
             if (owner.Field == null) return;
 
+            int strength = _strengthF.ValueInt(trait.GetStacks());
+            IEnumerable<BattleField> fields = owner.Territory.Fields(owner.Field.pos, _range).WithCard();
+
             await trait.AnimActivation();
             await trait.SetStacks(0, trait);
 
-            int strength = STRENGTH_ABS_PER_STACK * trait.GetStacks();
-            IEnumerable<BattleField> fields = owner.Territory.Fields(owner.Field.pos, _range).WithCard();
             foreach (BattleField field in fields)
             {
                 field.Card.Drawer?.CreateTextAsSpeech($"Бах\n<size=50%>-{strength}", Color.red);

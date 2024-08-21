@@ -25,13 +25,10 @@ namespace Game.Traits
         protected tMinistryRat(tMinistryRat other) : base(other) { }
         public override object Clone() => new tMinistryRat(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале хода, когда остаётся один на своей стороне территории (П{PRIORITY})",
-                    $"переходит на вражеское поле напротив, если оно не занято. Тратит все заряды."),
-            });
+            return $"<color>В начале хода, когда остаётся один на своей стороне территории (П{PRIORITY})</color>\n" +
+                   $"переходит на вражеское поле напротив, если оно не занято. Тратит все заряды.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

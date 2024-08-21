@@ -23,13 +23,13 @@ namespace Game.Traits
         protected tWayOut(tWayOut other) : base(other) { }
         public override object Clone() => new tWayOut(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании",
-                    $"Возвращает владельца в рукав. Тратит все заряды."),
-            });
+            return $"<color>При использовании</color>\nВозвращает владельца в рукав. Тратит все заряды.";
+        }
+        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
+        {
+            return new(0, 0.20f);
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {

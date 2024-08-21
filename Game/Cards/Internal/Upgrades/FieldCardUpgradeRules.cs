@@ -93,11 +93,11 @@ namespace Game.Cards
             }
             #endregion
 
-            #region traits creation
-            SkipPossibleTraitsAmplifying: // fills new dict using card.traits and possibleTraits, also scales stats and traits upgrade frequency
+            #region stackable traits creation
+            SkipPossibleTraitsAmplifying:
             Dictionary<string, float> cardTraitsStackable = new(capacity: allTraitsCount); // traitId, frequency
             foreach (Trait trait in card.traits.Select(e => e.Trait).Where(t => !t.tags.HasFlag(TraitTag.Static)))
-                cardTraitsStackable.Add(trait.id, 1f - trait.frequency);
+                cardTraitsStackable.Add(trait.id, Random.value);
 
             for (int i = cardTraitsStackable.Count; i < allTraitsCount; i++)
             {
@@ -124,18 +124,16 @@ namespace Game.Cards
                 }
 
                 if (!traitSrc.tags.HasFlag(TraitTag.Static)) // if is stackable
-                    cardTraitsStackable.Add(traitId, 1f);
+                    cardTraitsStackable.Add(traitId, Random.value);
             }
             #endregion
 
-            #region traits upgrading             
-            // upgrades generated traits (stackable ones)
+            #region stackable traits upgrading           
             float traitsFreqSum = cardTraitsStackable.Values.Sum();
             foreach (KeyValuePair<string, float> pair in cardTraitsStackable)
             {
                 string traitId = pair.Key;
                 Trait traitSrc = TraitBrowser.GetTrait(traitId);
-
                 float traitPointsShare = traitsPointsShare * pair.Value / traitsFreqSum;
                 float traitPointsShareCurrent = 0;
                 int traitUpStep = 1000;

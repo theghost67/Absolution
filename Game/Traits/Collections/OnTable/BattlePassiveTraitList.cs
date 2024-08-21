@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Game.Traits
@@ -41,7 +42,7 @@ namespace Game.Traits
                 return element;
             }
 
-            BattlePassiveTrait trait = new(TraitBrowser.NewPassive(e.id), Set.Owner, null);
+            BattlePassiveTrait trait = new(Set.Owner.Data.traits.Passives[e.id]?.Trait ?? TraitBrowser.NewPassive(e.id), Set.Owner, null);
             element = new BattlePassiveTraitListElement(this, trait, e.delta);
             return element;
         }
@@ -56,6 +57,12 @@ namespace Game.Traits
             BattleTraitListCloneArgs argsCast = (BattleTraitListCloneArgs)args;
             BattleTraitListElementCloneArgs elementCArgs = new(this, argsCast.terrCArgs);
             return (BattlePassiveTraitListElement)src.Clone(elementCArgs);
+        }
+        protected override UniTask ElementAwaiter(ITableTraitListElement element)
+        {
+            if (element.WasAdded(element.Stacks))
+                 return ((BattlePassiveTraitListElement)element).Trait.Area.SetObserveTargets(true);
+            else return base.ElementAwaiter(element);
         }
 
         IEnumerator<IBattleTraitListElement> IEnumerable<IBattleTraitListElement>.GetEnumerator() => GetEnumerator();

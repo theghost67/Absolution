@@ -9,130 +9,107 @@ using UnityEngine;
 
 namespace Game.Traits
 {
-    // TODO: implement scrolling
-    // TODO: set sorting orders for masks
-
     /// <summary>
     /// Класс, представляющий взаимодействие пользователя с типом <see cref="TableTraitListSet"/>.
     /// </summary>
-    public sealed class TableTraitListSetDrawer : Drawer, IEnumerable<TableTraitListElementDrawer>
+    public sealed class TableTraitListSetDrawer : ScrollableDrawer, IEnumerable<TableTraitListElementDrawer>
     {
-        const float VIEWPORT_HEIGHT = 0.69f;
         public TableFieldCardDrawer Owner => attached.Owner.Drawer;
-        public new bool IsSelected => IsAnySelected();
-
+        public bool IsAnySelected => IsAnyElementSelected();
         public readonly new TableTraitListSet attached;
-        public readonly TableTraitListSetDrawerElementsCollection elements;
+        public readonly TableTraitListSetDrawerElementsQueue queue;
 
-        Tween _animScrollTween;
+        static readonly GameObject _prefab;
         Tween _animAlphaTween;
-        float _animAlpha;
 
-        public TableTraitListSetDrawer(TableTraitListSet set) : base(set, set.Owner.Drawer.transform.CreateEmptyObject("Traits"))
+        static TableTraitListSetDrawer()
         {
+            _prefab = Resources.Load<GameObject>("Prefabs/Traits/Trait list set");
+        }
+        public TableTraitListSetDrawer(TableTraitListSet set) : base(set, _prefab, set.Owner.Drawer.transform)
+        {
+            gameObject.name = "Traits";
             attached = set;
-            elements = new TableTraitListSetDrawerElementsCollection(this);
+            queue = new TableTraitListSetDrawerElementsQueue(this);
 
             attached.OnDrawerCreated += OnSetDrawerCreated;
-            SetSortingOrder(set.Owner.Drawer.GetSortingOrder() + 8);
+            SetSortingOrder(set.Owner.Drawer.SortingOrder + 8);
             gameObject.SetActive(false);
-        }
-
-        public override void SetCollider(bool value)
-        {
-            base.SetCollider(value);
-            foreach (TableTraitListElementDrawer drawer in elements)
-                drawer?.SetCollider(value);
-        }
-        public override void SetSortingOrder(int value, bool asDefault = false)
-        {
-            base.SetSortingOrder(value, asDefault);
-            foreach (TableTraitListElementDrawer drawer in elements)
-                drawer?.SetSortingOrder(value);
-        }
-        public override void SetAlpha(float value)
-        {
-            base.SetAlpha(value);
-            _animAlpha = value;
-            foreach (TableTraitListElementDrawer drawer in elements)
-                drawer?.SetAlpha(value);
-        }
-        public override void SetColor(Color value)
-        {
-            base.SetColor(value);
-            foreach (TableTraitListElementDrawer drawer in elements)
-                drawer?.SetColor(value);
         }
 
         public Tween ShowStoredElements()
         {
-            if (gameObject.activeSelf && !_animAlphaTween.IsActive() && _animAlpha == 1) 
+            if (gameObject.activeSelf && !_animAlphaTween.IsActive() && Alpha == 1) 
                 return _animAlphaTween;
 
             gameObject.SetActive(true);
             attached.Owner.Drawer.ShowBg();
             _animAlphaTween.Kill();
-            _animAlphaTween = DOVirtual.Float(_animAlpha, 1, 0.25f, SetAlpha);
+            _animAlphaTween = this.DOFade(1, 0.25f);
             return _animAlphaTween;
         }
         public Tween HideStoredElements()
         {
-            if (!gameObject.activeSelf || (!_animAlphaTween.IsActive() && _animAlpha == 0)) 
+            if (!gameObject.activeSelf || (!_animAlphaTween.IsActive() && Alpha == 0)) 
                 return _animAlphaTween;
 
             attached.Owner.Drawer.HideBg();
             _animAlphaTween.Kill();
-            _animAlphaTween = DOVirtual.Float(_animAlpha, 0, 0.25f, SetAlpha);
+            _animAlphaTween = this.DOFade(0, 0.25f);
             _animAlphaTween.OnComplete(gameObject.Deactivate);
             return _animAlphaTween;
-        }
-        public Tween ScrollStoredElements(float posY)
-        {
-            // TODO: implement
-            return _animScrollTween;
         }
 
         public void ShowStoredElementsInstantly()
         {
-            if (elements.IsEmpty) return;
+            if (queue.IsEmpty) return;
             if (gameObject.activeSelf) return;
 
+            Alpha = 1f;
             gameObject.SetActive(true);
             _animAlphaTween.Kill();
-            SetAlpha(1f);
         }
         public void HideStoredElementsInstantly()
         {
-            if (elements.IsEmpty) return;
+            if (queue.IsEmpty) return;
             if (!gameObject.activeSelf) return;
 
+            Alpha = 0f;
             gameObject.SetActive(false);
             _animAlphaTween.Kill();
-            SetAlpha(0f);
         }
 
         protected override void DestroyInstantly()
         {
             base.DestroyInstantly();
-            AnimKill();
-            foreach (TableTraitListElementDrawer drawer in elements)
+            _animAlphaTween.Kill();
+            foreach (TableTraitListElementDrawer drawer in queue)
                 drawer?.TryDestroyInstantly();
         }
         protected override UniTask DestroyAnimated()
         {
             UniTask task = base.DestroyAnimated();
-            AnimKill();
-            foreach (TableTraitListElementDrawer drawer in elements)
+            _animAlphaTween.Kill();
+            foreach (TableTraitListElementDrawer drawer in queue)
                 drawer.TryDestroyAnimated();
             return task;
         }
-        protected override bool SetActiveStateOnAlphaSet() => false;
 
-        bool IsAnySelected()
+        protected override bool SetActiveStateOnAlphaSet() => false;
+        protected override bool IgnoreMouseScroll()
         {
-            foreach (TableTraitListElementDrawer element in elements)
+            return base.IgnoreMouseScroll() || queue.IsRunning;
+        }
+        protected override bool CanBeSelected()
+        {
+            return base.CanBeSelected() && !Sleeves.ITableSleeveCard.IsHoldingAnyCard;
+        }
+
+        bool IsAnyElementSelected()
+        {
+            foreach (TableTraitListElementDrawer drawer in queue)
             {
-                if (element?.IsSelected ?? false)
+                if (drawer != null && drawer.IsSelected)
                     return true;
             }
             return false;
@@ -145,29 +122,24 @@ namespace Game.Traits
             foreach (ITableTraitListElement element in set.Actives)
             {
                 element.CreateDrawer(transform);
-                set.Drawer.elements.EnqueueInstantly(element);
+                set.Drawer.queue.EnqueueInstantly(element);
             }
             foreach (ITableTraitListElement element in set.Passives)
             {
                 element.CreateDrawer(transform);
-                set.Drawer.elements.EnqueueInstantly(element);
+                set.Drawer.queue.EnqueueInstantly(element);
             }
 
             attached.OnDrawerCreated -= OnSetDrawerCreated;
         }
-        void AnimKill()
-        {
-            _animScrollTween.Kill();
-            _animAlphaTween.Kill();
-        }
 
         public IEnumerator<TableTraitListElementDrawer> GetEnumerator()
         {
-            return elements.GetEnumerator();
+            return queue.GetEnumerator();
         }
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return elements.GetEnumerator();
+            return queue.GetEnumerator();
         }
     }
 }

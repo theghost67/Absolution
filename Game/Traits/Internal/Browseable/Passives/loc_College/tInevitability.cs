@@ -25,13 +25,9 @@ namespace Game.Traits
         protected tInevitability(tInevitability other) : base(other) { }
         public override object Clone() => new tInevitability(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После смерти любой карты на территории (П{PRIORITY})",
-                    $"увеличивает здоровье владельца на {_healthF.Format(trait)}."),
-            });
+            return $"<color>После смерти любой карты на территории (П{PRIORITY})</color>\nУвеличивает здоровье владельца на {_healthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -66,6 +62,7 @@ namespace Game.Traits
             BattleField field = (BattleField)sender;
             BattlePassiveTrait trait = (BattlePassiveTrait)TraitFinder.FindInBattle(field.Territory);
             if (trait == null) return;
+            if (field.Card == null) return;
             field.Card.OnPostKilled.Add(trait.GuidStr, OnTerritoryCardPostKilled, PRIORITY);
         }
         async UniTask OnTerritoryCardPostKilled(object sender, BattleKillAttemptArgs e)
@@ -77,7 +74,7 @@ namespace Game.Traits
             if (terrCard == trait.Owner) return;
 
             await trait.AnimActivation();
-            await trait.Owner.Health.AdjustValueScale(_healthF.Value(trait), trait);
+            await trait.Owner.Health.AdjustValueScale(_healthF.Value(trait.GetStacks()), trait);
         }
     }
 }

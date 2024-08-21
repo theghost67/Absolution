@@ -6,6 +6,7 @@ using Game.Sleeves;
 using GreenOne;
 using MyBox;
 using System;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -36,7 +37,6 @@ namespace Game.Traits
         Tween _appearTween;
         Tween _adjustTween;
         Tween _disappearTween;
-        Tween _scrollTween; // note: not used at the moment
 
         static TableTraitListElementDrawer()
         {
@@ -68,31 +68,6 @@ namespace Game.Traits
             RedrawNameAsDefault();
             RedrawStacks();
             SetColor(GetCooldownColor());
-        }
-
-        public override void SetSortingOrder(int value, bool asDefault = false)
-        {
-            base.SetSortingOrder(value, asDefault);
-            _nameTextMesh.sortingOrder = value;
-            _stacksTextMesh.sortingOrder = value;
-            _rarityIconRenderer.sortingOrder = value;
-            _traitIconRenderer.sortingOrder = value;
-        }
-        public override void SetAlpha(float value)
-        {
-            base.SetAlpha(value);
-            _rarityIconRenderer.color = _rarityIconRenderer.color.WithAlpha(value);
-            _traitIconRenderer.color = _traitIconRenderer.color.WithAlpha(value);
-            _nameTextMesh.color = _nameTextMesh.color.WithAlpha(value);
-            _stacksTextMesh.color = _stacksTextMesh.color.WithAlpha(value);
-        }
-        public override void SetColor(Color value)
-        {
-            base.SetColor(value);
-            _rarityIconRenderer.color = value;
-            _traitIconRenderer.color = value;
-            _nameTextMesh.color = value;
-            _stacksTextMesh.color = value;
         }
 
         public void RedrawRarityIconAsDefault()
@@ -151,15 +126,16 @@ namespace Game.Traits
         public Vector2 GetSizeDelta() => _rectTransform.sizeDelta;
         public Color GetCooldownColor()
         {
-            bool hasCooldown = attached.Trait.Storage.turnsDelay > 0;
-            return ColorPalette.All[hasCooldown ? 1 : 0].ColorCur;
+            bool cooldown = attached.Trait.IsOnCooldown();
+            return ColorPalette.All[cooldown ? 1 : 0].ColorCur;
         }
 
         public Tween AnimAppear()
         {
+            if (IsDestroyed) return null;
             SetCollider(false);
             OnTweenUpdatePosX(-0.25f);
-            SetAlpha(1f);
+            Alpha = 1f;
 
             _appearTween.Kill();
             _appearTween = AnimPosX(0);
@@ -168,6 +144,7 @@ namespace Game.Traits
         }
         public Tween AnimAdjust(int toStacks)
         {
+            if (IsDestroyed) return null;
             OnTweenUpdateStacksScale(Vector3.one * 1.3f);
             Sequence seq = DOTween.Sequence();
             seq.Append(AnimStacks(toStacks));
@@ -179,19 +156,13 @@ namespace Game.Traits
         }
         public Tween AnimDisappear()
         {
+            if (IsDestroyed) return null;
             SetCollider(false);
             AnimAlpha(0);
 
             _disappearTween.Kill();
             _disappearTween = AnimPosX(0.25f);
             return _disappearTween;
-        }
-        public Tween AnimScroll(float y)
-        {
-            float srcPosY = transform.localPosition.y;
-            _scrollTween.Kill();
-            _scrollTween = DOVirtual.Float(srcPosY, y, TWEEN_DURATION, OnTweenUpdatePosY).SetEase(Ease.OutQuad);
-            return _scrollTween;
         }
 
         protected virtual bool ChangePointerBase() => false;
@@ -202,6 +173,10 @@ namespace Game.Traits
                  return sleeveCard.Sleeve.Drawer.IsPulledOut;
             else return true;
         }
+        protected override bool CanBeSelected()
+        {
+            return base.CanBeSelected() && !ITableSleeveCard.IsHoldingAnyCard && (attached.List.Set.Drawer?.IsSelected ?? false);
+        }
 
         protected override void DestroyInstantly()
         {
@@ -210,14 +185,32 @@ namespace Game.Traits
             _appearTween.Kill();
             _adjustTween.Kill();
             _disappearTween.Kill();
-            _scrollTween.Kill();
+        }
+        protected override void SetSortingOrder(int value)
+        {
+            base.SetSortingOrder(value);
+            _nameTextMesh.sortingOrder = value;
+            _stacksTextMesh.sortingOrder = value;
+            _rarityIconRenderer.sortingOrder = value;
+            _traitIconRenderer.sortingOrder = value;
+        }
+        protected override void SetColor(Color value)
+        {
+            base.SetColor(value);
+            _rarityIconRenderer.color = value;
+            _traitIconRenderer.color = value;
+            _nameTextMesh.color = value;
+            _stacksTextMesh.color = value;
         }
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e) 
         {
             base.OnMouseEnterBase(sender, e);
             ITableTrait trait = attached.Trait;
-            Menu.WriteDescToCurrent(trait.DescRich());
+
+            string desc = trait.DescDynamicWithLinks(out string[] descLinksTexts);
+            Menu.WriteDescToCurrent(desc);
+            Tooltip.ShowLinks(descLinksTexts);
 
             bool isPassive = trait.Data.isPassive;
             Color color = ColorPalette.All[isPassive ? 5 : 6].ColorCur;
@@ -230,8 +223,13 @@ namespace Game.Traits
         {
             base.OnMouseLeaveBase(sender, e);
             ITableTrait trait = attached.Trait;
-            if (trait.Owner.Drawer.IsSelected && !trait.Owner.Drawer.Traits.IsSelected)
-                Menu.WriteDescToCurrent(trait.Owner.DescRich());
+
+            if (trait.Owner.Drawer.IsSelected && !trait.Owner.Drawer.Traits.IsAnySelected)
+            {
+                string desc = trait.Owner.DescDynamicWithLinks(out string[] descLinksTexts);
+                Menu.WriteDescToCurrent(desc);
+                Tooltip.ShowLinks(descLinksTexts);
+            }
 
             _nameTextMesh.text = trait.Data.name;
             SetColor(GetCooldownColor());
@@ -240,9 +238,6 @@ namespace Game.Traits
         {
             base.OnMouseClickBase(sender, e);
             if (!e.isLmbDown) return;
-
-            e.handled |= TableEventManager.CanAwaitAnyEvents();
-            if (e.handled) return;
 
             if (ShakeOnMouseClickLeft())
                 transform.DOAShake();
@@ -255,10 +250,12 @@ namespace Game.Traits
 
         Tween AnimAlpha(float to)
         {
+            if (IsDestroyed) return null;
             return DOVirtual.Float(_nameTextMesh.color.a, to, TWEEN_DURATION, OnTweenUpdateAlpha).SetEase(Ease.OutQuad);
         }
         Tween AnimStacks(int to)
         {
+            if (IsDestroyed) return null;
             if (!int.TryParse(_stacksTextMesh.text[1..], out int from))
                 return null;
 
@@ -271,17 +268,19 @@ namespace Game.Traits
         }
         Tween AnimStacksScale(Vector3 to)
         {
+            if (IsDestroyed) return null;
             return DOVirtual.Vector3(_stacksTextMesh.transform.localScale, to, TWEEN_DURATION, OnTweenUpdateStacksScale);
         }
         Tween AnimPosX(float to)
         {
+            if (IsDestroyed) return null;
             float srcPosX = transform.localPosition.x;
             return DOVirtual.Float(srcPosX, to, TWEEN_DURATION, OnTweenUpdatePosX).SetEase(Ease.OutQuad);
         }
 
         void OnTweenUpdateAlpha(float value)
         {
-            SetAlpha(value);
+            Alpha = value;
         }
         void OnTweenUpdateStacks(int value)
         {
@@ -289,14 +288,17 @@ namespace Game.Traits
         }
         void OnTweenUpdateStacksScale(Vector3 value)
         {
+            if (_stacksTextMesh == null) return;
             _stacksTextMesh.transform.localScale = value;
         }
         void OnTweenUpdatePosX(float value)
         {
+            if (transform == null) return;
             transform.localPosition = transform.localPosition.SetX(value);
         }
         void OnTweenUpdatePosY(float value)
         {
+            if (transform == null) return;
             transform.localPosition = transform.localPosition.SetY(value);
         }
     }

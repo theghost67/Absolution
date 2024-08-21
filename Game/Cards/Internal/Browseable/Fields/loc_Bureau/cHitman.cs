@@ -9,8 +9,7 @@
                    "сколько человек пали от его пули, но, без сомнений, свои контракты он выполнит, чего бы это не стоило.";
 
             rarity = Rarity.Rare;
-            price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);
-            frequency = 1.00f;
+            price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
         }
         protected cHitman(cHitman other) : base(other) { }
         public override object Clone() => new cHitman(this);

@@ -14,9 +14,27 @@ namespace Game.Sleeves
             if (!attached.isForMe)
                 MoveOutInstantly();
         }
+
+        public override void PullOut()
+        {
+            if (IsPulledOut) return;
+            base.PullOut();
+            if (attached.isForMe) return;
+            foreach (IBattleSleeveCard card in attached)
+                card.Drawer.FlipY();
+        }
+        public override void PullIn()
+        {
+            if (!IsPulledOut) return;
+            base.PullIn();
+            if (attached.isForMe) return;
+            foreach (IBattleSleeveCard card in attached)
+                card.Drawer.FlipY();
+        }
+
         protected override bool UpdateUserInput()
         {
-            return base.UpdateUserInput() && (attached.Side.Drawer?.SleeveIsVisible ?? false);
+            return base.UpdateUserInput() && gameObject.activeInHierarchy;
         }
     }
 }

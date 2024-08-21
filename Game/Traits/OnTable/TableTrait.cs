@@ -17,6 +17,9 @@ namespace Game.Traits
         public Trait Data => _data;
         public TableTraitStorage Storage => _storage;
 
+        public int TurnAge { get; set; }
+        public int TurnDelay { get; set; }
+
         public new TableTraitDrawer Drawer => ((TableObject)this).Drawer as TableTraitDrawer;
         public virtual TableFinder Finder => null;
 
@@ -31,7 +34,7 @@ namespace Game.Traits
         {
             _data = data;
             _owner = owner;
-            _storage = new TableTraitStorage(this, _data.storage);
+            _storage = new TableTraitStorage(_data.storage);
 
             // class is abstract
             //TryOnInstantiatedAction(GetType(), typeof(TableTrait));
@@ -40,7 +43,7 @@ namespace Game.Traits
         {
             _data = args.srcTraitDataClone;
             _owner = args.srcTraitOwnerClone;
-            _storage = new TableTraitStorage(this, src._storage);
+            _storage = new TableTraitStorage(src._storage);
             
             // class is abstract
             //TryOnInstantiatedAction(GetType(), typeof(TableTrait));

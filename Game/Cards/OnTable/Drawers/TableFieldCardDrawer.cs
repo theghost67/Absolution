@@ -28,25 +28,26 @@ namespace Game.Cards
             RedrawOutlineInstantly();
         }
 
-        public override void SetCollider(bool value)
+        protected override void SetCollider(bool value)
         {
             base.SetCollider(value);
-            Traits?.SetCollider(value);
+            TableTraitListSetDrawer traits = Traits;
+            if (traits != null)
+                traits.ColliderEnabled = value;
         }
-        public override void SetSortingOrder(int value, bool asDefault = false)
+        protected override void SetSortingOrder(int value)
         {
-            base.SetSortingOrder(value, asDefault);
-            Traits?.SetSortingOrder(value + 3);
+            base.SetSortingOrder(value);
+            TableTraitListSetDrawer traits = Traits;
+            if (traits != null)
+                traits.SortingOrder = value + 3;
         }
-        public override void SetAlpha(float value)
-        {
-            base.SetAlpha(value);
-            Traits?.SetAlpha(value);
-        }
-        public override void SetColor(Color value)
+        protected override void SetColor(Color value)
         {
             base.SetColor(value);
-            Traits?.SetColor(value);
+            TableTraitListSetDrawer traits = Traits;
+            if (traits != null)
+                traits.Color = value;
         }
 
         protected override void DestroyInstantly()
@@ -89,13 +90,13 @@ namespace Game.Cards
             int moxieDefault = attached.Data.moxie;
             int initiationOrder = (attached as BattleFieldCard)?.InitiationOrder ?? -1;
             if (initiationOrder == -1)
-                 return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.StatToStringRich(moxieDefault)} ед.\n<color=grey><i>Инициатива: определяет быстроту действий.";
-            else return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.StatToStringRich(moxieDefault)} ед.\nПозиция в очереди: {initiationOrder}.\n<color=grey><i>Инициатива: определяет быстроту действий.";
+                 return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.StatToStringRich(moxieDefault)} ед.\n<color=grey><i>Инициатива: быстрота действий.";
+            else return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.StatToStringRich(moxieDefault)} ед.\nПозиция в очереди: {initiationOrder}.\n<color=grey><i>Инициатива: быстрота действий.";
         }
         protected override string LowerLeftIconTooltip()
         {
             int healthDefault = attached.Data.health;
-            return $"По умолчанию: {healthDefault} ед.\nТекущее: {attached.Health.StatToStringRich(healthDefault)} ед.\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.";
+            return $"По умолчанию: {healthDefault} ед.\nТекущее: {attached.Health.StatToStringRich(healthDefault)} ед.\n<color=grey><i>Здоровье: смерть при достижении нуля.";
         }
         protected override string LowerRightIconTooltip()
         {
@@ -110,8 +111,7 @@ namespace Game.Cards
 
             TableTraitListSetDrawer setDrawer = Traits;
             if (setDrawer == null) return;
-            if (setDrawer.elements.IsEmpty) return;
-            if (setDrawer.elements.IsRunning) return;
+            if (setDrawer.queue.IsEmpty) return;
             if (queue.IsRunning) return;
 
             Traits?.ShowStoredElementsInstantly();
@@ -124,8 +124,8 @@ namespace Game.Cards
 
             TableTraitListSetDrawer setDrawer = Traits;
             if (setDrawer == null) return;
-            if (setDrawer.elements.IsEmpty) return;
-            if (setDrawer.elements.IsRunning) return;
+            if (setDrawer.queue.IsEmpty) return;
+            if (setDrawer.queue.IsRunning) return;
             if (queue.IsRunning) return;
 
             setDrawer?.HideStoredElementsInstantly();

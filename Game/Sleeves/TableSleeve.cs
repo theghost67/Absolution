@@ -83,7 +83,7 @@ namespace Game.Sleeves
             if (Count >= LIMIT) return false;
 
             if (_latestRemovedCardIndex != -1 && _latestRemovedCardIndex < _cards.Count && card == _latestRemovedCard)
-                 _cards.Insert(card, _latestRemovedCardIndex);
+                _cards.Insert(card, _latestRemovedCardIndex);
             else _cards.Add(card);
 
             Drawer?.AddCardDrawer(card);
@@ -146,9 +146,8 @@ namespace Game.Sleeves
         async UniTask TakeCardsAnimated(int count)
         {
             if (count <= 0) return;
-            Drawer.SetCollider(false);
+            Drawer.ColliderEnabled = false;
 
-            List<ITableSleeveCard> cards = new(count);
             int delay = 500;
             for (int i = 0; i < count; i++)
             {
@@ -158,10 +157,8 @@ namespace Game.Sleeves
 
                 ITableSleeveCard sCard = HoldingCardCreator(takenCard);
                 if (sCard == null) continue;
-                
-                Add(sCard);
-                sCard.OnPullOut(false);
-                cards.Add(sCard);
+                if (!Add(sCard))
+                    throw new InvalidOperationException("Unable to add taken card to collection.");
 
                 await UniTask.Delay(delay);
                 if (delay > 250)
@@ -169,9 +166,7 @@ namespace Game.Sleeves
             }
 
             await UniTask.Delay(500);
-            foreach (ITableSleeveCard card in cards)
-                card.OnPullIn(false);
-            Drawer.SetCollider(true);
+            Drawer.ColliderEnabled = true;
         }
 
         void TakeMissingCardsInstantly()
@@ -191,7 +186,6 @@ namespace Game.Sleeves
                 Add(sCard);
             }
         }
-
         Card TakeCardFromDeck()
         {
             Card card = null;

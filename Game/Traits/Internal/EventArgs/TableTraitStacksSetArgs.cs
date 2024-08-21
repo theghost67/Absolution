@@ -9,6 +9,7 @@
         public readonly int delta;
         public readonly ITableEntrySource source;
         public readonly ITableTrait trait;
+        public readonly int traitStacks;
         public readonly bool isInBattle;
 
         public TableTraitStacksSetArgs(ITableTraitListElement element, int delta, ITableEntrySource source)
@@ -17,6 +18,7 @@
             this.delta = delta;
             this.source = source;
             trait = element.Trait;
+            traitStacks = element.Stacks;
             isInBattle = element is IBattleTraitListElement;
         }
     }

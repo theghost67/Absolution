@@ -25,6 +25,16 @@ namespace Game.Territories
         readonly BattleSide _side;
 
         public static bool IsAnyMakingTurn => _isAnyMakingTurn;
+        public bool IsEnabled
+        {
+            get => _isEnabled;
+            set
+            {
+                _isEnabled = value;
+                if (_side.Territory.PhaseSide == _side)
+                    _ = MakeTurn().ContinueWith(_side.Territory.NextPhase);
+            }
+        }
         public bool IsMakingTurn => _isMakingTurn;
         public bool UsesAiming
         {
@@ -52,6 +62,7 @@ namespace Game.Territories
         BattleTerritory _lastTerr;
 
         static bool _isAnyMakingTurn;
+        bool _isEnabled;
         bool _isMakingTurn;
         bool _usesAiming;
         PlayStyle _style;
@@ -161,12 +172,13 @@ namespace Game.Territories
             _lastTerrLogs = new List<string>();
             _side = side;
             _style = PlayStyle.Defensive;
+            _isEnabled = !side.isMe;
         }
         public async UniTask MakeTurn()
         {
-            if (_isMakingTurn || _side.Territory.PhaseSide != _side)
+            if (!_isEnabled || _isAnyMakingTurn || _side.Territory.PhaseSide != _side)
             {
-                Debug.LogError($"can't make a turn because it's not AI's place phase or already making turn.");
+                Debug.LogError($"Can't make a turn as an AI. Check all conditions before calling this function.");
                 return;
             }
 
@@ -174,34 +186,23 @@ namespace Game.Territories
             _isMakingTurn = true;
             _isAnyMakingTurn = true;
 
-            try
-            {
-                await MakeTurn_Cards();
-                await MakeTurn_Traits();
-            }
-            catch (Exception ex)
-            {
-                await UniTask.SwitchToMainThread();
-                Debug.LogException(ex);
-                _lastTerr?.Dispose();
-            }
+            await MakeTurn_Await();
+            await MakeTurn_Cards();
+            await MakeTurn_Traits();
+            await MakeTurn_Await();
 
             _isMakingTurn = false;
             _isAnyMakingTurn = false;
-
             TableConsole.LogToFile("ai", $"TURN ENDED");
-            await _side.Territory.NextPhase();
         }
 
         async UniTask MakeTurn_Cards()
         {
-            int eventsCount = TableEventManager.Count();
             int iterations = 0;
             CardsResultsListSet resultsSet = new();
-
             Start:
-            await MakeTurn_Await(eventsCount);
-            
+            await UniTask.WhenAll(MakeTurn_Await(), UniTask.Delay(TURN_DELAY_MS));
+
             if (iterations++ > ITERATIONS_MAX)
             {
                 Debug.LogError("too many iterations.");
@@ -248,7 +249,7 @@ namespace Game.Territories
                     resultsSet[currency].Add(result);
             };
 
-            StopWritingLastTerrLogs(forCards: true);
+            StopWritingLastTerrLogs();
             await UniTask.SwitchToMainThread();
 
             for (int i = 0; i < resultsSet.Count; i++) // iterates for each CardCurrency in the game
@@ -284,7 +285,8 @@ namespace Game.Territories
                     if (!floatCardData.IsUsable(floatCardUseArgs) || !floatCardData.Threshold.WeightIsEnough(resultOfFloatCard))
                         goto PickResultAgain;
                 }
-                resultCard.TryDropOn(resultField);
+                if (!resultCard.TryDropOn(new TableSleeveCardDropArgs(resultField, false)))
+                    Debug.LogError("Failed to drop a card on a field while making turn.");
                 TableConsole.LogToFile("ai", $"CARD PLACEMENT ENDS: {result.Entity.TableNameDebug}");
                 goto End;
             }
@@ -299,11 +301,9 @@ namespace Game.Territories
         }
         async UniTask MakeTurn_Traits()
         {
-            int eventsCount = TableEventManager.Count();
             int iterations = 0;
-
             Start:
-            await MakeTurn_Await(eventsCount);
+            await UniTask.WhenAll(MakeTurn_Await(), UniTask.Delay(TURN_DELAY_MS));
 
             if (iterations++ > ITERATIONS_MAX)
             {
@@ -345,7 +345,7 @@ namespace Game.Territories
                     results.Add(result);
             }
 
-            StopWritingLastTerrLogs(forCards: false);
+            StopWritingLastTerrLogs();
             await UniTask.SwitchToMainThread();
 
             PickResultAgain:
@@ -362,11 +362,9 @@ namespace Game.Territories
             await activeTrait.TryUse(bestResult.Field);
             goto Start;
         }
-        async UniTask MakeTurn_Await(int eventsCountBeforeTurn)
+        UniTask MakeTurn_Await()
         {
-            while (TableEventManager.Count() > eventsCountBeforeTurn)
-                await UniTask.Yield();
-            await UniTask.Delay(TURN_DELAY_MS);
+            return TableEventManager.AwaitAll();
         }
 
         IBattleWeightResult GetNoPlacementResult(float2 sidesWeight)
@@ -383,7 +381,7 @@ namespace Game.Territories
             if (card.Side != _side)
                 throw new InvalidOperationException("Provided card does not belong to this side.");
 
-            int2[] possibleFieldsPos = card.Side.Fields().WithoutCard().Select(f => f.pos).ToArray(); // TODO[in next updates]: check if card trait has Attr.ALLOWS_TO_STACK_CARDS
+            int2[] possibleFieldsPos = card.Side.Fields().WithoutCard().Select(f => f.pos).ToArray();
             BattleFieldCardWeightResult[] results = new BattleFieldCardWeightResult[possibleFieldsPos.Length];
             BattleTerritory srcTerritory = _side.Territory;
 
@@ -397,23 +395,25 @@ namespace Game.Territories
                                         $"Also consider implementing this interface in all classes used in territory.");
 
                 BattleSide sideClone = _side.isMe ? terrClone.Player : terrClone.Enemy;
-                FieldCard dataClone = sideClone.Deck.fieldCards[card.Data.Guid];
+                FieldCard dataClone = (FieldCard)card.Data.Clone();
                 BattleField fieldClone = terrClone.Field(fieldPos.x, fieldPos.y);
                 BattleField cardFieldClone = card.Field == null ? null : terrClone.Field(card.Field.pos);
                 BattleFieldCardCloneArgs cardCArgs = new(dataClone, cardFieldClone, sideClone, terrCArgs);
                 BattleFieldCard cardClone = (BattleFieldCard)card.Clone(cardCArgs);
-                int cardCloneHealth = cardClone.Health;
 
-                // will still run synchronously (handlers should check ITableObject.Drawer for null value)
-                _ = terrClone.PlaceFieldCard(cardClone, fieldClone, sideClone);
-                _ = terrClone.LastPhase();
+                try
+                {
+                    // will still run synchronously (handlers should check ITableObject.Drawer for null value)
+                    _ = terrClone.PlaceFieldCard(cardClone, fieldClone, sideClone);
+                    _ = terrClone.LastPhase();
 
-                BattleSide sideCloneOpposite = sideClone.Opposite;
-                float2 weightsWeightAfterTurn = new(sideClone.Weight, sideCloneOpposite.Weight);
-                float2 weightDelta = CalculateWeightDelta(sidesWeight, weightsWeightAfterTurn, sideClone, sideCloneOpposite);
-                results[i] = new BattleFieldCardWeightResult(card, srcTerritory.Field(fieldPos), weightDelta[0], weightDelta[1]);
-
-                terrClone.Dispose();
+                    BattleSide sideCloneOpposite = sideClone.Opposite;
+                    float2 weightsWeightAfterTurn = new(sideClone.Weight, sideCloneOpposite.Weight);
+                    float2 weightDelta = CalculateWeightDelta(sidesWeight, weightsWeightAfterTurn, sideClone, sideCloneOpposite);
+                    results[i] = new BattleFieldCardWeightResult(card, srcTerritory.Field(fieldPos), weightDelta[0], weightDelta[1]);
+                }
+                catch (Exception e) { Debug.LogException(e); }
+                finally { terrClone.Dispose(); }
             }
 
             BattleFieldCardWeightResult bestResult = GetBestResult(results, out _);
@@ -429,7 +429,8 @@ namespace Game.Territories
                 return null;
 
             void UseAction(BattleTerritory terr) => ((BattleFloatCard)card.Finder.FindInBattle(terr)).TryUse();
-            UseVirtual(UseAction, sidesWeight, out float2 deltas);
+            if (!UseVirtual(UseAction, sidesWeight, out float2 deltas))
+                return null;
 
             BattleFloatCardWeightResult bestResult = new(card, deltas[0], deltas[1]); // single because cannot be placed on field (no difference)
             return bestResult;
@@ -455,7 +456,8 @@ namespace Game.Territories
                     BattleField targetClone = (BattleField)target.Finder.FindInBattle(terr);
                     _ = traitClone.TryUse(targetClone);
                 }
-                UseVirtual(UseAction, sidesWeight, out float2 deltas);
+                if (!UseVirtual(UseAction, sidesWeight, out float2 deltas))
+                    continue;
 
                 BattleActiveTraitWeightResult result = new(trait, target, deltas[0], deltas[1]);
                 results.Add(result);
@@ -499,19 +501,30 @@ namespace Game.Territories
             }
         }
 
-        void UseVirtual(Action<BattleTerritory>? useFunc, float2 sidesWeight, out float2 deltas)
+        bool UseVirtual(Action<BattleTerritory>? useFunc, float2 sidesWeight, out float2 deltas)
         {
             BattleTerritory terrClone = CloneTerritory(_side.Territory, out _);
             BattleSide sideClone = _side.isMe ? terrClone.Player : terrClone.Enemy;
 
-            useFunc?.Invoke(terrClone);
-            _ = terrClone.LastPhase();
+            try
+            {
+                useFunc?.Invoke(terrClone);
+                _ = terrClone.LastPhase();
+            }
+            catch (Exception e) 
+            {
+                Debug.LogException(e);
+                deltas = float2.zero;
+                terrClone.Dispose();
+                return false; 
+            }
 
             BattleSide sideCloneOpposite = sideClone.Opposite;
             float2 weightsWeightAfterTurn = new(sideClone.Weight, sideCloneOpposite.Weight);
 
             deltas = CalculateWeightDelta(sidesWeight, weightsWeightAfterTurn, sideClone, sideCloneOpposite);
             terrClone.Dispose();
+            return true;
         }
         float2 CalculateWeightDelta(float2 sidesStartWeight, float2 sidesEndWeight, BattleSide thisSideAfterTurn, BattleSide oppoSideAfterTurn)
         {
@@ -556,12 +569,12 @@ namespace Game.Territories
         {
             TableConsole.OnLogToFile += OnConsoleLogToFile;
         }
-        void StopWritingLastTerrLogs(bool forCards)
+        void StopWritingLastTerrLogs()
         {
             TableConsole.OnLogToFile -= OnConsoleLogToFile;
-            TableConsole.LogToFile("ai", $"LAST AI TERRITORY CLONE LOGS START ({(forCards ? "CARDS" : "TRAITS")})");
+            TableConsole.LogToFile("ai", $"LAST AI TERRITORY CLONE LOGS START");
             TableConsole.LogToFile("ai", _lastTerrLogs);
-            TableConsole.LogToFile("ai", $"LAST AI TERRITORY CLONE LOGS END ({(forCards ? "CARDS" : "TRAITS")})");
+            TableConsole.LogToFile("ai", $"LAST AI TERRITORY CLONE LOGS END");
             _lastTerrLogs.Clear();
         }
         void StopWritingLastTerrLogsForNoPlacement()

@@ -13,7 +13,7 @@ namespace Game.Palette
         public int Index { get; }
         public Color ColorDef { get; set; } 
         public Color ColorCur { get; set; }
-        public Color ColorAll { set; }
+        public Color Color { set; }
 
         public Tween DOColorCur(Func<Color> from, Func<Color> to, float duration);
         public Tween DOColorDef(Func<Color> from, Func<Color> to, float duration); 

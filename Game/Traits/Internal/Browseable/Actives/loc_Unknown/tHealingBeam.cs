@@ -26,21 +26,17 @@ namespace Game.Traits
         protected tHealingBeam(tHealingBeam other) : base(other) { }
         public override object Clone() => new tHealingBeam(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на карте рядом",
-                    $"Увеличивает здоровье цели на {_healthF.Format(trait)}. Все лучи уходят на перезарядку: {CD} х."),
-            });
+            return $"<color>При использовании на союзной карте рядом</color>\nУвеличивает здоровье цели на {_healthF.Format(args.stacks, true)}. Все лучи уходят на перезарядку: {CD} х.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsLinear(10, stacks);
+            return base.Points(owner, stacks) + PointsLinear(12, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(_healthF.Value(result.Entity));
+            return new(_healthF.Value(result.Entity.GetStacks()) * 1.2f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -55,11 +51,10 @@ namespace Game.Traits
             IBattleTrait trait2 = trait1.Owner.Traits.Any(OTHER_BEAM_ID);
             BattleFieldCard card = (BattleFieldCard)e.target.Card;
 
-            trait1.Storage.turnsDelay += CD;
-            if (trait2 != null)
-                trait2.Storage.turnsDelay += CD;
+            trait1.SetCooldown(CD);
+            trait2.SetCooldown(CD);
 
-            await card.Health.AdjustValue(_healthF.Value(trait1), trait1);
+            await card.Health.AdjustValue(_healthF.Value(e.traitStacks), trait1);
         }
     }
 }

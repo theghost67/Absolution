@@ -26,13 +26,10 @@ namespace Game.Traits
         protected tWideSwingPlus(tWideSwingPlus other) : base(other) { }
         public override object Clone() => new tWideSwingPlus(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"Перед каждой последующей атакой владельца (П{PRIORITY})",
-                    $"Если цель атаки только одна - все карты на стороне цели станут целями. Сила атаки будет распределена равномерно."),
-            });
+            return $"<color>Перед каждой последующей атакой владельца (П{PRIORITY})</color>\n" +
+                   $"Если цель атаки только одна - все карты на стороне цели станут целями. Сила атаки будет распределена равномерно.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -62,7 +59,7 @@ namespace Game.Traits
             foreach (BattleField field in fields)
                 e.AddReceiver(field);
 
-            await e.strength.SetValue((float)e.strength / e.Receivers.Count, trait);
+            await e.Strength.SetValue((float)e.Strength / e.Receivers.Count, trait);
         }
     }
 }

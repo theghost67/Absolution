@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Game.Territories;
 using UnityEngine;
 
 namespace Game.Cards
@@ -36,18 +37,22 @@ namespace Game.Cards
             else return null;
         }
 
+        public UniTask TryUse(TableTerritory territory)
+        {
+            return TryUse(new TableFloatCardUseArgs(this, territory));
+        }
         public async UniTask TryUse(TableFloatCardUseArgs e)
         {
             if (!IsUsable(e)) return;
-            TableEventManager.Add(-Guid);
-            if (Drawer != null) 
+            TableEventManager.Add("table", -Guid);
+            if (Drawer != null)
                 await AnimUse().AsyncWaitForCompletion();
             await OnUsed(e);
-            TableEventManager.Remove(-Guid);
+            TableEventManager.Remove("table", -Guid);
         }
         public bool IsUsable(TableFloatCardUseArgs e)
         {
-            return _data.IsUsable(e);
+            return !IsDisposed && _data.IsUsable(e);
         }
 
         protected virtual UniTask OnUsed(TableFloatCardUseArgs e)
@@ -56,16 +61,14 @@ namespace Game.Cards
         }
         protected override Drawer DrawerCreator(Transform parent)
         {
-            TableFloatCardDrawer drawer = new(this, parent);
-            drawer.SetSortingOrder(10, asDefault: true);
-            return drawer;
+            return new TableFloatCardDrawer(this, parent) { SortingOrderDefault = 10 };
         }
 
         // TODO: improve
         Tween AnimUse()
         {
             TableFloatCardDrawer drawer = Drawer;
-            drawer.SetCollider(false);
+            drawer.ColliderEnabled = false;
             drawer.SetSortingAsTop();
             return drawer.AnimExplosion();
         }

@@ -19,8 +19,8 @@ namespace Game.Menus
 
         public bool IsDestroyed { get; }
         public bool IsOpened { get; }
-        public bool ColliderEnabled { get; }
-        public int SortingOrder { get; }
+        public bool ColliderEnabled { get; set; }
+        public int SortingOrder { get; set; }
         public int OpenDepth { get; } // indicates menu index within opened ones (-1 when closed)
         public int FullDepth { get; } // indicates menu index within any other ones (-1 when destroyed)
 
@@ -38,15 +38,11 @@ namespace Game.Menus
         public void OnTransitMiddle(bool isFromThis); // invokes at the black screen of transit animation
         public void OnTransitEnd(bool isFromThis);    // invokes after transit animation
 
-        public void Open();
-        public void Close();
-        public void Destroy();
+        public void TryOpen();
+        public void TryClose();
+        public void TryDestroy();
 
         public void WriteLog(string text);
         public void WriteDesc(string text);
-
-        public void SetColliders(bool value);
-        public void SetSortingOrder(int value);
-
     }
 }

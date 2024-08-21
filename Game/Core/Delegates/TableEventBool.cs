@@ -23,7 +23,7 @@ namespace Game
         {
             if (Count == 0) return true;
             bool result = true;
-            TableEventManager.Add(Id);
+            TableEventManager.Add("table", Id);
             List<string> unsubbedIds = new(Count);
             try
             {
@@ -43,7 +43,7 @@ namespace Game
             finally
             {
                 PostInvokeCleanUp(unsubbedIds);
-                TableEventManager.Remove(Id);
+                TableEventManager.Remove("table", Id);
             }
             return result;
         }
@@ -67,7 +67,7 @@ namespace Game
             if (Count == 0) return true;
             bool result = false;
             List<string> unsubbedIds = new(Count);
-            TableEventManager.Add(Id);
+            TableEventManager.Add("table", Id);
             try
             {
                 for (int i = 0; i < Count; i++)
@@ -86,7 +86,7 @@ namespace Game
             finally
             {
                 PostInvokeCleanUp(unsubbedIds);
-                TableEventManager.Remove(Id);
+                TableEventManager.Remove("table", Id);
             }
             return result;
         }
@@ -124,7 +124,7 @@ namespace Game
         {
             if (Count == 0) return true;
             bool result = true;
-            TableEventManager.Add(Id);
+            TableEventManager.Add("table", Id);
             List<string> unsubbedIds = new(Count);
             try
             {
@@ -144,7 +144,7 @@ namespace Game
             finally
             {
                 PostInvokeCleanUp(unsubbedIds);
-                TableEventManager.Remove(Id);
+                TableEventManager.Remove("table", Id);
             }
             return result;
         }
@@ -168,7 +168,7 @@ namespace Game
             if (Count == 0) return true;
             bool result = false;
             List<string> unsubbedIds = new(Count);
-            TableEventManager.Add(Id);
+            TableEventManager.Add("table", Id);
             try
             {
                 for (int i = 0; i < Count; i++)
@@ -187,7 +187,7 @@ namespace Game
             finally
             {
                 PostInvokeCleanUp(unsubbedIds);
-                TableEventManager.Remove(Id);
+                TableEventManager.Remove("table", Id);
             }
             return result;
         }

@@ -65,6 +65,7 @@ namespace Game.Traits
             if (Owner == null) return false;
             if (Side != by) return false;
             if (Territory.PhaseSide != by) return false;
+            if (TurnDelay > 0) return false;
             if (!IsReadyToUse())
             {
                 if (_owner.Field != null)
@@ -108,7 +109,12 @@ namespace Game.Traits
         }
         void AimFinished(BattleField aimedField)
         {
-            TryUse(aimedField);
+            TableActiveTraitUseArgs args = new(this, aimedField);
+            PlayerQueue.Enqueue(new PlayerAction()
+            {
+                conditionFunc = () => IsUsable(args),
+                successFunc = () => TryUse(aimedField),
+            });
         }
     }
 }

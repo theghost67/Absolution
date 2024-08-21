@@ -99,20 +99,24 @@ namespace Game.Territories
         {
             _currentlyAimingArea?.CancelTargetAiming();
         }
+
         public async UniTask SetObserveTargets(bool value)
         {
+            if (observingPoint.Field == null)
+                value = false;
             if (_observeTargets == value)
                 return;
 
             _observeTargets = value;
             if (_observeTargets)
-            {
-                if (observingPoint.Field == null)
-                    throw new Exception($"{nameof(BattleArea)}: SetObserveTargets(true) can be used only when observingPoint is attached to a field.");
-                await EnableContinuousObserving();
-            }
+                 await EnableContinuousObserving();
             else await DisableContinuousObserving();
         }
+        public bool GetObserveTargets()
+        {
+            return _observeTargets;
+        }
+
         public void SelectTargetsByWeight()
         {
             int length = _possibleTargets.Length;
@@ -292,23 +296,20 @@ namespace Game.Territories
         {
             return observingPoint.Field != null && _observeTargets;
         }
-        async UniTask CheckObserveStateFor(BattleFieldCard target)
+        UniTask CheckObserveStateFor(BattleFieldCard target)
         {
             bool wasInRange = _observingCards.Contains(target);
             bool isInRange = _potentialTargets.Contains(target.Field);
-
-            if (isInRange == wasInRange) return;
+            if (isInRange == wasInRange) return UniTask.CompletedTask;
             if (isInRange)
             {
                 _observingCards.Add(target);
-                await TableEventManager.AwaitInitiationQueue();
-                await _onCardSeen.Invoke(this, target);
+                return _onCardSeen.Invoke(this, target);
             }
             else
             {
                 _observingCards.Remove(target);
-                await TableEventManager.AwaitInitiationQueue();
-                await _onCardUnseen.Invoke(this, target);
+                return _onCardUnseen.Invoke(this, target);
             }
         }
 

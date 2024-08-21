@@ -29,18 +29,20 @@ namespace Game.Traits
         protected tSmellyTrapper(tSmellyTrapper other) : base(other) { }
         public override object Clone() => new tSmellyTrapper(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале каждого хода (П{PRIORITY})",
-                    $"Расставляет рядом с владельцем карты <i>{cardName}</i> с единицей здоровья. Тратит по заряду за каждую установленную карту."),
-            });
+            return $"<color>В начале каждого хода (П{PRIORITY})</color>\n" +
+                   $"Расставляет рядом с владельцем карты <nobr><u>{cardName}</u></nobr>. Тратит по заряду за каждую установленную карту.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = CardDescriptiveArgs.normalStats } };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(12, stacks, 4);
+            return base.Points(owner, stacks) + PointsExponential(12, stacks, 4, 1.25f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

@@ -23,17 +23,17 @@ namespace Game.Traits
         protected tTeleportationScroll(tTeleportationScroll other) : base(other) { }
         public override object Clone() => new tTeleportationScroll(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на пустом союзном поле",
-                    $"Перемещает владельца на указанное поле. Тратит один заряд."),
-            });
+            return $"<color>При использовании на пустом союзном поле</color>\nПеремещает владельца на указанное поле. Тратит один заряд.";
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(0, 0.12f);
+        }
+        public override BattleWeight Weight(IBattleTrait trait)
+        {
+            return new(2);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

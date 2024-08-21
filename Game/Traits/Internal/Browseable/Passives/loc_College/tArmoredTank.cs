@@ -26,17 +26,13 @@ namespace Game.Traits
         protected tArmoredTank(tArmoredTank other) : base(other) { }
         public override object Clone() => new tArmoredTank(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"Перед атакой на владельца (П{PRIORITY})",
-                    $"уменьшает силу атаки на {_strengthF.Format(trait)}."),
-            });
+            return $"<color>Перед атакой на владельца (П{PRIORITY})</color>\nУменьшает силу атаки на {_strengthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(32, stacks);
+            return base.Points(owner, stacks) + PointsExponential(24, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -56,10 +52,10 @@ namespace Game.Traits
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
-            if (e.strength < 0) return;
+            if (e.Strength < 0) return;
 
             await trait.AnimActivation();
-            await e.strength.AdjustValueScale(-_strengthF.Value(trait), trait);
+            await e.Strength.AdjustValueScale(-_strengthF.Value(trait.GetStacks()), trait);
         }
     }
 }

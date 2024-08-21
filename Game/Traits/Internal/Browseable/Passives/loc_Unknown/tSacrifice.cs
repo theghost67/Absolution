@@ -28,13 +28,10 @@ namespace Game.Traits
         protected tSacrifice(tSacrifice other) : base(other) { }
         public override object Clone() => new tSacrifice(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале хода владельца (П{PRIORITY})",
-                    $"Убивает союзные карты рядом и забирает их силу и здоровье."),
-            });
+            return $"<color>В начале хода владельца (П{PRIORITY})</color>\n" +
+                   $"Убивает союзные карты рядом и забирает их силу и здоровье.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

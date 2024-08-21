@@ -2,7 +2,6 @@
 using Game.Cards;
 using Game.Territories;
 using System.Linq;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -14,7 +13,7 @@ namespace Game.Traits
         const string ID = "ultrasonic_scream";
         const int PRIORITY = 4;
         static readonly TraitStatFormula _moxieF = new(false, 0, 1);
-        static readonly TerritoryRange oppositeRange = TerritoryRange.oppositeTriple;
+        static readonly TerritoryRange _range = TerritoryRange.oppositeTriple;
 
         public tUltrasonicScream() : base(ID)
         {
@@ -28,17 +27,13 @@ namespace Game.Traits
         protected tUltrasonicScream(tUltrasonicScream other) : base(other) { }
         public override object Clone() => new tUltrasonicScream(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При смерти любой карты, кроме себя (П{PRIORITY})",
-                    $"издаст крайне неприятный крик в сторону всех карт рядом (напротив владельца), инициатива которых будет понижена на {_moxieF.Format(trait)}."),
-            });
+            return $"<color>При смерти любой карты, кроме себя (П{PRIORITY})</color>\nИнициатива всех вражеских карт рядом с владельцем будет понижена на {_moxieF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(80, stacks);
+            return base.Points(owner, stacks) + PointsExponential(20, stacks);
         }
 
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
@@ -57,10 +52,10 @@ namespace Game.Traits
             if (trait.Owner.Field == null) return;
             if (target == trait.Owner) return;
 
-            BattleFieldCard[] cards = trait.Owner.Territory.Fields(trait.Owner.Field.pos, oppositeRange).WithCard().Select(f => f.Card).ToArray();
+            BattleFieldCard[] cards = trait.Owner.Territory.Fields(trait.Owner.Field.pos, _range).WithCard().Select(f => f.Card).ToArray();
             if (cards.Length == 0) return;
 
-            int value = (int)-_moxieF.Value(trait);
+            int value = -_moxieF.ValueInt(trait.GetStacks());
             await trait.AnimActivation();
             foreach (BattleFieldCard card in cards)
                 await card.Moxie.AdjustValue(value, trait);

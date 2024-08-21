@@ -87,9 +87,9 @@ namespace Game.Menus
                 drawer.OnMouseLeave += OnCardMouseLeave;
                 drawer.OnMouseClick += OnCardMouseClickLeft;
 
-                drawer.SetCollider(false);
-                drawer.SetSortingOrder(0);
-                drawer.SetAlpha(0);
+                drawer.ColliderEnabled = false;
+                drawer.SortingOrder = 0;
+                drawer.Alpha = 0;
             }
 
             public Tween AnimShow()
@@ -101,14 +101,13 @@ namespace Game.Menus
                     AnimFadeIn();
                 });
                 seq.AppendInterval(ANIM_DURATION * 2);
-                seq.OnComplete(() => Drawer.SetCollider(_menu.ColliderEnabled));
+                seq.OnComplete(() => Drawer.ColliderEnabled = _menu.ColliderEnabled);
 
                 return seq.Play();
             }
             public Tween AnimHide()
             {
-                Drawer.SetCollider(false);
-
+                Drawer.ColliderEnabled = false;
                 Sequence seq = DOTween.Sequence();
                 seq.AppendCallback(() =>
                 {
@@ -173,7 +172,7 @@ namespace Game.Menus
             void OnCardMouseClickLeft(object sender, DrawerMouseEventArgs e)
             {
                 _chosen = true;
-                _menu.ConfirmChoice(_onTable);
+                _ = _menu.ConfirmChoice(_onTable);
             }
         }
         class ArrowsAnim
@@ -217,17 +216,17 @@ namespace Game.Menus
                 _paletteElement.setColorOnStart = false;
                 SetTooltip(() => $"Перебросить карты ({_menu._rerollsLeft}x). Обновите ассортимент карт, если текущий выбор вас не устраивает.");
             }
-            public override void SetColor(Color value)
+
+            protected override void SetColor(Color value)
             {
                 base.SetColor(value);
                 _renderer.color = value;
             }
-            public override void SetCollider(bool value)
+            protected override void SetCollider(bool value)
             {
                 base.SetCollider(value);
                 SetColor(value ? _paletteElement.SyncedColor : Color.gray);
             }
-
             protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
             {
                 base.OnMouseClickBase(sender, e);
@@ -254,12 +253,12 @@ namespace Game.Menus
                 SetColor(ColliderEnabled ? _paletteElement.SyncedColor : Color.gray);
             }
 
-            public override void SetColor(Color value)
+            protected override void SetColor(Color value)
             {
                 base.SetColor(value);
                 _renderer.color = value;
             }
-            public override void SetCollider(bool value)
+            protected override void SetCollider(bool value)
             {
                 base.SetCollider(value);
                 SetColor();
@@ -304,38 +303,48 @@ namespace Game.Menus
             };
         }
 
+        public override void WriteDesc(string text)
+        {
+            base.WriteDesc(text);
+            _descTextMesh.text = text;
+        }
+        public override void OnTransitStart(bool isFromThis)
+        {
+            if (!isFromThis)
+                _animInProgress = true;
+            base.OnTransitStart(isFromThis);
+        }
         public override async void OnTransitEnd(bool isFromThis)
         {
             if (!isFromThis)
                 await ShowCards();
             base.OnTransitEnd(isFromThis);
+            if (!isFromThis)
+                _animInProgress = false;
         }
 
-        public override void Open()
+        protected override void Open()
         {
             base.Open();
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Play();
         }
-        public override void Close()
+        protected override void Close()
         {
             base.Close();
             foreach (ArrowsAnim arrows in _arrows)
                 arrows.Kill();
         }
-        public override void SetColliders(bool value)
+        protected override void SetCollider(bool value)
         {
-            value &= !_animInProgress;
-            base.SetColliders(value);
+            base.SetCollider(value);
             foreach (CardToChoose card in _cards)
-                card.Drawer?.SetCollider(value);
-            _rerollButton.SetCollider(value && _rerollsLeft > 0);
-            _declineButton.SetCollider(value);
-        }
-        public override void WriteDesc(string text)
-        {
-            base.WriteDesc(text);
-            _descTextMesh.text = text;
+            {
+                if (card.Drawer != null)
+                    card.Drawer.ColliderEnabled = value;
+            }
+            _rerollButton.ColliderEnabled = value && _rerollsLeft > 0;
+            _declineButton.ColliderEnabled = value;
         }
 
         Card[] GenerateCardsToChoose()
@@ -377,7 +386,7 @@ namespace Game.Menus
                 return;
 
             _animInProgress = true;
-            SetColliders(false);
+            SetCollider(false);
             if (chosenCard != null)
             {
                 Tween tween = chosenCard.Drawer.AnimHighlightOutline(1.5f);
@@ -395,13 +404,13 @@ namespace Game.Menus
             await HideCards();
             if (AllChoicesLeft <= 0)
             {
-                TransitFromThis();
+                await TransitFromThis();
                 return;
             }
 
             await ShowCards();
             _animInProgress = false;
-            SetColliders(true);
+            SetCollider(true);
         }
         async UniTask RerollChoice()
         {
@@ -410,11 +419,11 @@ namespace Game.Menus
 
             _animInProgress = true;
             _rerollsLeft--;
-            SetColliders(false);
+            SetCollider(false);
             await HideCards();
             await ShowCards();
             _animInProgress = false;
-            SetColliders(true);
+            SetCollider(true);
         }
         async UniTask DeclineChoice() => await ConfirmChoice(null);
 

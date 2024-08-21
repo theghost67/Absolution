@@ -74,8 +74,8 @@ namespace Game.Territories
 
         public BattleSide(BattleTerritory territory, bool isMe) : base(territory.Transform)
         {
-            this.ai = new BattleAI(this);
             this.isMe = isMe;
+            this.ai = new BattleAI(this);
 
             _finder = new BattleSideFinder(this);
             _territory = territory;
@@ -104,8 +104,8 @@ namespace Game.Territories
         }
         protected BattleSide(BattleSide src, BattleSideCloneArgs args) : base(src)
         {
-            ai = new BattleAI(this);
             isMe = src.isMe;
+            ai = new BattleAI(this);
 
             _finder = new BattleSideFinder(this);
             _territory = args.srcSideTerritoryClone;
@@ -231,7 +231,7 @@ namespace Game.Territories
             if (_health > 0 || args.handled) return;
 
             _isKilled = true;
-            await _territory.TryConclude(!isMe);
+            await _territory.TryConclude();
         }
 
         protected virtual int HealthAtStartFunc() => (_deck.Points / 4).Ceiling();

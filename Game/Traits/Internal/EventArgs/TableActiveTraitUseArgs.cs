@@ -7,14 +7,16 @@ namespace Game.Traits
     /// </summary>
     public class TableActiveTraitUseArgs
     {
-        public readonly bool isInBattle;
         public readonly TableActiveTrait trait;
         public readonly TableField target;
+        public readonly int traitStacks;
+        public readonly bool isInBattle;
 
         public TableActiveTraitUseArgs(TableActiveTrait trait, TableField target)
         {
             this.trait = trait;
             this.target = target;
+            traitStacks = trait.GetStacks();
             isInBattle = trait is IBattleTrait;
         }
     }

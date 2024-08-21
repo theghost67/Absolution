@@ -58,7 +58,7 @@ namespace Game.Sleeves
         {
             TableCardDrawer drawer = (TableCardDrawer)sender;
             ITableSleeveCard drawerCard = (ITableSleeveCard)drawer.attached;
-            PlayerHand.TryTakeCard(drawerCard);
+            ITableSleeveCard.TryTakeCard(drawerCard);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Effects;
 using Game.Territories;
+using Game.Traits;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,14 +16,13 @@ namespace Game.Cards
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
-            frequency = 1.00f;
         }
         protected cDeleteDueToUselessness(cDeleteDueToUselessness other) : base(other) { }
         public override object Clone() => new cDeleteDueToUselessness(this);
 
-        public override string DescRich(ITableCard card)
+        protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return DescRichBase(card, "Уничтожает все карты со стоимостью ≤ 0 ед. или атакой ≤ 0 ед., возвращая по 1 ед. золота за каждую убитую карту владельцу.");
+            return "Уничтожает все карты со стоимостью ≤ 0 ед. или атакой ≤ 0 ед., возвращая по 1 ед. золота за каждую убитую карту владельцу.";
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

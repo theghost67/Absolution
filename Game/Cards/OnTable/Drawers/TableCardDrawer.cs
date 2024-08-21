@@ -19,6 +19,7 @@ namespace Game.Cards
         public const int HEIGHT = 112;
         const float BG_ALPHA_MAX = 0.8f;
 
+        public bool IsFlipped => _isFlipped;
         public bool BgIsVisible => _bgIsVisible;
         public SpriteRendererOutline Outline => _outline;
         protected override SpriteRenderer SelectableRenderer => _spriteRenderer;
@@ -51,6 +52,7 @@ namespace Game.Cards
         readonly SpriteRenderer _bgRenderer;
         readonly SpriteRendererOutline _outline;
 
+        bool _isFlipped;
         bool _bgIsVisible;
         Tween _bgTween;
         Tween _headerTween;
@@ -111,66 +113,6 @@ namespace Game.Cards
             RedrawHeaderColor(Color.black);
         }
 
-        public override void SetSortingOrder(int value, bool asDefault = false)
-        {
-            base.SetSortingOrder(value, asDefault);
-            int overlapOrder = value + 1;
-
-            _spriteRenderer.sortingOrder = value;
-            _portraitRenderer.sortingOrder = overlapOrder;
-            _headerTextMesh.sortingOrder = overlapOrder;
-            _subheaderTextMesh.sortingOrder = overlapOrder;
-            _bgRenderer.sortingOrder = overlapOrder + 1;
-
-            priceIcon.SetSortingOrder(overlapOrder);
-            moxieIcon.SetSortingOrder(overlapOrder);
-            healthIcon.SetSortingOrder(overlapOrder);
-            strengthIcon.SetSortingOrder(overlapOrder);
-        }
-        public override void SetCollider(bool value)
-        {
-            base.SetCollider(value);
-
-            priceIcon.SetCollider(value);
-            moxieIcon.SetCollider(value);
-            healthIcon.SetCollider(value);
-            strengthIcon.SetCollider(value);
-        }
-        public override void SetAlpha(float value)
-        {
-            base.SetAlpha(value);
-
-            if (_bgRenderer.color.a != 0)
-                _bgRenderer.SetAlpha(value * BG_ALPHA_MAX);
-
-            priceIcon.SetAlpha(value);
-            moxieIcon.SetAlpha(value);
-            healthIcon.SetAlpha(value);
-            strengthIcon.SetAlpha(value);
-
-            _portraitRenderer.SetAlpha(value);
-            _spriteRenderer.SetAlpha(value);
-            _headerTextMesh.SetAlpha(value);
-            _subheaderTextMesh.SetAlpha(value);
-        }
-        public override void SetColor(Color value)
-        {
-            base.SetColor(value);
-
-            if (_bgRenderer.color.a != 0)
-                _bgRenderer.color = value * BG_ALPHA_MAX;
-
-            priceIcon.SetColor(value);
-            moxieIcon.SetColor(value);
-            healthIcon.SetColor(value);
-            strengthIcon.SetColor(value);
-
-            _portraitRenderer.color = value;
-            _spriteRenderer.color = value;
-            _headerTextMesh.color = value;
-            _subheaderTextMesh.color = value;
-        }
-
         public void RedrawSpriteAsDefault()
         {
             Sprite sprite = attached.Data.rarity switch
@@ -224,14 +166,6 @@ namespace Game.Cards
             _bgTween.Kill();
             _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(BG_ALPHA_MAX), 0.25f);
         }
-        public void HideBg()
-        {
-            if (!_bgIsVisible) return;
-            _bgIsVisible = false;
-            _bgTween.Kill();
-            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(0f), 0.25f);
-        }
-
         public void ShowBgInstantly()
         {
             if (_bgIsVisible) return;
@@ -239,12 +173,24 @@ namespace Game.Cards
             _bgTween.Kill();
             _bgRenderer.color = Color.white.WithAlpha(BG_ALPHA_MAX);
         }
+        public void HideBg()
+        {
+            if (!_bgIsVisible) return;
+            _bgIsVisible = false;
+            _bgTween.Kill();
+            _bgTween = _bgRenderer.DOColor(Color.white.WithAlpha(0f), 0.25f);
+        }
         public void HideBgInstantly()
         {
             if (!_bgIsVisible) return;
             _bgIsVisible = false;
             _bgTween.Kill();
             _bgRenderer.color = Color.white.WithAlpha(0f);
+        }
+        public void FlipY()
+        {
+            _isFlipped = !_isFlipped;
+            transform.Rotate(Vector3.forward * 180); 
         }
 
         public async UniTask RedrawHeaderTypingWithReset(params string[] texts)
@@ -343,16 +289,65 @@ namespace Game.Cards
         protected virtual string LowerLeftIconTooltip() => "";
         protected virtual string LowerRightIconTooltip() => "";
 
+        protected override void SetSortingOrder(int value)
+        {
+            base.SetSortingOrder(value);
+            int overlapOrder = value + 1;
+
+            _spriteRenderer.sortingOrder = value;
+            _portraitRenderer.sortingOrder = overlapOrder;
+            _headerTextMesh.sortingOrder = overlapOrder;
+            _subheaderTextMesh.sortingOrder = overlapOrder;
+            _bgRenderer.sortingOrder = overlapOrder + 1;
+
+            priceIcon.SortingOrder = overlapOrder;
+            moxieIcon.SortingOrder = overlapOrder;
+            healthIcon.SortingOrder = overlapOrder;
+            strengthIcon.SortingOrder = overlapOrder;
+        }
+        protected override void SetCollider(bool value)
+        {
+            base.SetCollider(value);
+
+            priceIcon.ColliderEnabled = value;
+            moxieIcon.ColliderEnabled = value;
+            healthIcon.ColliderEnabled = value;
+            strengthIcon.ColliderEnabled = value;
+        }
+        protected override void SetColor(Color value)
+        {
+            base.SetColor(value);
+
+            if (_bgRenderer.color.a != 0)
+                _bgRenderer.color = value * BG_ALPHA_MAX;
+
+            priceIcon.Color = value;
+            moxieIcon.Color = value;
+            healthIcon.Color = value;
+            strengthIcon.Color = value;
+
+            _portraitRenderer.color = value;
+            _spriteRenderer.color = value;
+            _headerTextMesh.color = value;
+            _subheaderTextMesh.color = value;
+        }
+
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseEnterBase(sender, e);
             if (e.handled) return;
-            Menu.WriteDescToCurrent(attached.DescRich());
+
+            string desc = attached.DescDynamicWithLinks(out string[] descLinksTexts);
+            Menu.WriteDescToCurrent(desc);
+            Tooltip.ShowLinks(descLinksTexts);
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseLeaveBase(sender, e);
+            if (e.handled) return;
+
             Menu.WriteDescToCurrent("");
+            Tooltip.Hide();
         }
 
         protected override void DestroyInstantly()
@@ -378,6 +373,10 @@ namespace Game.Cards
             strengthIcon.TryDestroyAnimated();
 
             return UniTask.CompletedTask;
+        }
+        protected override bool CanBeSelected()
+        {
+            return base.CanBeSelected() && !Sleeves.ITableSleeveCard.IsHoldingAnyCard;
         }
 
         static void OnPaletteColorChanged_Static(IPaletteColorInfo info)

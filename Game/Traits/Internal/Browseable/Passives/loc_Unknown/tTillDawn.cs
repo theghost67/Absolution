@@ -27,13 +27,10 @@ namespace Game.Traits
         protected tTillDawn(tTillDawn other) : base(other) { }
         public override object Clone() => new tTillDawn(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"В начале следующего хода (П{PRIORITY})",
-                    $"Восстанавливает {_healthF.Format(trait)} здоровья и {_moxieF.Format(trait)} инициативы. Тратит все заряды."),
-            });
+            return $"<color>В начале следующего хода (П{PRIORITY})</color>\n" +
+                   $"Восстанавливает {_healthF.Format(args.stacks)} здоровья и {_moxieF.Format(args.stacks)} инициативы. Тратит все заряды.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -57,10 +54,11 @@ namespace Game.Traits
             BattleFieldCard owner = trait.Owner;
             if (owner.Field == null) return;
 
+            int stacks = trait.GetStacks();
             await trait.AnimActivation();
             await trait.SetStacks(0, trait);
-            await owner.Health.AdjustValue(owner.Data.health * _healthF.Value(trait), trait);
-            await owner.Moxie.AdjustValue(_moxieF.Value(trait), trait);
+            await owner.Health.AdjustValue(owner.Data.health * _healthF.Value(stacks), trait);
+            await owner.Moxie.AdjustValue(_moxieF.Value(stacks), trait);
         }
     }
 }

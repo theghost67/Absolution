@@ -16,6 +16,7 @@ namespace Game.Territories
         public event EventHandler<int> OnStrengthChanged; // called in strength.OnPostSet
 
         public BattleFieldCard Sender => _sender;
+        public TableStat Strength => _strength;
         public int Priority => topPriority ? int.MaxValue : _sender.InitiationPriority;
         public IReadOnlyList<BattleField> Receivers => _receivers;
 
@@ -23,11 +24,11 @@ namespace Game.Territories
         public readonly TableEventVoid OnPostSent;
         public readonly TableEventVoid<BattleInitiationRecvArgs> OnConfirmed;
 
-        public readonly TableStat strength;
         public bool manualAim;
         public bool topPriority;
         public bool handled;
 
+        readonly TableStat _strength;
         readonly BattleFieldCard _sender;
         readonly List<BattleField> _receivers;
 
@@ -37,8 +38,8 @@ namespace Game.Territories
             if (sender.Field == null) 
                 throw new Exception("Initiation sender must have a field.");
 
-            this.strength = new TableStat("strength", this, strength);
-            this.strength.OnPostSet.Add("base", OnStrengthPostSet);
+            this._strength = new TableStat("strength", this, strength);
+            this._strength.OnPostSet.Add("base", OnStrengthPostSet);
 
             this.manualAim = manualAim;
             this.topPriority = topPriority;

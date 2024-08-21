@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -26,17 +25,14 @@ namespace Game.Traits
         protected tPlayWithVictim(tPlayWithVictim other) : base(other) { }
         public override object Clone() => new tPlayWithVictim(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После совершения атаки на карту владельцем (П{PRIORITY})",
-                    $"уменьшает силу цели на {_strengthF.Format(trait)}."),
-            });
+            return $"<color>После совершения атаки на карту владельцем (П{PRIORITY})</color>\n" +
+                   $"уменьшает силу цели на {_strengthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(40, stacks);
+            return base.Points(owner, stacks) + PointsExponential(12, stacks, 1, 1.8f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -58,7 +54,7 @@ namespace Game.Traits
             if (trait == null) return;
 
             await trait.AnimActivation();
-            await e.Receiver.Card.Strength.AdjustValueScale(-_strengthF.Value(trait), trait);
+            await e.Receiver.Card.Strength.AdjustValueScale(-_strengthF.Value(trait.GetStacks()), trait);
         }
     }
 }

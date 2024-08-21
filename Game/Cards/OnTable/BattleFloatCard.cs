@@ -74,9 +74,7 @@ namespace Game.Cards
 
         protected override Drawer DrawerCreator(Transform parent)
         {
-            BattleFloatCardDrawer drawer = new(this, parent);
-            drawer.SetSortingOrder(10, asDefault: true);
-            return drawer;
+            return new BattleFloatCardDrawer(this, parent) { SortingOrderDefault = 10 };
         }
     }
 }

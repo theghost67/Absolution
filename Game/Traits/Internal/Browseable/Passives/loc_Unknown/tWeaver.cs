@@ -29,20 +29,26 @@ namespace Game.Traits
         protected tWeaver(tWeaver other) : base(other) { }
         public override object Clone() => new tWeaver(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
+            return $"<color>При появлении владельца на территории (П{PRIORITY})</color>\n" +
+                   $"Расставляет рядом с владельцем карты <nobr><color><u>{cardName}</u></color></nobr>. Тратит все заряды.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            TraitStacksPair[] traits = new TraitStacksPair[]
+            { new(TRAIT_ID, _stacksF.ValueInt(args.stacks)) };
+
+            return new DescLinkCollection()
             {
-                new($"При появлении владельца на территории (П{PRIORITY})",
-                    $"Расставляет рядом с владельцем карты <i>{cardName}</i> с единицей здоровья и {_stacksF.Format(trait)} " +
-                    $"зарядами навыка <i>{traitName}</i>. Тратит все заряды."),
-            });
+                new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = CardDescriptiveArgs.normalStats, linkTraits = traits },
+                new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true, stacks = traits[0].stacks }
+            };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsLinear(12, stacks);
+            return base.Points(owner, stacks) + PointsLinear(8, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -65,13 +71,14 @@ namespace Game.Traits
             if (owner.IsKilled) return;
             if (owner.Field == null) return;
 
+            int stacks = trait.GetStacks();
             await trait.AnimActivation();
             await trait.SetStacks(0, trait);
             IEnumerable<BattleField> fields = owner.Territory.Fields(owner.Field.pos, _range).WithoutCard();
             foreach (BattleField field in fields)
             {
                 FieldCard newCard = CardBrowser.NewField(CARD_ID);
-                newCard.traits.AdjustStacks(TRAIT_ID, trait.GetStacks());
+                newCard.traits.AdjustStacks(TRAIT_ID, stacks);
                 await owner.Territory.PlaceFieldCard(newCard, field, trait);
             }    
         }

@@ -26,13 +26,9 @@ namespace Game.Traits
         protected tMeaty(tMeaty other) : base(other) { }
         public override object Clone() => new tMeaty(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При появлении карты с навыком <i>{name}</i> рядом с владельцем (П{PRIORITY})",
-                    $"увеличивает здоровье владельца на {_healthF.Format(trait)}."),
-            });
+            return $"<color>При появлении карты с навыком <i>{name}</i> рядом с владельцем (П{PRIORITY})</color>\nУвеличивает здоровье владельца на {_healthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -54,7 +50,7 @@ namespace Game.Traits
             if (e.canSeeTarget)
             {
                 await trait.AnimDetectionOnSeen(e.target);
-                await trait.Owner.Health.AdjustValueScale(_healthF.Value(trait), trait, entryId);
+                await trait.Owner.Health.AdjustValueScale(_healthF.Value(e.traitStacks), trait, entryId);
             }
         }
     }

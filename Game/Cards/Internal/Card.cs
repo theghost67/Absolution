@@ -1,6 +1,9 @@
 using Game.Palette;
+using Game.Traits;
 using GreenOne;
+using MyBox;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
@@ -9,7 +12,7 @@ namespace Game.Cards
     /// <summary>
     /// Абстрактный базовый класс для данных игровой карты.
     /// </summary>
-    public abstract class Card : Unique, ISerializable, ICloneable
+    public abstract class Card : Unique, IDescriptive, ISerializable, ICloneable
     {
         public const float POINTS_MAX = 9999;
         public readonly string id;
@@ -28,6 +31,7 @@ namespace Game.Cards
             this.id = id;
             this.isField = isField;
             this.spritePath = $"Sprites/Cards/Portraits/{id}";
+            this.frequency = 1f;
         }
         protected Card(SerializationDict dict) : base()
         {
@@ -67,8 +71,6 @@ namespace Game.Cards
                 { "price", frequency },
             };
         }
-        public virtual string DescRich(ITableCard card) => DescRichBase(card, "");
-
         public abstract object Clone();
         public object CloneAsNew()
         {
@@ -79,7 +81,6 @@ namespace Game.Cards
 
         public abstract TableCard CreateOnTable(Transform parent);
         public abstract float Points(); // 1 point = 1 hp
-
         public float PointsDeltaForPrice(int priceAdjust, CardCurrency currency = null)
         {
             int oldPrice = price.value;
@@ -95,46 +96,117 @@ namespace Game.Cards
             return after - before;
         }
 
-        // add string from this method to the end of DescRich(ITableCard) string
-        protected static string DescRichBase(ITableCard card, string contents)
+        public string DescDynamic(CardDescriptiveArgs args)
         {
-            StringBuilder sb = new();
-            Card data = card.Data;
+            string contentsFormat = DescContentsFormat(args);
+            string internalFormat = DescInternalFormat(args, contentsFormat);
+            return internalFormat;
+        }
+        public virtual DescLinkCollection DescLinks(CardDescriptiveArgs args)
+        {
+            // used to show multiple tooltips on mouse over
+            // link type (to card/to trait) will be determined by value type
 
-            sb.Append($"<size=150%>{data.name}</size>\n<i>");
-            switch (data.rarity)
+            // key = trait_id link
+            // value = args passed to trait_id.DescDynamic() function
+
+            return DescLinkCollection.empty;
+        }
+        protected virtual string DescContentsFormat(CardDescriptiveArgs args)
+        {
+            // main block for description, can use args.custom created from DescParamsCreator here
+            return "";
+        }
+        protected virtual object[] DescCustomParams()
+        {
+            return Array.Empty<object>();
+        }
+        private string DescInternalFormat(CardDescriptiveArgs args, string contents)
+        {
+            if (args.linkStats.Length != 4 || !args.isCard)
+                throw new ArgumentException(nameof(args));
+
+            StringBuilder sb = new();
+            sb.Append($"<size=150%>{name}</size>\n<i>");
+            switch (rarity)
             {
                 case Rarity.None: sb.Append("Обычная"); break;
                 case Rarity.Rare: sb.Append("Редкая"); break;
                 case Rarity.Epic: sb.Append("Особая"); break;
                 default: throw new NotSupportedException();
             }
-            if (data.isField)
+            if (isField)
                  sb.Append(" карта поля</i>\n\n");
             else sb.Append(" карта способности</i>\n\n");
 
+            sb.Append(contents);
             if (contents != "")
-            {
-                sb.Append(contents);
                 sb.Append("\n\n");
-            }
 
-            string colorHex = ColorPalette.C3.Hex;
-            sb.Append($"<color={colorHex}>");
-
-            if (card is BattleFieldCard bCard && bCard.Field != null)
+            if (args.linkFormat)
             {
-                int turnAge = bCard.TurnAge;
-                if (turnAge > 0)
-                     sb.Append($"Установлена: {turnAge} х. назад\n\n");
-                else sb.Append("Установлена: на этом ходу\n\n");
+                if (args.linkStats[0] >= 0) sb.AppendLine($"Стоимость: {price.currency.name}, {args.linkStats[0]} ед.");
+                if (args.linkStats[1] >= 0) sb.AppendLine($"Инициатива: {args.linkStats[1]} ед.");
+                if (args.linkStats[2] >= 0) sb.AppendLine($"Здоровье: {args.linkStats[2]} ед.");
+                if (args.linkStats[3] >= 0) sb.AppendLine($"Сила: {args.linkStats[3]} ед.");
+
+                if (args.linkTraits.Length == 0)
+                {
+                    sb.Append("Навыки: нет.");
+                    return sb.ToString();
+                }
+                sb.Append("Навыки: ");
+                foreach (TraitStacksPair pair in args.linkTraits)
+                {
+                    Trait trait = TraitBrowser.GetTrait(pair.id);
+                    Color color = (trait.isPassive ? ColorPalette.CP : ColorPalette.CA).ColorCur;
+                    sb.Append(trait.name.Colored(color));
+                    sb.Append($" x{pair.stacks}, ");
+                }
+                sb.Remove(sb.Length - 2, 2);
+                return sb.ToString();
             }
 
-            if (string.IsNullOrEmpty(data.desc))
-                return sb.ToString();
+            sb.Append($"<color={ColorPalette.C3.Hex}>");
+            bool extraLine = false;
 
-            sb.Append($"<i>«{data.desc}»");
+            int turnAge = args.turnAge;
+            if (turnAge > 0)
+            {
+                sb.Append($"Установлена: {turnAge} х. назад\n");
+                extraLine = true;
+            }
+            else if (turnAge == 0)
+            {
+                sb.Append("Установлена: на этом ходу\n");
+                extraLine = true;
+            }
+            if (args.linksAreAvailable)
+            {
+                sb.Append("Удерживайте ALT для подробностей.\n");
+                extraLine = true;
+            }
+
+            if (string.IsNullOrEmpty(desc))
+                return sb.ToString();
+            if (extraLine)
+                sb.Append('\n');
+
+            sb.Append($"<i>«{desc}»");
             return sb.ToString();
+        }
+
+        string IDescriptive.DescDynamic(DescriptiveArgs args)
+        {
+            return DescDynamic((CardDescriptiveArgs)args);
+        }
+        DescLinkCollection IDescriptive.DescLinks(DescriptiveArgs args)
+        {
+            return DescLinks((CardDescriptiveArgs)args);
+        }
+        object[] IDescriptive.DescCustomParams()
+        {
+            return DescCustomParams();
         }
     }
 }

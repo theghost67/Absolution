@@ -23,15 +23,10 @@ namespace Game.Traits
         protected tSelfDestruction(tSelfDestruction other) : base(other) { }
         public override object Clone() => new tSelfDestruction(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории",
-                    $"Убивает владельца."),
-            });
+            return $"<color>При использовании</color>\nУбивает владельца. Да, вот так просто.";
         }
-
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
             return base.IsUsable(e) && e.isInBattle && e.trait.Owner.Field != null;

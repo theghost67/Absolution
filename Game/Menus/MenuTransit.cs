@@ -21,10 +21,8 @@ namespace Game.Menus
         static readonly MenuTransit _instance = new();
 
         Tween _tween;
-        private MenuTransit() : base(ID, _prefab) { }
+        private MenuTransit() : base(ID, _prefab) { ResetPosition(); }
 
-        // call to?.SetColliders(true) in TransitToThis
-        // call from?.SetColliders(false) in TransitFromThis
         public static UniTask Between(Menu? from, Menu? to, Action? action = null)
         {
             return _instance.BetweenInternal(from, to, action);
@@ -35,8 +33,8 @@ namespace Game.Menus
             to?.OnTransitStart(false);
             await AnimShow();
             await UniTask.Delay((int)(DURATION * 1000));
-            from?.Close();
-            to?.Open();
+            from?.TryClose();
+            to?.TryOpen();
             from?.OnTransitMiddle(true);
             to?.OnTransitMiddle(false);
             action?.Invoke();
@@ -48,7 +46,6 @@ namespace Game.Menus
         public UniTask AnimShow()
         {
             Open();
-
             _tween.Kill();
             _tween = Transform.DOLocalMoveY(Y_TO_OPENED, DURATION).SetEase(Ease.InOutQuad);
             return _tween.AsyncWaitForCompletion();
@@ -62,8 +59,12 @@ namespace Game.Menus
 
         void OnCloseTweenComplete()
         {
-            Transform.localPosition = Vector3.up * Y_TO_RESET;
+            ResetPosition();
             Close();
+        }
+        void ResetPosition()
+        {
+            Transform.localPosition = Vector3.up * Y_TO_RESET;
         }
     }
 }

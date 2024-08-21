@@ -16,14 +16,13 @@ namespace Game.Cards
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
-            frequency = 1.00f;
         }
         protected cKotovsSyndrome(cKotovsSyndrome other) : base(other) { }
         public override object Clone() => new cKotovsSyndrome(this);
 
-        public override string DescRich(ITableCard card)
+        protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return DescRichBase(card, $"Уменьшает инициативу всех противников на {MOXIE_DECREASE} ед.");
+            return $"Уменьшает инициативу всех противников на {MOXIE_DECREASE} ед.";
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

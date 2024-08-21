@@ -19,47 +19,32 @@ namespace Game.Traits
             this.valuePerStack = valuePerStack;
         }
 
-        public int ValueInt(ITableTrait trait)
-        {
-            if (!isRelative)
-                return (int)Value(trait);
-            else throw new System.InvalidCastException("Relative stats cannot be casted to int.");
-        }
-        public int ValueInt(ITableTrait trait, int stacks)
-        {
-            if (!isRelative)
-                return (int)Value(trait, stacks);
-            else throw new System.InvalidCastException("Relative stats cannot be casted to int.");
-        }
-
-        public float Value(ITableTrait trait)
-        {
-            return Value(trait, trait.GetStacks());
-        }
-        public virtual float Value(ITableTrait trait, int stacks)
+        public virtual float Value(int stacks)
         {
             if (valuePerStack == 0)
                  return valueBase;
             else return valueBase + valuePerStack * stacks;
         }
-
-        public string Format(ITableTrait trait)
+        public int ValueInt(int stacks)
         {
-            return Format(trait, trait.GetStacks());
+            if (!isRelative)
+                return (int)Value(stacks);
+            else throw new System.InvalidCastException("Relative stats cannot be casted to int.");
         }
-        public string Format(ITableTrait trait, int stacks)
+        public string Format(int stacks, bool noDot = false)
         {
             if (isRelative)
             {
-                if (DoFormatWithOutline())
-                     return $"<u>{(Value(trait, stacks) * 100).Rounded()}%</u>";
-                else return $"{(Value(trait, stacks) * 100).Rounded()}%";
+                if (DoFormatWithColor())
+                     return $"<nobr><color>{(Value(stacks) * 100).Rounded()}%</color></nobr>";
+                else return $"<nobr>{(Value(stacks) * 100).Rounded()}%</nobr>";
             }
             else
             {
-                if (DoFormatWithOutline())
-                     return $"<u>{Value(trait, stacks).Rounded()} ед</u>";
-                else return $"{Value(trait, stacks).Rounded()} ед";
+                string postfix = noDot ? "ед" : "ед.";
+                if (DoFormatWithColor())
+                     return $"<nobr><color>{Value(stacks).Rounded()} {postfix}</color></nobr>";
+                else return $"<nobr>{Value(stacks).Rounded()} {postfix}</nobr>";
             }
         }
 
@@ -82,7 +67,7 @@ namespace Game.Traits
                 else return $"{valueBase} ед + X * {valuePerStack} ед";
             }
         }
-        protected virtual bool DoFormatWithOutline()
+        protected virtual bool DoFormatWithColor()
         {
             return valuePerStack != 0;
         }

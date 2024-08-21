@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -12,8 +11,8 @@ namespace Game.Traits
     {
         const string ID = "deadly_crit";
         const int PRIORITY = 5;
-        const float DAMAGE_REL_INCREASE = 1.00f;
         const int ATTACKS_NEEDED = 3;
+        static readonly TraitStatFormula _strengthF = new(true, 0.50f, 0.50f);
 
         public tDeadlyCrit() : base(ID)
         {
@@ -27,18 +26,14 @@ namespace Game.Traits
         protected tDeadlyCrit(tDeadlyCrit other) : base(other) { }
         public override object Clone() => new tDeadlyCrit(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            float strengthRel = DAMAGE_REL_INCREASE * 100 * trait.GetStacks();
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При каждой {ATTACKS_NEEDED}-й атаке владельца (П{PRIORITY})",
-                    $"увеличивает силу атаки на <u>{strengthRel}%</u>."),
-            });
+            return $"<color>При каждой {ATTACKS_NEEDED}-й атаке владельца (П{PRIORITY})</color>\n" +
+                   $"увеличивает силу атаки на {_strengthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(60, stacks);
+            return base.Points(owner, stacks) + PointsExponential(16, stacks, 1);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -68,7 +63,7 @@ namespace Game.Traits
 
             trait.Storage[ID] = 0;
             await trait.AnimActivation();
-            await e.strength.AdjustValueScale(DAMAGE_REL_INCREASE * trait.GetStacks(), trait);
+            await e.Strength.AdjustValueScale(_strengthF.Value(trait.GetStacks()), trait);
         }
     }
 }

@@ -12,6 +12,7 @@ namespace Game.Traits
         const string ID = "stealth";
         const int PRIORITY = 7;
         const string TRAIT_ID = "evasion";
+        static readonly TraitStatFormula _stacksF = new(false, 0, 1);
 
         public tStealth() : base(ID)
         {
@@ -25,19 +26,20 @@ namespace Game.Traits
         protected tStealth(tStealth other) : base(other) { }
         public override object Clone() => new tStealth(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            float stacks = trait.GetStacks();
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После убийства любой карты владельцем с одной атаки (П{PRIORITY})",
-                    $"накладывает на владельца навык <i>{traitName}</i> с <u>{stacks}</u> зарядами."),
-            });
+            return $"<color>После убийства любой карты владельцем с одной атаки (П{PRIORITY})</color>\n" +
+                   $"накладывает на владельца навык <u>{traitName}</u> с {_stacksF.Format(args.stacks)} зарядов.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true, stacks = _stacksF.ValueInt(args.stacks) } };
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(80, stacks);
+            return base.Points(owner, stacks) + PointsExponential(32, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

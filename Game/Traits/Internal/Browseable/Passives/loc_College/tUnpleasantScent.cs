@@ -21,22 +21,18 @@ namespace Game.Traits
 
             rarity = Rarity.None;
             tags = TraitTag.None;
-            range = new BattleRange(TerritoryRange.ownerSingle, TerritoryRange.oppositeAll);
+            range = BattleRange.none;
         }
         protected tUnpleasantScent(tUnpleasantScent other) : base(other) { }
         public override object Clone() => new tUnpleasantScent(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После смерти владельца (П{PRIORITY})",
-                    $"уменьшает инициативу инициатора на {_moxieF.Format(trait)}."),
-            });
+            return $"<color>После смерти владельца (П{PRIORITY})</color>\nУменьшает инициативу атакующего на {_moxieF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(16, stacks);
+            return base.Points(owner, stacks) + PointsExponential(8, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -61,7 +57,7 @@ namespace Game.Traits
             if (killer == null) return;
 
             await trait.AnimActivation();
-            await killer.Moxie.AdjustValue(_moxieF.Value(trait), trait);
+            await killer.Moxie.AdjustValue(_moxieF.Value(trait.GetStacks()), trait);
         }
     }
 }

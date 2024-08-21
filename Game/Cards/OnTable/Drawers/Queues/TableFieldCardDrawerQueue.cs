@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Game.Traits;
 using GreenOne;
 using System.Collections.Generic;
@@ -18,6 +19,8 @@ namespace Game.Cards
 
         static bool _isAnyRunning;
         bool _isRunning;
+        Tween _finishTween;
+
         readonly Queue<TableFieldCardDrawerQueueElement> _queue;
 
         public TableFieldCardDrawerQueue(TableFieldCardDrawer drawer)
@@ -41,9 +44,11 @@ namespace Game.Cards
         {
             _isAnyRunning = true;
             _isRunning = true;
-            TableTraitListSetDrawer setDrawer = drawer.Traits;
 
+            TableTraitListSetDrawer setDrawer = drawer.Traits;
             if (setDrawer == null) goto End;
+
+            _finishTween.Kill();
             setDrawer.HideStoredElementsInstantly();
             drawer.ShowBgInstantly();
 
@@ -58,11 +63,17 @@ namespace Game.Cards
             }
 
             End:
-            if (!drawer.HasInitiationPreview())
-                drawer.HideBg();
-
+            _finishTween = DOVirtual.DelayedCall(0.25f, FinishTweenOnComplete);
             _isRunning = false;
             _isAnyRunning = false;
+        }
+        void FinishTweenOnComplete()
+        {
+            if (drawer == null) return;
+            if (drawer.IsSelected)
+                drawer.IsSelected = true;
+            else if (!drawer.HasInitiationPreview() && !(drawer.Traits?.queue.IsRunning ?? false)) 
+                drawer.HideBg();
         }
     }
 }

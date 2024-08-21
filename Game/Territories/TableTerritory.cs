@@ -19,7 +19,7 @@ namespace Game.Territories
         public const int MAX_SIZE = MAX_WIDTH * MAX_HEIGHT;
 
         public override string TableName => "Территория" + (_fieldsDrawersAreNull ? " (виртуальная)" : "");
-        public override string TableNameDebug => $"{Menu.GetCurrent().Id}/territory+{GuidStr}";
+        public override string TableNameDebug => $"territory+{GuidStr}";
         public bool DrawersAreNull => _fieldsDrawersAreNull;
 
         public ITableEventVoid<TableFieldAttachArgs> OnAnyCardAttachedToField => _onAnyCardAttachedToField;
@@ -89,7 +89,12 @@ namespace Game.Territories
         public void SetFieldsColliders(bool value)
         {
             foreach (TableField field in Fields())
-                field.Drawer?.SetCollider(value);
+            {
+                if (field.Drawer != null)
+                    field.Drawer.ColliderEnabled = value;
+                if (field.Card?.Drawer != null)
+                    field.Card.Drawer.ColliderEnabled = value;
+            }
         }
         public void SetFieldsHighlight(bool value)
         {
@@ -99,7 +104,10 @@ namespace Game.Territories
         public void SetCardsColliders(bool value)
         {
             foreach (TableField field in Fields().WithCard())
-                field.Card.Drawer?.SetCollider(value);
+            {
+                if (field.Drawer != null)
+                    field.Card.Drawer.ColliderEnabled = value;
+            }
         }
 
         public void CreateFields()
@@ -198,11 +206,11 @@ namespace Game.Territories
 
         // use to invoke handler on all currently placed cards and all cards that will be attached later
         // if (source == null) handler was invoked on a already placed card
-        public void ContinuousAttachHandler_Add(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler)
+        public void ContinuousAttachHandler_Add(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler, int priority = 0)
         {
             foreach (TableField field in Fields().WithCard())
                 handler.Invoke(this, new TableFieldAttachArgs(field.Card, field, null));
-            _onAnyCardAttachedToField.Add(guid, handler);
+            _onAnyCardAttachedToField.Add(guid, handler, priority);
         }
         public void ContinuousAttachHandler_Remove(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler)
         {

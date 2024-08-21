@@ -26,13 +26,10 @@ namespace Game.Traits
         protected tAlcoHeal(tAlcoHeal other) : base(other) { }
         public override object Clone() => new tAlcoHeal(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на карте рядом",
-                    $"Восстанавливает {_healthIncF.Format(trait)} здоровья цели, уменьшает её инициативу на {_moxieDecF.Format(trait)}. Перезарядка: {CD} х."),
-            });
+            return $"<color>При использовании на карте рядом</color>\n" +
+                   $"Восстанавливает {_healthIncF.Format(args.stacks)} здоровья цели, уменьшает её инициативу на {_moxieDecF.Format(args.stacks, true)}. Перезарядка: {CD} х.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -40,7 +37,7 @@ namespace Game.Traits
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(_healthIncF.Value(result.Entity));
+            return new(_healthIncF.Value(result.Entity.GetStacks()) * 1.2f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -54,10 +51,9 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleFieldCard card = (BattleFieldCard)e.target.Card;
 
-            int stacks = trait.GetStacks();
-            trait.Storage.turnsDelay += CD;
-            await card.Health.AdjustValue(_healthIncF.Value(trait, stacks), trait);
-            await card.Moxie.AdjustValue(-_moxieDecF.Value(trait, stacks), trait);
+            trait.SetCooldown(CD);
+            await card.Health.AdjustValue(_healthIncF.Value(e.traitStacks), trait);
+            await card.Moxie.AdjustValue(-_moxieDecF.Value(e.traitStacks), trait);
         }
     }
 }

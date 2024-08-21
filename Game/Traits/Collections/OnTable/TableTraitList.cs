@@ -87,23 +87,17 @@ namespace Game.Traits
             if (element == null) return;
 
             ITableTrait trait = element.Trait;
-            TableEntry entry;
-
-            if (source is IBattleObject sourceInBattle)
-                 entry = new TableEntry(stacks, source, sourceInBattle.Territory.Turn);
-            else entry = new TableEntry(stacks, source);
-
-            ((TableTraitListElement)element).AddEntryInternal(entryId, entry);
             TableTraitStacksSetArgs stacksArgs = new(element, stacks, source);
 
             if (element.Drawer != null)
             {
                 if (element.Drawer.enqueueAnims)
-                    _set.Drawer?.elements.Enqueue(element, stacks);
+                    _set.Drawer?.queue.Enqueue(element, stacks);
                 else element.Drawer.AnimAdjust(element.Stacks);
             }
 
             await trait.Data.OnStacksChanged(stacksArgs);
+            await ElementAwaiter(element);
             await _onStacksChanged.Invoke(this, stacksArgs);
         }
         public async UniTask RevertStacks(string id, string entryId)
@@ -122,26 +116,27 @@ namespace Game.Traits
             if (element.Drawer != null)
             {
                 if (element.Drawer.enqueueAnims)
-                    _set.Drawer?.elements.Enqueue(element, listArgs.delta);
+                    _set.Drawer?.queue.Enqueue(element, listArgs.delta);
                 else element.Drawer.AnimAdjust(listArgs.delta);
             }
 
             await trait.Data.OnStacksChanged(stacksArgs);
+            await ElementAwaiter(element);
             await _onStacksChanged.Invoke(this, stacksArgs);
         }
 
-        public void AdjustStacksByOwnerList(TraitList dataList)
+        public async UniTask AdjustStacksByOwnerList(TraitList dataList)
         {
             foreach (TraitListElement element in dataList)
-                AdjustStacks(element.Trait.id, element.Stacks, _set.Owner);
+                await AdjustStacks(element.Trait.id, element.Stacks, _set.Owner);
         }
-        public void Clear(ITableEntrySource source)
+        public async UniTask Clear(ITableEntrySource source)
         {
             ITableTraitListElement[] values = this.ToArray();
             for (int i = values.Length - 1; i >= 0; i--)
             {
                 ITableTraitListElement element = values[i];
-                AdjustStacks(element.Trait.Data.id, -element.Stacks, source);
+                await AdjustStacks(element.Trait.Data.id, -element.Stacks, source);
             }
         }
 
@@ -152,6 +147,10 @@ namespace Game.Traits
         protected abstract ITableTraitListElement ElementCreator(TableTraitStacksTryArgs e);
         protected abstract ITableTraitListElement ElementRemover(TableTraitStacksTryArgs e);
         protected abstract ITableTraitListElement ElementCloner(ITableTraitListElement src, TableTraitListCloneArgs args);
+        protected virtual UniTask ElementAwaiter(ITableTraitListElement element)
+        {
+            return UniTask.CompletedTask; // used to await trait initializing (i.e.: battle trait area observing)
+        }
 
         protected virtual UniTask<bool> OnStacksTryToChangeBase_TOP(object sender, TableTraitStacksTryArgs e)
         {

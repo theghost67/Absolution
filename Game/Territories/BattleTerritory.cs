@@ -31,10 +31,9 @@ namespace Game.Territories
         public ITableEventVoid OnPlayerWon => _onPlayerWon;
         public ITableEventVoid OnPlayerLost => _onPlayerLost;
 
-        public bool Concluded => _isConcluded;
+        public bool IsConcluded => _isConcluding;
         public bool PlayerMovesFirst => _playerMovesFirst;
         public bool PhaseCycleEnabled => _phaseCycleEnabled;
-        public bool PhaseAwaitsPlayer => _currentPhaseCycleIndex == _playerPhaseCycleIndex;
         public BattleInitiationQueue Initiations => _initiations;
 
         public BattleSide PhaseSide => GetPhaseSide();
@@ -174,18 +173,28 @@ namespace Game.Territories
         {
             return _currentPhaseCycleIndex == START_PHASE_INDEX;
         }
+        public bool IsPlayerPhase()
+        {
+            return _currentPhaseCycleIndex == (_playerMovesFirst ? 1 : 2);
+        }
+        public bool IsEnemyPhase()
+        {
+            return _currentPhaseCycleIndex == (_playerMovesFirst ? 2 : 1);
+        }
         public bool IsEndPhase()
         {
             return _currentPhaseCycleIndex == END_PHASE_INDEX;
         }
+
         public BattleSide GetOppositeOf(BattleSide side)
         {
             return _player == side ? _enemy : _player;
         }
-
         public async UniTask NextPhase()
         {
             if (!_phaseCycleEnabled) return;
+            if (_phaseCycleEvents.Count == 0) return;
+
             _currentPhaseCycleIndex++;
             _phasesPassed++;
 
@@ -195,32 +204,45 @@ namespace Game.Territories
                 _phaseCyclesPassed++;
             }
 
-            if (_phaseCycleEvents.Count == 0)
-                throw new Exception();
-
             await _onNextPhase.Invoke(this, EventArgs.Empty);
             await _phaseCycleEvents[_currentPhaseCycleIndex].Invoke(this, EventArgs.Empty);
+
+            if (IsStartPhase() && PassThroughStartPhase())
+                await NextPhase();
+            else if (IsPlayerPhase() && PassThroughPlayerPhase())
+            {
+                if (!DrawersAreNull && _player.ai.IsEnabled)
+                    await _player.ai.MakeTurn();
+                await NextPhase();
+            }
+            else if (IsEnemyPhase() && PassThroughEnemyPhase())
+            {
+                if (!DrawersAreNull && _enemy.ai.IsEnabled)
+                    await _enemy.ai.MakeTurn();
+                await NextPhase();
+            }
+            else if (IsEndPhase() && PassThroughEndPhase())
+                await NextPhase();
         }
         public async UniTask LastPhase()
         {
-            int repeats = END_PHASE_INDEX - _currentPhaseCycleIndex;
-            for (int i = 0; i < repeats; i++)
+            int cycles = _phaseCyclesPassed;
+            while (!IsEndPhase() && cycles == _phaseCyclesPassed)
                 await NextPhase();
         }
-        public async UniTask TryConclude(bool playerWon)
+        public async UniTask TryConclude()
         {
             if (_isConcluding) return;
             _isConcluding = true;
 
             _phaseCycleEnabled = false; // blocks phase cycle (to block next turn start)
             if (!_initiations.IsRunning)
-                await TryConcludeInternal(playerWon);
+                await TryConcludeInternal();
             else _initiations.OnceComplete += (s, e) =>
             {
-                TryConcludeInternal(playerWon);
+                TryConcludeInternal();
                 if (_isConcluded) return;
                 _phaseCycleEnabled = true;
-                _ = NextPhase();
             };
         }
         
@@ -228,14 +250,16 @@ namespace Game.Territories
         {
             if (data == null || field == null) 
                 throw new NullReferenceException();
+            if (field.Card != null)
+                return UniTask.FromResult<BattleFieldCard>(null);
 
             BattleFieldCard card = FieldCardCreator(data, field.Side);
             if (card.Drawer != null)
             {
-                card.Drawer.SetCollider(false);
+                card.Drawer.ColliderEnabled = false;
+                card.Drawer.Alpha = 0;
                 card.Drawer.transform.position = field.Drawer.transform.position;
-                card.Drawer.SetAlpha(0);
-                card.Drawer.DOFade(1, 0.5f).SetEase(Ease.InCubic).OnComplete(() => card.Drawer.SetCollider(true));
+                card.Drawer.DOFade(1, 0.5f).SetEase(Ease.InCubic).OnComplete(() => card.Drawer.ColliderEnabled = true);
             }
             return PlaceFieldCard(card, field, source);
         }
@@ -245,7 +269,6 @@ namespace Game.Territories
                 throw new NullReferenceException();
 
             BattleFloatCard card = FloatCardCreator(data, side);
-
             return PlaceFloatCard(card, source);
         }
 
@@ -263,14 +286,16 @@ namespace Game.Territories
                 else Menu.WriteLogToCurrent($"Установка карты {card.Data.name} на поле {field.TableName}.");
             }
 
-            TableConsole.LogToFile("terr", $"{TableNameDebug}: field card placement: id: {card.Data.id}, field: {field.TableNameDebug} (by: {sourceNameDebug}).");
             await card.TryAttachToField(field, source);
-
             if (card.Field != null)
+            {
+                TableConsole.LogToFile("terr", $"{TableNameDebug}: field card placement: id: {card.Data.id}, field: {field.TableNameDebug} (by: {sourceNameDebug}).");
                 return card;
+            }
 
             card.Dispose();
-            throw new InvalidOperationException("Territory field card placement failed. Field is already occupied.");
+            Debug.LogError("Territory field card placement failed. Field is already occupied.");
+            return null;
         }
         public async UniTask<BattleFloatCard> PlaceFloatCard(BattleFloatCard card, ITableEntrySource source)
         {
@@ -289,7 +314,6 @@ namespace Game.Territories
 
             TableConsole.LogToFile("terr", $"{TableNameDebug}: float card placement: id: {card.Data.id} (by: {sourceNameDebug}).");
             await card.TryUse();
-
             return card;
         }
 
@@ -441,43 +465,61 @@ namespace Game.Territories
                 Menu.WriteLogToCurrent($"-- Ход {terr.Turn} (конец) --");
             TableConsole.LogToFile("terr", $"turn: {terr.Turn} (end)");
 
+            if (BattleInitiationQueue.IsAnyRunning)
+            {
+                Debug.LogError("Territory end phase event invoked while initiation queue is running.");
+                return UniTask.CompletedTask;
+            }
+
             List<BattleInitiationSendArgs> initiations = new();
             foreach (BattleField field in terr.Fields().WithCard())
                 initiations.Add(field.Card.CreateInitiation());
 
             terr.Initiations.EnqueueAndRun(initiations);
-            return terr.Initiations.Await().ContinueWith(terr.NextPhase);
+            return terr.Initiations.Await();
         }
         protected virtual UniTask OnNextPhaseBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             if (!terr.DrawersAreNull)
-            {
                 BattleArea.StopTargetAiming();
-                if (terr._phaseCyclesPassed == 0)
-                    Menu.WriteLogToCurrent("-- НАЧАЛО БОЯ -- ");
-            }
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnPlayerWonBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
-            if (!terr.DrawersAreNull)
-                Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ --\n-- ИГРОК ПОБЕДИЛ --");
             TableConsole.LogToFile("terr", $"{terr.TableNameDebug}: player won");
+
+            terr._onStartPhase.Clear();
+            terr._onEnemyPhase.Clear();
+            terr._onPlayerPhase.Clear();
+            terr._onEndPhase.Clear();
+            terr._onNextPhase.Clear();
+
             return UniTask.CompletedTask;
         }
         protected virtual UniTask OnPlayerLostBase_TOP(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
-            if (!terr.DrawersAreNull)
-                Menu.WriteLogToCurrent("-- КОНЕЦ БОЯ --\n-- ИГРОК ПРОИГРАЛ --");
             TableConsole.LogToFile("terr", $"{terr.TableNameDebug}: player lost");
+
+            terr._onStartPhase.Clear();
+            terr._onEnemyPhase.Clear();
+            terr._onPlayerPhase.Clear();
+            terr._onEndPhase.Clear();
+            terr._onNextPhase.Clear();
+
             return UniTask.CompletedTask;
         }
 
         protected virtual void OnInitiationsProcessingStartBase(object sender, EventArgs e) { }
         protected virtual void OnInitiationsProcessingEndBase(object sender, EventArgs e) { }
+
+        // if true, will call NextPhase again after phase event was called (in NextPhase)
+        protected virtual bool PassThroughStartPhase() => true;
+        protected virtual bool PassThroughPlayerPhase() => !DrawersAreNull && _player.ai.IsEnabled;
+        protected virtual bool PassThroughEnemyPhase() => !DrawersAreNull && _enemy.ai.IsEnabled;
+        protected virtual bool PassThroughEndPhase() => true;
 
         BattleSide GetPhaseSide()
         {
@@ -492,16 +534,20 @@ namespace Game.Territories
             return _currentPhaseCycleIndex == _playerPhaseCycleIndex ? _enemy : _player;
         }
 
-        UniTask TryConcludeInternal(bool playerWon)
+        UniTask TryConcludeInternal()
         {
+            _isConcluding = false;
+
             bool anySideIsKilled = _player.IsKilled || _enemy.IsKilled;
             if (!anySideIsKilled)
                 return UniTask.CompletedTask;
             if (_isConcluded)
                 return UniTask.CompletedTask;
 
+            _isConcluding = true;
             _isConcluded = true;
-            if (playerWon)
+
+            if (_player.Health > 0)
                  return _onPlayerWon.Invoke(this, EventArgs.Empty);
             else return _onPlayerLost.Invoke(this, EventArgs.Empty);
         }

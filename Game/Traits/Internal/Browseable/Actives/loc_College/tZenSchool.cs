@@ -10,8 +10,8 @@ namespace Game.Traits
     public class tZenSchool : ActiveTrait
     {
         const string ID = "zen_school";
-        static readonly TraitStatFormula _strengthF = new(false, 2, 0);
-        const int CD = 2;
+        static readonly TraitStatFormula _healthF = new(false, 2, 0);
+        const int CD = 1;
 
         public tZenSchool() : base(ID)
         {
@@ -25,17 +25,14 @@ namespace Game.Traits
         protected tZenSchool(tZenSchool other) : base(other) { }
         public override object Clone() => new tZenSchool(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на любой союзной карте",
-                    $"перенаправляет всю силу цели в её здоровье: 1 ед. силы = {_strengthF.Format(trait)} здоровья. Так же восстанавливает своё здоровье на то же значение. Перезарядка: {CD} х."),
-            });
+            return "<color>При использовании на любой союзной карте</color>\n" +
+                   $"Перенаправляет всю силу цели в её здоровье: 1 ед. силы = {_healthF.Format(args.stacks)} здоровья. Так же восстанавливает своё здоровье на то же значение. Перезарядка: {CD} х.";
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(result.Field.Card.Health * 2.25f, 0);
+            return new(0, 0.40f);
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -49,9 +46,9 @@ namespace Game.Traits
             BattleFieldCard card = (BattleFieldCard)e.target.Card;
             int strength = card.Strength;
 
-            trait.Storage.turnsDelay += CD;
+            trait.SetCooldown(CD);
             await card.Strength.AdjustValue(-strength, trait);
-            await card.Health.AdjustValue(strength * _strengthF.ValueInt(trait), trait);
+            await card.Health.AdjustValue(strength * _healthF.ValueInt(e.traitStacks), trait);
             await trait.Owner.Health.AdjustValue(strength, trait);
         }
     }

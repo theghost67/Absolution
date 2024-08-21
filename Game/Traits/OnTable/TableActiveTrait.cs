@@ -51,17 +51,20 @@ namespace Game.Traits
             else return Owner.Traits.Actives.AdjustStacks(_data.id, delta, source);
         }
 
-        public async UniTask TryUse(TableField target)
+        public UniTask TryUse(TableField target)
         {
-            TableActiveTraitUseArgs e = new(this, target);
+            return TryUse(new TableActiveTraitUseArgs(this, target));
+        }
+        public async UniTask TryUse(TableActiveTraitUseArgs e)
+        {
             if (!_data.IsUsable(e)) return;
-            TableEventManager.Add(-Guid);
+            TableEventManager.Add("table", -Guid);
             await _data.OnUse(e);
-            TableEventManager.Remove(-Guid);
+            TableEventManager.Remove("table", -Guid);
         }
         public bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return _data.IsUsable(e);
+            return !IsDisposed && e.trait.GetStacks() > 0 && _data.IsUsable(e);
         }
 
         protected override Drawer DrawerCreator(Transform parent)

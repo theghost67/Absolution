@@ -24,25 +24,23 @@ namespace Game.Traits
         protected tTeleportationBag(tTeleportationBag other) : base(other) { }
         public override object Clone() => new tTeleportationBag(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на любой союзной карте",
-                    $"Даёт цели навык <i>{traitName}</i>. Тратит один заряд."),
-            });
+            return $"<color>При использовании на любой союзной карте</color>\nДаёт цели навык <u>{traitName}</u>. Тратит один заряд.";
+        }
+        public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
+        {
+            return new DescLinkCollection()
+            { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true } };
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            BattleFieldCard card = result.Field.Card;
-            if (card == null || card.Traits[TRAIT_ID] == null)
-                 return BattleWeight.none;
-            else return BattleWeight.negative;
+            return BattleWeight.one;
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(30, stacks, 2);
+            return base.Points(owner, stacks) + PointsExponential(18, stacks, 1, 1.8f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

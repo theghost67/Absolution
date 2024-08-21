@@ -43,12 +43,6 @@ namespace Game.Territories
             ColorPalette.OnColorChanged += OnColorPaletteChanged;
         }
 
-        public override void SetCollider(bool value)
-        {
-            base.SetCollider(value);
-            attached.Card?.Drawer?.SetCollider(value);
-        }
-
         public void SetHighlight(bool value)
         {
             if (_isHighlighted != value)
@@ -77,7 +71,7 @@ namespace Game.Territories
         {
             if (cardDrawer == null) return _attachTween;
             cardDrawer.transform.SetParent(transform, worldPositionStays: true);
-            cardDrawer.SetSortingOrder(GetSortingOrder() + 1);
+            cardDrawer.SortingOrder = SortingOrder + 1;
             _attachTween = cardDrawer.transform.DOMove(transform.position, 0.5f).SetEase(Ease.OutExpo);
             return _attachTween;
         }
@@ -86,10 +80,12 @@ namespace Game.Territories
             return _attachTween; // TODO: implement?
         }
 
-        protected virtual void OnColorPaletteChanged(IPaletteColorInfo info)
+        protected override void SetCollider(bool value)
         {
-            if (info.Index == 1)
-                _light.color = info.ColorCur;
+            base.SetCollider(value);
+            TableFieldCardDrawer drawer = attached.Card?.Drawer;
+            if (drawer != null)
+                drawer.ColliderEnabled = value;
         }
         protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
         {
@@ -103,6 +99,12 @@ namespace Game.Territories
         {
             base.DestroyInstantly();
             ColorPalette.OnColorChanged -= OnColorPaletteChanged;
+        }
+
+        void OnColorPaletteChanged(IPaletteColorInfo info)
+        {
+            if (info.Index == 1)
+                _light.color = info.ColorCur;
         }
     }
 }

@@ -10,10 +10,10 @@ using UnityEngine;
 namespace Game.Traits
 {
     /// <summary>
-    /// Класс, представляющий коллекцию элементов списка навыков (см. <see cref="TableTraitListElement"/>) у отрисовщика.<br/>
+    /// Класс, представляющий коллекцию элементов списка навыков (см. <see cref="TableTraitListElement"/>) с очередью.<br/>
     /// Существует для удобства пользователя (добавляет изменение зарядов навыков в очередь).
     /// </summary>
-    public class TableTraitListSetDrawerElementsCollection : IEnumerable<TableTraitListElementDrawer>
+    public class TableTraitListSetDrawerElementsQueue : IEnumerable<TableTraitListElementDrawer>
     {
         public event EventHandler OnStarted;
         public event EventHandler OnEnded;
@@ -25,9 +25,7 @@ namespace Game.Traits
         readonly TableTraitListSetDrawer _drawer;
         readonly List<ITableTraitListElement> _storage;
         readonly Queue<QueueQuery> _queue;
-
         bool _isRunning;
-        float _currentY;
 
         class QueueQuery : IEquatable<QueueQuery>
         {
@@ -52,10 +50,9 @@ namespace Game.Traits
             Remove,
         }
 
-        public TableTraitListSetDrawerElementsCollection(TableTraitListSetDrawer drawer)
+        public TableTraitListSetDrawerElementsQueue(TableTraitListSetDrawer drawer)
         {
             _drawer = drawer;
-            _currentY = 0.25f; // start pos
             _storage = new List<ITableTraitListElement>();
             _queue = new Queue<QueueQuery>();
         }
@@ -70,10 +67,8 @@ namespace Game.Traits
             if (isAdded) return;
 
             TableTraitListElementDrawer drawer = element.Drawer;
-            float posYDelta = drawer.GetSizeDelta().y;
-            drawer.transform.localPosition = Vector3.up * _currentY;
+            _drawer.AddToViewport(drawer);
             _storage.Add(element);
-            _currentY -= posYDelta;
         }
         public void Enqueue(ITableTraitListElement element)
         {
@@ -106,8 +101,8 @@ namespace Game.Traits
             TableTraitListElementDrawer elementDrawer = element.Drawer;
             QueueQuery query = new(element, QueueOperation.Add);
 
-            elementDrawer.SetAlpha(0);
-            elementDrawer.SetSortingOrder(_drawer.GetSortingOrder());
+            elementDrawer.Alpha = 0;
+            elementDrawer.SortingOrder = _drawer.SortingOrder;
             EnqueueInternal(query);
         }
         void EnqueueElementForAdjust(ITableTraitListElement element)
@@ -151,51 +146,33 @@ namespace Game.Traits
                 if (query.operation == QueueOperation.Adjust)
                 {
                     if (elementDrawer == null) continue;
-                    Tween tween = elementDrawer.AnimAdjust(query.stacks);
-                    if (tween != null) await tween.AsyncWaitForCompletion();
+                    await _drawer.ScrollTo(elementDrawer).AsyncWaitForCompletion();
+                    await elementDrawer.AnimAdjust(query.stacks).AsyncWaitForCompletion();
                     continue;
                 }
 
                 bool addToStorage = query.operation == QueueOperation.Add;
-                float posYDelta = elementDrawer.GetSizeDelta().y;
-                float elementUpperPoint = _currentY;
-
                 if (addToStorage)
                 {
-                    elementDrawer.transform.localPosition = Vector3.up * _currentY;
                     _storage.Add(element);
-                    _currentY -= posYDelta;
+                    _drawer.AddToViewport(elementDrawer);
+                    await _drawer.ScrollTo(elementDrawer).AsyncWaitForCompletion();
                     await elementDrawer.AnimAppear().AsyncWaitForCompletion();
                 }
                 else
                 {
-                    int indexInQueue = _storage.IndexOf(element);
-                    for (int i = indexInQueue + 1; i < _storage.Count; i++)
-                    {
-                        TableTraitListElementDrawer drawer = _storage[i].Drawer;
-                        drawer.AnimScroll(drawer.transform.localPosition.y + posYDelta);
-                    }
-
                     _storage.Remove(element);
-                    _currentY += posYDelta;
+                    await _drawer.ScrollTo(elementDrawer).AsyncWaitForCompletion();
                     await elementDrawer.AnimDisappear().AsyncWaitForCompletion();
+                    await _drawer.RemoveFromViewportAsync(elementDrawer);
                     element.DestroyDrawer(false);
                 }
-
-                float elementLowerPoint = _currentY;
-                // TODO: implement scrolling (elementUpperPoint && elementLowerPoint must be visible)
-                // use _drawer.ScrollStoredElements
-
-                //if (_animPosY < -0.36)
-                ////inverts lowest pos, subtracts half of viewport size & text offsets
-                //float scrollPosY = -_animPosY - 0.69f / 2 - 0.015f;
-                //_animScrollTween = transform.DOMoveY(scrollPosY, 0.25f).SetEase(Ease.OutQuad);
             }
 
             if (OnceComplete == null)
                 await UniTask.Delay(1000);
 
-            if (_drawer.Owner != null && !_drawer.Owner.IsSelected)
+            if (!_drawer.IsDestroyed && _drawer.Owner != null && !_drawer.Owner.IsSelected)
                 _drawer.HideStoredElements();
 
             _isRunning = false;

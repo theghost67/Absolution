@@ -26,17 +26,14 @@ namespace Game.Traits
         protected tAlcoRage(tAlcoRage other) : base(other) { }
         public override object Clone() => new tAlcoRage(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"После убийства вражеской карты владельцем (П{PRIORITY})",
-                    $"Восстанавливает себе {_healthF.Format(trait)} здоровья и уменьшает свою инициативу на {_moxieF.Format(trait)}."),
-            });
+            return $"<color>После убийства вражеской карты владельцем (П{PRIORITY})</color>\n" +
+                   $"Восстанавливает себе {_healthF.Format(args.stacks)} здоровья и уменьшает свою инициативу на {_moxieF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(48, stacks);
+            return base.Points(owner, stacks) + PointsExponential(18, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -59,8 +56,8 @@ namespace Game.Traits
             if (e.victim.Side == owner.Side) return;
 
             int stacks = trait.GetStacks();
-            float health = owner.Data.health * _healthF.Value(trait, stacks);
-            float moxie = -_moxieF.Value(trait, stacks);
+            float health = owner.Data.health * _healthF.Value(stacks);
+            float moxie = -_moxieF.Value(stacks);
 
             await trait.AnimActivation();
             await owner.Health.AdjustValue(health, trait);

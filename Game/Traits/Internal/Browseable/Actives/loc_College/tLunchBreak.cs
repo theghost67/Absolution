@@ -10,7 +10,7 @@ namespace Game.Traits
     public class tLunchBreak : ActiveTrait
     {
         const string ID = "lunch_break";
-        static readonly TraitStatFormula _healthF = new(false, 0, 1);
+        static readonly TraitStatFormula _healthF = new(false, 0, 2);
         const int CD = 1;
 
         public tLunchBreak() : base(ID)
@@ -25,20 +25,15 @@ namespace Game.Traits
         protected tLunchBreak(tLunchBreak other) : base(other) { }
         public override object Clone() => new tLunchBreak(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            string healthF = _healthF.Format(trait);
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При использовании на территории на карте рядом",
-                    $"Лечит цель на <u>{healthF}</u> ед. Перезарядка: {CD} х."),
-                new($"При использовании на территории на поле рядом",
-                    $"Лечит сторону, которая владеет этим полем, на <u>{healthF}</u> ед. Перезарядка: {CD} х."),
-            });
+            string healthF = _healthF.Format(args.stacks, true);
+            return $"<color>При использовании на карте рядом</color>\nЛечит цель на {healthF}. Перезарядка: {CD} х.\n\n" +
+                   $"<color>При использовании на поле рядом</color>\nЛечит сторону, которая владеет этим полем, на {healthF}. Перезарядка: {CD} х.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsLinear(6, stacks);
+            return base.Points(owner, stacks) + PointsLinear(8, stacks);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -52,8 +47,8 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField target = (BattleField)e.target;
 
-            trait.Storage.turnsDelay += CD;
-            int health = (int)_healthF.Value(trait);
+            trait.SetCooldown(CD);
+            int health = (int)_healthF.Value(e.traitStacks);
 
             if (target.Card != null)
                  await target.Card.Health.AdjustValue(health, trait);

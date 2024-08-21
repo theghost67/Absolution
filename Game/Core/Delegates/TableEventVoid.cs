@@ -19,7 +19,7 @@ namespace Game
         public async UniTask Invoke(object sender, EventArgs e)
         {
             if (Count == 0) return;
-            TableEventManager.Add(Id);
+            TableEventManager.Add("table", Id);
             List<string> unsubbedIds = new(Count);
             try
             {
@@ -36,7 +36,7 @@ namespace Game
             finally
             {
                 PostInvokeCleanUp(unsubbedIds);
-                TableEventManager.Remove(Id);
+                TableEventManager.Remove("table", Id);
             }
         }
         public async UniTask InvokeIncluding(object sender, EventArgs e, string[] ids)
@@ -70,7 +70,7 @@ namespace Game
         public async UniTask Invoke(object sender, T e)
         {
             if (Count == 0) return;
-            TableEventManager.Add(Id);
+            TableEventManager.Add("table", Id);
             List<string> unsubbedIds = new(Count);
             try
             {
@@ -87,7 +87,7 @@ namespace Game
             finally
             {
                 PostInvokeCleanUp(unsubbedIds);
-                TableEventManager.Remove(Id);
+                TableEventManager.Remove("table", Id);
             }
         }
         public async UniTask InvokeIncluding(object sender, T e, string[] ids)

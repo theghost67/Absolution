@@ -25,17 +25,14 @@ namespace Game.Traits
         protected tOnLookout(tOnLookout other) : base(other) { }
         public override object Clone() => new tOnLookout(this);
 
-        public override string DescRich(ITableTrait trait)
+        protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return DescRichBase(trait, new TraitDescChunk[]
-            {
-                new($"При появлении карты напротив владельца (П{PRIORITY})",
-                    $"Мгновенно атакует эту карту с силой в {_strengthF.Format(trait)}."),
-            });
+            return $"<color>При появлении карты напротив владельца (П{PRIORITY})</color>\n" +
+                   $"Мгновенно атакует цель с силой в {_strengthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsLinear(7, stacks);
+            return base.Points(owner, stacks) + PointsLinear(6, stacks);
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {
@@ -44,7 +41,7 @@ namespace Game.Traits
             if (!e.canSeeTarget) return;
 
             await trait.AnimDetectionOnSeen(e.target);
-            int strength = (int)_strengthF.Value(trait);
+            int strength = _strengthF.ValueInt(e.traitStacks);
             BattleInitiationSendArgs initiation = new(trait.Owner, strength, true, false, e.target.Field);
             trait.Territory.Initiations.EnqueueAndRun(initiation);
         }        
