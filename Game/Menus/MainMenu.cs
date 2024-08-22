@@ -3,6 +3,7 @@ using DG.Tweening;
 using Game.Effects;
 using Game.Environment;
 using Game.Palette;
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ namespace Game.Menus
     {
         const string ID = "main";
         public override string LinkedMusicMixId => "main";
+        public DateTime GameStartTime => _gameStartTime;
 
         static readonly GameObject _prefab;
         static readonly string[] _tips;
@@ -30,6 +32,7 @@ namespace Game.Menus
 
         readonly LogoDrawer _logoDrawer;
 
+        static DateTime _gameStartTime;
         static Tween _flickeringTween;
         static Tween _tipsTween;
         static int _tipsIndex;
@@ -95,7 +98,7 @@ namespace Game.Menus
                 "Пройти хардкорный режим далеко не так просто. Только игроки с превосходной колодой, знанием механик игры и каплей удачи могут бросить ему вызов.",
 				"Ускорение сражения не влияет на таймер прохождения. Готовы устроить спидран?",
             };
-            _tipsIndex = Random.Range(0, _tips.Length);
+            _tipsIndex = UnityEngine.Random.Range(0, _tips.Length);
             _firstTimeOpened = true;
         }
         public MainMenu() : base(ID, _prefab)
@@ -161,6 +164,7 @@ namespace Game.Menus
 
             await UniTask.Delay(1000);
 
+            _gameStartTime = DateTime.Now;
             Player.Deck.Clear();
             DOVirtual.Float(2, 1, 2, v => SFX.MusicVolumeScale = v);
             AudioBrowser.Shuffle();
@@ -171,7 +175,7 @@ namespace Game.Menus
 
         void OnFlickeringTweenUpdate()
         {
-            int value = Random.Range(0, 200);
+            int value = UnityEngine.Random.Range(0, 200);
             _controlsGO.SetActive(value != 2);
             _tipsGO.SetActive(value != 3);
         }

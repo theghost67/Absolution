@@ -41,7 +41,6 @@ namespace Game.Menus
         static float _demoDifficultyScale;
         static int _demoPrevFieldsCount;
         static int _demoPrevFloatsCount;
-        static DateTime _demoStartTime;
 
         static readonly Color[][] _demoPalettes = new Color[][]
         {
@@ -887,8 +886,6 @@ namespace Game.Menus
                 ColorPalette.All[i].ColorCur = _demoPalettes[_demoDifficulty][i];
 
             _demoDifficulty++;
-            if (_demoDifficulty == DEMO_DIFFICULTY_MIN)
-                _demoStartTime = DateTime.Now;
 
             int locStage = demo_DifficultyToLocStage(_demoDifficulty);
             _demoDifficultyScale = demo_DifficultyToLocStageScale(_demoDifficulty);
@@ -962,7 +959,7 @@ namespace Game.Menus
         };
         static string demo_TimeSpanFormat()
         {
-            TimeSpan span = DateTime.Now - _demoStartTime;
+            TimeSpan span = DateTime.Now - Global.Menu.GameStartTime;
             int minutes = span.Minutes;
             int seconds = span.Seconds;
             string minutesStr = minutes < 10 ? "0" + minutes : minutes.ToString();
