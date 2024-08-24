@@ -36,7 +36,8 @@ namespace Game.Traits
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return base.IsUsable(e) && e.isInBattle && e.trait.Owner.Field != null && e.target.Card != null;
+            return base.IsUsable(e) && e.isInBattle && e.trait.Owner.Field != null 
+                && e.target.Card != null && e.target.Card.Strength.ValueRaw < 1;
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {

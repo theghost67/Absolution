@@ -287,7 +287,7 @@ namespace Game.Territories
             }
 
             await card.TryAttachToField(field, source);
-            if (card.Field != null)
+            if (card.IsKilled || card.Field != null)
             {
                 TableConsole.LogToFile("terr", $"{TableNameDebug}: field card placement: id: {card.Data.id}, field: {field.TableNameDebug} (by: {sourceNameDebug}).");
                 return card;

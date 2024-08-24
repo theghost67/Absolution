@@ -216,7 +216,9 @@ namespace Game.Sleeves
                 else // plays 'add' animation
                 {
                     card.Drawer.transform.localPosition = new Vector3(newPosX, _moveOutPosY);
-                    lastTween = card.Drawer.transform.DOLocalMoveY(0, ANIM_DURATION).SetEase(Ease.OutQuad);
+                    if (_isPulledOut)
+                         lastTween = card.OnPullOut(true);
+                    else lastTween = card.Drawer.transform.DOLocalMoveY(0, ANIM_DURATION).SetEase(Ease.OutQuad);
                 }
             }
             return lastTween.AsyncWaitForCompletion();

@@ -30,11 +30,11 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             return $"<color>После убийства карты владельцем (П{PRIORITY})</color>\n" +
-                   $"Даёт {_goldF.Format(args.stacks)} золота стороне-владельцу и понижает инициативу владельца на {_moxieF.Format(args.stacks, true)}. Тратит один заряд.";
+                   $"Даёт {_goldF.Format(args.stacks)} золота стороне-владельцу и понижает инициативу владельца на {_moxieF.Format(args.stacks, true)}. Тратит все заряды.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(24, stacks, 1);
+            return PointsExponential(24, stacks, 1);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -57,7 +57,7 @@ namespace Game.Traits
 
             int stacks = trait.GetStacks();
             await trait.AnimActivation();
-            await trait.AdjustStacks(-1, trait);
+            await trait.SetStacks(0, trait);
             await owner.Side.Gold.AdjustValue(_goldF.Value(stacks), trait);
             await owner.Moxie.AdjustValue(-_moxieF.Value(stacks), trait);
         }

@@ -13,41 +13,44 @@ namespace Game.Territories
         public event EventHandler<int> OnStrengthChanged; // called in strength.OnPostSet
 
         public BattleInitiationSendArgs SenderArgs { get; }
-        public BattleFieldCard Sender { get; }
+        public BattleFieldCard Sender => SenderArgs.Sender;
         public TableStat Strength { get; } // does not matter if ReceiverChanged (will redirect attack, creating a new RecvArgs from new receiver)
-        public BattleField Receiver 
+        public BattleField ReceiverField 
         {
-            get => _receiver; 
+            get => _receiverField; 
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException($"Receiver must have not null reference (to cancel initiation or remove this field from targets, handle it in {nameof(Sender.OnInitiationPreSent)})");
-                if (value == _receiver)
+                    throw new ArgumentNullException($"{nameof(ReceiverField)} must have not null reference (to cancel initiation or remove this field from targets, handle it in {nameof(Sender.OnInitiationPreSent)})");
+                if (value == _receiverField)
                     return;
 
-                _receiverPrev = _receiver;
-                _receiver = value;
+                _receiverPrev = _receiverField;
+                _receiverField = value;
+                _receiver = _receiverField.Card;
                 OnReceiverChanged?.Invoke(this, value);
             }
         }
-        public BattleField ReceiverPrev => _receiverPrev; // internal use
+        public BattleFieldCard Receiver => _receiver; // could be null or killed
+
+        internal BattleField ReceiverPrev => _receiverPrev; // internal use
 
         public readonly TableEventVoid OnPreReceived;
         public readonly TableEventVoid OnPostReceived;
 
         public bool handled;
 
-        BattleField _receiver;
+        BattleField _receiverField;
+        BattleFieldCard _receiver;
         BattleField _receiverPrev;
 
         public BattleInitiationRecvArgs(BattleField receiver, BattleInitiationSendArgs sArgs)
         {
             SenderArgs = sArgs;
-            Sender = sArgs.Sender;
 
             Strength = new TableStat("strength", this, sArgs.Strength);
             Strength.OnPostSet.Add(null, OnStrengthPostSet);
-            Receiver = receiver;
+            ReceiverField = receiver;
 
             OnPreReceived = new TableEventVoid();
             OnPostReceived = new TableEventVoid();

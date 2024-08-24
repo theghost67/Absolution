@@ -132,7 +132,8 @@ namespace Game.Menus
         bool _territoryEndTurnIsPending;
         pTerritory _territory;
         SquaresBackground _bg;
-        Sequence _deathsDoorSequence;
+        Tween _deathsDoorVolumeTween;
+        Tween _deathsDoorPitchTween;
         Tween _beatTween;
 
         TableTerritory IMenuWithTerritory.Territory => _territory;
@@ -753,14 +754,8 @@ namespace Game.Menus
             component.saturation.overrideState = true;
             component.saturation.value = -100 * (1f - ratio);
 
-            _deathsDoorSequence.Kill();
-            _deathsDoorSequence = DOTween.Sequence();
-            _deathsDoorSequence.AppendCallback(() =>
-            {
-                DOVirtual.Float(pitchFrom, pitchTo, duration, v => SFX.MusicPitchScale = v).SetEase(Ease.OutCubic);
-                DOVirtual.Float(volumeFrom, volumeTo, duration, v => SFX.MusicVolumeScale = v).SetEase(Ease.OutCubic);
-            });
-            _deathsDoorSequence.Play();
+            _deathsDoorPitchTween = DOVirtual.Float(pitchFrom, pitchTo, duration, v => SFX.MusicPitchScale = v).SetEase(Ease.OutCubic);
+            _deathsDoorVolumeTween = DOVirtual.Float(volumeFrom, volumeTo, duration, v => SFX.MusicVolumeScale = v).SetEase(Ease.OutCubic);
         }
         void ResetDeathsDoorEffect()
         {
@@ -769,26 +764,22 @@ namespace Game.Menus
             Global.Volume.profile.TryGet(out ColorAdjustments component);
             component.saturation.value = 0;
 
-            _deathsDoorSequence.Kill();
-            _deathsDoorSequence = DOTween.Sequence();
-            _deathsDoorSequence.AppendCallback(() =>
-            {
-                DOVirtual.Float(SFX.MusicPitchScale, 1f, DURATION, v => SFX.MusicPitchScale = v).SetEase(Ease.OutCubic);
-                DOVirtual.Float(SFX.MusicVolumeScale, 1f, DURATION, v => SFX.MusicVolumeScale = v).SetEase(Ease.OutCubic);
-            });
-            _deathsDoorSequence.Play();
+            _deathsDoorPitchTween.Kill();
+            _deathsDoorVolumeTween.Kill();
+
+            _deathsDoorPitchTween = DOVirtual.Float(SFX.MusicPitchScale, 1f, DURATION, v => SFX.MusicPitchScale = v).SetEase(Ease.OutCubic);
+            _deathsDoorVolumeTween = DOVirtual.Float(SFX.MusicVolumeScale, 1f, DURATION, v => SFX.MusicVolumeScale = v).SetEase(Ease.OutCubic);
         }
-        void ResetDeathsDoorEffectInstantly(bool resetSaturation = true, bool resetPitch = true, bool resetVolume = true)
+        void ResetDeathsDoorEffectInstantly()
         {
-            if (resetSaturation)
-            {
-                Global.Volume.profile.TryGet(out ColorAdjustments component);
-                component.saturation.value = 0;
-            }
-            if (resetPitch)
-                SFX.MusicPitchScale = 1f;
-            if (resetVolume)
-                SFX.MusicVolumeScale = 1f;
+            Global.Volume.profile.TryGet(out ColorAdjustments component);
+            component.saturation.value = 0;
+
+            _deathsDoorPitchTween.Kill();
+            SFX.MusicPitchScale = 1f;
+
+            _deathsDoorVolumeTween.Kill();
+            SFX.MusicVolumeScale = 1f;
         }
 
         void SetBellState(bool value)
@@ -960,11 +951,13 @@ namespace Game.Menus
         static string demo_TimeSpanFormat()
         {
             TimeSpan span = DateTime.Now - Global.Menu.GameStartTime;
+            int hours = span.Hours;
             int minutes = span.Minutes;
             int seconds = span.Seconds;
+            string hoursStr = hours < 10 ? "0" + hours : hours.ToString();
             string minutesStr = minutes < 10 ? "0" + minutes : minutes.ToString();
             string secondsStr = seconds < 10 ? "0" + seconds : seconds.ToString();
-            return $"{minutesStr}:{secondsStr}";
+            return $"{hoursStr}:{minutesStr}:{secondsStr}";
         }
 
         void demo_EndChoiceOnUpdate()
@@ -975,10 +968,10 @@ namespace Game.Menus
             Global.OnUpdate -= demo_EndChoiceOnUpdate;
             _demoDifficulty = 0;
             SFX.ResetMusicMixes();
-            SFX.MusicVolumeScale = 2f;
-            ResetDeathsDoorEffectInstantly(resetVolume: false);
+            ResetDeathsDoorEffectInstantly();
+            SFX.MusicVolumeScale = 0f;
             OnClosed += TryDestroy;
-            MenuTransit.Between(this, Global.Menu);
+            MenuTransit.Between(this, Global.Menu, () => SFX.MusicVolumeScale = 2f);
         }
         void demo_StageFiveChoiceOnUpdate()
         {

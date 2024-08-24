@@ -175,8 +175,7 @@ namespace Game.Effects
                 _ownPitch = 1.0f;
                 _source = source; 
             }
-
-            public void Play(Music music, string musicMixId)
+            public void SetMusic(Music music, string musicMixId)
             {
                 if (music == null) return;
                 _musicMixId = musicMixId;
@@ -184,12 +183,15 @@ namespace Game.Effects
                 if (_musicMixId != null)
                     _musicMixes[_musicMixId].lastMusicId = music.id;
 
+                _playingMusic = music;
+                _source.clip = music.clip;
+            }
+
+            public void Play()
+            {
                 _playing = true;
                 _stopping = false;
                 _updateBeats = true;
-                _playingMusic = music;
-                _volumeTween.Kill();
-                _source.clip = music.clip;
                 _source.Play();
             }
             public void Stop()
@@ -200,12 +202,13 @@ namespace Game.Effects
                 _playing = false;
                 _stopping = false;
                 _updateBeats = false;
-                _volumeTween.Kill();
                 _source.Stop();
             }
             public void Reset()
             {
                 _source.time = 0;
+                _musicMixId = null;
+                _musicMixLastId = null;
             }
 
             public Tween Fade(float to)
@@ -216,6 +219,8 @@ namespace Game.Effects
             {
                 if (from > 1 || from < 0 || to > 1 || to < 0)
                     throw new ArgumentOutOfRangeException();
+                if (from == 0 && to != 0)
+                    Play();
 
                 _stopping = to == 0;
                 _volumeTween.Kill();
@@ -317,6 +322,8 @@ namespace Game.Effects
         }
         public static void ResetMusicMixes()
         {
+            foreach (MusicSource source in _musicSources)
+                source.Reset();
             _musicMixes.Clear();
         }
         public static void StopMusic()
@@ -368,7 +375,8 @@ namespace Game.Effects
             if (musicFadeStyle == FadeStyle.Instant)
             {
                 currentSource.Stop();
-                requestedSource.Play(music, musicMixId);
+                requestedSource.SetMusic(music, musicMixId);
+                requestedSource.Play();
                 return;
             }
 
@@ -393,18 +401,19 @@ namespace Game.Effects
             {
                 case FadeStyle.InstantStopSmoothStart:
                     currentSource.Stop();
-                    requestedSource.Play(music, musicMixId);
+                    requestedSource.SetMusic(music, musicMixId);
                     requestedSource.Fade(0, 1).SetEase(inEase);
                     break;
 
                 case FadeStyle.SmoothStopInstantStart:
                     currentSource.Fade(0).SetEase(outEase);
-                    requestedSource.Play(music, musicMixId);
+                    requestedSource.SetMusic(music, musicMixId);
+                    requestedSource.Play();
                     break;
 
                 case FadeStyle.Simultaneously:
                     currentSource.Fade(0).SetEase(outEase);
-                    requestedSource.Play(music, musicMixId);
+                    requestedSource.SetMusic(music, musicMixId);
                     requestedSource.Fade(0, 1).SetEase(inEase);
                     break;
 

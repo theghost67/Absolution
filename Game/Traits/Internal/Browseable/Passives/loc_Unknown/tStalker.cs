@@ -33,7 +33,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(20, stacks, 1, 1.8f);
+            return PointsExponential(20, stacks, 1, 1.8f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -53,10 +53,10 @@ namespace Game.Traits
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
-            if (trait.Storage.ContainsKey(e.Receiver.GuidStr)) return;
+            if (trait.Storage.ContainsKey(e.ReceiverField.GuidStr)) return;
 
             int stacks = trait.GetStacks();
-            trait.Storage.TryAdd(e.Receiver.GuidStr, null);
+            trait.Storage.Add(e.ReceiverField.GuidStr, null);
             await trait.AnimActivation();
             await owner.Strength.AdjustValueScale(_strengthF.Value(stacks), trait);
         }

@@ -243,24 +243,10 @@ namespace Game
             return obj.Side.isMe;
         }
 
-        public static string StatToStringRich(this TableStat stat, int defaultValue)
-        {
-            Color statColor;
-            if (stat > defaultValue)
-                statColor = Color.green;
-            else if (stat < defaultValue)
-                statColor = Color.red;
-            else statColor = Color.white;
-
-            if (stat.Id == "health")
-                 return $"{stat.ToString().Colored(statColor)} ({stat.PosValue.Rounded(2)} * {(stat.PosScale * 100).Rounded(2)}% - {stat.NegValue.Rounded(2)})";
-            else return $"{stat.ToString().Colored(statColor)} ({stat.PosValue.Rounded(2)} * {(stat.PosScale * 100).Rounded(2)}%)";
-        }
         public static Color GetSideColor(this BattleSide side)
         {
             return side.isMe ? Color.green : Color.red;
         }
-
         public static BattleFieldCard AsBattleFieldCard(this ITableEntrySource source)
         {
             BattleFieldCard killer = source switch

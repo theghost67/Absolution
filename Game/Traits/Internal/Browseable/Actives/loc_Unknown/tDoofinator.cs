@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using static UnityEngine.GraphicsBuffer;
 
 namespace Game.Traits
 {
@@ -12,7 +11,7 @@ namespace Game.Traits
     {
         const string ID = "doofinator";
         const string CARD_ID = "doof";
-        static readonly TraitStatFormula _moxieF = new(false, 0, 0);
+        static readonly TraitStatFormula _healthF = new(false, 0, 4);
 
         public tDoofinator() : base(ID)
         {
@@ -30,21 +29,21 @@ namespace Game.Traits
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
             return $"<color>При использовании на вражеской карте рядом</color>\n" +
-                   $"Если инициатива цели ≤ {_moxieF.Format(args.stacks)}, она превратится в карту {cardName} с такими же характеристиками, как у владельца. Тратит один заряд.";
+                   $"Если здоровье цели ≤ {_healthF.Format(args.stacks)}, она превратится в карту {cardName} с такими же характеристиками, как у владельца. Тратит все заряды.";
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            return new(0, 0.12f);
+            return new(0, 0.16f);
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(16, stacks, 2, 1.6f);
+            return PointsLinear(10, stacks);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
             return base.IsUsable(e) && e.isInBattle && e.target.Card != null 
-                && e.trait.Owner.Field != null && e.target.Card.Moxie <= _moxieF.Value(e.traitStacks);
+                && e.trait.Owner.Field != null && e.target.Card.Health <= _healthF.Value(e.traitStacks);
         }
         public override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
@@ -54,14 +53,12 @@ namespace Game.Traits
             BattleField targetField = (BattleField)e.target;
             BattleFieldCard target = targetField.Card;
 
-            await trait.AdjustStacks(-1, trait.Side);
+            await trait.SetStacks(0, trait.Side);
             await target.TryKill(BattleKillMode.Default, trait);
-            if (target.IsKilled)
-            {
-                FieldCard ownerClone = (FieldCard)trait.Owner.Data.CloneAsNew();
-                ownerClone.traits.Clear();
-                await trait.Territory.PlaceFieldCard(ownerClone, targetField, trait);
-            }
+            if (!target.IsKilled) return;
+            FieldCard ownerClone = (FieldCard)trait.Owner.Data.CloneAsNew();
+            ownerClone.traits.Clear();
+            await trait.Territory.PlaceFieldCard(ownerClone, targetField, trait);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Game.Traits
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
-            range = BattleRange.self;
+            range = BattleRange.none;
         }
         protected tTesting(tTesting other) : base(other) { }
         public override object Clone() => new tTesting(this);

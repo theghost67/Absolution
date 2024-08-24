@@ -21,7 +21,7 @@ namespace Game.Traits
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
-            range = new BattleRange(TerritoryRange.ownerSingle, TerritoryRange.oppositeAll);
+            range = BattleRange.none;
         }
         protected tBloodthirstiness(tBloodthirstiness other) : base(other) { }
         public override object Clone() => new tBloodthirstiness(this);
@@ -32,7 +32,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(20, stacks);
+            return PointsExponential(20, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

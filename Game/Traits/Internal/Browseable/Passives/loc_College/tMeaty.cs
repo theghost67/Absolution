@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
-using UnityEngine;
 
 namespace Game.Traits
 {
@@ -28,11 +27,11 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении карты с навыком <i>{name}</i> рядом с владельцем (П{PRIORITY})</color>\nУвеличивает здоровье владельца на {_healthF.Format(args.stacks, true)}.";
+            return $"<color>При появлении карты с навыком {name} рядом с владельцем (П{PRIORITY})</color>\nУвеличивает здоровье владельца на {_healthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(12, stacks);
+            return PointsExponential(12, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

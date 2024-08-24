@@ -491,12 +491,14 @@ namespace Game
         protected virtual void OnMouseScrollBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseEnterBase(object sender, DrawerMouseEventArgs e) 
         {
+            if (e.handled) return;
             if (_tooltipFunc == null) return;
             Tooltip.ShowAligned(_tooltipAlign, _tooltipFunc());
         }
         protected virtual void OnMouseHoverBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e) 
         {
+            if (e.handled) return;
             if (_tooltipFunc != null)
                 Tooltip.Hide();
         }

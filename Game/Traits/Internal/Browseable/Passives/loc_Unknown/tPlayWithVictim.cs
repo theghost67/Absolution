@@ -28,11 +28,11 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             return $"<color>После совершения атаки на карту владельцем (П{PRIORITY})</color>\n" +
-                   $"уменьшает силу цели на {_strengthF.Format(args.stacks, true)}.";
+                   $"Уменьшает силу цели на {_strengthF.Format(args.stacks, true)}.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(12, stacks, 1, 1.8f);
+            return PointsExponential(12, stacks, 1, 1.8f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -52,9 +52,10 @@ namespace Game.Traits
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null) return;
+            if (e.Receiver == null || e.Receiver.IsKilled) return;
 
             await trait.AnimActivation();
-            await e.Receiver.Card.Strength.AdjustValueScale(-_strengthF.Value(trait.GetStacks()), trait);
+            await e.Receiver.Strength.AdjustValueScale(-_strengthF.Value(trait.GetStacks()), trait);
         }
     }
 }

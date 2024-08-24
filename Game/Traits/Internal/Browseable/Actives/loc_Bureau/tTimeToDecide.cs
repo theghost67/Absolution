@@ -22,7 +22,7 @@ namespace Game.Traits
             name = "Время решать";
             desc = "Не делай этого, Коннор.";
 
-            rarity = Rarity.Rare;
+            rarity = Rarity.Epic;
             tags = TraitTag.None;
             range = new BattleRange(TerritoryRange.bothSingle);
         }
@@ -42,7 +42,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(20, stacks);
+            return PointsExponential(20, stacks);
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {

@@ -28,7 +28,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             return $"<color>В начале хода, когда остаётся один на своей стороне территории (П{PRIORITY})</color>\n" +
-                   $"переходит на вражеское поле напротив, если оно не занято. Тратит все заряды.";
+                   $"Переходит на вражеское поле напротив, если оно не занято. Тратит все заряды.";
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

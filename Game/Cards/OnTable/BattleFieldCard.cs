@@ -283,6 +283,7 @@ namespace Game.Cards
                 return;
             }
 
+            int initiationEvents = TableEventManager.Count("initiations");
             await _onFieldPreAttached.Invoke(this, e);
             await SetObserveTargets(false);
 
@@ -290,6 +291,8 @@ namespace Game.Cards
             _side = ((BattleField)e.field).Side;
             await base.AttachToFieldInternal(e);
 
+            await TableEventManager.Await("initiations", initiationEvents);
+            if (IsKilled) return;
             await SetObserveTargets(true);
             await _onFieldPostAttached.Invoke(this, e);
         }
@@ -450,7 +453,7 @@ namespace Game.Cards
         protected virtual UniTask OnInitiationConfirmedBase_TOP(object sender, BattleInitiationRecvArgs e)
         {
             string senderName = e.Sender.TableNameDebug;
-            string receiverName = e.Receiver.TableNameDebug;
+            string receiverName = e.ReceiverField.TableNameDebug;
 
             TableConsole.LogToFile("card", $"{senderName}: initiation: OnConfirmed: strength: {e.Strength}, target: {receiverName}.");
             return UniTask.CompletedTask;
@@ -458,7 +461,7 @@ namespace Game.Cards
         protected virtual UniTask OnInitiationPreReceivedBase_TOP(object sender, BattleInitiationRecvArgs e)
         {
             string senderName = e.Sender.TableNameDebug;
-            string receiverName = e.Receiver.TableNameDebug;
+            string receiverName = e.ReceiverField.TableNameDebug;
 
             TableConsole.LogToFile("card", $"{senderName}: initiation: OnPreReceived: strength: {e.Strength}, target: {receiverName}.");
             return UniTask.CompletedTask;
@@ -466,7 +469,7 @@ namespace Game.Cards
         protected virtual UniTask OnInitiationPostReceivedBase_TOP(object sender, BattleInitiationRecvArgs e)
         {
             string senderName = e.Sender.TableNameDebug;
-            string receiverName = e.Receiver.TableNameDebug;
+            string receiverName = e.ReceiverField.TableNameDebug;
 
             TableConsole.LogToFile("card", $"{senderName}: initiation: OnPostReceived: strength: {e.Strength}, target: {receiverName}.");
             return UniTask.CompletedTask;

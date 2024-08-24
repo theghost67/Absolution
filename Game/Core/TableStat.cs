@@ -1,7 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Core;
 using GreenOne;
+using MyBox;
 using System;
+using UnityEngine;
 
 namespace Game
 {
@@ -17,9 +19,9 @@ namespace Game
         public string Id => _id;
         public object Owner => _owner;
 
-        public float PosValue => _posValue;
-        public float PosScale => _posScale;
-        public float NegValue => _negValue;
+        public int Value => _value;
+        public float ValueRaw => _valueRaw;
+        public float ValueScale => _valueScale;
 
         public string TableName => _id;
         public string TableNameDebug => _id;
@@ -31,11 +33,12 @@ namespace Game
         readonly TableEntryDict _valueEntries;
         readonly TableEntryDict _valueScaleEntries;
 
-        float _posValue;
-        float _posScale;
-        float _negValue;
-        float _relDelta;
         int _value;
+        float _valueRaw;
+        float _valueAbsPositive;
+        float _valueAbsNegative; // used only in health stat
+        float _valueScale;
+        float _valueScaleDelta;
 
         public class PreSetArgs
         {
@@ -83,9 +86,9 @@ namespace Game
             _valueEntries = new TableEntryDict();
             _valueScaleEntries = new TableEntryDict();
 
-            _posValue = defaultValue;
-            _negValue = 0;
-            _posScale = 1;
+            _valueAbsPositive = defaultValue;
+            _valueAbsNegative = 0;
+            _valueScale = 1;
             _value = defaultValue;
         }
         private TableStat(TableStat src, TableStatCloneArgs args)
@@ -101,9 +104,9 @@ namespace Game
             _valueEntries = (TableEntryDict)src._valueEntries.Clone(entriesCArgs);
             _valueScaleEntries = (TableEntryDict)src._valueScaleEntries.Clone(entriesCArgs);
 
-            _posValue = src._posValue;
-            _negValue = src._negValue;
-            _posScale = src._posScale;
+            _valueAbsPositive = src._valueAbsPositive;
+            _valueAbsNegative = src._valueAbsNegative;
+            _valueScale = src._valueScale;
             _value = src._value;
         }
 
@@ -125,6 +128,20 @@ namespace Game
         {
             return _value.ToString();
         }
+        public string ToStringRich(int defaultValue)
+        {
+            int value = _value;
+            Color statColor;
+            if (value > defaultValue)
+                statColor = Color.green;
+            else if (value < defaultValue)
+                statColor = Color.red;
+            else statColor = Color.white;
+
+            if (_id == "health")
+                 return $"{ToString().Colored(statColor)} ({_valueAbsPositive.Rounded(2)} * {(_valueScale * 100).Rounded(2)}% - {_valueAbsNegative.Rounded(2)})";
+            else return $"{ToString().Colored(statColor)} ({_valueAbsPositive.Rounded(2)} * {(_valueScale * 100).Rounded(2)}%)";
+        }
 
         // use entryId and RevertValue to revert applied effect instead of calling AdjustValue with negative value
         // (as value can be modified by OnPreSet event)
@@ -144,11 +161,11 @@ namespace Game
 
         public UniTask SetValueScale(float value, ITableEntrySource source, string entryId = null)
         {
-            return AdjustValue(value - _posScale, source, entryId, true, false);
+            return AdjustValue(value - _valueScale, source, entryId, true, false);
         }
         public UniTask SetValue(float value, ITableEntrySource source, string entryId = null)
         {
-            return AdjustValue(value - (_posValue - _negValue), source, entryId, false, _id != "health");
+            return AdjustValue(value - (_valueAbsPositive - _valueAbsNegative), source, entryId, false, _id != "health");
         }
 
         public UniTask AdjustValueScale(float value, ITableEntrySource source, string entryId = null)
@@ -185,15 +202,15 @@ namespace Game
             if (!isRelative)
             {
                 if (asDefault)
-                    _posValue += preArgsDelta;
+                    _valueAbsPositive += preArgsDelta;
                 else if (preArgsDelta < 0)
-                     _negValue -= preArgsDelta;
-                else _posValue += preArgsDelta;
+                     _valueAbsNegative -= preArgsDelta;
+                else _valueAbsPositive += preArgsDelta;
                 _valueEntries.Add(entryId, entry);
             }
             else
             {
-                UpdateRelValue(preArgsDelta);
+                UpdateValueScale(preArgsDelta);
                 _valueScaleEntries.Add(entryId, entry);
             }
 
@@ -210,26 +227,27 @@ namespace Game
             if (!isRelative)
             {
                 if (entry.value < 0)
-                    _negValue += entry.value;
-                else _posValue -= entry.value;
+                    _valueAbsNegative += entry.value;
+                else _valueAbsPositive -= entry.value;
             }
-            else UpdateRelValue(-entry.value);
+            else UpdateValueScale(-entry.value);
 
             entries.Remove(entryId);
             RecalculateValue();
             await _onPostSet.Invoke(this, new PostSetArgs(oldValue, _value, isRelative, null));
         }
 
-        void UpdateRelValue(float delta)
+        void UpdateValueScale(float delta)
         {
-            _relDelta += delta;
-            if (_relDelta > 0)
-                 _posScale = 1 * (1 + _relDelta);
-            else _posScale = 1 / (1 - _relDelta);
+            _valueScaleDelta += delta;
+            if (_valueScaleDelta > 0)
+                 _valueScale = 1 * (1 + _valueScaleDelta);
+            else _valueScale = 1 / (1 - _valueScaleDelta);
         }
         void RecalculateValue()
         {
-            _value = (_posValue * _posScale - _negValue).Ceiling();
+            _valueRaw = _valueAbsPositive * _valueScale - _valueAbsNegative;
+            _value = _valueRaw.Ceiling();
         }
     }
 }

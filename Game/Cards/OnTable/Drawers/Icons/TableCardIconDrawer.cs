@@ -8,17 +8,23 @@ namespace Game.Cards
     /// </summary>
     public abstract class TableCardIconDrawer : Drawer
     {
-        public readonly TableCardDrawer card;
+        public readonly TableCardDrawer owner;
         protected readonly Func<int> cardDisplayValue;
         readonly SpriteRenderer _renderer;
 
-        public TableCardIconDrawer(TableCardDrawer card, Func<int> cardDisplayValue, Transform worldTransform) : this(card, cardDisplayValue, worldTransform.gameObject) { }
-        public TableCardIconDrawer(TableCardDrawer card, Func<int> cardDisplayValue, GameObject worldObject) : base(card, worldObject)
+        public TableCardIconDrawer(TableCardDrawer card, Func<int> displayValue, Transform worldTransform) : this(card, displayValue, worldTransform.gameObject) { }
+        public TableCardIconDrawer(TableCardDrawer card, Func<int> displayValue, GameObject worldObject) : base(card, worldObject)
         {
-            this.card = card;
-            this.cardDisplayValue = cardDisplayValue;
+            owner = card;
+            cardDisplayValue = displayValue;
             _renderer = gameObject.GetComponent<SpriteRenderer>();
             BlocksSelection = false;
+            card.OnMouseEnter += OnOwnerMouseEnter;
+        }
+
+        public void RedrawSprite(Sprite sprite)
+        {
+            _renderer.sprite = sprite;
         }
 
         public abstract void RedrawValueAsNull();
@@ -39,9 +45,22 @@ namespace Game.Cards
             _renderer.color = value;
         }
 
-        public void RedrawSprite(Sprite sprite)
+        protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
-            _renderer.sprite = sprite;
+            e.handled |= !owner.IsSelected;
+            if (!e.handled)
+                base.OnMouseEnterBase(sender, e);
+        }
+        protected override void OnDestroyBase(object sender, EventArgs e)
+        {
+            base.OnDestroyBase(sender, e);
+            owner.OnMouseEnter -= OnOwnerMouseEnter;
+        }
+
+        void OnOwnerMouseEnter(object sender, DrawerMouseEventArgs e)
+        {
+            if (IsSelected)
+                OnMouseEnterBase(this, e);
         }
     }
 }

@@ -249,13 +249,13 @@ namespace Game.Menus
 
                 _selected?.Deselect(true);
                 _selected = this;
-                _selected.Drawer.SortingOrder = 10;
                 _menu.OnSelectedChanged?.Invoke();
 
                 Vector3 from = prevPos;
                 Vector3 to = Vector3.zero;
                 await AnimCardSelect(from, to).AsyncWaitForCompletion();
 
+                _selected.Drawer.SortingOrderDefault = 0;
                 foreach (ITableSleeveCard sleeveCard in _sleeve)
                     sleeveCard.Drawer.ColliderEnabled = true;
 
@@ -265,7 +265,7 @@ namespace Game.Menus
             {
                 if (Drawer == null || Drawer.IsDestroying) return;
 
-                Drawer.SetSortingAsDefault();
+                _selected.Drawer.SortingOrderDefault = _defaultSorting;
                 _selected = null;
                 //Sleeve.Add(this); // moves Drawer.transform
 

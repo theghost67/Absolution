@@ -208,9 +208,12 @@ namespace Game.Traits
             base.OnMouseEnterBase(sender, e);
             ITableTrait trait = attached.Trait;
 
-            string desc = trait.DescDynamicWithLinks(out string[] descLinksTexts);
-            Menu.WriteDescToCurrent(desc);
-            Tooltip.ShowLinks(descLinksTexts);
+            if (attached.Stacks > 0)
+            {
+                string desc = trait.DescDynamicWithLinks(out string[] descLinksTexts);
+                Menu.WriteDescToCurrent(desc);
+                Tooltip.ShowLinks(descLinksTexts);
+            }
 
             bool isPassive = trait.Data.isPassive;
             Color color = ColorPalette.All[isPassive ? 5 : 6].ColorCur;

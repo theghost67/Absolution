@@ -48,7 +48,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsLinear(14, stacks);
+            return PointsLinear(14, stacks);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

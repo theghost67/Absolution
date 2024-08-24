@@ -33,7 +33,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(12, stacks, 1, 1.8f);
+            return PointsExponential(12, stacks, 1, 1.8f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

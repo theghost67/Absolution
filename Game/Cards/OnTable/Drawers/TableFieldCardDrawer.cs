@@ -83,25 +83,25 @@ namespace Game.Cards
             CardCurrency priceCurrency = attached.Data.price.currency;
             string priceCurrencyStr = priceCurrency.name.Colored(priceCurrency.color);
             int priceDefault = attached.Data.price.value;
-            return $"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault}.\nТекущее: {attached.Price.StatToStringRich(priceDefault)} ед.\n<color=grey><i>Стоимость: цена установки на территорию.";
+            return $"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault}.\nТекущее: {attached.Price.ToStringRich(priceDefault)} ед.\n<color=grey><i>Стоимость: цена установки на территорию.";
         }
         protected override string UpperRightIconTooltip()
         {
             int moxieDefault = attached.Data.moxie;
             int initiationOrder = (attached as BattleFieldCard)?.InitiationOrder ?? -1;
             if (initiationOrder == -1)
-                 return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.StatToStringRich(moxieDefault)} ед.\n<color=grey><i>Инициатива: быстрота действий.";
-            else return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.StatToStringRich(moxieDefault)} ед.\nПозиция в очереди: {initiationOrder}.\n<color=grey><i>Инициатива: быстрота действий.";
+                 return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.ToStringRich(moxieDefault)} ед.\n<color=grey><i>Инициатива: быстрота действий.";
+            else return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.ToStringRich(moxieDefault)} ед.\nПозиция в очереди: {initiationOrder}.\n<color=grey><i>Инициатива: быстрота действий.";
         }
         protected override string LowerLeftIconTooltip()
         {
             int healthDefault = attached.Data.health;
-            return $"По умолчанию: {healthDefault} ед.\nТекущее: {attached.Health.StatToStringRich(healthDefault)} ед.\n<color=grey><i>Здоровье: смерть при достижении нуля.";
+            return $"По умолчанию: {healthDefault} ед.\nТекущее: {attached.Health.ToStringRich(healthDefault)} ед.\n<color=grey><i>Здоровье: смерть при достижении нуля.";
         }
         protected override string LowerRightIconTooltip()
         {
             int strengthDefault = attached.Data.strength;
-            return $"По умолчанию: {strengthDefault} ед.\nТекущее: {attached.Strength.StatToStringRich(strengthDefault)} ед.\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.";
+            return $"По умолчанию: {strengthDefault} ед.\nТекущее: {attached.Strength.ToStringRich(strengthDefault)} ед.\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.";
         }
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
@@ -123,14 +123,16 @@ namespace Game.Cards
             base.OnMouseLeaveBase(sender, e);
 
             TableTraitListSetDrawer setDrawer = Traits;
-            if (setDrawer == null) return;
-            if (setDrawer.queue.IsEmpty) return;
-            if (setDrawer.queue.IsRunning) return;
-            if (queue.IsRunning) return;
+            bool bgIsHidden = !BgIsVisible;
+            if (bgIsHidden) return;
 
+            bool bgShouldBeHidden = !this.HasInitiationPreview() && queue.IsRunning;
+            if (setDrawer != null)
+                bgShouldBeHidden |= !setDrawer.queue.IsRunning && !setDrawer.queue.IsEmpty;
+
+            if (!bgShouldBeHidden) return;
             setDrawer?.HideStoredElementsInstantly();
-            if (!this.HasInitiationPreview())
-                HideBgInstantly();
+            HideBgInstantly();
         }
         protected override OutlineType GetOutlineType()
         {

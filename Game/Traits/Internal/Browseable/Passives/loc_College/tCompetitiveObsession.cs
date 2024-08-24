@@ -39,13 +39,13 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(24, stacks);
+            return PointsExponential(24, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
             await base.OnStacksChanged(e);
 
-            if (e.trait.Data.storage.TryGetValue(STRENGTH_STORAGE_ID, out object strengthRel))
+            if (e.trait.WasAdded(e) && e.trait.Data.storage.TryGetValue(STRENGTH_STORAGE_ID, out object strengthRel))
                 await e.trait.Owner.Strength.AdjustValueScale((float)strengthRel, e.trait);
 
             if (!e.isInBattle) return;

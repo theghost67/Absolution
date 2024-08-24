@@ -106,16 +106,17 @@ namespace Game.Traits
 
             AddPassive(new tOnLookout());
             AddPassive(new tPlayWithVictim());
+            AddPassive(new tPocketDimension());
             AddPassive(new tReflection());
             AddPassive(new tRobbery());
-            AddPassive(new tSacrifice());
 
+            AddPassive(new tSacrifice());
             AddPassive(new tShootingPassion());
             AddPassive(new tSmellyTrapper());
             AddPassive(new tStalker());
             AddPassive(new tTillDawn());
-            AddPassive(new tTurningPoint());
 
+            AddPassive(new tTurningPoint());
             AddPassive(new tWeaver());
             AddPassive(new tWeaving());
 

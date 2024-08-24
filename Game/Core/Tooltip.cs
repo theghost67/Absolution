@@ -176,16 +176,17 @@ namespace Game
             foreach (Prefab prefab in _prefabs)
             {
                 if (!prefab.IsVisible()) continue;
-                float prefabSizeY = prefab.GetSize().y;
-                if (curPos.y - prefabSizeY < -_maxMultipleSize.y)
-                {
-                    curPos.x += _minMultipleSize.x + _tooltipsOffset.y;
-                    curPos.y = 0;
-                    maxSize.x = curPos.x;
-                }
+                Vector3 prefabSize = prefab.GetSize();
+                //if (curPos.y - prefabSizeY < -_maxMultipleSize.y)
+                //{
+                //    curPos.x += _minMultipleSize.x + _tooltipsOffset.y;
+                //    curPos.y = 0;
+                //    maxSize.x = curPos.x;
+                //}
                 prefab.MoveToCornerLocal(curPos);
-                curPos.y -= prefabSizeY + _tooltipsOffset.y;
+                curPos.y -= prefabSize.y + _tooltipsOffset.y;
                 maxSize.y = Mathf.Max(maxSize.y, -curPos.y);
+                maxSize.x = Mathf.Max(maxSize.x, prefabSize.x);
             }
             return maxSize;
         }

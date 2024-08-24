@@ -39,7 +39,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(12, stacks, 1, 1.25f);
+            return PointsExponential(12, stacks, 1, 1.25f);
         }
         public override UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -67,7 +67,7 @@ namespace Game.Traits
 
             FieldCard spawnCardData = CardBrowser.NewField(SPAWN_CARD_ID);
             BattleField prevField = owner.Field;
-            e.Receiver = prevField;
+            e.ReceiverField = prevField;
 
             await trait.AnimActivation();
             await trait.AdjustStacks(-1, e.Sender);

@@ -31,7 +31,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return base.Points(owner, stacks) + PointsExponential(32, stacks);
+            return PointsExponential(32, stacks);
         }
 
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)

@@ -27,7 +27,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При использовании на вражеской карте рядом</color>\nПеред каждой последующей атакой владельца (П{PRIORITY}), <i>цель</i> станет целью атаки.\n\n" +
+            return $"<color>При использовании на вражеском поле рядом</color>\nУказанная цель станет целью будущих атак владельца (П{PRIORITY}).\n\n" +
                    $"<color>При перемещении владельца (П{PRIORITY})</color>\nДеактивирует эффект данного навыка.";
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)

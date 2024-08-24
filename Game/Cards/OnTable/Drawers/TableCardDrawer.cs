@@ -292,18 +292,19 @@ namespace Game.Cards
         protected override void SetSortingOrder(int value)
         {
             base.SetSortingOrder(value);
-            int overlapOrder = value + 1;
+            int overlapOrder1 = value + 1;
+            int overlapOrder2 = value + 2;
 
             _spriteRenderer.sortingOrder = value;
-            _portraitRenderer.sortingOrder = overlapOrder;
-            _headerTextMesh.sortingOrder = overlapOrder;
-            _subheaderTextMesh.sortingOrder = overlapOrder;
-            _bgRenderer.sortingOrder = overlapOrder + 1;
+            _portraitRenderer.sortingOrder = overlapOrder1;
+            _headerTextMesh.sortingOrder = overlapOrder1;
+            _subheaderTextMesh.sortingOrder = overlapOrder1;
+            _bgRenderer.sortingOrder = overlapOrder2;
 
-            priceIcon.SortingOrder = overlapOrder;
-            moxieIcon.SortingOrder = overlapOrder;
-            healthIcon.SortingOrder = overlapOrder;
-            strengthIcon.SortingOrder = overlapOrder;
+            priceIcon.SortingOrder = overlapOrder2;
+            moxieIcon.SortingOrder = overlapOrder2;
+            healthIcon.SortingOrder = overlapOrder2;
+            strengthIcon.SortingOrder = overlapOrder2;
         }
         protected override void SetCollider(bool value)
         {

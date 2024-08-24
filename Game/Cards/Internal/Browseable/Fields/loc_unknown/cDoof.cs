@@ -2,7 +2,7 @@
 {
     public class cDoof : FieldCard
     {
-        public cDoof() : base("doof", "doofinator 2", "self_destruction")
+        public cDoof() : base("doof", "doofinator", "self_destruction")
         {
             name = "Фуфел";
             desc = "Множество опытов, экспериментов и изобретений помогли обрести Фуфелшмерцу славу по всему штату. " +
