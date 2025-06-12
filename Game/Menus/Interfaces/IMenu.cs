@@ -41,8 +41,6 @@ namespace Game.Menus
         public void TryOpen();
         public void TryClose();
         public void TryDestroy();
-
-        public void WriteLog(string text);
-        public void WriteDesc(string text);
+        public void Refresh();
     }
 }

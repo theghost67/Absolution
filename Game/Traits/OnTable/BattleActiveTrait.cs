@@ -3,13 +3,14 @@ using Game.Cards;
 using Game.Territories;
 using UnityEngine;
 using Game.Effects;
+using System.Collections.Generic;
 
 namespace Game.Traits
 {
     /// <summary>
     /// Представляет активный навык на карте стола с возможностью отслеживания целей.
     /// </summary>
-    public class BattleActiveTrait : TableActiveTrait, IBattleTrait
+    public class BattleActiveTrait : TableActiveTrait, IBattleTrait, IBattleFighter
     {
         public new BattleFieldCard Owner => _owner;
         public new BattleTerritory Territory => _owner.Territory;
@@ -20,7 +21,6 @@ namespace Game.Traits
 
         public BattleArea Area => _area;
         public BattleRange Range => Data.range;
-        public BattleWeight Weight => Data.Weight(this);
 
         readonly BattleFieldCard _owner;
         readonly BattleArea _area;
@@ -60,19 +60,32 @@ namespace Game.Traits
             return new BattleActiveTraitDrawer(this, parent);
         }
 
-        public bool TryUseWithAim(BattleSide by)
+        public BattleWeight CalculateWeight(int[] excludedWeights)
         {
+            return Data.Weight(this);
+        }
+        public bool TryUseWithAim(BattleSide by, out bool isAiming)
+        {
+            isAiming = false;
             if (Owner == null) return false;
             if (Side != by) return false;
             if (Territory.PhaseSide != by) return false;
             if (TurnDelay > 0) return false;
-            if (!IsReadyToUse())
+
+            List<BattleField> targets = GetValidTargetsForUse();
+            if (targets.Count == 0)
             {
                 if (_owner.Field != null)
-                    _owner.Drawer?.CreateTextAsSpeech("НЕТ ЦЕЛЕЙ", Color.red);
+                    _owner.Drawer?.CreateTextAsSpeech("НЕТ ВОЗМОЖНОСТИ", Color.red);
                 return false;
             }
-            _area.StartTargetAiming(AimFilter, AimFinished);
+            if (targets.Count == 1)
+                AimFinished(targets[0]);
+            else
+            {
+                _area.StartTargetAiming(AimFilter, AimFinished);
+                isAiming = true;
+            }
             return true;
         }
 
@@ -89,19 +102,20 @@ namespace Game.Traits
             return trait.Data.OnTargetStateChanged(new BattleTraitTargetStateChangeArgs(trait, card, false));
         }
 
-        bool IsReadyToUse()
+        List<BattleField> GetValidTargetsForUse()
         {
-            bool isUsable = _owner.Field == null && Data.IsUsable(new TableActiveTraitUseArgs(this, null));
-            if (!isUsable && _owner.Field != null)
+            List<BattleField> list = new();
+            if (_owner.Field != null)
             {
                 foreach (BattleField possibleTarget in Territory.Fields(Owner.Field.pos, Range.potential))
                 {
-                    if (!Data.IsUsable(new TableActiveTraitUseArgs(this, possibleTarget))) continue;
-                    isUsable = true;
-                    break;
+                    if (Data.IsUsable(new TableActiveTraitUseArgs(this, possibleTarget)))
+                        list.Add(possibleTarget);
                 }
             }
-            return isUsable;
+            if (list.Count == 0 && Data.range == BattleRange.none && Data.IsUsable(new TableActiveTraitUseArgs(this, Owner.Field)))
+                list.Add(Owner.Field);
+            return list;
         }
         bool AimFilter(BattleField aimedField)
         {

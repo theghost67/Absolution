@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Game
 {
@@ -8,27 +7,25 @@ namespace Game
     /// </summary>
     public abstract class DescriptiveArgs : IEquatable<DescriptiveArgs>
     {
-        public readonly IDescriptive src;
+        public readonly ITableObject table; // can be null
+        public readonly IDescriptive data;
         public readonly bool isCard;
-        public readonly List<object> custom;
 
         public bool linkFormat;
-        public bool linksAreAvailable; // used to show a hint in description
-        public int turnAge;
+        public bool linksAreAvailable;
 
-        public DescriptiveArgs(IDescriptive src) 
+        public DescriptiveArgs(IDescriptive objectData, ITableObject tableObject) 
         {
-            this.src = src;
-            this.isCard = src is Cards.Card;
-            this.custom = new List<object>(src.DescCustomParams());
+            data = objectData;
+            table = tableObject;
+            isCard = objectData is Cards.Card;
 
             linksAreAvailable = false;
             linkFormat = false;
-            turnAge = -1;
         }
         public bool Equals(DescriptiveArgs other)
         {
-            return src.Equals(other.src);
+            return data.Equals(other.data);
         }
     }
 }

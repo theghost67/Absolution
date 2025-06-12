@@ -1,4 +1,5 @@
 ﻿using Game.Traits;
+using GreenOne;
 using MyBox;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,27 +16,55 @@ namespace Game.Cards
         public int traitsCount;
         public IReadOnlyDictionary<string, float> possiblePassivesFreqs;
         public IReadOnlyDictionary<string, float> possibleActivesFreqs;
-        static readonly IReadOnlyDictionary<string, float> _empty = new Dictionary<string, float>(capacity: 0);
 
-        public FieldCardUpgradeRules(float points, bool addTraits) : this(points, addTraits ? TraitsCount(points) : 0) { }
+        static readonly IReadOnlyDictionary<string, float> _empty;
+        static readonly IReadOnlyDictionary<string, float> _allPassives;
+        static readonly IReadOnlyDictionary<string, float> _allActives;
+
+        static FieldCardUpgradeRules()
+        {
+            Dictionary<string, float> passives = new(TraitBrowser.Passives.Count);
+            Dictionary<string, float> actives = new(TraitBrowser.Actives.Count);
+
+            foreach (PassiveTrait trait in TraitBrowser.Passives)
+                passives.Add(trait.id, trait.frequency);
+            foreach (ActiveTrait trait in TraitBrowser.Actives)
+                actives.Add(trait.id, trait.frequency);
+
+            _empty = new Dictionary<string, float>(capacity: 0);
+            _allPassives = passives;
+            _allActives = actives;
+        }
         public FieldCardUpgradeRules(float points, int traitsCount) 
         {
             this.points = points;
             this.traitsCount = traitsCount;
 
-            possiblePassivesFreqs = _empty;
-            possibleActivesFreqs = _empty;
+            if (PlayerConfig.chaosMode)
+            {
+                possiblePassivesFreqs = _allPassives;
+                possibleActivesFreqs = _allActives;
+            }
+            else
+            {
+                possiblePassivesFreqs = _empty;
+                possibleActivesFreqs = _empty;
+            }
         }
 
+        public static int TraitsCountRandom(float points)
+        {
+            return Random.Range(0, (TraitsCount(points) * Random.Range(0.5f, 1.25f)).Ceiling() + 1);
+        }
         public static int TraitsCount(float points)
         {
             return System.Convert.ToInt32(TraitsCountRaw(points));
         }
         public static float TraitsCountRaw(float points)
         {
-            if (points < 16)
-                return 0;
-            else return Mathf.Log((points - 10) / 6);
+            if (points > 6)
+				 return Mathf.Log(points / 6);
+			else return 0;
         }
 
         public void Upgrade(FieldCard card)
@@ -78,8 +107,7 @@ namespace Game.Cards
                 string traitId = pair.Key;
                 float traitFrequency = pair.Value;
                 Trait traitSrc = TraitBrowser.GetPassive(traitId);
-
-                if (traitFrequency != 0) // no need to add trait that has 0 chance
+                if (traitFrequency > 0) // no need to add trait that has 0 chance
                     possibleTraits.Add(traitId, traitFrequency);
             }
             foreach (KeyValuePair<string, float> pair in possibleActivesFreqs)
@@ -87,8 +115,7 @@ namespace Game.Cards
                 string traitId = pair.Key;
                 float traitFrequency = pair.Value;
                 Trait traitSrc = TraitBrowser.GetActive(traitId);
-
-                if (traitFrequency != 0) // no need to add trait that has 0 chance
+                if (traitFrequency > 0) // no need to add trait that has 0 chance
                     possibleTraits.Add(traitId, traitFrequency);
             }
             #endregion
@@ -99,7 +126,7 @@ namespace Game.Cards
             foreach (Trait trait in card.traits.Select(e => e.Trait).Where(t => !t.tags.HasFlag(TraitTag.Static)))
                 cardTraitsStackable.Add(trait.id, Random.value);
 
-            for (int i = cardTraitsStackable.Count; i < allTraitsCount; i++)
+            for (int i = cardTraitsCount; i < allTraitsCount; i++)
             {
                 if (possibleTraits.Count == 0) break;
                 KeyValuePair<string, float> weightedPair = possibleTraits.GetWeightedRandom(pair => pair.Value);
@@ -123,8 +150,8 @@ namespace Game.Cards
                     continue; // cannot afford another trait add
                 }
 
-                if (!traitSrc.tags.HasFlag(TraitTag.Static)) // if is stackable
-                    cardTraitsStackable.Add(traitId, Random.value);
+                if (!traitSrc.tags.HasFlag(TraitTag.Static) && !cardTraitsStackable.ContainsKey(traitId)) // if is stackable
+                    cardTraitsStackable.TryAdd(traitId, Random.value);
             }
             #endregion
 
@@ -143,7 +170,7 @@ namespace Game.Cards
                 {
                     TryAddStacks:
                     float stacksAddPointsDelta = card.PointsDeltaForTrait(traitSrc, traitUpStep);
-                    if (stacksAddPointsDelta <= 0) return;
+                    if (stacksAddPointsDelta <= 0) break;
                     if (stacksAddPointsDelta + traitPointsShareCurrent < traitPointsShare)
                     {
                         traitPointsShareCurrent += stacksAddPointsDelta;

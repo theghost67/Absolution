@@ -1,6 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Game
@@ -105,12 +107,15 @@ namespace Game
             if (group == null) return UniTask.CompletedTask;
             return group.Await(eventsThreshold);
         }
-        public static UniTask AwaitAll()
+        public static async UniTask AwaitAll(int eventsThreshold = 0)
         {
-            UniTask[] tasks = new UniTask[_groups.Count];
-            for (int i = 0; i < tasks.Length; i++)
-                tasks[i] = _groups[i].Await();
-            return UniTask.WhenAll(tasks);
+            while (true)
+            {
+                int sum = _groups.Sum(g => g.Count());
+                if (sum > eventsThreshold)
+                    await UniTask.Yield();
+                else break;
+            }
         }
     }
 }

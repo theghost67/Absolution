@@ -47,6 +47,7 @@ namespace Game
 
         public void AddToViewport(Drawer drawer, bool update = true)
         {
+            if (drawer?.IsDestroyed ?? true) return;
             _drawers.Add(drawer);
             drawer.transform.SetParent(_viewport, true);
             drawer.SortingOrder = SortingOrder;
@@ -54,6 +55,7 @@ namespace Game
         }
         public void RemoveFromViewport(Drawer drawer, bool update = true)
         {
+            if (drawer?.IsDestroyed ?? true) return;
             _drawers.Remove(drawer);
             if (update) UpdateViewport();
         }
@@ -171,6 +173,7 @@ namespace Game
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseEnterBase(sender, e);
+            Global.OnFixedUpdate += OnFixedUpdateWhileMouseEntered;
             foreach (Drawer drawer in _drawers)
                 drawer.IsSelected = true;
         }
@@ -178,14 +181,30 @@ namespace Game
         {
             base.OnMouseScrollBase(sender, e);
             if (IgnoreMouseScroll()) return;
-            if (_viewportSize < _scrollViewSize) return;
-            Vector3 pos = _viewport.localPosition;
-            pos.y = (pos.y - e.scrollDeltaY * SCROLL_DISTANCE).Clamped(0, _viewportSize - _scrollViewSize);
-            _viewport.localPosition = pos;
+            Scroll(e.scrollDeltaY);
         }
+        protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
+        {
+            base.OnMouseLeaveBase(sender, e);
+            Global.OnFixedUpdate -= OnFixedUpdateWhileMouseEntered;
+        }
+
         protected virtual bool IgnoreMouseScroll()
         {
             return ScrollIsPlaying();
+        }
+        private void OnFixedUpdateWhileMouseEntered()
+        {
+            float value = Input.GetAxis("Vertical");
+            if (value != 0)
+                Scroll(value);
+        }
+        private void Scroll(float delta)
+        {
+            Vector3 pos = _viewport.localPosition;
+            float maxY = (_viewportSize - _scrollViewSize).ClampedMin(0);
+            pos.y = (pos.y - delta * SCROLL_DISTANCE).Clamped(0, maxY);
+            _viewport.localPosition = pos;
         }
     }
 }

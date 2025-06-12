@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
-using Game.Core;
 using MyBox;
 using System;
 using Unity.Mathematics;
@@ -22,12 +21,12 @@ namespace Game.Territories
         public TableFieldCard Card => _card;
         public new TableFieldDrawer Drawer => ((TableObject)this).Drawer as TableFieldDrawer;
         public TableFinder Finder => _finder;
+        public TableStat Health { get; }
 
         public override string TableName => GetTableName();
         public override string TableNameDebug => GetTableNameDebug();
 
         public readonly int2 pos;
-        public readonly TableStat health;
 
         readonly TableTerritory _territory;
         readonly TableFieldFinder _finder;
@@ -47,8 +46,8 @@ namespace Game.Territories
             _onCardDetatched = new TableEventVoid<TableFieldAttachArgs>();
             _eventsGuid = this.GuidGen(2);
 
-            health = new TableStat("health", this, 0);
-            health.OnPostSet.Add(_eventsGuid, OnHealthPostSetBase);
+            Health = new TableStat("health", this, 0);
+            Health.OnPostSet.Add(_eventsGuid, OnHealthPostSetBase);
 
             OnDrawerCreated += OnDrawerCreatedBase;
             OnDrawerDestroyed += OnDrawerDestroyedBase;
@@ -65,7 +64,7 @@ namespace Game.Territories
             _eventsGuid = (string)src._eventsGuid.Clone();
 
             TableStatCloneArgs healthCArgs = new(this, args.terrCArgs);
-            health = (TableStat)src.health.Clone(healthCArgs);
+            Health = (TableStat)src.Health.Clone(healthCArgs);
 
             AddOnInstantiatedAction(GetType(), typeof(TableField), () => _card = CardCloner(src.Card, args));
         }

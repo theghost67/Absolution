@@ -8,6 +8,7 @@
         public readonly string id;
         public readonly int delta;
         public readonly ITableEntrySource source; // can be null
+        public bool handled;
 
         public TableTraitStacksTryArgs(string id, int delta, ITableEntrySource source)
         {

@@ -31,7 +31,7 @@ namespace Game.Palette
             set
             {
                 for (int i = 0; i < _instanceColorInfos.Length; i++)
-                    _instanceColorInfos[i].Color = value[i];
+                    _instanceColorInfos[i].ColorSet = value[i];
             }
         }
 
@@ -49,7 +49,7 @@ namespace Game.Palette
             public string Hex => _colorCur.ToHex();
             public Color ColorDef { get => _colorDef; set => SetColorDef(value); }
             public Color ColorCur { get => _colorCur; set => SetColorCur(value); }
-            public Color Color { set => SetColorAll(value); }
+            public Color ColorSet { set => SetColorAll(value); }
 
             private readonly int _index;
             private Color _colorDef;

@@ -8,7 +8,7 @@ namespace Game.Traits
     /// <summary>
     /// Представляет пассивный навык на карте стола с возможностью отслеживания целей.
     /// </summary>
-    public class BattlePassiveTrait : TablePassiveTrait, IBattleTrait
+    public class BattlePassiveTrait : TablePassiveTrait, IBattleTrait, IBattleFighter
     {
         public new BattleFieldCard Owner => _owner;
         public new BattleTerritory Territory => _owner.Territory;
@@ -19,7 +19,6 @@ namespace Game.Traits
 
         public BattleArea Area => _area;
         public BattleRange Range => Data.range;
-        public BattleWeight Weight => Data.Weight(this);
 
         readonly BattleFieldCard _owner;
         readonly BattleArea _area;
@@ -54,6 +53,12 @@ namespace Game.Traits
                 return new BattlePassiveTrait(this, cArgs);
             else return null;
         }
+
+        public BattleWeight CalculateWeight(int[] excludedWeights)
+        {
+            return Data.Weight(this);
+        }
+
         protected override Drawer DrawerCreator(Transform parent)
         {
             return new BattlePassiveTraitDrawer(this, parent);
@@ -71,5 +76,6 @@ namespace Game.Traits
             BattlePassiveTrait trait = (BattlePassiveTrait)area.observer;
             return trait.Data.OnTargetStateChanged(new BattleTraitTargetStateChangeArgs(trait, card, false));
         }
+
     }
 }

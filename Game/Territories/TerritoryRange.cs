@@ -36,6 +36,9 @@ namespace Game.Territories
         public static readonly TerritoryRange bothDouble = new(TerritoryFields.Both, TerritoryTargets.Double);
         public static readonly TerritoryRange bothTriple = new(TerritoryFields.Both, TerritoryTargets.Triple);
 
+        public static readonly TerritoryRange ownerRadiusSmall = new(TerritoryFields.Both, TerritoryTargets.Triple | TerritoryTargets.NotSelf);
+        public static readonly TerritoryRange ownerRadiusBig = ownerAllNotSelf;
+
         public readonly TerritoryFields fields;
         public readonly TerritoryTargets targets;
 
@@ -49,15 +52,6 @@ namespace Game.Territories
             this.targets = targets;
 
             fieldsModifier = fields == TerritoryFields.Both ? 2 : 1;
-            targetIsSingle = fieldsModifier == 1 && targets == TerritoryTargets.Single;
-            targetsCount = targetIsSingle ? 1 : CountTargets(targets, fieldsModifier);
-        }
-        public TerritoryRange(SerializationDict dict)
-        {
-            fields = dict.DeserializeKeyAs<TerritoryFields>("fields");
-            targets = dict.DeserializeKeyAs<TerritoryTargets>("targets");
-
-            fieldsModifier = fields == TerritoryFields.Both ? 2 : 1 ;
             targetIsSingle = fieldsModifier == 1 && targets == TerritoryTargets.Single;
             targetsCount = targetIsSingle ? 1 : CountTargets(targets, fieldsModifier);
         }
@@ -123,6 +117,15 @@ namespace Game.Territories
             return positions.ToArray();
         }
 
+        public bool OverlapsTarget(int2 centerPos, int2 targetPos)
+        {
+            return OverlapsY(centerPos.y, targetPos.y) && OverlapsX(centerPos.x, targetPos.x);
+        }
+        public bool Overlaps(int2 centerCurX, int2 centerCurY)
+        {
+            return OverlapsY(centerCurY.x, centerCurY.y) && OverlapsX(centerCurX.x, centerCurX.y);
+        }
+
         public bool OverlapsX(int centerX, int currentX)
         {
             if (targets.HasFlag(TerritoryTargets.All))
@@ -150,14 +153,6 @@ namespace Game.Territories
             return false;
         }
 
-        public SerializationDict Serialize()
-        {
-            return new SerializationDict()
-            {
-                { "fields", fields },
-                { "targets", targets },
-            };
-        }
         static int CountTargets(TerritoryTargets targets, int fieldsMod)
         {
             if (targets.HasFlag(TerritoryTargets.All))

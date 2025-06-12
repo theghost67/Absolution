@@ -1,14 +1,12 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Effects;
-using Game.Environment;
 using Game.Sleeves;
 using GreenOne;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI;
 
 namespace Game.Territories
 {
@@ -29,7 +27,6 @@ namespace Game.Territories
 
         public BattleSleeve Sleeve => _sleeve;
         public CardDeck Deck => _deck;
-        public float Weight => CalculateWeight();
 
         public int HealthAtStart => _healthAtStart;
         public int GoldAtStart => _goldAtStart;
@@ -215,6 +212,14 @@ namespace Game.Territories
             else _ether.AdjustValue(-card.price.value, this);
         }
 
+        public float CalculateWeight(params int[] excludedWeights)
+        {
+            float baseWeight = CalculateBaseWeight(excludedWeights);
+            float goldWeight = CalculateCurrencyWeight(Gold, excludedWeights);
+            float etherWeight = CalculateCurrencyWeight(Ether, excludedWeights);
+            float sum = baseWeight + goldWeight + etherWeight;
+            return sum;
+        }
         public async UniTask TryKill(BattleKillMode mode, ITableEntrySource source)
         {
             if (_killBlock) return;
@@ -286,7 +291,7 @@ namespace Game.Territories
 
         protected virtual CardDeck DeckCreator()
         {
-            return Traveler.NewDeck();
+            return new CardDeck();
         }
         protected CardDeck DeckCloner(CardDeck src)
         {
@@ -304,7 +309,7 @@ namespace Game.Territories
             side.Sleeve?.DestroyDrawer(Drawer?.IsDestroyed ?? true);
         }
 
-        UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
+        private UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
         {
             if (e.newStatValue > 0)
                 return UniTask.CompletedTask;
@@ -313,12 +318,45 @@ namespace Game.Territories
             BattleSide side = (BattleSide)stat.Owner;
             return side.TryKill(BattleKillMode.Default, e.source);
         }
-        float CalculateWeight()
+
+        private float CalculateBaseWeight(params int[] excludedWeights)
         {
             if (_isKilled)
                 return -int.MaxValue;
-            IEnumerable<BattleWeight> weights = Fields().WithCard().Select(f => f.Card.Weight);
-            return BattleWeight.Float(_health, weights);
+            List<BattleWeight> allWeights = new();
+            float healthWeight = _health;
+            IEnumerable<IBattleCard> sleeveCards = Sleeve.Cards;
+            IBattleCard[] affordableCards = sleeveCards.Where(c => CanAfford(c)).ToArray();
+            foreach (IBattleCard card in affordableCards)
+            {
+                if (excludedWeights.Contains(card.Guid)) continue;
+                BattleWeight weight = card.CalculateWeight(excludedWeights);
+                float multiplier = 4f;
+                weight.absolute /= multiplier;
+                weight.relative /= multiplier;
+                allWeights.Add(weight);
+            }
+            allWeights.AddRange(Fields().WithCard().Select(f => f.Card.CalculateWeight(excludedWeights)));
+            return BattleWeight.Float(healthWeight, allWeights);
+        }
+        private float CalculateCurrencyWeight(TableStat currencyStat, int[] excludedWeights)
+        {
+            if (_isKilled)
+                return 0;
+            List<BattleWeight> allWeights = new();
+            IEnumerable<IBattleCard> sleeveCards = Sleeve.Cards;
+            IBattleCard[] currencyCards = sleeveCards.Where(c => c.Data.price.currency.id == currencyStat.Id).ToArray();
+            int cardsCurrencySum = currencyCards.Sum(c => c.Price);
+            float multiplier = 0.5f * (currencyStat / (float)cardsCurrencySum).Clamped(0, 1);
+            foreach (IBattleCard card in currencyCards)
+            {
+                if (excludedWeights.Contains(card.Guid)) continue;
+                BattleWeight weight = card.CalculateWeight(excludedWeights);
+                weight.absolute *= multiplier;
+                weight.relative *= multiplier;
+                allWeights.Add(weight);
+            }
+            return BattleWeight.Float(0, allWeights);
         }
     }
 }

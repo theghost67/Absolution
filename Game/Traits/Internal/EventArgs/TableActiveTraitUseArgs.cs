@@ -14,6 +14,8 @@ namespace Game.Traits
 
         public TableActiveTraitUseArgs(TableActiveTrait trait, TableField target)
         {
+            if (target == null)
+                throw new System.ArgumentException("Target cannot be null.");
             this.trait = trait;
             this.target = target;
             traitStacks = trait.GetStacks();

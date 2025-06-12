@@ -28,7 +28,7 @@ namespace Game.Traits
         public int ValueInt(int stacks)
         {
             if (!isRelative)
-                return (int)Value(stacks);
+                return Value(stacks).Ceiling();
             else throw new System.InvalidCastException("Relative stats cannot be casted to int.");
         }
         public string Format(int stacks, bool noDot = false)

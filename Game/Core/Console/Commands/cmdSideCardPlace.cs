@@ -58,27 +58,23 @@ namespace Game.Console
                 TableConsole.Log("Текущее меню не содержит территорию сражения.", LogType.Error);
                 return;
             }
-            BattleFieldDrawer drawer = (BattleFieldDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is BattleFieldDrawer);
-            if (drawer == null)
-            {
-                TableConsole.Log("Наведите курсор на поле, на которое нужно установить карту.", LogType.Error);
-                return;
-            }
 
             string id = args["id"].input;
             int points = args["points"].ValueAs<int>();
-            BattleField field = drawer.attached;
+            BattleFieldDrawer drawer = (BattleFieldDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is BattleFieldDrawer);
+            BattleField field = drawer?.attached;
+            bool isFieldCard = CardBrowser.FieldsIndexed.ContainsKey(id);
 
-            if (field.Card != null)
+            if ((field == null && isFieldCard) || (field != null && field.Card != null))
             {
-                TableConsole.Log($"Указанное поле для установки карты уже занято.", LogType.Error);
+                TableConsole.Log($"Невозможно установить карту на данную позицию.", LogType.Error);
                 return;
             }
 
             Card card = CardBrowser.NewCard(id);
             if (card is FieldCard fCard)
                  territory.PlaceFieldCard(fCard.ShuffleMainStats().UpgradeWithTraitAdd(points), field, null);
-            else territory.PlaceFloatCard((FloatCard)card, field.Side, null);
+            else territory.PlaceFloatCard((FloatCard)card, field?.Side ?? territory.Player, null);
 
             TableConsole.Log($"Карта {id} создана и установлена (от: null, принадлежит владельцу поля).", LogType.Log);
         }

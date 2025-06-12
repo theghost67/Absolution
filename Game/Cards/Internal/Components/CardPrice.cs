@@ -7,7 +7,7 @@ namespace Game.Cards
     /// <summary>
     ///  ласс, представл€ющий информацию о стоимости игровой карты.
     /// </summary>
-    public class CardPrice : IEquatable<CardPrice>, ISerializable
+    public class CardPrice : IEquatable<CardPrice>
     {
         public CardCurrency currency;
         public int value;
@@ -16,11 +16,6 @@ namespace Game.Cards
         {
             this.currency = currency;
             this.value = value;
-        }
-        public CardPrice(SerializationDict dict)
-        {
-            currency = dict.DeserializeKeyAs<CardCurrency>("currency");
-            value = dict.DeserializeKeyAs<int>("value");
         }
 
         public static bool operator ==(CardPrice left, CardPrice right)
@@ -32,14 +27,6 @@ namespace Game.Cards
             return !left.Equals(right);
         }
 
-        public SerializationDict Serialize()
-        {
-            return new SerializationDict()
-            {
-                { "currency", currency },
-                { "value", value },
-            };
-        }
         public override int GetHashCode()
         {
             return value.GetHashCode() + currency.GetHashCode();

@@ -139,15 +139,6 @@ namespace Game.Menus
             return null;
         }
 
-        public static void WriteLogToCurrent(string text)
-        {
-            GetCurrent()?.WriteLog(text);
-        }
-        public static void WriteDescToCurrent(string text)
-        {
-            GetCurrent()?.WriteDesc(text);
-        }
-
         public Menu GetPrevious()
         {
             if (this == null) return null;
@@ -221,6 +212,7 @@ namespace Game.Menus
             if (!isFromThis)
                 ColliderEnabled = true;
         }
+        public virtual void Refresh() { } // use Translator class
 
         protected virtual void Open()
         {
@@ -264,13 +256,6 @@ namespace Game.Menus
             _gameObject.Destroy();
             _fullDepth = -1;
         }
-
-        public virtual void WriteLog(string text)
-        {
-            _logBuilder.AppendLine(text);
-            _logString = _logBuilder.ToString();
-        }
-        public virtual void WriteDesc(string text) { }
 
         protected virtual void SetCollider(bool value) => _colliderEnabled = value;
         protected virtual void SetSortingOrder(int value) => _sortingOrder = value;

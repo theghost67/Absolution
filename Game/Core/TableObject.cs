@@ -11,8 +11,8 @@ namespace Game
         public event EventHandler OnDrawerCreated;
         public event EventHandler OnDrawerDestroyed;
 
-        public virtual string TableName => "Объект стола";
-        public virtual string TableNameDebug => "table object";
+        public virtual string TableName => "";
+        public virtual string TableNameDebug => GetType().ToString();
 
         public Drawer Drawer => _drawer;
         public bool IsDisposed => _isDisposed;

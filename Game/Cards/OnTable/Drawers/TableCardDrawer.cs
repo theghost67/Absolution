@@ -5,7 +5,9 @@ using Game.Menus;
 using Game.Palette;
 using GreenOne;
 using MyBox;
+using System.Linq;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Game.Cards
@@ -19,7 +21,8 @@ namespace Game.Cards
         public const int HEIGHT = 112;
         const float BG_ALPHA_MAX = 0.8f;
 
-        public bool IsFlipped => _isFlipped;
+        public bool2 RendererIsFlipped => _rendererIsFlipped;
+        public bool2 PortraitIsFlipped => _portraitIsFlipped;
         public bool BgIsVisible => _bgIsVisible;
         public SpriteRendererOutline Outline => _outline;
         protected override SpriteRenderer SelectableRenderer => _spriteRenderer;
@@ -52,7 +55,9 @@ namespace Game.Cards
         readonly SpriteRenderer _bgRenderer;
         readonly SpriteRendererOutline _outline;
 
-        bool _isFlipped;
+        bool2 _rendererIsFlipped;
+        bool2 _portraitIsFlipped;
+
         bool _bgIsVisible;
         Tween _bgTween;
         Tween _headerTween;
@@ -187,10 +192,26 @@ namespace Game.Cards
             _bgTween.Kill();
             _bgRenderer.color = Color.white.WithAlpha(0f);
         }
-        public void FlipY()
+
+        public void FlipRendererX()
         {
-            _isFlipped = !_isFlipped;
-            transform.Rotate(Vector3.forward * 180); 
+            _rendererIsFlipped.x = !_rendererIsFlipped.x;
+            transform.Rotate(Vector3.right * 180);
+        }
+        public void FlipRendererY()
+        {
+            _rendererIsFlipped.y = !_rendererIsFlipped.y;
+            transform.Rotate(Vector3.forward * 180);
+        }
+        public void FlipPortraitX()
+        {
+            _portraitIsFlipped.x = !_portraitIsFlipped.x;
+            _portraitRenderer.flipX = _portraitIsFlipped.x;
+        }
+        public void FlipPortraitY()
+        {
+            _portraitIsFlipped.y = !_portraitIsFlipped.y;
+            _portraitRenderer.flipY = _portraitIsFlipped.y;
         }
 
         public async UniTask RedrawHeaderTypingWithReset(params string[] texts)
@@ -337,18 +358,15 @@ namespace Game.Cards
         {
             base.OnMouseEnterBase(sender, e);
             if (e.handled) return;
-
             string desc = attached.DescDynamicWithLinks(out string[] descLinksTexts);
-            Menu.WriteDescToCurrent(desc);
-            Tooltip.ShowLinks(descLinksTexts);
+            Tooltip.SetAlign(HorizontalAlignmentOptions.Left);
+            Tooltip.SetText(descLinksTexts.Prepend(desc).ToArray());
         }
         protected override void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e)
         {
             base.OnMouseLeaveBase(sender, e);
             if (e.handled) return;
-
-            Menu.WriteDescToCurrent("");
-            Tooltip.Hide();
+            Tooltip.ClearText();
         }
 
         protected override void DestroyInstantly()

@@ -1,4 +1,5 @@
 ﻿using GreenOne;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -13,21 +14,14 @@ namespace Game
     {
         const KeyCode LINKS_KEY = KeyCode.LeftAlt;
 
-        static readonly Vector2 _maxSingleSize = new(3.6f, 2.4f);
-        static readonly Vector2 _minSingleSize = new(1.2f, 2.4f);
-
-        static readonly Vector2 _maxMultipleSize = new(6.4f, 3.6f);
-        static readonly Vector2 _minMultipleSize = _minSingleSize;
-
+        static readonly Vector2 _tooltipSizeLimit = new(1.2f, 1.6f);
         static readonly Vector2 _tooltipsMarginSum = new(0.04f * 2, 0.02f * 2);
         static readonly Vector3 _tooltipsOffset = new(0.02f, 0.02f);
 
         static Transform _parent;
         static List<Prefab> _prefabs = new();
-        static Vector3 _tooltipsSize;
         static HorizontalAlignmentOptions _align;
-
-        static string[] _linksArray;
+        static string[] _texts = Array.Empty<string>();
 
         class Prefab
         {
@@ -53,11 +47,15 @@ namespace Game
                 GameObject.Destroy(_gameObject);
             }
 
-            public void Show(string text)
+            public void SetText(string text)
             {
-                if (string.IsNullOrEmpty(text)) return;
+                _text.text = text;
+            }
+            public void Show()
+            {
+                if (string.IsNullOrEmpty(_text.text)) return;
 
-                Vector2 optimalSize = GetForceUpdatedTextSize(text, _minSingleSize);
+                Vector2 optimalSize = GetForceUpdatedTextSize(_text.text, _tooltipSizeLimit);
                 Vector2 optimalSizeWithMargin = _tooltipsMarginSum + optimalSize;
 
                 _isVisible = true;
@@ -94,97 +92,72 @@ namespace Game
             }
         }
 
-        public static void ShowLinksAligned(HorizontalAlignmentOptions align, params string[] texts)
+        public static void SetAlign(HorizontalAlignmentOptions align)
         {
-            HorizontalAlignmentOptions prev = _align;
-            SetAlign(align);
-            ShowLinks(texts);
-            SetAlign(prev);
+            _align = align;
         }
-        public static void ShowAligned(HorizontalAlignmentOptions align, params string[] texts)
+        public static void SetText(params string[] texts)
         {
-            HorizontalAlignmentOptions prev = _align;
-            SetAlign(align);
-            Show(texts);
-            SetAlign(prev);
-        }
+            if (texts.Length == 0)
+            {
+                ClearText();
+                return;
+            }
 
-        public static void ShowLinks(params string[] texts)
-        {
-            if (texts.Length == 0)
-            {
-                Hide();
-                return;
-            }
-            _linksArray = texts.Prepend("<color=grey>Ссылки из описания</color>").ToArray();
-            if (Input.GetKey(LINKS_KEY))
-                ShowAligned(HorizontalAlignmentOptions.Left, _linksArray);
-        }
-        public static void Show(params string[] texts)
-        {
-            if (texts.Length == 0)
-            {
-                Hide();
-                return;
-            }
+            _texts = texts;
             if (texts.Length == 1)
             {
                 foreach (Prefab prefab in _prefabs)
                     prefab.Hide();
-                _prefabs[0].Show(texts[0]);
+                _prefabs[0].SetText(texts[0]);
                 _prefabs[0].MoveToCornerLocal(Vector3.zero);
-                _tooltipsSize = _prefabs[0].GetSize();
                 MoveToPointerGlobal();
                 return;
             }
 
             for (int i = 0; i < texts.Length; i++)
             {
-                Prefab prefab = _prefabs.TryGetValue(i);
-                if (prefab == null)
-                    _prefabs.Add(prefab = new Prefab(_parent));
-                prefab.Show(texts[i]);
+                if (_prefabs.TryGetValue(i) == null)
+                    _prefabs.Add(new Prefab(_parent));
+                _prefabs.TryGetValue(i).SetText(texts[i]);
             }
-            for (int i = _prefabs.Count - 1; i >= texts.Length; i--)
-                _prefabs[i].Hide(); // hides not used prefabs
-        
-            _tooltipsSize = OrganizeTooltips();
+            foreach (Prefab prefab in _prefabs)
+                prefab.Hide();
+
             MoveToPointerGlobal();
         }
-
-        public static void HideLinks()
+        public static void SetTextImmediately(string text)
         {
             foreach (Prefab prefab in _prefabs)
                 prefab.Hide();
+            _prefabs[0].SetText(text);
+            _prefabs[0].MoveToCornerLocal(Vector3.zero);
+            _prefabs[0].Show();
+            MoveToPointerGlobal();
         }
-        public static void Hide()
+        public static void ClearText()
         {
-            _linksArray = null;
+            _texts = Array.Empty<string>();
             foreach (Prefab prefab in _prefabs)
                 prefab.Hide();
         }
 
-        static void SetAlign(HorizontalAlignmentOptions align)
-        {
-            _align = align;
-        }
         static Vector3 OrganizeTooltips()
         {
-            // TODO: IMPLEMENT (also note: if tooltip pos is on center, it will be more effective to offset starting pos to top/bottom)
             Vector3 maxSize = Vector3.zero;
             Vector3 curPos = Vector3.zero;
             foreach (Prefab prefab in _prefabs)
             {
                 if (!prefab.IsVisible()) continue;
                 Vector3 prefabSize = prefab.GetSize();
-                //if (curPos.y - prefabSizeY < -_maxMultipleSize.y)
-                //{
-                //    curPos.x += _minMultipleSize.x + _tooltipsOffset.y;
-                //    curPos.y = 0;
-                //    maxSize.x = curPos.x;
-                //}
                 prefab.MoveToCornerLocal(curPos);
                 curPos.y -= prefabSize.y + _tooltipsOffset.y;
+                if (-curPos.y > _tooltipSizeLimit.y)
+                {
+                    curPos.x = maxSize.x + _tooltipsOffset.x;
+                    curPos.y = 0;
+                    prefab.MoveToCornerLocal(curPos);
+                }
                 maxSize.y = Mathf.Max(maxSize.y, -curPos.y);
                 maxSize.x = Mathf.Max(maxSize.x, prefabSize.x);
             }
@@ -195,7 +168,7 @@ namespace Game
             if (!_prefabs[0].IsVisible()) return;
 
             Vector3 cameraHalfSize = new(Global.Camera.orthographicSize * Global.ASPECT_RATIO, Global.Camera.orthographicSize);
-            Vector3 tooltipSizeScaled = _tooltipsSize * Global.PIXEL_SCALE;
+            Vector3 tooltipSizeScaled = OrganizeTooltips() * Global.PIXEL_SCALE;
             Vector3 offset = new Vector3(0.04f, -0.04f) * Global.PIXEL_SCALE;
 
             Vector3 pointerPos = Pointer.Position;
@@ -217,11 +190,17 @@ namespace Game
         }
         static void OnUpdate()
         {
-            if (_linksArray == null) return;
+            if (_texts.Length == 0) return;
             if (Input.GetKeyDown(LINKS_KEY))
-                ShowAligned(HorizontalAlignmentOptions.Left, _linksArray);
+            {
+                for (int i = 0; i < _texts.Length; i++)
+                    _prefabs[i].Show();
+            }
             if (Input.GetKeyUp(LINKS_KEY))
-                HideLinks();
+            {
+                foreach (Prefab prefab in _prefabs)
+                    prefab.Hide();
+            }
         }
 
         void Start()

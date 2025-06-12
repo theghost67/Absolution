@@ -15,7 +15,7 @@ namespace Game.Cards
     /// <summary>
     /// Класс, представляющий карту поля во время сражения, которая может инициировать своё действие на территории сражения.
     /// </summary>
-    public class BattleFieldCard : TableFieldCard, IBattleCard, IBattleWeighty, IBattleKillable
+    public class BattleFieldCard : TableFieldCard, IBattleCard, IBattleFighter, IBattleKillable
     {
         const int MOXIE_PRIORITY_VALUE = 256;
 
@@ -47,7 +47,6 @@ namespace Game.Cards
         public BattleSide Side => _side;
         public BattleArea Area => _area;
         public BattleRange Range => BattleRange.normal;
-        public BattleWeight Weight => CalculateWeight();
 
         public bool CanInitiate
         {
@@ -242,8 +241,8 @@ namespace Game.Cards
             }
 
             _isKilled = true;
-            await AttachToFieldInternal(new TableFieldAttachArgs(this, null, null));
             await _onPostKilled.Invoke(this, args);
+            await AttachToFieldInternal(new TableFieldAttachArgs(this, null, null));
             if (source is BattleFieldCard killer && !killer.IsKilled)
                 await killer._onKillConfirmed.Invoke(killer, new BattleKillConfirmArgs(this, args));
 
@@ -262,6 +261,24 @@ namespace Game.Cards
             int strengthPerTarget = (Strength / (float)Range.splash.targetsCount).Ceiling();
             return new BattleInitiationSendArgs(this, strengthPerTarget, topPriority: false, manualAim: Side.isMe);
         }
+        public BattleWeight CalculateWeight(params int[] excludedWeights)
+        {
+            if (_isKilled)
+                return BattleWeight.Zero(this);
+
+            float absWeight = ((int)Health).ClampedMin(0) + ((int)Strength).ClampedMin(0) * 2;
+            float relWeight = 0;
+
+            foreach (IBattleTraitListElement element in Traits)
+            {
+                if (excludedWeights.Contains(element.Trait.Guid)) continue;
+                BattleWeight weight = element.Trait.CalculateWeight(excludedWeights);
+                absWeight += weight.absolute;
+                relWeight += weight.relative;
+            }
+
+            return new BattleWeight(this, absWeight, relWeight);
+        }
 
         protected override TableTraitListSet TraitListSetCreator()
         {
@@ -278,20 +295,19 @@ namespace Game.Cards
         {
             if (e.field == null)
             {
-                await base.AttachToFieldInternal(e);
+                await _onFieldPreAttached.Invoke(this, e);
                 await SetObserveTargets(false);
+                await base.AttachToFieldInternal(e);
+                await _onFieldPostAttached.Invoke(this, e);
                 return;
             }
 
-            int initiationEvents = TableEventManager.Count("initiations");
             await _onFieldPreAttached.Invoke(this, e);
             await SetObserveTargets(false);
 
-            if (Field != null) await Field.DetatchCard(e.source);
             _side = ((BattleField)e.field).Side;
             await base.AttachToFieldInternal(e);
 
-            await TableEventManager.Await("initiations", initiationEvents);
             if (IsKilled) return;
             await SetObserveTargets(true);
             await _onFieldPostAttached.Invoke(this, e);
@@ -352,7 +368,7 @@ namespace Game.Cards
             BattleTerritory terr = card.Territory;
 
             string cardNameDebug = card.TableNameDebug;
-            string fieldNameDebug = e.field.TableNameDebug;
+            string fieldNameDebug = e.field?.TableNameDebug;
             string sourceNameDebug = e.source?.TableNameDebug;
 
             TableConsole.LogToFile("card", $"{cardNameDebug}: field: PostAttached: field: {fieldNameDebug} (by: {sourceNameDebug}).");
@@ -366,13 +382,6 @@ namespace Game.Cards
             string cardNameDebug = card.TableNameDebug;
             string sourceName = e.source?.TableName;
             string sourceNameDebug = e.source?.TableNameDebug;
-
-            if (card.Drawer != null)
-            {
-                if (sourceName != null)
-                    Menu.WriteLogToCurrent($"{cardName}: смертельное ранение от {sourceName}.");
-                else Menu.WriteLogToCurrent($"{cardName}: смертельное ранение.");
-            }
             TableConsole.LogToFile("card", $"{cardNameDebug}: OnPreKilled (by: {sourceNameDebug}).");
             return UniTask.FromResult(true);
         }
@@ -383,13 +392,6 @@ namespace Game.Cards
             string cardNameDebug = card.TableNameDebug;
             string sourceName = e.source?.TableName;
             string sourceNameDebug = e.source?.TableNameDebug;
-
-            if (card.Drawer != null)
-            {
-                if (sourceName != null)
-                    Menu.WriteLogToCurrent($"{cardName}: смерть от {sourceName}.");
-                else Menu.WriteLogToCurrent($"{cardName}: смерть.");
-            }
             TableConsole.LogToFile("card", $"{cardNameDebug}: OnPostKilled (by: {sourceNameDebug})");
             return UniTask.CompletedTask;
         }
@@ -400,13 +402,6 @@ namespace Game.Cards
             string cardNameDebug = card.TableNameDebug;
             string sourceName = e.source?.TableName;
             string sourceNameDebug = e.source?.TableNameDebug;
-
-            if (card.Drawer != null)
-            {
-                if (sourceName != null)
-                    Menu.WriteLogToCurrent($"{cardName}: смерть от {sourceName} предотвращена.");
-                else Menu.WriteLogToCurrent($"{cardName}: смерть предотвращена.");
-            }
             TableConsole.LogToFile("card", $"{cardNameDebug}: evaded being killed (by: {sourceNameDebug})");
             return UniTask.CompletedTask;
         }
@@ -478,7 +473,8 @@ namespace Game.Cards
         async UniTask SetObserveTargets(bool value)
         {
             await _area.SetObserveTargets(value);
-            foreach (IBattleTraitListElement element in Traits)
+            IEnumerable<IBattleTraitListElement> traits = ((IEnumerable<IBattleTraitListElement>)Traits).ToArray();
+            foreach (IBattleTraitListElement element in traits)
                 await element.Trait.Area.SetObserveTargets(value);
         }
         async UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
@@ -523,22 +519,6 @@ namespace Game.Cards
             List<BattleFieldCard> cards = Side.Territory.Fields().WithCard().Select(f => f.Card).ToList();
             cards.Sort((x, y) => -x.InitiationPriority.CompareTo(y.InitiationPriority)); // reversed
             return cards.IndexOf(this) + 1;
-        }
-        BattleWeight CalculateWeight()
-        {
-            if (_isKilled || Field == null)
-                return BattleWeight.zero;
-
-            float absWeight = ((int)Health).ClampedMin(0) + ((int)Strength).ClampedMin(0) * 2;
-            float relWeight = 0;
-
-            foreach (IBattleTraitListElement element in Traits)
-            {
-                BattleWeight weight = element.Trait.Weight;
-                absWeight += weight.absolute;
-                relWeight += weight.relative;
-            }
-            return new BattleWeight(absWeight, relWeight);
         }
     }
 }

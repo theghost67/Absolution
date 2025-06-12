@@ -5,13 +5,13 @@ using DG.Tweening;
 using Game.Backgrounds;
 using Game.Cards;
 using Game.Effects;
-using Game.Environment;
 using Game.Palette;
 using Game.Sleeves;
 using Game.Territories;
 using GreenOne;
 using MyBox;
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -39,10 +39,10 @@ namespace Game.Menus
         static int _demoLocStageForEnemy;
         static int _demoDifficulty = 0;
         static float _demoDifficultyScale;
-        static int _demoPrevFieldsCount;
-        static int _demoPrevFloatsCount;
+        static int _demoPointsForUpgrade;
+        static int _demoPointsSavedForUpgrade;
 
-        static readonly Color[][] _demoPalettes = new Color[][]
+        static readonly Color[][] _demoPalettesSt1 = new Color[][]
         {
             new Color[]
             {
@@ -57,6 +57,31 @@ namespace Game.Menus
             },
             new Color[]
             {
+                Utils.HexToColor("#eaefef"),
+                Utils.HexToColor("#b8cfce"),
+                Utils.HexToColor("#7f8caa"),
+                Utils.HexToColor("#333446"),
+                Utils.HexToColor("#060608"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+            new Color[]
+            {
+                Utils.HexToColor("#fffaec"),
+                Utils.HexToColor("#d5c8a6"),
+                Utils.HexToColor("#578e7e"),
+                Utils.HexToColor("#3d3d3d"),
+                Utils.HexToColor("#080808"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+        };
+        static readonly Color[][] _demoPalettesSt2 = new Color[][]
+        {
+            new Color[]
+            {
                 Utils.HexToColor("#ebf4f6"),
                 Utils.HexToColor("#37b7c3"),
                 Utils.HexToColor("#088395"),
@@ -66,6 +91,31 @@ namespace Game.Menus
                 Utils.HexToColor("#00ffff"),
                 Utils.HexToColor("#ffff00"),
             },
+            new Color[]
+            {
+                Utils.HexToColor("#f1efec"),
+                Utils.HexToColor("#d4c9be"),
+                Utils.HexToColor("#4e83be"),
+                Utils.HexToColor("#123458"),
+                Utils.HexToColor("#030303"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+            new Color[]
+            {
+                Utils.HexToColor("#fbf7f0"),
+                Utils.HexToColor("#dcc8a9"),
+                Utils.HexToColor("#697565"),
+                Utils.HexToColor("#3c3d37"),
+                Utils.HexToColor("#0e0f0c"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+        };
+        static readonly Color[][] _demoPalettesSt3 = new Color[][]
+        {
             new Color[]
             {
                 Utils.HexToColor("#fff5e0"),
@@ -79,6 +129,31 @@ namespace Game.Menus
             },
             new Color[]
             {
+                Utils.HexToColor("#fff7f8"),
+                Utils.HexToColor("#fa9500"),
+                Utils.HexToColor("#ab3e0a"),
+                Utils.HexToColor("#3d0814"),
+                Utils.HexToColor("#000000"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+            new Color[]
+            {
+                Utils.HexToColor("#f8faff"),
+                Utils.HexToColor("#47a8bd"),
+                Utils.HexToColor("#394053"),
+                Utils.HexToColor("#1b1f4b"),
+                Utils.HexToColor("#050623"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+        };
+        static readonly Color[][] _demoPalettesSt4 = new Color[][]
+        {
+            new Color[]
+            {
                 Utils.HexToColor("#f5e6e8"),
                 Utils.HexToColor("#c8acd6"),
                 Utils.HexToColor("#433d8b"),
@@ -90,6 +165,31 @@ namespace Game.Menus
             },
             new Color[]
             {
+                Utils.HexToColor("#f5eedd"),
+                Utils.HexToColor("#7ae2cf"),
+                Utils.HexToColor("#077a7d"),
+                Utils.HexToColor("#06202b"),
+                Utils.HexToColor("#03090b"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+            new Color[]
+            {
+                Utils.HexToColor("#faf0ff"),
+                Utils.HexToColor("#bf7fe1"),
+                Utils.HexToColor("#630d91"),
+                Utils.HexToColor("#39064f"),
+                Utils.HexToColor("#000000"),
+
+                Utils.HexToColor("#00ffff"),
+                Utils.HexToColor("#ffff00"),
+            },
+        };
+        static readonly Color[][] _demoPalettesSt5 = new Color[][]
+        {
+            new Color[]
+            {
                 Utils.HexToColor("#ffedd8"),
                 Utils.HexToColor("#eabe6c"),
                 Utils.HexToColor("#891652"),
@@ -97,8 +197,33 @@ namespace Game.Menus
                 Utils.HexToColor("#000000"),
 
                 Utils.HexToColor("#00ffff"),
-                Utils.HexToColor("#eabe6c"),
+                Utils.HexToColor("#ffff00"),
             },
+            new Color[]
+            {
+                Utils.HexToColor("#ffffff"),
+                Utils.HexToColor("#1dcd9f"),
+                Utils.HexToColor("#0f5844"),
+                Utils.HexToColor("#222222"),
+                Utils.HexToColor("#000000"),
+
+                Utils.HexToColor("#daffeb"),
+                Utils.HexToColor("#ffff00"),
+            },
+            new Color[]
+            {
+                Utils.HexToColor("#f8eded"),
+                Utils.HexToColor("#ff8225"),
+                Utils.HexToColor("#b43f3f"),
+                Utils.HexToColor("#173b45"),
+                Utils.HexToColor("#050e1b"),
+
+                Utils.HexToColor("#ff8225"),
+                Utils.HexToColor("#ffff00"),
+            },
+        };
+        static readonly Color[][] _demoPalettesSt6 = new Color[][]
+        {
             new Color[]
             {
                 Utils.HexToColor("#edf2f4"),
@@ -112,6 +237,31 @@ namespace Game.Menus
             },
             new Color[]
             {
+                Utils.HexToColor("#eff1f3"),
+                Utils.HexToColor("#735290"),
+                Utils.HexToColor("#ef233c"),
+                Utils.HexToColor("#3d2437"),
+                Utils.HexToColor("#120309"),
+
+                Utils.HexToColor("#ef233c"),
+                Utils.HexToColor("#ffff00"),
+            },
+            new Color[]
+            {
+                Utils.HexToColor("#f1dede"),
+                Utils.HexToColor("#bbacc1"),
+                Utils.HexToColor("#d90368"),
+                Utils.HexToColor("#36151e"),
+                Utils.HexToColor("#1a090d"),
+
+                Utils.HexToColor("#ef233c"),
+                Utils.HexToColor("#ffff00"),
+            },
+        };
+        static readonly Color[][] _demoPalettesSt7 = new Color[][]
+        {
+            new Color[]
+            {
                 Utils.HexToColor("#eeeeee"),
                 Utils.HexToColor("#ff204e"),
                 Utils.HexToColor("#5d0e41"),
@@ -121,19 +271,40 @@ namespace Game.Menus
                 Utils.HexToColor("#ff204e"),
                 Utils.HexToColor("#ffff00"),
             },
+            new Color[]
+            {
+                Utils.HexToColor("#eeeeee"),
+                Utils.HexToColor("#d84040"),
+                Utils.HexToColor("#8e1616"),
+                Utils.HexToColor("#1d1616"),
+                Utils.HexToColor("#000000"),
+
+                Utils.HexToColor("#ff0000"),
+                Utils.HexToColor("#ffff00"),
+            },
+            new Color[]
+            {
+                Utils.HexToColor("#fdfffc"),
+                Utils.HexToColor("#ffa6bd"),
+                Utils.HexToColor("#f71735"),
+                Utils.HexToColor("#5e0b15"),
+                Utils.HexToColor("#1a0813"),
+
+                Utils.HexToColor("#ff0000"),
+                Utils.HexToColor("#ffff00"),
+            },
         };
         #endif
 
         readonly Drawer _turnButton;
         readonly Drawer _fleeButton;
-        readonly TextMeshPro _logTextMesh;
-        readonly TextMeshPro _descTextMesh;
 
         bool _territoryEndTurnIsPending;
         pTerritory _territory;
         SquaresBackground _bg;
         Tween _deathsDoorVolumeTween;
         Tween _deathsDoorPitchTween;
+        Tween _deathsDoorVignetteTween;
         Tween _beatTween;
 
         TableTerritory IMenuWithTerritory.Territory => _territory;
@@ -181,6 +352,8 @@ namespace Game.Menus
             {
                 if (BattleArea.IsAnyAiming) return false;
                 bool result = Side.isMe && Side.CanAfford(this) && _menu._territory.IsPlayerPhase() && !_endTurnDropBlockIsActive;
+                if (result)
+                    result = !Drawer.queue.IsRunning;
                 if (!result)
                     Drawer.transform.DOAShake();
                 return result;
@@ -202,32 +375,35 @@ namespace Game.Menus
             }
             public bool CanPullIn()
             {
-                return true;
+                return !Drawer.queue.IsRunning;
             }
 
             public void OnTake()
             {
                 AsInSleeve.OnTakeBase();
+                Side.Opposite.Sleeve.Drawer.CanPullOut = false;
                 _menu._territory.SetCardsColliders(false);
                 SetFieldsHighlight(true);
             }
             public void OnReturn()
             {
                 AsInSleeve.OnReturnBase();
+                Side.Opposite.Sleeve.Drawer.CanPullOut = true;
                 _menu._territory.SetFieldsColliders(true);
                 SetFieldsHighlight(false);
             }
             public void OnDropOn(TableSleeveCardDropArgs e)
             {
                 AsInSleeve.OnDropOnBase(e);
+                if (Drawer != null)
+                    Side.Opposite.Sleeve.Drawer.CanPullOut = true;
                 if (Side.isMe)
                 {
                     _menu._territory.SetFieldsColliders(true);
-                    Drawer.IsSelected = false;
+                    if (Drawer != null)
+                        Drawer.IsSelected = false;
                     SetFieldsHighlight(false);
                 }
-                if (Drawer.IsFlipped)
-                    Drawer.FlipY();
 
                 if (!e.isPreview)
                     _endTurnDropBlockIsActive = _menu._territoryEndTurnIsPending;
@@ -238,7 +414,8 @@ namespace Game.Menus
                 }
 
                 Side.Purchase(this);
-                Drawer.ChangePointer = false;
+                if (Drawer != null)
+                    Drawer.ChangePointer = false;
                 _ = Territory.PlaceFieldCard(this, (BattleField)e.field, Side);
             }
             public Tween OnPullOut(bool sleevePull)
@@ -355,8 +532,6 @@ namespace Game.Menus
                     _menu._territory.SetFieldsColliders(true);
                     Drawer.IsSelected = false;
                 }
-                if (Drawer.IsFlipped)
-                    Drawer.FlipY();
 
                 if (!e.isPreview)
                     _endTurnDropBlockIsActive = _menu._territoryEndTurnIsPending;
@@ -419,7 +594,7 @@ namespace Game.Menus
                      card = new pFieldCard(_menu, (FieldCard)data, Side);
                 else card = new pFloatCard(_menu, (FloatCard)data, Side);
                 if (!card.Side.isMe)
-                     card.Drawer?.FlipY();
+                     card.Drawer?.FlipRendererY();
                 return card;
             }
             protected override ITableSleeveCard HoldingCardCloner(ITableSleeveCard src, TableSleeveCloneArgs args)
@@ -467,7 +642,7 @@ namespace Game.Menus
             {
                 if (isMe)
                      return Player.Deck;
-                else return Traveler.NewDeck(default, isMe ? _demoLocStageForPlayer : _demoLocStageForEnemy);
+                else return new CardDeck(isMe ? _demoLocStageForPlayer : _demoLocStageForEnemy);
             }
             protected override BattleSleeve SleeveCreator(Transform parent)
             {
@@ -476,9 +651,28 @@ namespace Game.Menus
 
             protected override int HealthAtStartFunc()
             {
+                float healthScale = _demoDifficulty switch
+                {
+                    0 => 1.00f,
+                    1 => 1.15f,
+                    2 => 1.30f,
+                    3 => 1.45f,
+                    4 => 1.60f,
+                    5 => 1.75f,
+                    6 => 1.90f,
+                    7 => 2.05f,
+                    _ => 2.05f,
+                };
+
+                float healthBase;
                 if (isMe)
-                     return PlayerConfig.psychoMode ? 1 : _demoLocStageForPlayer * 2;
-                else return (_demoLocStageForEnemy * 2 * 1 + ((_demoDifficultyScale - 1) * 2)).Ceiling();
+                     healthBase = PlayerConfig.psychoMode ? 1 : _demoLocStageForPlayer * 2;
+                else healthBase = (_demoLocStageForEnemy * 2 * 1 + (_demoDifficultyScale - 1) * 2).Ceiling();
+
+                if (!isMe || !PlayerConfig.psychoMode)
+                    healthBase *= healthScale;
+
+                return healthBase.Ceiling();
             }
             protected override int GoldAtStartFunc()
             {
@@ -552,7 +746,7 @@ namespace Game.Menus
                 await base.OnStartPhaseBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
                 if (!terr.DrawersAreNull)
-                    await VFX.CreateText($"ХОД {terr.Turn}", Color.white, Vector3.zero).DOATextPopUp(0.5f).AsyncWaitForCompletion();
+                    await VFX.CreateText($"ХОД {terr.Turn}", Color.white, Vector3.zero).DOATextPopUp(0.5f, doNotScale: true).AsyncWaitForCompletion();
             }
             protected override async UniTask OnEnemyPhaseBase_TOP(object sender, EventArgs e)
             {
@@ -576,8 +770,9 @@ namespace Game.Menus
 
                 await side.Gold.AdjustValue(1, _menu);
                 await side.Sleeve.TakeMissingCards(!(side.Drawer?.SleeveIsVisible ?? false));
-                if (side.isMe && !side.ai.IsEnabled)
+                if (side.isMe)
                     _menu.SetPlayerControls(true);
+                else await side.ai.MakeTurn();
             }
         }
         protected class pButtonDrawer : Drawer 
@@ -594,8 +789,6 @@ namespace Game.Menus
             _turnButton = new pButtonDrawer(this, "Turn button");
             _fleeButton = new pButtonDrawer(this, "Flee button");
 
-            _logTextMesh = Transform.Find<TextMeshPro>("Log window/Text");
-            _descTextMesh = Transform.Find<TextMeshPro>("Desc window/Text");
             _bg = Transform.Find<SquaresBackground>("BG");
             _bg.manualLightUp = true;
 
@@ -605,32 +798,14 @@ namespace Game.Menus
             _fleeButton.OnMouseClick += (s, e) => TryFlee();
             _fleeButton.SetTooltip(() => "Шанс побега: 100%.");
 
-            _logTextMesh.text = Log;
-            _descTextMesh.text = "";
-
-
             #if !DEMO
             _territory = new pTerritory(this, playerMovesFirst: true /*UnityEngine.Random.value > 0.5f*/, sizeX: 5);
             _territory.player = _territory.player;
             _territory.enemy = _territory.enemy;
-            #else
-            _demoPrevFieldsCount = 4;
-            _demoPrevFloatsCount = 0;
             #endif
 
             SetBellState(false);
             SetFleeState(false);
-        }
-
-        public override void WriteLog(string text)
-        {
-            base.WriteLog(text);
-            _logTextMesh.text = Log;
-        }
-        public override void WriteDesc(string text)
-        {
-            base.WriteDesc(text);
-            _descTextMesh.text = text;
         }
 
         public void SetPlayerControls(bool value)
@@ -655,7 +830,7 @@ namespace Game.Menus
             else
             {
                 BattleSide side = _territory.Enemy;
-                side.Health.OnPreSet.Add(null, async (s, e) => e.deltaValue = -side.HealthAtStart);
+                side.Health.OnPreSet.Add(null, async (s, e) => e.deltaValue = -side.Health);
                 _ = side.Health.AdjustValue(1, null);
             }
         }
@@ -750,36 +925,53 @@ namespace Game.Menus
             float volumeFrom = SFX.MusicVolumeScale;
             float volumeTo = 1f - 0.20f * (1f - ratio);
 
-            Global.Volume.profile.TryGet(out ColorAdjustments component);
-            component.saturation.overrideState = true;
-            component.saturation.value = -100 * (1f - ratio);
+            Global.Volume.profile.TryGet(out ColorAdjustments colorAdj);
+            colorAdj.saturation.overrideState = true;
+            colorAdj.saturation.value = -100 * (1f - ratio);
+
+            Global.Volume.profile.TryGet(out Vignette vignette);
+            float vignetteValue = 0.6f * (1f - ratio);
+            if (vignette.intensity.value < vignetteValue)
+                vignette.intensity.value = vignetteValue;
+
+            _deathsDoorPitchTween.Kill();
+            _deathsDoorVolumeTween.Kill();
+            _deathsDoorVignetteTween.Kill();
 
             _deathsDoorPitchTween = DOVirtual.Float(pitchFrom, pitchTo, duration, v => SFX.MusicPitchScale = v).SetEase(Ease.OutCubic);
             _deathsDoorVolumeTween = DOVirtual.Float(volumeFrom, volumeTo, duration, v => SFX.MusicVolumeScale = v).SetEase(Ease.OutCubic);
+            _deathsDoorVignetteTween = DOVirtual.Float(vignette.intensity.value, 0.4f * (1f - ratio), 2f, v => vignette.intensity.value = v).SetEase(Ease.InSine);
         }
-        void ResetDeathsDoorEffect()
+        void ResetDeathsDoorEffectOnTransit()
         {
-            const float DURATION = 2.0f;
+            const float DURATION = 1.5f;
 
-            Global.Volume.profile.TryGet(out ColorAdjustments component);
-            component.saturation.value = 0;
+            Global.Volume.profile.TryGet(out ColorAdjustments colorAdj);
+            Global.Volume.profile.TryGet(out Vignette vignette);
+            colorAdj.saturation.value = 0;
 
             _deathsDoorPitchTween.Kill();
             _deathsDoorVolumeTween.Kill();
 
-            _deathsDoorPitchTween = DOVirtual.Float(SFX.MusicPitchScale, 1f, DURATION, v => SFX.MusicPitchScale = v).SetEase(Ease.OutCubic);
-            _deathsDoorVolumeTween = DOVirtual.Float(SFX.MusicVolumeScale, 1f, DURATION, v => SFX.MusicVolumeScale = v).SetEase(Ease.OutCubic);
+            _deathsDoorPitchTween = DOVirtual.Float(SFX.MusicPitchScale, 1f, DURATION, v => SFX.MusicPitchScale = v).SetEase(Ease.InQuad);
+            _deathsDoorVolumeTween = DOVirtual.Float(SFX.MusicVolumeScale, 1f, DURATION, v => SFX.MusicVolumeScale = v).SetEase(Ease.InQuad);
+            _deathsDoorVignetteTween = DOVirtual.Float(vignette.intensity.value, 0, 1f, v => vignette.intensity.value = v).SetEase(Ease.InQuad);
         }
-        void ResetDeathsDoorEffectInstantly()
+        void ResetDeathsDoorEffectOnLeave()
         {
-            Global.Volume.profile.TryGet(out ColorAdjustments component);
-            component.saturation.value = 0;
+            const float DURATION = 1.5f;
+
+            Global.Volume.profile.TryGet(out ColorAdjustments colorAdj);
+            Global.Volume.profile.TryGet(out Vignette vignette);
+            colorAdj.saturation.value = 0;
 
             _deathsDoorPitchTween.Kill();
-            SFX.MusicPitchScale = 1f;
-
             _deathsDoorVolumeTween.Kill();
-            SFX.MusicVolumeScale = 1f;
+
+            _deathsDoorPitchTween = DOVirtual.Float(SFX.MusicPitchScale, 1f, DURATION, v => SFX.MusicPitchScale = v).SetEase(Ease.InQuad);
+            _deathsDoorVolumeTween = DOVirtual.Float(SFX.MusicVolumeScale, 2f, DURATION, v => SFX.MusicVolumeScale = v).SetEase(Ease.InQuad);
+            _deathsDoorVignetteTween = DOVirtual.Float(vignette.intensity.value, 0, DURATION, v => vignette.intensity.value = v).SetEase(Ease.InQuad);
+            _deathsDoorVignetteTween = DOVirtual.Float(vignette.intensity.value, 0, 1f, v => vignette.intensity.value = v).SetEase(Ease.InQuad);
         }
 
         void SetBellState(bool value)
@@ -795,88 +987,107 @@ namespace Game.Menus
         }
 
         #if DEMO
-        Menu demo_CreateCardChooseAndUpgrade(int cPointsPerCard, int cFieldChoices, int cFloatChoices, int cCardsPerChoice, int uPointsLimit)
+        Menu demo_CreateCardChooseMenu(int pointsPerCard, int fieldChoices, int floatChoices, int cardsPerChoice, int rerolls, Func<Menu> whenClosed)
         {
-            if (cFieldChoices == 0 && cFloatChoices == 0)
-                return demo_CreateCardUpgrade(uPointsLimit);
-            CardChooseMenu menu = new(cPointsPerCard, cFieldChoices, cFloatChoices, cCardsPerChoice, PlayerConfig.rerollsAtStart - _demoDifficulty);
-            menu.MenuWhenClosed = () => demo_CreateCardUpgrade(uPointsLimit);
+            CardChooseMenu menu = new(pointsPerCard, fieldChoices, floatChoices, cardsPerChoice, rerolls);
+            menu.MenuWhenClosed = whenClosed;
             menu.OnClosed += menu.TryDestroy;
             return menu;
         }
-        Menu demo_CreateCardUpgrade(int uPointsLimit)
+        Menu demo_CreateTraitChooseMenu(int choices, int traitsPerChoice, int rerolls, Func<Menu> whenClosed)
+        {
+            TraitChooseMenu menu = new(choices, traitsPerChoice, rerolls);
+            menu.MenuWhenClosed = whenClosed;
+            menu.OnClosed += menu.TryDestroy;
+            return menu;
+        }
+        Menu demo_CreateCardUpgradeMenu(int uPointsLimit, Func<Menu> whenClosed)
         {
             CardUpgradeMenu menu = new(Player.Deck, uPointsLimit);
             menu.MenuWhenClosed = () => this;
-            menu.OnClosed += menu.TryDestroy;
+            menu.OnClosed += () => 
+            { 
+                _demoPointsSavedForUpgrade = menu.PointsAvailable > 0 ? menu.PointsAvailable.Ceiling() : 0; 
+                menu.TryDestroy();
+            };
             return menu;
         }
 
-        async void demo_OnBattleEnd()
+        void demo_OnBattleEnd()
         {
             Global.OnUpdate -= demo_SpeedUpUpdate;
             DOTween.timeScale = 1f;
+            SetCollider(false);
+
+            _territory.Player.Sleeve.Drawer.ColliderEnabled = false;
+            _territory.Enemy.Sleeve.Drawer.ColliderEnabled = false;
 
             if (Territory.Player.Health <= 0)
             {
-                Traveler.TryStopTravel(complete: false);
-                await VFX.CreateScreenBG(Color.clear, Transform).DOFade(1, 0.5f).AsyncWaitForCompletion();
-                TextMeshPro text = VFX.CreateText($"КОНЕЦ\n<size=50%>время: {demo_TimeSpanFormat()}\n\n[Enter] главное меню\n[Shift+Esc] сдаться", Color.white, Transform);
-                text.transform.DOAShake();
-                text.sortingOrder = 600;
+                demo_CreateBattleEndText(Transform, "СМЕРТЬ", "Смерть это часть пути.", "Не сдаваться", "Сдаться");
                 Global.OnUpdate += demo_EndChoiceOnUpdate;
-                SFX.StopMusic();
             }
             else if (_demoDifficulty == DEMO_DIFFICULTY_MID)
             {
-                SpriteRenderer bg = VFX.CreateScreenBG(Color.clear, Transform);
-                bg.name = "Black bg";
-                await bg.DOFade(1, 0.5f).AsyncWaitForCompletion();
-                TextMeshPro text = VFX.CreateText($"ФИНАЛ?\n<size=50%>время: {demo_TimeSpanFormat()}\n\n<size=50%>[Enter] начать хардкор\n[Shift+Esc] сбежать", Color.white, Transform);
-                text.sortingOrder = 410;
-                text.transform.DOAShake();
-                text.name = "Black text";
+                demo_CreateBattleEndText(Transform, "ПЕРЕПУТЬЕ", "Дальше лежит дорога страданий.", "Начать хардкор", "Уйти");
                 Global.OnUpdate += demo_StageFiveChoiceOnUpdate;
             }
             else if (_demoDifficulty == DEMO_DIFFICULTY_MAX)
             {
-                SpriteRenderer bg = VFX.CreateScreenBG(Color.clear, Transform);
-                bg.name = "Black bg";
-                await bg.DOFade(1, 0.5f).AsyncWaitForCompletion();
-                string headerStr = PlayerConfig.psychoMode ? "ФИНАЛ" : "ФИНАЛ НА ПСИХЕ";
-                TextMeshPro text = VFX.CreateText($"{headerStr}\n<size=50%>время: {demo_TimeSpanFormat()}\n\n[Enter] главное меню\n[Shift+Esc] уйти красиво", Color.white, Transform);
-                text.sortingOrder = 410;
-                text.transform.DOAShake();
-                text.name = "Black text";
+                if (PlayerConfig.psychoMode && PlayerConfig.chaosMode)
+                    demo_CreateBattleEndText(Transform, "<color=#FF00FF>ФИНАЛ ФУЛЛ ХАОСА</color>", "Наконец этот мир ждёт Искупление.", "Пройти путь заново", "Уйти");
+                else if (PlayerConfig.psychoMode)
+                    demo_CreateBattleEndText(Transform, "<color=#FF0000>ФИНАЛ ПСИХА</color>", "Альтернативное виденье даёт преимущество.", "Пройти путь заново", "Уйти");
+                else if (PlayerConfig.chaosMode)
+                    demo_CreateBattleEndText(Transform, "<color=#00FFFF>ФИНАЛ ХАОСА</color>", "Хаос стремится к порядку.", "Пройти путь заново", "Уйти");
+                else demo_CreateBattleEndText(Transform, "ФИНАЛ", "Можно насладиться проделанной работой.", "Пройти путь заново", "Уйти");
                 Global.OnUpdate += demo_EndChoiceOnUpdate;
             }
             else demo_OnBattleEndBase();
         }
         async void demo_OnBattleEndBase()
         {
-            //int fieldCards = Player.Deck.fieldCards.Count;
-            //int floatCards = Player.Deck.floatCards.Count;
-
             int pointsPerCard = demo_DifficultyToLocStage(_demoDifficulty + 1);
-            Traveler.DeckCardsCount(pointsPerCard, out int fieldCardsRecommended, out int floatCardsRecommended);
-            int pointsLimit = fieldCardsRecommended * pointsPerCard;
+            int cardsCount = demo_DifficultyToFieldCardsCount(_demoDifficulty + 1);
+            _demoPointsForUpgrade = demo_DifficultyToPlayerUpgradePoints(_demoDifficulty + 1);
+            int finalPointsForUpgrade = _demoPointsSavedForUpgrade + _demoPointsForUpgrade;
 
-            int fieldsChoices = (fieldCardsRecommended - _demoPrevFieldsCount).ClampedMin(1);
+            int modeRerollsModifier;
+            if (PlayerConfig.psychoMode && PlayerConfig.chaosMode)
+                modeRerollsModifier = 4;
+            else if (PlayerConfig.psychoMode || PlayerConfig.chaosMode)
+                modeRerollsModifier = 2;
+            else modeRerollsModifier = 1;
+
+            int fieldsChoices = _demoDifficulty switch
+            {
+                < 3 => 2,
+                < 5 => 1,
+                _ => 1,
+            };
             int floatsChoices = _demoDifficulty >= 3 && _demoDifficulty <= DEMO_DIFFICULTY_MID ? 1 : 0;
             int cardsPerChoice = (_demoDifficulty + 2).ClampedMax(5);
+            int cardsRerolls = 5 * modeRerollsModifier;
 
-            _demoPrevFieldsCount = fieldCardsRecommended;
-            _demoPrevFloatsCount = floatCardsRecommended;
+            int traitsPerChoice = _demoDifficulty switch
+            {
+                < 3 => 3,
+                < 5 => 4,
+                _ => 5,
+            };
 
-            Menu menu = demo_CreateCardChooseAndUpgrade(pointsPerCard, fieldsChoices, floatsChoices, cardsPerChoice, pointsLimit);
-            await MenuTransit.Between(this, menu, ResetDeathsDoorEffect);
+            Func<Menu> cardUpgradeMenuFunc = () => demo_CreateCardUpgradeMenu(finalPointsForUpgrade, () => this);
+            Func<Menu> traitChooseMenuFunc = null;
+            if (PlayerConfig.chaosMode)
+                traitChooseMenuFunc = () => demo_CreateTraitChooseMenu(2, traitsPerChoice, 4, cardUpgradeMenuFunc);
+            Func<Menu> cardChooseMenuFunc = () => demo_CreateCardChooseMenu(pointsPerCard, fieldsChoices, floatsChoices, cardsPerChoice, cardsRerolls, traitChooseMenuFunc ?? cardUpgradeMenuFunc);
+            await MenuTransit.Between(this, cardChooseMenuFunc != null ? cardChooseMenuFunc() : traitChooseMenuFunc(), ResetDeathsDoorEffectOnTransit);
         }
         async void demo_OnBattleStart(bool firstOpening)
         {
-            for (int i = 0; i < _demoPalettes[_demoDifficulty].Length; i++)
-                ColorPalette.All[i].ColorCur = _demoPalettes[_demoDifficulty][i];
-
             _demoDifficulty++;
+            ColorPalette.Current = demo_DifficultyToPalette(_demoDifficulty);
+            Player.RefreshHealth();
 
             int locStage = demo_DifficultyToLocStage(_demoDifficulty);
             _demoDifficultyScale = demo_DifficultyToLocStageScale(_demoDifficulty);
@@ -886,7 +1097,6 @@ namespace Game.Menus
             _territory?.Dispose();
             _territory = new pTerritory(this, demo_DifficultyToPlayerIfFirst(_demoDifficulty), sizeX: 5);
             _territory.Enemy.ai.Style = (BattleAI.PlayStyle)UnityEngine.Random.Range(0, 3);
-            //_territory.Enemy.Drawer.SleeveIsVisible = true; // TODO: remove
 
             SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
             await UniTask.Delay(500);
@@ -894,9 +1104,6 @@ namespace Game.Menus
             string text2Hex = ColorPalette.C2.Hex;
             string text2 = $"\n<size=50%><color={text2Hex}>угроза: {_demoLocStageForPlayer}    сложность: {_demoDifficultyScale * 100}%";
             string text3 = _territory.PlayerMovesFirst ? $"\nвы ходите первым" : "\nвы ходите последним";
-
-            if (_demoDifficulty >= DEMO_DIFFICULTY_MID)
-                _fleeButton.SetTooltip("<color=red>ТЕБЕ НЕ СБЕЖАТЬ.");
 
             TextMeshPro bgText = VFX.CreateText(text1, Color.white, bg.transform);
             bgText.transform.position = Vector2.up * 136;
@@ -928,7 +1135,7 @@ namespace Game.Menus
         }
         static float demo_DifficultyToLocStageScale(int difficulty) => difficulty switch
         {
-            1 => 0.80f,
+            1 => 0.67f,
             2 => 1.00f,
             3 => 1.20f,
             4 => 1.40f,
@@ -946,46 +1153,119 @@ namespace Game.Menus
             5 => 40,
             6 => 48,
             7 => 56,
-            _ => throw new NotSupportedException(),
+            _ => 0,
         };
+        static int demo_DifficultyToFieldCardsCount(int difficulty) => difficulty switch
+        {
+            1 => 4,
+            2 => 6,
+            3 => 8,
+            4 => 9,
+            5 => 10,
+            6 => 11,
+            7 => 12,
+            _ => 0,
+        };
+        static int demo_DifficultyToPlayerUpgradePoints(int difficulty)
+        {
+            int prevStagePoints = demo_DifficultyToLocStage(difficulty - 1) * demo_DifficultyToFieldCardsCount(difficulty - 1);
+            int thisStagePoints = demo_DifficultyToLocStage(difficulty) * demo_DifficultyToFieldCardsCount(difficulty);
+            return thisStagePoints - prevStagePoints;
+        }
+        static Color[] demo_DifficultyToPalette(int difficulty)
+        {
+            Color[][] colors = difficulty switch
+            {
+                1 => _demoPalettesSt1,
+                2 => _demoPalettesSt2,
+                3 => _demoPalettesSt3,
+                4 => _demoPalettesSt4,
+                5 => _demoPalettesSt5,
+                6 => _demoPalettesSt6,
+                7 => _demoPalettesSt7,
+                _ => throw new NotSupportedException(),
+            };
+            List<Color[]> palettes = new();
+            for (int i = 0; i < colors.Length; i++)
+            {
+                if (colors[i].Length == 7)
+                    palettes.Add(colors[i]);
+            }
+            return palettes.GetRandom();
+        }
         static string demo_TimeSpanFormat()
         {
-            TimeSpan span = DateTime.Now - Global.Menu.GameStartTime;
+            TimeSpan span = DateTime.Now - Player.GameStartTime;
             int hours = span.Hours;
             int minutes = span.Minutes;
             int seconds = span.Seconds;
-            string hoursStr = hours < 10 ? "0" + hours : hours.ToString();
-            string minutesStr = minutes < 10 ? "0" + minutes : minutes.ToString();
-            string secondsStr = seconds < 10 ? "0" + seconds : seconds.ToString();
-            return $"{hoursStr}:{minutesStr}:{secondsStr}";
+            return $"{hours:D2}:{minutes:D2}:{seconds:D2}";
+        }
+        static async void demo_CreateBattleEndText(Transform transform, string header, string desc, string enterKeyDesc, string escKeyDesc)
+        {
+            SpriteRenderer bg = VFX.CreateScreenBG(Color.clear, transform);
+            bg.name = "Black bg";
+            await bg.DOFade(1, 0.5f).AsyncWaitForCompletion();
+            TextMeshPro text = VFX.CreateText($"{header}<size=50%>\n{desc}\n\nвремя: {demo_TimeSpanFormat()}\n\n<size=50%>[Enter] {enterKeyDesc}\n[Esc] {escKeyDesc}", Color.white, transform);
+            text.sortingOrder = 600;
+            text.transform.DOAShake();
+            text.name = "Black text";
         }
 
         void demo_EndChoiceOnUpdate()
         {
-            if (!Input.GetKeyDown(KeyCode.Return))
-                return;
-
-            Global.OnUpdate -= demo_EndChoiceOnUpdate;
-            _demoDifficulty = 0;
-            SFX.ResetMusicMixes();
-            ResetDeathsDoorEffectInstantly();
-            SFX.MusicVolumeScale = 0f;
-            OnClosed += TryDestroy;
-            MenuTransit.Between(this, Global.Menu, () => SFX.MusicVolumeScale = 2f);
+            if (Input.GetKeyDown(KeyCode.Return))
+            {
+                Global.OnUpdate -= demo_EndChoiceOnUpdate;
+                demo_RestartGame();
+            }
+            else if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Global.OnUpdate -= demo_EndChoiceOnUpdate;
+                demo_LeaveGame();
+            }
         }
         void demo_StageFiveChoiceOnUpdate()
         {
-            if (!Input.GetKeyDown(KeyCode.Return))
-                return;
+            if (Input.GetKeyDown(KeyCode.Return))
+            {
+                Global.OnUpdate -= demo_StageFiveChoiceOnUpdate;
+                demo_EnterHardmode();
+            }
+            else if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Global.OnUpdate -= demo_StageFiveChoiceOnUpdate;
+                demo_LeaveGame();
+            }
+        }
 
-            Global.OnUpdate -= demo_StageFiveChoiceOnUpdate;
+        // TODO: add leaderboard
+        void demo_LeaveGame()
+        {
+            Player.Deck.Clear();
+            _demoDifficulty = 0;
+            SFX.ResetMusicMixes();
+            ResetDeathsDoorEffectOnLeave();
+            OnClosed += TryDestroy;
+            MenuTransit.Between(this, Global.Menu);
+        }
+        void demo_EnterHardmode()
+        {
             demo_OnBattleEndBase();
             DOVirtual.DelayedCall(1, () =>
             {
-                Transform.Find("Black text").gameObject.Destroy();
-                Transform.Find("Black bg").gameObject.Destroy();
+                Transform.Find("Black text")?.gameObject.Destroy();
+                Transform.Find("Black bg")?.gameObject.Destroy();
             });
         }
+        void demo_RestartGame()
+        {
+            Player.Deck.Clear();
+            _demoDifficulty = 0;
+            ResetDeathsDoorEffectOnTransit();
+            _ = Player.StartTheGame(this);
+        }
+
         void demo_SpeedUpUpdate()
         {
             if (Input.GetKeyDown(KeyCode.LeftShift))

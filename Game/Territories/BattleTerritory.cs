@@ -56,6 +56,7 @@ namespace Game.Territories
 
         readonly BattleField[,] _fields;
         readonly BattleInitiationQueue _initiations;
+        readonly Dictionary<int, BattleFieldCard> _stash;
         readonly List<TableEventVoid> _phaseCycleEvents;
         readonly bool _playerMovesFirst;
         readonly int _playerPhaseCycleIndex;
@@ -78,6 +79,7 @@ namespace Game.Territories
             _initiations = new BattleInitiationQueue(this);
             _initiations.OnStarted += OnInitiationsProcessingStartBase;
             _initiations.OnEnded += OnInitiationsProcessingEndBase;
+            _stash = new Dictionary<int, BattleFieldCard>();
 
             _phaseCycleEvents = new List<TableEventVoid>();
             _playerMovesFirst = playerMovesFirst;
@@ -143,6 +145,16 @@ namespace Game.Territories
             FillPhaseEventsList();
             _player = PlayerSideCloner(src._player, args);
             _enemy = EnemySideCloner(src._enemy, args);
+
+            _stash = new();
+            foreach (KeyValuePair<int, BattleFieldCard> pair in src._stash)
+            {
+                BattleFieldCard srcCard = pair.Value;
+                BattleFieldCardCloneArgs cArgs = new((FieldCard)srcCard.Data.Clone(), null, srcCard.Side.isMe ? _player : _enemy, args);
+                BattleFieldCard clnCard = (BattleFieldCard)srcCard.Clone(cArgs);
+                _stash.Add(pair.Key, clnCard);
+            }
+
             TryOnInstantiatedAction(GetType(), typeof(BattleTerritory));
         }
 
@@ -186,12 +198,28 @@ namespace Game.Territories
             return _currentPhaseCycleIndex == END_PHASE_INDEX;
         }
 
+        public void AddToStash(BattleFieldCard card)
+        {
+            _stash.Add(card.Guid, card);
+        }
+        public void RemoveFromStash(BattleFieldCard card)
+        {
+            _stash.Remove(card.Guid);
+        }
+        public BattleFieldCard GetFromStash(int cardGuid)
+        {
+            if (_stash.TryGetValue(cardGuid, out BattleFieldCard card))
+                 return card;
+            else return null;
+        }
+
         public BattleSide GetOppositeOf(BattleSide side)
         {
             return _player == side ? _enemy : _player;
         }
         public async UniTask NextPhase()
         {
+            Again:
             if (!_phaseCycleEnabled) return;
             if (_phaseCycleEvents.Count == 0) return;
 
@@ -207,27 +235,14 @@ namespace Game.Territories
             await _onNextPhase.Invoke(this, EventArgs.Empty);
             await _phaseCycleEvents[_currentPhaseCycleIndex].Invoke(this, EventArgs.Empty);
 
-            if (IsStartPhase() && PassThroughStartPhase())
-                await NextPhase();
-            else if (IsPlayerPhase() && PassThroughPlayerPhase())
-            {
-                if (!DrawersAreNull && _player.ai.IsEnabled)
-                    await _player.ai.MakeTurn();
-                await NextPhase();
-            }
-            else if (IsEnemyPhase() && PassThroughEnemyPhase())
-            {
-                if (!DrawersAreNull && _enemy.ai.IsEnabled)
-                    await _enemy.ai.MakeTurn();
-                await NextPhase();
-            }
-            else if (IsEndPhase() && PassThroughEndPhase())
-                await NextPhase();
+            if ((IsStartPhase() && PassThroughStartPhase()) ||
+                (IsEndPhase() && PassThroughEndPhase()))
+                goto Again;
         }
         public async UniTask LastPhase()
         {
-            int cycles = _phaseCyclesPassed;
-            while (!IsEndPhase() && cycles == _phaseCyclesPassed)
+            int times = END_PHASE_INDEX - _currentPhaseCycleIndex;
+            for (int i = 0; i < times; i++)
                 await NextPhase();
         }
         public async UniTask TryConclude()
@@ -279,12 +294,6 @@ namespace Game.Territories
 
             string sourceName = source?.TableName;
             string sourceNameDebug = source?.TableNameDebug;
-            if (card.Drawer != null)
-            {
-                if (sourceName != null)
-                    Menu.WriteLogToCurrent($"Установка карты {card.Data.name} на поле {field.TableName} от {sourceName}.");
-                else Menu.WriteLogToCurrent($"Установка карты {card.Data.name} на поле {field.TableName}.");
-            }
 
             await card.TryAttachToField(field, source);
             if (card.IsKilled || card.Field != null)
@@ -305,13 +314,6 @@ namespace Game.Territories
 
             string sourceName = source?.TableName;
             string sourceNameDebug = source?.TableNameDebug;
-            if (card.Drawer != null)
-            {
-                if (sourceName != null)
-                    Menu.WriteLogToCurrent($"Использование карты {card.Data.name} от {sourceName}.");
-                else Menu.WriteLogToCurrent($"Использование карты {card.Data.name}.");
-            }
-
             TableConsole.LogToFile("terr", $"{TableNameDebug}: float card placement: id: {card.Data.id} (by: {sourceNameDebug}).");
             await card.TryUse();
             return card;
@@ -442,7 +444,6 @@ namespace Game.Territories
         {
             BattleTerritory terr = (BattleTerritory)sender;
             if (!terr.DrawersAreNull)
-                Menu.WriteLogToCurrent($"-- Ход {terr.Turn} (начало) --");
             TableConsole.LogToFile("terr", $"turn: {terr.Turn} (start)");
             return UniTask.CompletedTask;
         }
@@ -462,7 +463,6 @@ namespace Game.Territories
         {
             BattleTerritory terr = (BattleTerritory)sender;
             if (!terr.DrawersAreNull)
-                Menu.WriteLogToCurrent($"-- Ход {terr.Turn} (конец) --");
             TableConsole.LogToFile("terr", $"turn: {terr.Turn} (end)");
 
             if (BattleInitiationQueue.IsAnyRunning)
@@ -475,7 +475,7 @@ namespace Game.Territories
             foreach (BattleField field in terr.Fields().WithCard())
                 initiations.Add(field.Card.CreateInitiation());
 
-            terr.Initiations.EnqueueAndRun(initiations);
+            terr.Initiations.Enqueue(initiations);
             return terr.Initiations.Await();
         }
         protected virtual UniTask OnNextPhaseBase_TOP(object sender, EventArgs e)
@@ -517,8 +517,6 @@ namespace Game.Territories
 
         // if true, will call NextPhase again after phase event was called (in NextPhase)
         protected virtual bool PassThroughStartPhase() => true;
-        protected virtual bool PassThroughPlayerPhase() => !DrawersAreNull && _player.ai.IsEnabled;
-        protected virtual bool PassThroughEnemyPhase() => !DrawersAreNull && _enemy.ai.IsEnabled;
         protected virtual bool PassThroughEndPhase() => true;
 
         BattleSide GetPhaseSide()

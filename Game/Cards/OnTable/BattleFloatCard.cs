@@ -3,6 +3,7 @@ using Game.Sleeves;
 using Game.Territories;
 using MyBox;
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace Game.Cards
@@ -29,6 +30,7 @@ namespace Game.Cards
                 _side.Sleeve.Add(sCard);
             }
         }
+
         BattleFloatCardDrawer _drawer;
         BattleSide _side;
 
@@ -70,6 +72,10 @@ namespace Game.Cards
         public UniTask TryUse()
         {
             return TryUse(new TableFloatCardUseArgs(this, _side.Territory));
+        }
+        public BattleWeight CalculateWeight(int[] excludedWeights)
+        {
+            return BattleWeight.Zero(this);
         }
 
         protected override Drawer DrawerCreator(Transform parent)

@@ -12,7 +12,7 @@ namespace Game.Cards
     /// <summary>
     /// Абстрактный базовый класс для данных игровой карты.
     /// </summary>
-    public abstract class Card : Unique, IDescriptive, ISerializable, ICloneable
+    public abstract class Card : Unique, IDescriptive, ICloneable
     {
         public const float POINTS_MAX = 9999;
         public readonly string id;
@@ -33,17 +33,6 @@ namespace Game.Cards
             this.spritePath = $"Sprites/Cards/Portraits/{id}";
             this.frequency = 1f;
         }
-        protected Card(SerializationDict dict) : base()
-        {
-            id = dict.DeserializeKeyAs<string>("id");
-            name = dict.DeserializeKeyAs<string>("name");
-            desc = dict.DeserializeKeyAs<string>("desc");
-            spritePath = dict.DeserializeKeyAs<string>("spritePath");
-            rarity = dict.DeserializeKeyAs<Rarity>("rarity");
-            tags = dict.DeserializeKeyAs<CardTag>("tags");
-            price = new CardPrice(dict.DeserializeKeyAsDict("price"));
-            frequency = dict.DeserializeKeyAs<float>("frequency");
-        }
         protected Card(Card other) : base(other.Guid)
         {
             id = other.id;
@@ -58,19 +47,6 @@ namespace Game.Cards
             frequency = other.frequency;
         }
 
-        public virtual SerializationDict Serialize()
-        {
-            return new SerializationDict()
-            { 
-                { "id", id },
-                { "name", name },
-                { "spritePath", spritePath },
-                { "rarity", rarity },
-                { "tags", tags },
-                { "price", price.Serialize() },
-                { "price", frequency },
-            };
-        }
         public abstract object Clone();
         public object CloneAsNew()
         {
@@ -112,14 +88,15 @@ namespace Game.Cards
 
             return DescLinkCollection.empty;
         }
+        public bool HasTableEquivalent()
+        {
+            return true;
+        }
+
         protected virtual string DescContentsFormat(CardDescriptiveArgs args)
         {
             // main block for description, can use args.custom created from DescParamsCreator here
             return "";
-        }
-        protected virtual object[] DescCustomParams()
-        {
-            return Array.Empty<object>();
         }
         private string DescInternalFormat(CardDescriptiveArgs args, string contents)
         {
@@ -167,10 +144,10 @@ namespace Game.Cards
                 return sb.ToString();
             }
 
-            sb.Append($"<color={ColorPalette.C3.Hex}>");
+            sb.Append($"<color={ColorPalette.C2.Hex}>");
             bool extraLine = false;
 
-            int turnAge = args.turnAge;
+            int turnAge = args.table?.TurnAge ?? -1;
             if (turnAge > 0)
             {
                 sb.Append($"Установлена: {turnAge} х. назад\n");
@@ -179,11 +156,6 @@ namespace Game.Cards
             else if (turnAge == 0)
             {
                 sb.Append("Установлена: на этом ходу\n");
-                extraLine = true;
-            }
-            if (args.linksAreAvailable)
-            {
-                sb.Append("Удерживайте ALT для подробностей.\n");
                 extraLine = true;
             }
 
@@ -203,10 +175,6 @@ namespace Game.Cards
         DescLinkCollection IDescriptive.DescLinks(DescriptiveArgs args)
         {
             return DescLinks((CardDescriptiveArgs)args);
-        }
-        object[] IDescriptive.DescCustomParams()
-        {
-            return DescCustomParams();
         }
     }
 }

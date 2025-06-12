@@ -1,5 +1,6 @@
 ﻿using Game.Territories;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Game
 {
@@ -24,8 +25,8 @@ namespace Game
             else return null;
         }
 
-        public new void Add(string id, TableEntry entry) => base.Add(id ?? NewId(), entry);
-        public void Add(TableEntry entry) => base.Add(NewId(), entry);
+        public new void Add(string id, TableEntry entry) => AddInternal(id ?? NewId(), entry);
+        public void Add(TableEntry entry) => AddInternal(NewId(), entry);
 
         static string NewId() => "_" + Unique.NewGuidStr;
         void Clone_OnTerritoryReady(TableEntryDict src, TableTerritory terr)
@@ -37,6 +38,13 @@ namespace Game
                 TableEntry entryClone = (TableEntry)srcEntry.Clone(entryCArgs);
                 Add(pair.Key, entryClone);
             }
+        }
+
+        void AddInternal(string key, TableEntry value)
+        {
+            if (!ContainsKey(key))
+                 base.Add(key, value);
+            else UnityEngine.Debug.LogWarning($"TableEntryDict key already exists: {key}. Value: {value.value}, source: {value.source}.");
         }
     }
 }

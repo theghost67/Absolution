@@ -61,9 +61,6 @@ namespace Game.Sleeves
         }
         public bool TryDropOn(TableSleeveCardDropArgs e)
         {
-            if (Drawer == null)
-                throw _ex;
-
             if (CanDropOn(e.field))
             {
                 OnDropOn(e);
@@ -126,6 +123,8 @@ namespace Game.Sleeves
         {
             Sleeve.Drawer.CanPullOut = true;
             if (e.isPreview) return;
+            if (Drawer.RendererIsFlipped.y)
+                Drawer.FlipRendererY();
             Sleeve.Remove(this);
             Drawer.ColliderEnabled = true;
             Drawer.SortingOrderDefault = 10 + (e.field?.pos.x * 4 ?? 0);

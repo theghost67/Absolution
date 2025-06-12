@@ -27,11 +27,11 @@ namespace Game.Territories
 
                 _receiverPrev = _receiverField;
                 _receiverField = value;
-                _receiver = _receiverField.Card;
                 OnReceiverChanged?.Invoke(this, value);
             }
         }
-        public BattleFieldCard Receiver => _receiver; // could be null or killed
+        public BattleFieldCard ReceiverCard => _receiverField.Card; // could be null or killed
+        public bool IgnoresCard { get; set; }
 
         internal BattleField ReceiverPrev => _receiverPrev; // internal use
 
@@ -41,7 +41,6 @@ namespace Game.Territories
         public bool handled;
 
         BattleField _receiverField;
-        BattleFieldCard _receiver;
         BattleField _receiverPrev;
 
         public BattleInitiationRecvArgs(BattleField receiver, BattleInitiationSendArgs sArgs)

@@ -36,6 +36,10 @@ namespace Game.Territories
         {
             return GetHashCode().Equals(other.GetHashCode());
         }
+        public bool Equals(IBattleWeightResult other)
+        {
+            return WeightDeltaAbs == other.WeightDeltaAbs;
+        }
 
         public int CompareTo(BattleWeightResult<T> other)
         {

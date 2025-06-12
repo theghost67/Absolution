@@ -1,6 +1,4 @@
-﻿using Game.Core;
-
-namespace Game
+﻿namespace Game
 {
     /// <summary>
     /// Интерфейс, реализующий объект как источник изменения какого-либо аспекта (переменной) объекта на столе (см. <see cref="TableEntry"/>).

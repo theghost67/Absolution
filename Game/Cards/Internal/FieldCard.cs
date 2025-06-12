@@ -23,13 +23,6 @@ namespace Game.Cards
             traits = new TraitListSet(this);
             FillTraitListSet(startTraitsIds);
         }
-        protected FieldCard(SerializationDict dict) : base(dict)
-        {
-            traits = new TraitListSet(dict.DeserializeKeyAsDict("traits"));
-            health = dict.DeserializeKeyAs<int>("health");
-            strength = dict.DeserializeKeyAs<int>("strength");
-            moxie = dict.DeserializeKeyAs<int>("moxie");
-        }
         protected FieldCard(FieldCard other) : base(other)
         {
             TraitListSetCloneArgs traitsCArgs = new(this);
@@ -39,16 +32,6 @@ namespace Game.Cards
             moxie = other.moxie;
         }
 
-        public override SerializationDict Serialize()
-        {
-            return new SerializationDict(base.Serialize())
-            {
-                { "traits", traits.Serialize() },
-                { "health", health },
-                { "strength", strength },
-                { "moxie", moxie },
-            };
-        }
         public override TableCard CreateOnTable(Transform parent)
         {
             return new TableFieldCard(this, parent);
@@ -60,9 +43,6 @@ namespace Game.Cards
                 points += element.Trait.Points(this, element.Stacks);
             return points * MoxiePointsScale(moxie) * PricePointsScale(price);
         }
-
-        public virtual bool RangePotentialIsGuaranteed() => false;
-        public virtual bool RangeSplashIsGuaranteed() => false;
 
         public float PointsDeltaForMoxie(int moxieAdjust)
         {
@@ -128,16 +108,15 @@ namespace Game.Cards
         };
         void FillTraitListSet(string[] traitsStrArray)
         {
-            const string FORMAT_STR = "Format: [traitId] [traitStacks].";
             foreach (string str in traitsStrArray)
             {
                 if (str == null || str.Length == 0)
-                    throw new ArgumentException($"Trait string shouldn't be null or empty.\n{FORMAT_STR}");
+                    continue;
 
                 string[] split = str.Split(' ');
                 int splitLength = split.Length;
                 if (splitLength == 0 || splitLength > 2)
-                    throw new ArgumentException($"Invalid trait string split length.\n{FORMAT_STR}");
+                    throw new ArgumentException($"Invalid trait string split length.\nFormat: [traitId] [traitStacks].");
 
                 string sId = split[0];
                 string sStacks = split.Length == 2 ? split[1] : "1";

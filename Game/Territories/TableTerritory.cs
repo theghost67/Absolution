@@ -1,6 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using Game.Core;
-using Game.Menus;
 using GreenOne;
 using System;
 using System.Collections.Generic;
@@ -49,6 +47,7 @@ namespace Game.Territories
             _grid = grid;
             _alignSettings = new AlignSettings(Vector2.zero, AlignAnchor.MiddleCenter, alignDistance, true, grid.x);
             _fields = new TableField[grid.x, grid.y];
+            _fieldsDrawersAreNull = true;
             AddOnInstantiatedAction(GetType(), typeof(TableTerritory), () =>
             {
                 if (createFields)
@@ -105,7 +104,7 @@ namespace Game.Territories
         {
             foreach (TableField field in Fields().WithCard())
             {
-                if (field.Drawer != null)
+                if (field.Card?.Drawer != null)
                     field.Card.Drawer.ColliderEnabled = value;
             }
         }

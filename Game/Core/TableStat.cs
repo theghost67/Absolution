@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using Game.Core;
 using GreenOne;
 using MyBox;
 using System;
@@ -11,7 +10,7 @@ namespace Game
     /// Класс, представляющий характеристику типа <see cref="int"/>, изменение значения которой вызывает события перед/после изменения этой характеристики.<br/>
     /// Событие, вызываемое перед изменением, может полностью отменить это изменение.
     /// </summary>
-    public sealed class TableStat : ITableLoggable, ICloneableWithArgs, IDisposable
+    public sealed class TableStat : ITableLoggable, ICloneableWithArgs, IDisposable, IComparable<TableStat>
     {
         public ITableEventVoid<PreSetArgs> OnPreSet => _onPreSet;
         public ITableEventVoid<PostSetArgs> OnPostSet => _onPostSet;
@@ -21,6 +20,7 @@ namespace Game
 
         public int Value => _value;
         public float ValueRaw => _valueRaw;
+        public float ValueAbs => _valueAbsPositive - _valueAbsNegative;
         public float ValueScale => _valueScale;
 
         public string TableName => _id;
@@ -123,6 +123,10 @@ namespace Game
             if (args is TableStatCloneArgs cArgs)
                 return new TableStat(this, cArgs);
             else return null;
+        }
+        public int CompareTo(TableStat other)
+        {
+            return _value.CompareTo(other._value);
         }
         public override string ToString()
         {

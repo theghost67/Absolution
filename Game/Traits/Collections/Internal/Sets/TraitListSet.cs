@@ -9,7 +9,7 @@ namespace Game.Traits
     /// <summary>
     /// Класс, содержащий списки данных активных и пассивных навыков (см. <see cref="Trait"/>).
     /// </summary>
-    public class TraitListSet : ICloneableWithArgs, ISerializable, IEnumerable<TraitListElement>
+    public class TraitListSet : ICloneableWithArgs, IEnumerable<TraitListElement>
     {
         public int Count => _passives.Count + _actives.Count;
         public FieldCard Owner => _owner;
@@ -27,11 +27,6 @@ namespace Game.Traits
             _actives = new ActiveTraitList(this);
         }
         public TraitListSet(FieldCard owner, TraitListElement[] traits) : this(owner) { AdjustStacksInRange(traits); }
-        public TraitListSet(SerializationDict dict)
-        {
-            // TODO: implement
-            throw new NotImplementedException();
-        }
         protected TraitListSet(TraitListSet src, TraitListSetCloneArgs args)
         {
             _owner = args.srcSetOwnerClone;
@@ -49,10 +44,6 @@ namespace Game.Traits
             if (args is TraitListSetCloneArgs cArgs)
                  return new TraitListSet(this, cArgs);
             else return null;
-        }
-        public SerializationDict Serialize()
-        {
-            throw new NotImplementedException();
         }
         public void Clear()
         {

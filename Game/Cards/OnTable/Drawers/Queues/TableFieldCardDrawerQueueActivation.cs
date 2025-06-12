@@ -7,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using MyBox;
 using Game.Territories;
+using Game.Sleeves;
 
 namespace Game.Cards
 {
@@ -49,6 +50,10 @@ namespace Game.Cards
             prefabIcon.sprite = Resources.Load<Sprite>(data.spritePath); // TODO: use traitInList.Drawer.sprite
             prefabSubheader.text = data.name; // TODO: use traitInList.Drawer.text
 
+            prefabHeader.sortingOrder = trait.Owner.Drawer.SortingOrder + 10;
+            prefabIcon.sortingOrder = trait.Owner.Drawer.SortingOrder + 10;
+            prefabSubheader.sortingOrder = trait.Owner.Drawer.SortingOrder + 10;
+
             Vector3 scale1 = Vector3.one * (activated ? 2.00f : 0.75f);
             Vector3 scale2 = Vector3.one * 1.00f;
             Vector3 scale3 = Vector3.one * 0.75f;
@@ -77,18 +82,45 @@ namespace Game.Cards
             Tween scaleTween1 = prefabTransform.DOScale(scale2, ACTIVATION_DUR_APPEAR).Pause().SetTarget(prefab).SetEase(Ease.OutCubic);
             Tween scaleTween2 = prefabTransform.DOScale(scale3, ACTIVATION_DUR_DISAPPEAR).Pause().SetTarget(prefab).SetEase(Ease.OutCubic);
 
+            _ = TryMoveFromSleeve();
             scaleTween1.Play();
             colorTween1.Play();
 
-            await UniTask.Delay((int)(ACTIVATION_DUR_DISPLAY * 1000));
+            await UniTask.Delay((int)(ACTIVATION_DUR_DISPLAY * 1000 / DOTween.timeScale));
 
+            _ = TryMoveInSleeve();
             scaleTween2.Play();
             colorTween2.Play();
 
-            await UniTask.Delay((int)(ACTIVATION_DUR_DISAPPEAR * 1000));
+            await UniTask.Delay((int)(ACTIVATION_DUR_DISAPPEAR * 1000 / DOTween.timeScale));
 
             target?.Drawer.AnimHideSelection();
             prefab.Destroy();
+        }
+
+        private UniTask TryMoveFromSleeve()
+        {
+            if (trait.Owner is not ITableSleeveCard card || !card.Sleeve.Contains(card)) 
+                return UniTask.CompletedTask;
+            card.Drawer.ColliderEnabled = false;
+            card.Sleeve.Drawer.CanPullOut = false;
+            if (!card.Sleeve.isForMe)
+                card.Drawer.FlipRendererY();
+            return card.Drawer.transform.DOMove(Vector3.zero, 0.5f).SetEase(Ease.OutCubic).AsyncWaitForCompletion();
+        }
+        private UniTask TryMoveInSleeve()
+        {
+            if (trait.Owner is not ITableSleeveCard card || !card.Sleeve.Contains(card))
+                return UniTask.CompletedTask;
+            if (card.Drawer.IsDestroying || !card.Sleeve.Contains(card))
+                return UniTask.CompletedTask;
+            return card.Sleeve.Drawer.UpdateCardsPosAndOrderAnimated().ContinueWith(() =>
+            {
+                card.Drawer.ColliderEnabled = true;
+                card.Sleeve.Drawer.CanPullOut = true;
+                if (!card.Sleeve.isForMe)
+                    card.Drawer.FlipRendererY();
+            });
         }
     }
 }

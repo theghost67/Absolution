@@ -261,6 +261,7 @@ namespace Game
                     Behaviour b = _selectedBehaviours[i];
                     b.TryHandleMouseEvents(e);
                     if (!b._selected) i--; // has been removed from the list
+                    if (e.handled == true) break;
                 }
                 _ptrLastPos = e.position;
             }
@@ -493,14 +494,15 @@ namespace Game
         {
             if (e.handled) return;
             if (_tooltipFunc == null) return;
-            Tooltip.ShowAligned(_tooltipAlign, _tooltipFunc());
+            Tooltip.SetAlign(_tooltipAlign);
+            Tooltip.SetTextImmediately(_tooltipFunc());
         }
         protected virtual void OnMouseHoverBase(object sender, DrawerMouseEventArgs e) { }
         protected virtual void OnMouseLeaveBase(object sender, DrawerMouseEventArgs e) 
         {
             if (e.handled) return;
             if (_tooltipFunc != null)
-                Tooltip.Hide();
+                Tooltip.ClearText();
         }
         protected virtual void OnMouseClickBase(object sender, DrawerMouseEventArgs e) { }
 

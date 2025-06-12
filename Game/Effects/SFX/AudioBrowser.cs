@@ -21,10 +21,10 @@ namespace Game.Effects
             Music[] mainMenuMix = new Music[] { new mDevour() };
             AddMusicMix("main", mainMenuMix);
 
-            Music[] battleMix = new Music[] { new mWhereTheWorldEnds(), new mForget(), new mEyesThroat() };
+            Music[] battleMix = new Music[] { new mWhereTheWorldEnds(), new mForget(), new mEyesThroat(), new mPetrochem(), new mTerminal() };
             AddMusicMix("battle", battleMix);
 
-            Music[] peaceMix = new Music[] { new m9thDimension(), new mFloatingPoint() };
+            Music[] peaceMix = new Music[] { new m9thDimension(), new mFloatingPoint(), new mQuantumLoop() };
             AddMusicMix("peace", peaceMix);
         }
         public static void Shuffle()

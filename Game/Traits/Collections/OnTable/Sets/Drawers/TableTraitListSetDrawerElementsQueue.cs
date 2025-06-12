@@ -145,7 +145,7 @@ namespace Game.Traits
 
                 if (query.operation == QueueOperation.Adjust)
                 {
-                    if (elementDrawer == null) continue;
+                    if (elementDrawer == null || elementDrawer.IsDestroying) continue;
                     await _drawer.ScrollTo(elementDrawer).AsyncWaitForCompletion();
                     await elementDrawer.AnimAdjust(query.stacks).AsyncWaitForCompletion();
                     continue;
@@ -155,6 +155,7 @@ namespace Game.Traits
                 if (addToStorage)
                 {
                     _storage.Add(element);
+                    if (elementDrawer == null || elementDrawer.IsDestroying) continue;
                     _drawer.AddToViewport(elementDrawer);
                     await _drawer.ScrollTo(elementDrawer).AsyncWaitForCompletion();
                     await elementDrawer.AnimAppear().AsyncWaitForCompletion();
@@ -162,6 +163,7 @@ namespace Game.Traits
                 else
                 {
                     _storage.Remove(element);
+                    if (elementDrawer == null || elementDrawer.IsDestroying) continue;
                     await _drawer.ScrollTo(elementDrawer).AsyncWaitForCompletion();
                     await elementDrawer.AnimDisappear().AsyncWaitForCompletion();
                     await _drawer.RemoveFromViewportAsync(elementDrawer);

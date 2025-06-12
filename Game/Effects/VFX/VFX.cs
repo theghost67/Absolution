@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Game.Palette;
 using GreenOne;
 using System;
 using TMPro;
@@ -120,11 +121,11 @@ namespace Game.Effects
             TextMeshPro textmesh = CreateText(damage.ToString(), isHealing ? Color.green : Color.red, drawer.transform.position, scale);
             return textmesh.DOATextPopUp(delay: 0f, rotZRange: new float2(10, 25));
         }
-        public static Tween CreateTextAsSpeech(this Drawer drawer, string text, Color color, float scale = 0.5f)
+        public static Tween CreateTextAsSpeech(this Drawer drawer, string text, Color color, float scale = 0.35f)
         {
             if (drawer == null) return null;
             TextMeshPro textmesh = CreateText(text, color, drawer.transform.position + Vector3.up * 100, scale);
-            return textmesh.DOATextPopUp(text.Length * 0.1f, rotZRange: new float2(5, 10));
+            return textmesh.DOATextPopUp(text.Length * 0.1f, rotZRange: new float2(5, 10), endColor: ColorPalette.C2.ColorCur);
         }
 
         public static Light2D CreateLight(Color color, Vector3 pos, float scale = 1)

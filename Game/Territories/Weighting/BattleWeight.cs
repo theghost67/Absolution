@@ -8,21 +8,26 @@ namespace Game.Territories
     /// Этот вес прибавляется к стороне, к которой принадлежит эта сущность.<br/>
     /// Тип может использоваться как дополнительный вес к уже существующему типу <see cref="BattleWeight"/>.
     /// </summary>
-    public readonly struct BattleWeight : IEquatable<BattleWeight>
+    public struct BattleWeight : IEquatable<BattleWeight>
     {
-        public static readonly BattleWeight one = new(1, 0);
-        public static readonly BattleWeight zero = new(0, 0);
-        public static readonly BattleWeight negative = new(-1, 0);
+        public readonly int guid;
+        public readonly float Total => Float(0, this);
 
-        public readonly float absolute;
-        public readonly float relative;
+        public float absolute;
+        public float relative;
 
-        public BattleWeight(float absolute) : this(absolute, 0) { }
-        public BattleWeight(float absolute, float relative)
+        public BattleWeight(IBattleObject obj) : this(obj, 0, 0) { }
+        public BattleWeight(IBattleObject obj, float absolute) : this(obj, absolute, 0) { }
+        public BattleWeight(IBattleObject obj, float absolute, float relative)
         {
+            guid = obj.Guid;
             this.absolute = absolute;
             this.relative = relative;
         }
+
+        public static BattleWeight One(IBattleObject obj) => new(obj, 1, 0);
+        public static BattleWeight Zero(IBattleObject obj) => new(obj, 0, 0);
+        public static BattleWeight Negative(IBattleObject obj) => new(obj, -1, 0);
 
         public static float Float(float startAbsValue, params BattleWeight[] weights)
         {
@@ -45,9 +50,13 @@ namespace Game.Territories
             return startAbsValue * relMod;
         }
 
-        public bool Equals(BattleWeight other)
+        public readonly bool Equals(BattleWeight other)
         {
             return absolute == other.absolute && relative == other.relative;
+        }
+        public override string ToString()
+        {
+            return $"[{guid}] abs: {absolute}, rel: {relative}";
         }
     }
 }

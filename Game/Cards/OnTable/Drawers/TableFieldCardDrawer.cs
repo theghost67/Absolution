@@ -45,6 +45,7 @@ namespace Game.Cards
         protected override void SetColor(Color value)
         {
             base.SetColor(value);
+            queue.SetColor(value);
             TableTraitListSetDrawer traits = Traits;
             if (traits != null)
                 traits.Color = value;
@@ -123,14 +124,9 @@ namespace Game.Cards
             base.OnMouseLeaveBase(sender, e);
 
             TableTraitListSetDrawer setDrawer = Traits;
-            bool bgIsHidden = !BgIsVisible;
-            if (bgIsHidden) return;
+            if (this.HasInitiationPreview() || queue.IsRunning) return;
+            if (setDrawer != null && setDrawer.queue.IsRunning) return;
 
-            bool bgShouldBeHidden = !this.HasInitiationPreview() && queue.IsRunning;
-            if (setDrawer != null)
-                bgShouldBeHidden |= !setDrawer.queue.IsRunning && !setDrawer.queue.IsEmpty;
-
-            if (!bgShouldBeHidden) return;
             setDrawer?.HideStoredElementsInstantly();
             HideBgInstantly();
         }

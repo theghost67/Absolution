@@ -39,11 +39,12 @@ namespace Game.Traits
             if (!e.isLmbDown) return;
             if (e.handled) return;
 
-            bool used = _attachedTrait.TryUseWithAim(attached.Trait.Territory.Player);
+            e.handled = true;
+            bool used = _attachedTrait.TryUseWithAim(attached.Trait.Territory.Player, out bool isAiming);
             if (!used)
                 transform.DOAShake();
-            else if (_attachedTrait.Owner is ITableSleeveCard sleeveCard && sleeveCard.Sleeve.Drawer.IsPulledOut)
-                sleeveCard.Sleeve.Drawer.PullIn();
+            else if (isAiming)
+                (_attachedTrait.Owner as ITableSleeveCard)?.Sleeve.Drawer.PullIn();
         }
     }
 }

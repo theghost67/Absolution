@@ -17,12 +17,25 @@ namespace Game
     public static class TableConsole
     {
         public const KeyCode SWITCH_KEY = KeyCode.BackQuote;
+        public static string FileName
+        {
+            get => _fileName;
+            set
+            {
+                _fileName = value;
+                _filePath = Path.Combine(Application.persistentDataPath, _fileName);
+                _fileStream?.Dispose();
+                Directory.CreateDirectory(Path.GetDirectoryName(_filePath));
+                _fileStream = new(_filePath);
+            }
+        }
         public static string FilePath => _filePath;
         public static event Func<string, bool> OnLogToFile; // bool = handled
+        public static bool IsVisible => _isVisible;
 
         static readonly List<string> _latestCommands = new();
-        static readonly Queue<string> _fileQueuedLogs = new();
         static string _filePath;
+        static string _fileName;
         static StreamWriter _fileStream;
 
         static GameObject _consoleObject;
@@ -33,7 +46,7 @@ namespace Game
 
         public static void Initialize()
         {
-            Commands.Add(new cmdAiStage());
+            Commands.Add(new cmdAiMove());
             Commands.Add(new cmdAiTest());
             Commands.Add(new cmdCardGod());
             Commands.Add(new cmdCardStat());
@@ -48,9 +61,9 @@ namespace Game
             Commands.Add(new cmdSideCardPlace());
             Commands.Add(new cmdSideStat());
             Commands.Add(new cmdSkip());
+            Commands.Add(new cmdSkipMusic());
 
-            _filePath = Application.persistentDataPath + "/Console.log";
-            _fileStream = new(_filePath);
+            FileName = "Console.log";
 
             _consoleObject = Global.Root.Find("CORE/Console").gameObject;
             _inputTextMesh = _consoleObject.Find<TMP_InputField>("Input text");
@@ -58,34 +71,8 @@ namespace Game
 
             Global.OnUpdate += OnUpdate;
             Application.quitting += _fileStream.Close;
-            Task.Run(LogToFileQueue);
         }
-
-        public static void LogToFile(string module, string text)
-        {
-            text = $"[{module}] {text}";
-            if (OnLogToFile?.Invoke(text) ?? false) return;
-            _fileQueuedLogs.Enqueue(text);
-        }
-        public static void LogToFile(string module, IReadOnlyList<string> texts)
-        {
-            for (int i = 0; i < texts.Count; i++)
-            {
-                string text = $"[{module}] {texts[i]}";
-                if (OnLogToFile?.Invoke(text) ?? false) continue;
-                _fileQueuedLogs.Enqueue(text);
-            }
-        }
-        public static void Log(string text, LogType type)
-        {
-            string str;
-            if (type == LogType.Error || type == LogType.Exception)
-                 str = $"<color=red>{text}</color>\n";
-            else str = $"{text}\n";
-            _outputTextMesh.text += str;
-        }
-
-        static void ExecuteLine(string line)
+        public static void ExecuteLine(string line)
         {
             if (string.IsNullOrEmpty(line)) return;
             try { Command.ExecuteLine(line); }
@@ -103,6 +90,31 @@ namespace Game
             _inputTextMesh.text = null;
             _inputTextMesh.ActivateInputField();
         }
+
+        public static void LogToFile(string module, string text)
+        {
+            text = $"[{module}] {text}";
+            if (OnLogToFile?.Invoke(text) ?? false) return;
+            _fileStream?.WriteLine(text);
+        }
+        public static void LogToFile(string module, IReadOnlyList<string> texts)
+        {
+            for (int i = 0; i < texts.Count; i++)
+            {
+                string text = $"[{module}] {texts[i]}";
+                if (OnLogToFile?.Invoke(text) ?? false) continue;
+                _fileStream?.WriteLine(text);
+            }
+        }
+        public static void Log(string text, LogType type)
+        {
+            string str;
+            if (type == LogType.Error || type == LogType.Exception)
+                 str = $"<color=red>{text}</color>\n";
+            else str = $"{text}\n";
+            UnityMainThreadDispatcher.Enqueue(() => _outputTextMesh.text += str);
+        }
+
         static void OnUpdate() 
         {
             if (_isVisible)
@@ -142,35 +154,6 @@ namespace Game
                 _inputTextMesh.text = _commandIndex == _latestCommands.Count ? "" : _latestCommands[_commandIndex];
             }
             _inputTextMesh.MoveToEndOfLine(false, false);
-        }
-
-        static void LogToFileQueue()
-        {
-            Start:
-            if (_fileQueuedLogs.Count == 0) goto End;
-            if (!_fileStream.BaseStream.CanWrite) goto End;
-            try
-            {
-                while (_fileQueuedLogs.Count != 0)
-                {
-                    string text;
-                    lock (_fileQueuedLogs) { text = _fileQueuedLogs.Dequeue(); }
-                    _fileStream.WriteLine(text);
-                }
-                _fileStream.Flush();
-            }
-            catch (Exception ex) 
-            { 
-                Debug.LogException(ex);
-                Debug.LogError("Log stream has been disposed.");
-                _fileStream.Dispose();
-                _fileStream = null;
-                return;
-            }
-
-            End:
-            Thread.Sleep(1000);
-            goto Start;
         }
     }
 }

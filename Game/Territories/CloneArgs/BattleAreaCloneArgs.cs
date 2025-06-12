@@ -7,11 +7,11 @@ namespace Game.Territories
     /// </summary>
     public class BattleAreaCloneArgs : CloneArgs
     {
-        public readonly IBattleWeighty srcAreaObserverClone;
+        public readonly IBattleFighter srcAreaObserverClone;
         public readonly BattleFieldCard srcAreaObservingPointClone;
         public readonly BattleTerritoryCloneArgs terrCArgs;
 
-        public BattleAreaCloneArgs(IBattleWeighty srcAreaObserverClone, BattleFieldCard srcAreaObservingPointClone, BattleTerritoryCloneArgs terrCArgs)
+        public BattleAreaCloneArgs(IBattleFighter srcAreaObserverClone, BattleFieldCard srcAreaObservingPointClone, BattleTerritoryCloneArgs terrCArgs)
         {
             this.srcAreaObserverClone = srcAreaObserverClone;
             this.srcAreaObservingPointClone = srcAreaObservingPointClone;

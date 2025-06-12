@@ -39,7 +39,10 @@ namespace Game.Console
 
         protected override void Execute(CommandArgInputDict args)
         {
-            if (TableEventManager.CountAll() != 0)
+            int stage = (int)(args.ContainsKey(StageArg.ID) ? args[StageArg.ID].value : SKIP_CUR);
+            bool forceSkip = stage == SKIP_FORCE;
+
+            if (!forceSkip && TableEventManager.CountAll() != 0)
             {
                 TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
                 return;
@@ -49,9 +52,6 @@ namespace Game.Console
                 TableConsole.Log("Текущее меню не является местом сражения.", LogType.Error);
                 return;
             }
-
-            int stage = (int)(args.ContainsKey(StageArg.ID) ? args[StageArg.ID].value : SKIP_CUR);
-            bool forceSkip = stage == SKIP_FORCE;
 
             if (stage != SKIP_CUR)
             {

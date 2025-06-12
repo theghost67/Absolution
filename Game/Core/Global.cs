@@ -1,12 +1,13 @@
-﻿using DG.Tweening;
+﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
-using Game.Environment;
 using Game.Menus;
 using Game.Palette;
 using Game.Traits;
 using GreenOne;
 using System;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -100,6 +101,31 @@ namespace Game
             _camera.orthographicSize = size;
         }
 
+        static void DisableCards()
+        {
+            if (!File.Exists("disabled_cards.txt")) return;
+            string[] ids = File.ReadAllLines("disabled_cards.txt");
+            foreach (string id in ids)
+            {
+                CardBrowser.AllIndexed.TryGetValue(id, out Card card);
+                if (card == null) continue;
+                card.frequency = 0;
+                TableConsole.Log($"Карта отключена: {id}.", LogType.Log);
+            }
+        }
+        static void DisableTraits()
+        {
+            if (!File.Exists("disabled_traits.txt")) return;
+            string[] ids = File.ReadAllLines("disabled_traits.txt");
+            foreach (string id in ids)
+            {
+                TraitBrowser.AllIndexed.TryGetValue(id, out Trait trait);
+                if (trait == null) continue;
+                trait.frequency = 0;
+                TableConsole.Log($"Навык отключён: {id}.", LogType.Log);
+            }
+        }
+
         void Awake()
         {
             _root = transform.root;
@@ -120,14 +146,15 @@ namespace Game
             //Time.fixedDeltaTime = 1 / 20f;
 
             UpdateCameraSize();
+            //Translator.Initialize(); // TODO: restore
             TraitBrowser.Initialize();
             CardBrowser.Initialize();
-            EnvironmentBrowser.Initialize();
             AudioBrowser.Initialize();
             TableConsole.Initialize();
 
-            Player.Load();
-            SaveSystem.LoadAll();
+            DisableCards();
+            DisableTraits();
+
             for (int i = 0; i < ColorPalette.All.Length; i++)
                 ColorPalette.Current = _palette;
 

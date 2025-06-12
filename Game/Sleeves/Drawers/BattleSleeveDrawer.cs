@@ -21,7 +21,7 @@ namespace Game.Sleeves
             base.PullOut();
             if (attached.isForMe) return;
             foreach (IBattleSleeveCard card in attached)
-                card.Drawer.FlipY();
+                card.Drawer.FlipRendererY();
         }
         public override void PullIn()
         {
@@ -29,12 +29,12 @@ namespace Game.Sleeves
             base.PullIn();
             if (attached.isForMe) return;
             foreach (IBattleSleeveCard card in attached)
-                card.Drawer.FlipY();
+                card.Drawer.FlipRendererY();
         }
 
         protected override bool UpdateUserInput()
         {
-            return base.UpdateUserInput() && gameObject.activeInHierarchy;
+            return base.UpdateUserInput() && !IsMovedOut;
         }
     }
 }

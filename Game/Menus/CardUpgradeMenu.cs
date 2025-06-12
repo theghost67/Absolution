@@ -30,6 +30,7 @@ namespace Game.Menus
         public CardDeck Deck => _sleeve.Deck;
         public float PointsLimit => _pointsLimit;
         public float PointsCurrent => _pointsCurrent;
+        public float PointsAvailable => _pointsAvailable;
         public override string LinkedMusicMixId => "peace";
 
         readonly InfoButtonDrawer _infoButton;
@@ -63,7 +64,7 @@ namespace Game.Menus
 
             public Vector3 DefaultPos => _defaultPos;
             public float DefaultPoints => _defaultPoints;
-            public float CurrentPoints => Data.Points();
+            public float CurrentPoints => Data.Points() - _defaultPoints;
 
             static readonly Vector3 minScale = Vector3.one;
             static readonly Vector3 maxScale = Vector3.one * 1.25f;
@@ -427,6 +428,7 @@ namespace Game.Menus
                 OnGraded?.Invoke(upgradePointsDelta);
                 menu.SetCollider(true);
                 statDrawer.IsSelected = true; // force mouse enter invoke
+                e.handled = true;
             }
             async void OnMouseClickRight(object sender, DrawerMouseEventArgs e)
             {
@@ -444,6 +446,7 @@ namespace Game.Menus
                 OnGraded?.Invoke(downgradePointsDelta);
                 menu.SetCollider(true);
                 statDrawer.IsSelected = true; // force mouse enter invoke
+                e.handled = true;
             }
         }
         abstract class ButtonDrawer : Drawer
@@ -483,9 +486,7 @@ namespace Game.Menus
             }
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {
-                if (downgrade)
-                    return card.Data.PointsDeltaForPrice(-times);
-                else return card.Data.PointsDeltaForPrice(times);
+                return 0;
             }
             protected override bool UpgradeIsPossible() => false;
         }
@@ -621,6 +622,8 @@ namespace Game.Menus
 
             protected override float GetGradePointsDelta(int times, bool downgrade)
             {
+                if (!UpgradeIsPossible())
+                    return 0;
                 if (downgrade)
                      return card.Data.PointsDeltaForTrait(_trait, -times);
                 else return card.Data.PointsDeltaForTrait(_trait, times);
@@ -632,19 +635,24 @@ namespace Game.Menus
 
             void OnMouseEnter(object sender, DrawerMouseEventArgs e)
             {
+                if (_element.Trait.Data.tags.HasFlag(TraitTag.Static))
+                    return;
                 int times = GetUserGradeTimes();
+                menu.WriteCurrentState(_element.Trait.DescDynamic(out _));
                 _element.AdjustStacksInternal(times);
-
                 string desc = _element.Trait.DescDynamicWithLinks(out string[] descLinksTexts);
                 menu.WriteUpgradedState(desc);
-                Tooltip.ShowLinks(descLinksTexts);
-
+                Tooltip.SetAlign(HorizontalAlignmentOptions.Left);
+                Tooltip.SetText(descLinksTexts.Prepend(desc).ToArray());
                 _element.AdjustStacksInternal(-times);
             }
             void OnMouseLeave(object sender, DrawerMouseEventArgs e)
             {
+                if (_element.Trait.Data.tags.HasFlag(TraitTag.Static))
+                    return;
+                menu.WriteCurrentState("");
                 menu.WriteUpgradedState("");
-                Tooltip.Hide();
+                Tooltip.ClearText();
             }
         }
 
@@ -768,7 +776,7 @@ namespace Game.Menus
         public CardUpgradeMenu(CardDeck deck, float pointsLimit) : base(ID, _prefab)
         {
             _pointsLimit = pointsLimit;
-            _pointsCurrent = deck.Points;
+            _pointsCurrent = 0;
             _sleeve = new SleeveToUpgrade(this, deck);
             _sleeve.TakeMissingCards(true);
 
@@ -803,12 +811,6 @@ namespace Game.Menus
             OnDeckPointsChangedBase(0);
             _pointsAvailableAtStart = _pointsAvailable;
             UpgradeInfoHide();
-        }
-
-        public override void WriteDesc(string text)
-        {
-            base.WriteDesc(text);
-            WriteCurrentState(text);
         }
 
         protected override void Open()

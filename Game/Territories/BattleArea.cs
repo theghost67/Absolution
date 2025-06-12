@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Game.Territories
 {
     /// <summary>
-    /// Представляет область действия весомой сущности (см. <see cref="IBattleWeighty"/>) с отслеживанием целей на территории карты во время сражения.
+    /// Представляет область действия весомой сущности (см. <see cref="IBattleFighter"/>) с отслеживанием целей на территории карты во время сражения.
     /// </summary>
     public sealed class BattleArea : ICloneableWithArgs, IDisposable
     {
@@ -24,7 +24,7 @@ namespace Game.Territories
         public BattleField AimedTarget => _aimedTarget;
 
         public readonly BattleFieldCard observingPoint;
-        public readonly IBattleWeighty observer;
+        public readonly IBattleFighter observer;
 
         static BattleArea _currentlyAimingArea;
         static bool _isAnyAiming;
@@ -47,7 +47,7 @@ namespace Game.Territories
         Action<BattleField> _onAimFinish;
         Action _onAimCancel;
 
-        public BattleArea(IBattleWeighty observer, BattleFieldCard observingPoint)
+        public BattleArea(IBattleFighter observer, BattleFieldCard observingPoint)
         {
             this.observer = observer;
             this.observingPoint = observingPoint;
@@ -76,7 +76,8 @@ namespace Game.Territories
             _possibleTargets = Array.Empty<BattleField[]>();
 
             _observeTargets = src._observeTargets;
-            args.terrCArgs.OnTerritoryReady += terr => Clone_OnTerrFieldsReady(src, (BattleTerritory)terr);
+            if (!observingPoint.IsKilled)
+                args.terrCArgs.OnTerritoryReady += terr => Clone_OnTerrFieldsReady(src, (BattleTerritory)terr);
         }
 
         public void Dispose()
@@ -136,7 +137,7 @@ namespace Game.Territories
                 {
                     if (splashTarget.Card == null) continue;
                     BattleFieldCard splashTargetCard = splashTarget.Card;
-                    BattleWeight splashTargetWeight = splashTargetCard.Weight;
+                    BattleWeight splashTargetWeight = splashTargetCard.CalculateWeight();
                     weights[i] += BattleWeight.Float(splashTargetCard.Side.Health, splashTargetWeight);
                 }
             }
@@ -224,6 +225,8 @@ namespace Game.Territories
         public IEnumerable<BattleField> AimedTargetSplash()
         {
             if (_aimedTarget == null)
+                EnableContinuousObserving().GetAwaiter().GetResult();
+            if (_aimedTarget == null)
                 yield break;
 
             // returns aimed target splash targets
@@ -234,6 +237,8 @@ namespace Game.Territories
         {
             if (!CanObserve())
                 yield break;
+            if (_potentialTargets.Length == 0)
+                EnableContinuousObserving().GetAwaiter().GetResult();
 
             // returns available targets to aim
             foreach (BattleField field in _potentialTargets)
@@ -243,6 +248,8 @@ namespace Game.Territories
         {
             if (!CanObserve())
                 yield break;
+            if (_possibleTargets.Length == 0)
+                EnableContinuousObserving().GetAwaiter().GetResult();
 
             // returns all splash targets of each available target
             foreach (BattleField field in _possibleTargets[index])
@@ -251,7 +258,12 @@ namespace Game.Territories
 
         async UniTask EnableContinuousObserving()
         {
+            if (!CanObserve())
+                return;
+
+            _observingCards = new List<BattleFieldCard>(TableTerritory.MAX_SIZE);
             _potentialTargets = GetPotentialTargetsOf(observingPoint.Field);
+
             if (Range.potential.targetIsSingle)
             {
                 _aimedTarget = _potentialTargets.First();
@@ -294,10 +306,15 @@ namespace Game.Territories
 
         bool CanObserve()
         {
-            return observingPoint.Field != null && _observeTargets;
+            return !observingPoint.IsKilled && !observingPoint.IsDisposed && observingPoint.Field != null && _observeTargets;
         }
         UniTask CheckObserveStateFor(BattleFieldCard target)
         {
+            if (_observingCards == null || _potentialTargets == null)
+            {
+                Debug.LogWarning("Battle area arrays are null.");
+                return UniTask.CompletedTask;
+            }
             bool wasInRange = _observingCards.Contains(target);
             bool isInRange = _potentialTargets.Contains(target.Field);
             if (isInRange == wasInRange) return UniTask.CompletedTask;
@@ -382,7 +399,7 @@ namespace Game.Territories
         {
             BattleField field = (BattleField)sender;
             BattleTerritory terr = field.Territory;
-            IBattleWeighty observer = (IBattleWeighty)this.observer.Finder.FindInBattle(terr);
+            IBattleFighter observer = (IBattleFighter)this.observer.Finder.FindInBattle(terr);
             if (observer == null) return UniTask.CompletedTask;
 
             BattleArea area = observer.Area;

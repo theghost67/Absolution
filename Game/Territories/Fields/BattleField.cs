@@ -53,6 +53,9 @@ namespace Game.Territories
             return field._side.Health.AdjustValue(e.totalDeltaValue, e.source);
         }
 
-        // TODO: add GetObservingEntities?
+        public BattleWeight CalculateWeight(int[] excludedWeights)
+        {
+            return BattleWeight.Zero(this);
+        }
     }
 }

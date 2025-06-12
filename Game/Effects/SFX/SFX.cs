@@ -53,6 +53,7 @@ namespace Game.Effects
                     source.volume = value;
             }
         }
+        public static float SpectrumVolume => _spectrumBuffer.Take(10).Average() * 1500;
 
         public static event Action<BeatInfo> OnBeat;
         public static bool IsAnyMusicPlaying
@@ -77,6 +78,7 @@ namespace Game.Effects
 
         static List<MusicSource> _musicSources;
         static List<AudioSource> _soundSources;
+        static float[] _spectrumBuffer = new float[128];
 
         class MusicMixCollection : HashSet<MusicMixInfo>
         {
@@ -210,6 +212,13 @@ namespace Game.Effects
                 _musicMixId = null;
                 _musicMixLastId = null;
             }
+            public bool Skip()
+            {
+                if (IsFading()) 
+                    return false;
+                OnComplete();
+                return true;
+            }
 
             public Tween Fade(float to)
             {
@@ -244,6 +253,11 @@ namespace Game.Effects
             public void UpdateVolume()
             {
                 UpdateVolumeInternal(TweenVolume());
+            }
+
+            public void GetSpectrum(float[] data)
+            {
+                _source.GetSpectrumData(data, 0, FFTWindow.Hamming);
             }
 
             public void OnUpdate()
@@ -329,6 +343,11 @@ namespace Game.Effects
         public static void StopMusic()
         {
             PlayMusic(null);
+        }
+        public static bool SkipMusic()
+        {
+            MusicSource currentSource = _musicSources[_musicSourceIsSwitched ? 1 : 0];
+            return currentSource.Skip();
         }
         public static void PlayMusic(string musicId)
         {
@@ -443,6 +462,7 @@ namespace Game.Effects
         {
             foreach (MusicSource source in _musicSources)
                 source.OnUpdate();
+            GetActiveMusicSource().GetSpectrum(_spectrumBuffer);
         }
     }
 }

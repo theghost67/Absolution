@@ -9,13 +9,22 @@ namespace Game
     {
         // length: 4 // [0] = price, [1] = moxie, [2] = health, [3] = strength
         public static readonly int[] normalStats = new int[] { 0, 0, 1, 0 };
-        public readonly new Card src;
+        public readonly new Card data;
+        public readonly new ITableCard table;
         public int[] linkStats;
         public TraitStacksPair[] linkTraits;
 
-        public CardDescriptiveArgs(string id) : base(CardBrowser.GetCard(id))
+        public CardDescriptiveArgs(ITableCard tableCard) : base(tableCard.Data, tableCard)
         {
-            src = (Card)base.src;
+            data = (Card)base.data;
+            table = tableCard;
+            linkStats = new int[] { -1, -1, -1, -1 };
+            linkTraits = Array.Empty<TraitStacksPair>();
+        }
+        public CardDescriptiveArgs(string id) : base(CardBrowser.GetCard(id), null)
+        {
+            data = (Card)base.data;
+            table = null;
             linkStats = new int[] { -1, -1, -1, -1 };
             linkTraits = Array.Empty<TraitStacksPair>();
         }

@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using Game.Sleeves;
 using Game.Territories;
 using UnityEngine;
 
@@ -10,14 +11,12 @@ namespace Game.Traits
     public abstract class ActiveTrait : Trait, IBattleThresholdUsable<BattleActiveTrait>
     {
         public IBattleThresholdUsable<BattleActiveTrait> Threshold => this;
+
         public ActiveTrait(string id) : base(id, isPassive: false) { }
         protected ActiveTrait(ActiveTrait other) : base(other) { }
 
-        public sealed override TableTrait CreateOnTable(Transform parent)
-        {
-            return new TableActiveTrait(this, null, parent);
-        }
-        public virtual BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result) => BattleWeight.zero;
+        public sealed override TableTrait CreateOnTable(Transform parent) => new TableActiveTrait(this, null, parent);
+        public virtual BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result) => BattleWeight.Zero(result.Entity);
 
         public virtual bool IsUsableInSleeve() => false;
         public virtual bool IsUsable(TableActiveTraitUseArgs e)
@@ -25,19 +24,25 @@ namespace Game.Traits
             bool cooldown = e.trait.IsOnCooldown();
             if (cooldown) return false;
 
-            bool usedInSleeve = (e.target == null) == IsUsableInSleeve();
-            if (!usedInSleeve) return false;
+            ITableSleeveCard sleeveCard = e.trait.Owner as ITableSleeveCard;
+            bool usedInSleeve = sleeveCard?.Sleeve.Contains(sleeveCard) ?? false;
+            if (usedInSleeve && !IsUsableInSleeve()) return false;
 
             if (e.isInBattle)
             {
                 IBattleTrait trait = (IBattleTrait)e.trait;
                 return trait.Territory.PhaseSide == trait.Side;
             }
-            return true;
+
+            bool targetIsReachable = e.trait.Owner.Field != null && !range.potential.OverlapsTarget(e.trait.Owner.Field.pos, e.target.pos);
+            return usedInSleeve || targetIsReachable;
         }
-        public virtual UniTask OnUse(TableActiveTraitUseArgs e)
+
+        public async UniTask Use(TableActiveTraitUseArgs e)
         {
-            return e.AnimActivation();
+            await e.AnimActivation();
+            await OnUse(e);
         }
+        protected abstract UniTask OnUse(TableActiveTraitUseArgs e);
     }
 }

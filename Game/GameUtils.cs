@@ -1,6 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
 using Game.Cards;
+using Game.Effects;
 using Game.Menus;
+using Game.Palette;
 using Game.Territories;
 using Game.Traits;
 using GreenOne;
@@ -127,56 +129,71 @@ namespace Game
             return AnimDeactivation(e.trait, e.target);
         }
 
+        public static UniTask AnimActivationShort(this TableActiveTraitUseArgs e, string text = null)
+        {
+            return AnimActivationShort(e.trait, text);
+        }
+        public static UniTask AnimActivationShort(this ITableTrait trait, string text = null)
+        {
+            if (trait == null)
+                return UniTask.CompletedTask;
+
+            TableConsole.LogToFile("card", $"{trait.TableNameDebug}: activation (short).");
+            if (trait.Owner.Drawer == null)
+                return UniTask.CompletedTask;
+
+            Color initialColor = trait.Data.isPassive ? ColorPalette.CP.ColorCur : ColorPalette.CA.ColorCur;
+            trait.Owner.Drawer.AnimHighlightOutline(1);
+            trait.Owner.Drawer.CreateTextAsSpeech(text ?? trait.Data.name, initialColor);
+            return UniTask.Delay(250);
+        }
+
         public static async UniTask AnimActivation(this ITableTrait trait, TableField target = null)
         {
-            if (trait == null || trait.Owner == null)
+            if (trait == null)
                 return;
 
             TableConsole.LogToFile("card", $"{trait.TableNameDebug}: activation.");
             if (trait.Owner.Drawer == null)
                 return;
 
-            Menu.WriteLogToCurrent($"{trait.TableName}: навык активируется!");
             trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueActivation(trait, target, true));
             await trait.Owner.Drawer.queue.Await();
         }
         public static async UniTask AnimDeactivation(this ITableTrait trait, TableField target = null)
         {
-            if (trait == null || trait.Owner == null)
+            if (trait == null)
                 return;
 
             TableConsole.LogToFile("card", $"{trait.TableNameDebug}: deactivation.");
             if (trait.Owner.Drawer == null)
                 return;
 
-            Menu.WriteLogToCurrent($"{trait.TableName}: навык деактивируется.");
             trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueActivation(trait, target, false));
             await trait.Owner.Drawer.queue.Await();
         }
 
         public static async UniTask AnimDetectionOnSeen(this ITableTrait trait, BattleFieldCard seenCard)
         {
-            if (trait == null || trait.Owner == null)
+            if (trait == null)
                 return;
 
             TableConsole.LogToFile("card", $"{trait.TableNameDebug}: card seen.");
             if (trait.Owner.Drawer == null)
                 return;
 
-            Menu.WriteLogToCurrent($"{trait.TableName}: карта обнаружена.");
             trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, seenCard.LastField, true));
             await trait.Owner.Drawer.queue.Await();
         }
         public static async UniTask AnimDetectionOnUnseen(this ITableTrait trait, BattleFieldCard unseenCard)
         {
-            if (trait == null || trait.Owner == null)
+            if (trait == null)
                 return;
 
             TableConsole.LogToFile("card", $"{trait.TableNameDebug}: card unseen.");
             if (trait.Owner.Drawer == null)
                 return;
 
-            Menu.WriteLogToCurrent($"{trait.TableName}: карта потеряна.");
             trait.Owner.Drawer.queue.Enqueue(new TableFieldCardDrawerQueueDetection(trait, unseenCard.LastField, false));
             await trait.Owner.Drawer.queue.Await();
         }
@@ -249,16 +266,16 @@ namespace Game
         }
         public static BattleFieldCard AsBattleFieldCard(this ITableEntrySource source)
         {
-            BattleFieldCard killer = source switch
+            BattleFieldCard card = source switch
             {
                 BattleFieldCard c => c,
                 IBattleTrait t => t.Owner,
                 _ => null,
             };
 
-            if (killer == null || killer.IsKilled)
+            if (card == null || card.IsKilled)
                 return null;
-            else return killer;
+            else return card;
         }
     }
 }

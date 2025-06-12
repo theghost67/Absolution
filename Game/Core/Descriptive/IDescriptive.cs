@@ -8,6 +8,6 @@
         // special characters: ≤ ≥ « »
         public string DescDynamic(DescriptiveArgs args);
         public DescLinkCollection DescLinks(DescriptiveArgs args);
-        public object[] DescCustomParams(); // can be used whatever you like in DescDynamic function
+        public bool HasTableEquivalent(); // if true, you'll need to pass tableObject to DescriptiveArgs, thus you can create descriptions based on object state
     }
 }

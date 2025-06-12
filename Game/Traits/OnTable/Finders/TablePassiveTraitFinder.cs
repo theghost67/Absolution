@@ -34,6 +34,9 @@ namespace Game.Traits
                 }
             }
 
+            if (owner == null && territory is BattleTerritory bTerr)
+                owner = bTerr.GetFromStash(_ownerGuid);
+
             if (owner != null)
                  return owner.Traits.Passives[_id]?.Trait ?? null;
             else return null;

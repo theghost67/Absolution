@@ -6,7 +6,7 @@ namespace Game.Territories
     /// <summary>
     /// Структура, определяющая цели какого-либо совершаемого действия во время сражения.
     /// </summary>
-    public readonly struct BattleRange : IEquatable<BattleRange>, ISerializable, ICloneable
+    public readonly struct BattleRange : IEquatable<BattleRange>, ICloneable
     {
         public static readonly BattleRange none = new(TerritoryRange.none, TerritoryRange.none);
         public static readonly BattleRange normal = new(TerritoryRange.oppositeSingle, TerritoryRange.ownerSingle);
@@ -32,12 +32,6 @@ namespace Game.Territories
 
             CheckAimRange();
         }
-        public BattleRange(SerializationDict dict)
-        {
-            potential = new TerritoryRange(dict.DeserializeKeyAsDict("potential"));
-            splash = new TerritoryRange(dict.DeserializeKeyAsDict("splash"));
-            priority = dict.DeserializeKeyAs<int>("priority");
-        }
 
         public static bool operator ==(BattleRange left, BattleRange right)
         {
@@ -51,15 +45,6 @@ namespace Game.Territories
         public object Clone()
         {
             return MemberwiseClone();
-        }
-        public SerializationDict Serialize()
-        {
-            return new SerializationDict()
-            {
-                { "potential", potential },
-                { "splash", splash },
-                { "priority", priority },
-            };
         }
         public override int GetHashCode()
         {

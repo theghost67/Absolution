@@ -1,5 +1,4 @@
-﻿using Game.Environment;
-using GreenOne.Console;
+﻿using GreenOne.Console;
 using UnityEngine;
 
 namespace Game.Console
@@ -35,7 +34,7 @@ namespace Game.Console
         {
             int stage = args["stage"].ValueAs<int>();
             Player.Deck.Clear();
-            Player.Deck.AddRange(Traveler.NewDeck(Traveler.EntityType.Player, stage));
+            Player.Deck.AddRange(new Cards.CardDeck(stage));
             TableConsole.Log($"Колода игрока сгенерирована.", LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]

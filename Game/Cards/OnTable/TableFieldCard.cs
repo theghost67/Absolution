@@ -26,6 +26,7 @@ namespace Game.Cards
         public TableField LastField => _lastField;
         public TableTraitListSet Traits => _traits;
         public int FieldsAttachments => _fieldsAttachments;
+        public bool FirstFieldAttachment => _fieldsAttachments == 1;
 
         readonly FieldCard _data;
         readonly TableFieldCardFinder _finder;
@@ -127,15 +128,17 @@ namespace Game.Cards
             if (e.field == null)
             {
                 if (_field == null) return;
-                await _field.DetatchCard(e.source);
+                TableField field = _field;
                 _field = null;
+                await field.DetatchCard(e.source);
             }
             else
             {
-                if (_field != null) 
-                    await Field.DetatchCard(e.source);
+                TableField lastField = _field;
+                if (_field?.Card != null) 
+                    await _field.DetatchCard(e.source);
+                _lastField = lastField;
                 _field = e.field;
-                _lastField = _field;
                 _fieldsAttachments++;
                 await _field.AttachCard(this, e.source);
             }

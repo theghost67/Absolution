@@ -6,13 +6,22 @@ namespace Game
     /// </summary>
     public class TraitDescriptiveArgs : DescriptiveArgs
     {
-        public readonly new Trait src;
+        public readonly new Trait data;
+        public readonly new ITableTrait table;
         public int turnsDelay;
         public int stacks;
 
-        public TraitDescriptiveArgs(string id) : base(TraitBrowser.GetTrait(id))
+        public TraitDescriptiveArgs(ITableTrait tableTrait) : base(tableTrait.Data, tableTrait)
         {
-            src = (Trait)base.src;
+            data = (Trait)base.data;
+            table = tableTrait;
+            turnsDelay = -1;
+            stacks = 1;
+        }
+        public TraitDescriptiveArgs(string id) : base(TraitBrowser.GetTrait(id), null)
+        {
+            data = (Trait)base.data;
+            table = null;
             turnsDelay = -1;
             stacks = 1;
         }

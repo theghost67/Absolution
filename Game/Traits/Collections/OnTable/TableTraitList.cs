@@ -14,13 +14,13 @@ namespace Game.Traits
     public abstract class TableTraitList : TableObject, ITableTraitList
     {
         public int Count => _list.Count;
-        public IIdEventBoolAsync<TableTraitStacksTryArgs> OnStacksTryToChange => _onStacksTryToChange;
+        public ITableEventVoid<TableTraitStacksTryArgs> OnStacksTryToChange => _onStacksTryToChange;
         public ITableEventVoid<TableTraitStacksSetArgs> OnStacksChanged => _onStacksChanged;
         public TableTraitListSet Set => _set;
 
         readonly TableTraitListSet _set;
         readonly List<ITableTraitListElement> _list;
-        readonly TableEventBool<TableTraitStacksTryArgs> _onStacksTryToChange; 
+        readonly TableEventVoid<TableTraitStacksTryArgs> _onStacksTryToChange; 
         readonly TableEventVoid<TableTraitStacksSetArgs> _onStacksChanged;
         readonly string _eventsGuid;
 
@@ -28,7 +28,7 @@ namespace Game.Traits
         {
             _set = set;
             _list = new List<ITableTraitListElement>();
-            _onStacksTryToChange = new TableEventBool<TableTraitStacksTryArgs>();
+            _onStacksTryToChange = new TableEventVoid<TableTraitStacksTryArgs>();
             _onStacksChanged = new TableEventVoid<TableTraitStacksSetArgs>();
             _eventsGuid = this.GuidGen(1);
 
@@ -41,7 +41,7 @@ namespace Game.Traits
         {
             _set = args.srcListSetClone;
             _list = new List<ITableTraitListElement>();
-            _onStacksTryToChange = (TableEventBool<TableTraitStacksTryArgs>)src._onStacksTryToChange.Clone();
+            _onStacksTryToChange = (TableEventVoid<TableTraitStacksTryArgs>)src._onStacksTryToChange.Clone();
             _onStacksChanged = (TableEventVoid<TableTraitStacksSetArgs>)src._onStacksChanged.Clone();
 
             AddOnInstantiatedAction(GetType(), typeof(TableTraitList), () =>
@@ -79,7 +79,11 @@ namespace Game.Traits
         {
             if (stacks == 0 || !_set.CanAdjustStacks()) return;
             TableTraitStacksTryArgs listArgs = new(id, stacks, source);
-            if (!await _onStacksTryToChange.InvokeAND(this, listArgs)) return;
+            foreach (var del in _onStacksTryToChange)
+            {
+                await del.Delegate.Invoke(this, listArgs);
+                if (listArgs.handled) return;
+            }
             if (stacks == 0 || !_set.CanAdjustStacks()) return;
 
             stacks = listArgs.delta;
@@ -102,12 +106,15 @@ namespace Game.Traits
         }
         public async UniTask RevertStacks(string id, string entryId)
         {
-            ITableEntryDict entries = this[id].StacksEntries;
+            ITableTraitListElement element = this[id];
+            if (element == null) return;
+
+            ITableEntryDict entries = element.StacksEntries;
             if (!entries.TryGetValue(entryId, out TableEntry entry))
                 return;
 
             TableTraitStacksTryArgs listArgs = new(id, (int)-entry.value, entry.source);
-            ITableTraitListElement element = AdjustInternal(listArgs);
+            element = AdjustInternal(listArgs);
             if (element == null) return;
 
             ITableTrait trait = element.Trait;
@@ -152,7 +159,7 @@ namespace Game.Traits
             return UniTask.CompletedTask; // used to await trait initializing (i.e.: battle trait area observing)
         }
 
-        protected virtual UniTask<bool> OnStacksTryToChangeBase_TOP(object sender, TableTraitStacksTryArgs e)
+        protected virtual UniTask OnStacksTryToChangeBase_TOP(object sender, TableTraitStacksTryArgs e)
         {
             TableTraitList list = (TableTraitList)sender;
             TableFieldCard owner = list.Set.Owner;
@@ -161,7 +168,7 @@ namespace Game.Traits
             string sourceName = e.source?.TableNameDebug;
 
             TableConsole.LogToFile("card", $"{ownerName}: traits: {e.id}: OnTryToChange: delta: {e.delta} (by: {sourceName}).");
-            return UniTask.FromResult(true);
+            return UniTask.CompletedTask;
         }
         protected virtual UniTask OnStacksChangedBase_TOP(object sender, TableTraitStacksSetArgs e)
         {

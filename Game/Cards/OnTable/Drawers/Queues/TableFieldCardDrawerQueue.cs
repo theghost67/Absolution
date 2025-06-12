@@ -2,6 +2,7 @@
 using DG.Tweening;
 using Game.Traits;
 using GreenOne;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ namespace Game.Cards
         public static bool IsAnyRunning => _isAnyRunning;
 
         static bool _isAnyRunning;
+        SpriteRenderer[] _renderers;
         bool _isRunning;
         Tween _finishTween;
 
@@ -27,6 +29,13 @@ namespace Game.Cards
         {
             this.drawer = drawer;
             _queue = new Queue<TableFieldCardDrawerQueueElement>();
+            _renderers = Array.Empty<SpriteRenderer>();
+        }
+
+        public void SetColor(Color color)
+        {
+            foreach (SpriteRenderer renderer in _renderers)
+                renderer.color = color;
         }
         public void Enqueue(TableFieldCardDrawerQueueElement element)
         {
@@ -59,7 +68,9 @@ namespace Game.Cards
                 if (lastPrefab != null) lastPrefab.Destroy();
                 TableFieldCardDrawerQueueElement element = _queue.Dequeue();
                 lastPrefab = element.CreateAnimationPrefab();
+                _renderers = lastPrefab.GetComponentsInChildren<SpriteRenderer>();
                 await element.PlayAnimation(lastPrefab);
+                _renderers = Array.Empty<SpriteRenderer>();
             }
 
             End:

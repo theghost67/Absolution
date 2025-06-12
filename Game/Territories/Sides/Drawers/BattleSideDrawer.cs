@@ -8,7 +8,6 @@ using UnityEngine;
 
 namespace Game.Territories
 {
-    // TODO: implement health bar animation
     /// <summary>
     /// Представляет отрисовщик UI для <see cref="BattleSide"/>.
     /// </summary>
@@ -43,6 +42,9 @@ namespace Game.Territories
         static readonly GameObject _playerPrefab;
         static readonly GameObject _enemyPrefab;
 
+        static readonly Vector2 _playerHpBarMaskMinMaxX = new(-1.40f, 0f);
+        static readonly Vector2 _enemyHpBarMaskMinMaxX = new(1.40f, 0f);
+
         static readonly Sprite _playerGoldPanelUnlockedSprite;
         static readonly Sprite _playerGoldPanelLockedSprite;
         static readonly Sprite _playerEtherPanelUnlockedSprite;
@@ -53,7 +55,10 @@ namespace Game.Territories
         static readonly Sprite _enemyEtherPanelUnlockedSprite;
         static readonly Sprite _enemyEtherPanelLockedSprite;
 
-        readonly SpriteRenderer _healthPanel;
+        readonly Transform _healthBarMask;
+        readonly Vector2 _hpBarMinMaxX;
+
+        readonly Transform _healthPanel;
         readonly SpriteRenderer _goldPanel;
         readonly SpriteRenderer _etherPanel;
 
@@ -91,10 +96,12 @@ namespace Game.Territories
             attached = side;
             _eventsGuid = this.GuidGen(1);
 
-            _healthPanel = transform.Find<SpriteRenderer>("Hp");
+            _healthBarMask = transform.Find("Hp").Find("Bar mask");
+            _healthPanel = transform.Find("Hp");
             _goldPanel = transform.Find<SpriteRenderer>("Gold");
             _etherPanel = transform.Find<SpriteRenderer>("Ether");
 
+            _hpBarMinMaxX = side.isMe ? _playerHpBarMaskMinMaxX : _enemyHpBarMaskMinMaxX;
             _healthText = _healthPanel.transform.Find<TextMeshPro>("Text");
             _goldText = _goldPanel.transform.Find<TextMeshPro>("Text");
             _etherText = _etherPanel.transform.Find<TextMeshPro>("Text");
@@ -129,9 +136,16 @@ namespace Game.Territories
 
         public void RedrawHealth(int current, int max)
         {
-            if (attached.isMe && PlayerConfig.psychoMode)
-                 _healthText.text = $"<color=red>ПСИХ";
+            if (!attached.isMe)
+                _healthText.text = $"{current}/{max}";
+            else if (PlayerConfig.psychoMode && PlayerConfig.chaosMode)
+                _healthText.text = $"<color=#FF00FF>ФУЛЛ ХАОС";
+            else if (PlayerConfig.psychoMode)
+                 _healthText.text = $"<color=#FF0000>ПСИХ";
+            else if (PlayerConfig.chaosMode)
+                 _healthText.text = $"{current}/{max} <color=#00FFFF>(ХАОС)";
             else _healthText.text = $"{current}/{max}";
+            AnimHealthBar(current, max);
         }
         public void RedrawGold(int value)
         {
@@ -198,6 +212,13 @@ namespace Game.Territories
             if (value)
                  drawer.MoveIn();
             else drawer.MoveOut();
+        }
+
+        void AnimHealthBar(int currentHp, int maxHp)
+        {
+            float ratio = (float)currentHp / maxHp;
+            float newX = Mathf.Lerp(_hpBarMinMaxX.x, _hpBarMinMaxX.y, ratio);
+            _healthBarMask.transform.DOLocalMoveX(newX, 0.75f).SetEase(Ease.OutCubic);
         }
     }
 }

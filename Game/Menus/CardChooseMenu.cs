@@ -1,11 +1,12 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
-using Game.Environment;
+using Game.Effects;
 using Game.Palette;
 using GreenOne;
 using MyBox;
 using System;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -39,8 +40,8 @@ namespace Game.Menus
 
         int _cardPoints; // increase to show more powerful cards
         int _cardsCount;
-        int _rerollsLeft; // TODO: imeplement
-        int _fieldsChoicesLeft; // TODO: implement graphics?
+        int _rerollsLeft;
+        int _fieldsChoicesLeft;
         int _floatsChoicesLeft;
         CardToChoose[] _cards;
         bool _cardsAreShown;
@@ -50,7 +51,7 @@ namespace Game.Menus
         // one of the field cards in this menu
         class CardToChoose
         {
-            const float ANIM_DURATION = 0.50f;
+            const float ANIM_DURATION = 0.33f;
             const float CARD_DISTANCE_X = 1f;
 
             const float CARD_MIN_Y = -0.25f;
@@ -61,7 +62,6 @@ namespace Game.Menus
 
             readonly CardChooseMenu _menu;
             readonly TableCard _onTable;
-            readonly int _index;
 
             public TableCardDrawer Drawer => _onTable.Drawer;
             public Card Data => _onTable.Data;
@@ -75,7 +75,6 @@ namespace Game.Menus
             {
                 _menu = menu;
                 _onTable = onTable;
-                _index = index;
 
                 float xHalfOffset = -menu._cardsCount / 2f + 0.5f;
                 TableCardDrawer drawer = _onTable.Drawer;
@@ -100,7 +99,7 @@ namespace Game.Menus
                     AnimPosUp();
                     AnimFadeIn();
                 });
-                seq.AppendInterval(ANIM_DURATION * 2);
+                seq.AppendInterval(ANIM_DURATION);
                 seq.OnComplete(() => Drawer.ColliderEnabled = _menu.ColliderEnabled);
 
                 return seq.Play();
@@ -114,7 +113,7 @@ namespace Game.Menus
                     AnimPosDown();
                     AnimFadeOut();
                 });
-                seq.AppendInterval(ANIM_DURATION * 2);
+                seq.AppendInterval(ANIM_DURATION);
                 seq.OnComplete(_onTable.Dispose);
 
                 return seq.Play();
@@ -124,14 +123,14 @@ namespace Game.Menus
             {
                 if (_chosen) return _scaleTween;
                 _scaleTween.Kill();
-                _scaleTween = Drawer.transform.DOScale(maxScale, ANIM_DURATION / 2).SetEase(Ease.OutCubic);
+                _scaleTween = Drawer.transform.DOScale(maxScale, ANIM_DURATION).SetEase(Ease.OutCubic);
                 return _scaleTween;
             }
             Tween AnimScaleDown()
             {
                 if (_chosen) return _scaleTween;
                 _scaleTween.Kill();
-                _scaleTween = Drawer.transform.DOScale(minScale, ANIM_DURATION / 2).SetEase(Ease.OutCubic);
+                _scaleTween = Drawer.transform.DOScale(minScale, ANIM_DURATION).SetEase(Ease.OutCubic);
                 return _scaleTween;
             }
 
@@ -164,10 +163,14 @@ namespace Game.Menus
             void OnCardMouseEnter(object sender, DrawerMouseEventArgs e)
             {
                 AnimScaleUp();
+                string desc = _onTable.DescDynamicWithLinks(out string[] links);
+                Tooltip.SetAlign(HorizontalAlignmentOptions.Left);
+                Tooltip.SetText(links.Prepend(desc).ToArray());
             }
             void OnCardMouseLeave(object sender, DrawerMouseEventArgs e)
             {
                 AnimScaleDown();
+                Tooltip.ClearText();
             }
             void OnCardMouseClickLeft(object sender, DrawerMouseEventArgs e)
             {
@@ -303,11 +306,6 @@ namespace Game.Menus
             };
         }
 
-        public override void WriteDesc(string text)
-        {
-            base.WriteDesc(text);
-            _descTextMesh.text = text;
-        }
         public override void OnTransitStart(bool isFromThis)
         {
             if (!isFromThis)
@@ -359,7 +357,7 @@ namespace Game.Menus
                 FieldCard[] genCards = new FieldCard[_cardsCount];
                 for (int i = 0; i < _cardsCount; i++)
                 {
-                    string srcCardId = Traveler.fieldsFrequencies.GetWeightedRandom(c => c.Value).Key;
+                    string srcCardId = CardBrowser.GetFieldRandom().id;
                     FieldCard genCard = CardBrowser.NewField(srcCardId).ShuffleMainStats().UpgradeWithTraitAdd(_cardPoints);
                     genCards[i] = genCard;
                 }
@@ -370,7 +368,7 @@ namespace Game.Menus
                 FloatCard[] genCards = new FloatCard[_cardsCount];
                 for (int i = 0; i < _cardsCount; i++)
                 {
-                    string srcCardId = Traveler.floatsFrequencies.GetWeightedRandom(c => c.Value).Key;
+                    string srcCardId = CardBrowser.GetFloatRandom().id;
                     FloatCard genCard = CardBrowser.NewFloat(srcCardId);
                     genCards[i] = genCard;
                 }
@@ -384,6 +382,11 @@ namespace Game.Menus
         {
             if (AllChoicesLeft <= 0 || _animInProgress)
                 return;
+            if (chosenCard != null && Player.Deck.LimitReached)
+            {
+                chosenCard.Drawer.CreateTextAsSpeech("ПРЕДЕЛ КОЛОДЫ", Color.red);
+                return;
+            }
 
             _animInProgress = true;
             SetCollider(false);

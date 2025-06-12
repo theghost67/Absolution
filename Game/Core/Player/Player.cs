@@ -1,6 +1,9 @@
-﻿using Game.Cards;
-using Game.Environment;
-using GreenOne;
+﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using Game.Cards;
+using Game.Effects;
+using Game.Menus;
+using Game.Palette;
 using System;
 using System.Linq;
 
@@ -15,6 +18,7 @@ namespace Game
         public static event Action<int> OnHealthSet;
 
         public static string Name { get; set; }
+        public static DateTime GameStartTime => _gameStartTime;
         public static CardDeck Deck => _deck;
         public static int LocationLevel => _locationLevel;
 
@@ -44,6 +48,7 @@ namespace Game
         public static int startGold;
         public static int startEther;
 
+        static DateTime _gameStartTime;
         static CardDeck _deck;
         static int _locationLevel;
 
@@ -56,9 +61,37 @@ namespace Game
 
         static Player()
         {
-            Traveler.OnTravelStart += OnTravelStart;
-            Traveler.OnTravelEnd += OnTravelEnd;
             Name = "Игрок";
+            _deck = new();
+        }
+
+        public static async UniTask StartTheGame(Menu? from)
+        {
+            int rerollsModifier;
+            if (PlayerConfig.psychoMode && PlayerConfig.chaosMode)
+                rerollsModifier = 4;
+            else if (PlayerConfig.psychoMode || PlayerConfig.chaosMode)
+                rerollsModifier = 2;
+            else rerollsModifier = 1;
+
+            CardChooseMenu menu = new(8, 4, 0, 3, 5 * rerollsModifier);
+            menu.MenuWhenClosed = () => new BattlePlaceMenu();
+            menu.OnClosed += menu.TryDestroy;
+            if (from is not MainMenu)
+                from.OnClosed += from.TryDestroy;
+
+            await UniTask.Delay(1000);
+
+            _gameStartTime = DateTime.Now;
+            AudioBrowser.Shuffle();
+
+            Action action = () =>
+            {
+                for (int i = 0; i < ColorPalette.All.Length; i++)
+                    ColorPalette.Current = Global.Palette;
+            };
+
+            await MenuTransit.Between(from, menu, action);
         }
 
         public static bool Owns(TableFieldCard card)
@@ -79,63 +112,10 @@ namespace Game
             return _deck.floatCards.Contains(card);
         }
 
-        static void OnTravelStart()
+        public static void RefreshHealth()
         {
             _health = _deck.fieldCards.Sum(c => c.health);
             _healthCurrent = _health;
-        }
-        static void OnTravelEnd()
-        {
-            if (Traveler.LastTravelWasCompleted)
-            {
-                _locationLevel = Traveler.Location.level;
-                _travelsFinished++;
-            }
-            else _travelsFailed++;
-        }
-
-        public static void Save()
-        {
-            SerializationDict dict = new()
-            {
-                { "deck", _deck.Serialize() },
-                { "sgold", startGold },
-                { "sether", startEther },
-                { "gold", _gold },
-                { "location", _locationLevel },
-                { "finished", _travelsFinished },
-                { "failed", _travelsFailed },
-            };
-            SaveSystem.Save(dict, "player");
-        }
-        public static void Load()
-        {
-            SerializationDict dict = SaveSystem.LoadDict("player");
-            if (dict == null)
-            {
-                startGold = 0;
-                startEther = 0;
-
-                _locationLevel = 0;
-                _travelsFinished = 0;
-                _travelsFailed = 0;
-
-                _deck = new CardDeck(); // TODO[IMPORTANT]: player should choose first 5 cards
-                _gold = 0;
-                _health = 100;
-
-                return;
-            }
-
-            startGold = dict.DeserializeKeyAs<int>("sgold");
-            startEther = dict.DeserializeKeyAs<int>("sether");
-
-            _locationLevel = dict.DeserializeKeyAs<int>("location");
-            _travelsFinished = dict.DeserializeKeyAs<int>("finished");
-            _travelsFailed = dict.DeserializeKeyAs<int>("failed");
-
-            _deck = new CardDeck(dict.DeserializeKeyAsDict("deck"));
-            _gold = dict.DeserializeKeyAs<int>("savings");
         }
     }
 }

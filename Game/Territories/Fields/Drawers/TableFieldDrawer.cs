@@ -71,13 +71,14 @@ namespace Game.Territories
         {
             if (cardDrawer == null) return _attachTween;
             cardDrawer.transform.SetParent(transform, worldPositionStays: true);
-            cardDrawer.SortingOrder = SortingOrder + 1;
+            cardDrawer.SortingOrder = attached.pos.x * 20;
             _attachTween = cardDrawer.transform.DOMove(transform.position, 0.5f).SetEase(Ease.OutExpo);
             return _attachTween;
         }
         public Tween AnimDetatchCard(TableCardDrawer cardDrawer)
         {
-            return _attachTween; // TODO: implement?
+            cardDrawer.SortingOrder = 120;
+            return _attachTween;
         }
 
         protected override void SetCollider(bool value)

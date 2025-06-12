@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MyBox;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game.Cards
@@ -8,6 +9,11 @@ namespace Game.Cards
     /// </summary>
     public static class CardBrowser
     {
+        public static IReadOnlyDictionary<string, CardCurrency> CurrenciesIndexed => _currencies;
+        public static IReadOnlyDictionary<string, FieldCard> FieldsIndexed => _fields;
+        public static IReadOnlyDictionary<string, FloatCard> FloatsIndexed => _floats;
+        public static IReadOnlyDictionary<string, Card> AllIndexed => _all;
+
         public static IReadOnlyCollection<CardCurrency> Currencies => _currencies.Values;
         public static IReadOnlyCollection<FieldCard> Fields => _fields.Values;
         public static IReadOnlyCollection<FloatCard> Floats => _floats.Values;
@@ -20,13 +26,10 @@ namespace Game.Cards
 
         public static void Initialize()
         {
-            // > --------- CURRENCIES --------- <
             AddCurrency(new ccGold());
             AddCurrency(new ccEther());
 
-            /* --------------------------------- //
-            ||            LOC: COLLEGE           ||
-            // --------------------------------- */
+
 
             AddField(new cBarbarian());
             AddField(new cBread());
@@ -37,7 +40,7 @@ namespace Game.Cards
             AddField(new cGermanSausages());
             AddField(new cGranny());
             AddField(new cHysteric());
-            AddField(new cMichael());
+            AddField(new cMichaelKgk());
             AddField(new cMoshev());
 
             AddField(new cPigeon());
@@ -47,102 +50,167 @@ namespace Game.Cards
             AddField(new cStudent());
 
             AddField(new cVavulov());
+            AddField(new cAgent007());
+            AddField(new cAgentOfBeholder());
+            AddField(new cAnderson()); 
+            AddField(new cArchivist());
+
+            AddField(new cCarl());
+            AddField(new cClues());
+            AddField(new cCodeLoaf());
+            AddField(new cConnor());
+            AddField(new cGeneralP());
+
+            AddField(new cHarry());
+            AddField(new cHitman());
+            AddField(new cNorman());
+            AddField(new cOrigami());
+            AddField(new cShelbi());
+
+            AddField(new cVanga());
+            AddField(new cVinsent());
+            AddField(new cCrap());
+            AddField(new cCrapper());
+            AddField(new cDallas());
+
+            AddField(new cDj());
+            AddField(new cDoof());
+            AddField(new cFengMine());
+            AddField(new cKillerOfFun());
+            AddField(new cMegTomat());
+
+            AddField(new cMercy());
+            AddField(new cMine());
+            AddField(new cMyers());
+            AddField(new cMyersMirror());
+            AddField(new cPhantom());
+
+            AddField(new cSatanist());
+            AddField(new cScp106());
+            AddField(new cScp173());
+            AddField(new cSpider());
+            AddField(new cSpiderling());
+
+            AddField(new cSpiderCocon());
+            AddField(new cTerrorist());
+            AddField(new cWidow());
+            AddField(new c626());
+            AddField(new cAlex());
+
+            AddField(new cBatman());
+            AddField(new cBerlin());
+            AddField(new cBmo());
+            AddField(new cBook());
+            AddField(new cBrick());
+
+            AddField(new cCadence());
+            AddField(new cCaptain());
+            AddField(new cCardsharper());
+            AddField(new cCarter());
+            AddField(new cCat());
+
+            AddField(new cChief());
+            AddField(new cCook());
+            AddField(new cCreeper());
+            AddField(new cCultist());
+            AddField(new cDeath());
+
+            AddField(new cEntrepreneur());
+            AddField(new cFaith());
+            AddField(new cFinn());
+            AddField(new cGazikel());
+            AddField(new cGhost());
+
+            AddField(new cGhostrunner());
+            AddField(new cHacker());
+            AddField(new cHouse());
+            AddField(new cHouseWilson());
+            AddField(new cIncredible());
+
+            AddField(new cInvestor());
+            AddField(new cInvisible());
+            AddField(new cJake());
+            AddField(new cJoy());
+            AddField(new cLibrarian());
+
+            AddField(new cLoba());
+            AddField(new cMaxwell());
+            AddField(new cMaxwellClone());
+            AddField(new cMichaelSanta());
+            AddField(new cMichaelScott());
+
+            AddField(new cMilitary());
+            AddField(new cMongol());
+            AddField(new cOppressor());
+            AddField(new cOverseer());
+            AddField(new cPlague());
+
+            AddField(new cProfessor());
+            AddField(new cQueen());
+            AddField(new cRandy());
+            AddField(new cRein());
+            AddField(new cSalad());
+
+            AddField(new cSans());
+            AddField(new cScpGarage());
+            AddField(new cSenorita());
+            AddField(new cShadowheart());
+            AddField(new cSonic());
+
+            AddField(new cSpiderMan());
+            AddField(new cStanley());
+            AddField(new cWilson());
+            AddField(new cTerminator());
+            AddField(new cTinyBunny());
+
+            AddField(new cWardrobe());
+            AddField(new cMarket());
+
+
 
             AddFloat(new cDeleteDueToUselessness());
             AddFloat(new cKalenskiyProtocol());
             AddFloat(new cKotovsSyndrome());
             AddFloat(new cVavulization());
-
-            /* --------------------------------- //
-            ||            LOC: BUREAU            ||
-            // --------------------------------- */
-
-            AddField(new cAgent007());
-            AddField(new cAgentOfBeholder());
-            AddField(new cAnderson()); 
-            AddField(new cArchivist());
-            AddField(new cCarl());
-
-            AddField(new cClues());
-            AddField(new cCodeLoaf());
-            AddField(new cConnor());
-            AddField(new cGeneralP());
-            AddField(new cHarry());
-
-            AddField(new cHitman());
-            AddField(new cNorman());
-            AddField(new cOrigami());
-            AddField(new cShelbi());
-            AddField(new cVanga());
-
-            AddField(new cVinsent());
-
             AddFloat(new cCodeInterception());
+
             AddFloat(new cSatelliteSurveillance());
-
-            /* --------------------------------- //
-            ||           LOC: MEGAPOLIS          ||
-            // --------------------------------- */
-
-            //AddField(new cChief());
-            //AddField(new cOguzok());
-            //AddField(new cClaudeMonet());
-            //AddField(new cViktorovich());
-            //AddField(new cPeter());
-
-            //AddField(new cJeweller());
-            //AddField(new cSecretary());
-            //AddField(new cHacker());
-            //AddField(new cBusinessman());
-            //AddField(new cMayor());
-
-            //AddField(new cInvestor());
-            //AddField(new cConsultant());
-            //AddField(new cBoris());
-            //AddField(new cHobo());
-            //AddField(new cIncredible());
-
-            //===================================//
-            //     WITH NO SPECIFIC LOCATION     //
-            //===================================//
-
-            AddField(new cCrap());
-            AddField(new cCrapper());
-            AddField(new cDallas());
-            AddField(new cDj());
-            AddField(new cDoof());
-
-            AddField(new cFengMine());
-            AddField(new cKillerOfFun());
-            AddField(new cMegTomat());
-            AddField(new cMercy());
-            AddField(new cMine());
-
-            AddField(new cMyers());
-            AddField(new cMyersMirror());
-            AddField(new cPhantom());
-            AddField(new cSatanist());
-            AddField(new cScp106());
-
-            AddField(new cScp173());
-            AddField(new cSpider());
-            AddField(new cSpiderling());
-            AddField(new cSpiderCocon());
-            AddField(new cTerrorist());
-
-            AddField(new cWidow());
-
             AddFloat(new cObjectOfObsession());
             AddFloat(new cUntilDawn());
+            AddFloat(new cBlackFriday());
+            AddFloat(new cCassandrasRage());
+
+            AddFloat(new cComeForTea());
+            AddFloat(new cFennecDefence());
+            AddFloat(new cNoed());
+            AddFloat(new cShockTherapy());
         }
 
-        public static CardCurrency NewCurrency(string id)
+        public static FieldCard NewField(string id)
         {
-            throw new System.NotSupportedException($"Card currency creation is not supported.\nUse {nameof(GetCurrency)} instead.");
+            return (FieldCard)GetField(id).CloneAsNew();
         }
-        public static FieldCard NewField(string id) => (FieldCard)GetField(id).CloneAsNew();
-        public static FloatCard NewFloat(string id) => (FloatCard)GetFloat(id).CloneAsNew();
-        public static Card NewCard(string id) => (Card)GetCard(id).CloneAsNew();
+        public static FloatCard NewFloat(string id)
+        {
+            return (FloatCard)GetFloat(id).CloneAsNew();
+        }
+        public static Card NewCard(string id)
+        {
+            return (Card)GetCard(id).CloneAsNew();
+        }
+
+        public static FieldCard NewFieldRandom()
+        {
+            return (FieldCard)_fields.Values.GetWeightedRandom(c => c.frequency).CloneAsNew();
+        }
+        public static FloatCard NewFloatRandom()
+        {
+            return (FloatCard)_floats.Values.GetWeightedRandom(c => c.frequency).CloneAsNew();
+        }
+        public static Card NewCardRandom()
+        {
+            return (Card)_all.Values.GetWeightedRandom(c => c.frequency).CloneAsNew();
+        }
 
         public static CardCurrency GetCurrency(string id)
         {
@@ -167,6 +235,23 @@ namespace Game.Cards
             if (_all.TryGetValue(id, out Card card))
                 return card;
             else throw new System.NullReferenceException($"Card with specified id was not found: {id}.");
+        }
+
+        public static CardCurrency GetCurrencyRandom()
+        {
+            return _currencies.Values.GetRandom();
+        }
+        public static FieldCard GetFieldRandom()
+        {
+            return _fields.Values.GetWeightedRandom(c => c.frequency);
+        }
+        public static FloatCard GetFloatRandom()
+        {
+            return _floats.Values.GetWeightedRandom(c => c.frequency);
+        }
+        public static Card GetCardRandom()
+        {
+            return _all.Values.GetWeightedRandom(c => c.frequency);
         }
 
         public static FieldCard ShuffleMainStats(this FieldCard card)
@@ -214,13 +299,13 @@ namespace Game.Cards
         }
         public static FieldCard UpgradeWithTraitAdd(this FieldCard card, in float points)
         {
-            FieldCardUpgradeRules rules = new(points - card.Points(), true);
+            FieldCardUpgradeRules rules = new(points - card.Points(), FieldCardUpgradeRules.TraitsCountRandom(points));
             rules.Upgrade(card);
             return card;
         }
         public static FieldCard UpgradeWithoutTraitAdd(this FieldCard card, in float points)
         {
-            FieldCardUpgradeRules rules = new(points - card.Points(), false);
+            FieldCardUpgradeRules rules = new(points - card.Points(), 0);
             rules.Upgrade(card);
             return card;
         }

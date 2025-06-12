@@ -211,8 +211,8 @@ namespace Game.Traits
             if (attached.Stacks > 0)
             {
                 string desc = trait.DescDynamicWithLinks(out string[] descLinksTexts);
-                Menu.WriteDescToCurrent(desc);
-                Tooltip.ShowLinks(descLinksTexts);
+                Tooltip.SetAlign(HorizontalAlignmentOptions.Left);
+                Tooltip.SetText(descLinksTexts.Prepend(desc).ToArray());
             }
 
             bool isPassive = trait.Data.isPassive;
@@ -230,8 +230,8 @@ namespace Game.Traits
             if (trait.Owner.Drawer.IsSelected && !trait.Owner.Drawer.Traits.IsAnySelected)
             {
                 string desc = trait.Owner.DescDynamicWithLinks(out string[] descLinksTexts);
-                Menu.WriteDescToCurrent(desc);
-                Tooltip.ShowLinks(descLinksTexts);
+                Tooltip.SetAlign(HorizontalAlignmentOptions.Left);
+                Tooltip.SetText(descLinksTexts.Prepend(desc).ToArray());
             }
 
             _nameTextMesh.text = trait.Data.name;

@@ -3,6 +3,7 @@ using Game.Cards;
 using Game.Palette;
 using Game.Territories;
 using GreenOne;
+using MyBox;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,7 +14,7 @@ namespace Game.Traits
     /// <summary>
     /// Абстрактный базовый класс для данных игровых навыков.
     /// </summary>
-    public abstract class Trait : Unique, IDescriptive, ISerializable, ICloneable
+    public abstract class Trait : Unique, IDescriptive, ICloneable
     {
         public readonly string id;
         public readonly bool isPassive; // used to remove 'is' type checks as there are only two derived types (PassiveTrait and ActiveTrait)
@@ -63,11 +64,6 @@ namespace Game.Traits
         {
             return id == other.id;
         }
-        public SerializationDict Serialize()
-        {
-            // TODO[IMPORTANT]: finish trait serialization
-            throw new NotImplementedException();
-        }
 
         public abstract TableTrait CreateOnTable(Transform parent);
         public abstract object Clone();
@@ -102,6 +98,8 @@ namespace Game.Traits
 
         public string DescDynamic(TraitDescriptiveArgs args)
         {
+            if (args.stacks <= 0)
+                args.stacks = 1;
             string contentsFormat = DescContentsFormat(args);
             string internalFormat = DescInternalFormat(args, contentsFormat);
             return internalFormat;
@@ -116,14 +114,15 @@ namespace Game.Traits
 
             return DescLinkCollection.empty;
         }
+        public bool HasTableEquivalent()
+        {
+            return true;
+        }
+
         protected virtual string DescContentsFormat(TraitDescriptiveArgs args)
         {
             // main block for description, can use args.custom created from DescParamsCreator here
             return "";
-        }
-        protected virtual object[] DescCustomParams()
-        {
-            return Array.Empty<object>();
         }
         private string DescInternalFormat(TraitDescriptiveArgs args, string contents)
         {
@@ -144,19 +143,20 @@ namespace Game.Traits
                 default: throw new NotSupportedException();
             }
 
+            string staticStr = tags.HasFlag(TraitTag.Static) ? " (статичный)" : "";
             if (isPassive)
-                 sb.Append(" пассивный навык</i>\n\n");
-            else sb.Append(" активный навык</i>\n\n");
+                 sb.Append($" пассивный навык{staticStr}</i>\n\n");
+            else sb.Append($" активный навык{staticStr}</i>\n\n");
 
             sb.Append(contents);
             if (args.linkFormat) return sb.ToString();
             if (contents != "") 
                 sb.Append("\n\n");
 
-            sb.Append($"<color={ColorPalette.C3.Hex}>");
+            sb.Append($"<color={ColorPalette.C2.Hex}>");
             bool extraLine = false;
 
-            int turnsPassed = args.turnAge;
+            int turnsPassed = args.table?.TurnAge ?? -1;
             if (turnsPassed > 0)
             {
                 sb.Append($"Навык наложен: {turnsPassed} х. назад\n");
@@ -166,11 +166,6 @@ namespace Game.Traits
             if (turnsDelay > 0)
             {
                 sb.Append($"Навык перезаряжается: {turnsDelay} х.\n");
-                extraLine = true;
-            }
-            if (args.linksAreAvailable)
-            {
-                sb.Append("Удерживайте ALT для подробностей.\n");
                 extraLine = true;
             }
 
@@ -195,10 +190,10 @@ namespace Game.Traits
                 return perStack * (stacks - freeStacks);
             else return 0;
         }
-        protected static float PointsExponential(float perStack, int stacks, int freeStacks = 1, float f = 2)
+        protected static float PointsExponential(float perStack, int stacks, int freeStacks = 1, float p = 2)
         {
             if (stacks > freeStacks)
-                return perStack * Mathf.Pow(f, stacks - freeStacks - 1);
+                return perStack * Mathf.Pow(stacks - freeStacks, p);
             else return 0;
         }
 
@@ -209,10 +204,6 @@ namespace Game.Traits
         DescLinkCollection IDescriptive.DescLinks(DescriptiveArgs args)
         {
             return DescLinks((TraitDescriptiveArgs)args);
-        }
-        object[] IDescriptive.DescCustomParams()
-        {
-            return DescCustomParams();
         }
     }
 }

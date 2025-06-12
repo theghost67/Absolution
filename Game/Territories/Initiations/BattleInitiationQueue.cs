@@ -83,14 +83,17 @@ namespace Game.Territories
                 _ = QueueLoop();
         }
 
-        public void EnqueueAndRun(params BattleInitiationSendArgs[] initiations)
+        public async UniTask EnqueueAndAwait(params BattleInitiationSendArgs[] initiations)
         {
-            EnqueueAndRun((IEnumerable<BattleInitiationSendArgs>)initiations);
-        }
-        public void EnqueueAndRun(IEnumerable<BattleInitiationSendArgs> initiations)
-        {
+            int count = TableEventManager.CountAll();
             Enqueue(initiations);
-            Run();
+            await TableEventManager.AwaitAll(count);
+        }
+        public async UniTask EnqueueAndAwait(IEnumerable<BattleInitiationSendArgs> initiations)
+        {
+            int count = TableEventManager.CountAll();
+            Enqueue(initiations);
+            await TableEventManager.AwaitAll(count);
         }
 
         public void Enqueue(params BattleInitiationSendArgs[] initiations)
@@ -101,11 +104,12 @@ namespace Game.Territories
         {
             foreach (BattleInitiationSendArgs sArgs in initiations)
                 _list.Add(sArgs);
+            Run();
         }
 
         public async UniTask Await()
         {
-            while (_isRunning)
+            while (_list.Count != 0)
                 await UniTask.Yield();
         }
         async UniTask QueueLoop()
@@ -120,8 +124,6 @@ namespace Game.Territories
             while (_list.Count != 0)
             {
                 BattleInitiationSendArgs sArgs = _list.Max();
-                _list.Remove(sArgs);
-
                 BattleFieldCard sender = sArgs.Sender;
                 int TryHandleInitiation(bool countReceivers)
                 {
@@ -135,8 +137,8 @@ namespace Game.Territories
 
                 switch (TryHandleInitiation(false))
                 {
-                    case KILLED: continue;
-                    case HANDLED: await AnimInitiationBlank(sArgs.Sender); continue;
+                    case KILLED: goto Skip;
+                    case HANDLED: await AnimInitiationBlank(sArgs.Sender); goto Skip;
                     case NOT_HANDLED: break;
                     default: throw new NotImplementedException();
                 }
@@ -148,8 +150,8 @@ namespace Game.Territories
                 await InvokeSendArgsEvent(sArgs, isPreInvoke: true);
                 switch (TryHandleInitiation(true))
                 {
-                    case KILLED: await HideInitiationPreviews(sArgs); continue;
-                    case HANDLED: await AnimInitiationBlank(sArgs.Sender); continue;
+                    case KILLED: await HideInitiationPreviews(sArgs); goto Skip;
+                    case HANDLED: await AnimInitiationBlank(sArgs.Sender); goto Skip;
                     case NOT_HANDLED: break;
                     default: throw new NotImplementedException();
                 }
@@ -171,6 +173,9 @@ namespace Game.Territories
                 }
                 await InvokeSendArgsEvent(sArgs, isPreInvoke: false);
                 await HideInitiationPreviews(sArgs);
+
+                Skip:
+                _list.Remove(sArgs);
             }
 
             if (!_territory.DrawersAreNull)
@@ -184,7 +189,7 @@ namespace Game.Territories
         }
 
         #region animations
-        const float ANIM_DURATION = 1.0f;
+        const float ANIM_DURATION = 0.75f;
         const float ANIM_DURATION_HALF = ANIM_DURATION / 2;
 
         const string SENDER_TAG = "Initiation sender";
@@ -212,7 +217,7 @@ namespace Game.Territories
                 drawer.CreateTextAsDamage(((float)rArgs.Strength).Abs().Ceiling(), rArgs.Strength < 0);
             }
 
-            await field.health.AdjustValue(-rArgs.Strength, rArgs.Sender);
+            await field.Health.AdjustValue(-rArgs.Strength, rArgs.Sender);
             await InvokeRecvArgsEvent(rArgs, isPreInvoke: false);
             HideInitiationPreview(rArgs.ReceiverField, instantly: true);
         }
@@ -244,7 +249,9 @@ namespace Game.Territories
                 drawer.CreateTextAsDamage(((float)rArgs.Strength).Abs().Ceiling(), rArgs.Strength < 0);
             }
 
-            await card.Health.AdjustValue(-rArgs.Strength, rArgs.Sender);
+            if (rArgs.IgnoresCard)
+                 await card.Field.Health.AdjustValue(-rArgs.Strength, rArgs.Sender);
+            else await card.Health.AdjustValue(-rArgs.Strength, rArgs.Sender);
             await InvokeRecvArgsEvent(rArgs, isPreInvoke: false);
             HideInitiationPreview(rArgs.ReceiverField, instantly: true);
         }
@@ -316,8 +323,6 @@ namespace Game.Territories
 
         Tween ShowInitiationPreview(ITableObject obj, int strength, bool fieldIsSender) 
         {
-            const float DURATION = ANIM_DURATION_HALF;
-
             if (obj.Drawer == null)
                 return null;
             if (obj.Drawer.transform.Find("Initiation") != null)
@@ -339,6 +344,7 @@ namespace Game.Territories
             Transform previewTransform = previewPrefab.transform;
             TextMeshPro previewText = previewPrefab.Find<TextMeshPro>("Text");
             SpriteRenderer previewBg = previewPrefab.Find<SpriteRenderer>("Bg");
+            float duration = ANIM_DURATION_HALF / DOTween.timeScale;
 
             previewPrefab.name = "Initiation";
             previewPrefab.tag = fieldIsSender ? SENDER_TAG : RECEIVER_TAG;
@@ -349,19 +355,17 @@ namespace Game.Territories
                  previewBg.sprite = strength < 0 ? _initiationPreviewSenderHealSprite : _initiationPreviewSenderDmgSprite;
             else previewBg.sprite = strength < 0 ? _initiationPreviewReceiverHealSprite : _initiationPreviewReceiverDmgSprite;
 
-            DOVirtual.Float(0, 1, DURATION, v => SetPreviewTextAlpha(previewText, v)).SetEase(Ease.OutCubic);
-            DOVirtual.Float(0, 1, DURATION, v => SetPreviewBgPosAndColor(previewBg, v)).SetEase(Ease.OutCubic);
+            DOVirtual.Float(0, 1, duration, v => SetPreviewTextAlpha(previewText, v)).SetEase(Ease.OutCubic);
+            DOVirtual.Float(0, 1, duration, v => SetPreviewBgPosAndColor(previewBg, v)).SetEase(Ease.OutCubic);
 
             previewText.transform.localScale = Vector3.one * 0.5f;
-            previewText.transform.DOScale(Vector3.one, DURATION).SetEase(Ease.OutCubic);
+            previewText.transform.DOScale(Vector3.one, duration).SetEase(Ease.OutCubic);
 
-            _iShowTween = DOVirtual.Int(0, strength, DURATION, v => SetPreviewStrength(previewText, previewBg, v)).SetEase(Ease.OutCubic);
+            _iShowTween = DOVirtual.Int(0, strength, duration, v => SetPreviewStrength(previewText, previewBg, v)).SetEase(Ease.OutCubic);
             return _iShowTween;
         }
         Tween UpdateInitiationPreview(ITableObject obj, int strength)
         {
-            const float DURATION = ANIM_DURATION_HALF;
-
             if (obj.Drawer == null)
                 return null;
 
@@ -371,11 +375,12 @@ namespace Game.Territories
             TextMeshPro previewText = previewTransform.Find<TextMeshPro>("Text");
             SpriteRenderer previewBg = previewTransform.Find<SpriteRenderer>("Bg");
             int prevValue = int.Parse(previewText.text);
+            float duration = ANIM_DURATION_HALF / DOTween.timeScale;
 
             int ID = 0x00BA771E + obj.Guid;
             DOTween.Kill(ID);
 
-            _iUpdateTween = DOVirtual.Int(prevValue, strength, DURATION, v => SetPreviewStrength(previewText, previewBg, v)).SetId(ID);
+            _iUpdateTween = DOVirtual.Int(prevValue, strength, duration, v => SetPreviewStrength(previewText, previewBg, v)).SetId(ID);
             return _iUpdateTween;
         }
         Tween RedirectInitiationPreview(ITableObject objOld, ITableObject objNew)
@@ -386,16 +391,13 @@ namespace Game.Territories
             Transform oldPreviewTransform = objOld.Drawer.transform.Find("Initiation");
             if (oldPreviewTransform == null) return null;
             oldPreviewTransform.SetParent(objNew.Drawer.transform, worldPositionStays: true);
+            float duration = ANIM_DURATION_HALF / DOTween.timeScale;
 
-            //TextMeshPro previewText = oldPreviewTransform.Find<TextMeshPro>("Text");
-            //previewText.color = Color.white.WithAlpha(previewText.color.a);
-
-            _iRedirectTween = oldPreviewTransform.DOMove(objNew.Drawer.transform.position, 0.5f).SetEase(Ease.OutExpo);
+            _iRedirectTween = oldPreviewTransform.DOMove(objNew.Drawer.transform.position, duration).SetEase(Ease.OutExpo);
             return _iRedirectTween;
         }
         Tween HideInitiationPreview(ITableObject obj, bool instantly)
         {
-            const float DURATION = ANIM_DURATION_HALF;
 
             if (obj.Drawer == null)
                 return null;
@@ -418,14 +420,15 @@ namespace Game.Territories
             previewTransform.gameObject.name = "Initiation (hiding)";
             TextMeshPro previewText = previewTransform.Find<TextMeshPro>("Text");
             SpriteRenderer previewBg = previewTransform.Find<SpriteRenderer>("Bg");
+            float duration = ANIM_DURATION_HALF / DOTween.timeScale;
 
-            DOVirtual.Float(1, 0, DURATION, v =>
+            DOVirtual.Float(1, 0, duration, v =>
             {
                 SetPreviewTextAlpha(previewText, v);
                 SetPreviewBgPosAndColor(previewBg, v);
             }).SetEase(Ease.InCubic);
 
-            _iHideTween = previewText.transform.DOScale(Vector3.one * 0.5f, DURATION).SetEase(Ease.InCubic).OnComplete(previewTransform.gameObject.Destroy);
+            _iHideTween = previewText.transform.DOScale(Vector3.one * 0.5f, duration).SetEase(Ease.InCubic).OnComplete(previewTransform.gameObject.Destroy);
             return _iHideTween;
         }
 
@@ -551,7 +554,7 @@ namespace Game.Territories
         UniTask rArgs_OnInitiationPreReceived(object sender, EventArgs e)
         {
             BattleInitiationRecvArgs rArgs = (BattleInitiationRecvArgs)sender;
-            BattleFieldCard receiver = rArgs.Receiver;
+            BattleFieldCard receiver = rArgs.ReceiverCard;
             if (receiver != null && !receiver.IsKilled)
                  return ((TableEventVoid<BattleInitiationRecvArgs>)receiver.OnInitiationPreReceived).Invoke(receiver, rArgs);
             else return UniTask.CompletedTask;
@@ -559,7 +562,7 @@ namespace Game.Territories
         UniTask rArgs_OnInitiationPostReceived(object sender, EventArgs e)
         {
             BattleInitiationRecvArgs rArgs = (BattleInitiationRecvArgs)sender;
-            BattleFieldCard receiver = rArgs.Receiver;
+            BattleFieldCard receiver = rArgs.ReceiverCard;
             if (receiver != null && !receiver.IsKilled)
                 return ((TableEventVoid<BattleInitiationRecvArgs>)receiver.OnInitiationPostReceived).Invoke(receiver, rArgs);
             else return UniTask.CompletedTask;

@@ -7,16 +7,16 @@ using UnityEngine;
 
 namespace Game.Sleeves
 {
-    // TODO: implement holding cards "history"? (if just added card was the last one removed, insert it to it's previous index)
     /// <summary>
     /// Класс, представляющий возможность подбирания игроком карт рукава типа <see cref="ITableSleeveCard"/> (из привязанной колоды карт).
     /// </summary>
     public class TableSleeve : TableObject, ICloneableWithArgs, IEnumerable<ITableSleeveCard>
     {
-        public const int LIMIT = CardDeck.LIMIT + 8;
+        public const int LIMIT = CardDeck.LIMIT;
 
         public CardDeck Deck => _deck;
         public int Count => _cards.Count;
+        public bool IsFull => Count >= LIMIT;
         public ITableSleeveCardsCollection Cards => _cards;
         public new TableSleeveDrawer Drawer => ((TableObject)this).Drawer as TableSleeveDrawer;
 
@@ -73,6 +73,7 @@ namespace Game.Sleeves
 
         public bool Add(Card card)
         {
+            if (card == null) return false;
             if (Count < LIMIT)
                  return Add(HoldingCardCreator(card));
             else return false;
@@ -100,6 +101,7 @@ namespace Game.Sleeves
         }
         public bool Contains(ITableSleeveCard card)
         {
+            if (card == null) return false;
             foreach (ITableSleeveCard sCard in _cards)
             {
                 if (sCard.Equals(card))
@@ -147,8 +149,9 @@ namespace Game.Sleeves
         {
             if (count <= 0) return;
             Drawer.ColliderEnabled = false;
+            Drawer.CanPullOut = false;
 
-            int delay = 500;
+            int delay = 400;
             for (int i = 0; i < count; i++)
             {
                 if (Drawer?.IsDestroyed ?? true) return;
@@ -161,12 +164,13 @@ namespace Game.Sleeves
                     throw new InvalidOperationException("Unable to add taken card to collection.");
 
                 await UniTask.Delay(delay);
-                if (delay > 250)
-                    delay -= 50;
+                if (delay > 100)
+                    delay -= 25;
             }
 
             await UniTask.Delay(500);
             Drawer.ColliderEnabled = true;
+            Drawer.CanPullOut = true;
         }
 
         void TakeMissingCardsInstantly()

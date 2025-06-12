@@ -6,7 +6,7 @@ namespace Game.Traits
     /// <summary>
     /// Реализует навык на столе как навык во время сражения с возможностью применения на целях.
     /// </summary>
-    public interface IBattleTrait : ITableTrait, IBattleWeighty
+    public interface IBattleTrait : ITableTrait, IBattleObject, IBattleRanging
     {
         public new BattleFieldCard Owner { get; }
         public new BattleTerritory Territory { get; }

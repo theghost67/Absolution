@@ -50,6 +50,10 @@ namespace Game.Cards
             prefabIcon.sprite = Resources.Load<Sprite>(data.spritePath); // TODO: use traitInList.Drawer.sprite
             prefabSubheader.text = data.name; // TODO: use traitInList.Drawer.text
 
+            prefabHeader.sortingOrder = trait.Owner.Drawer.SortingOrder + 10;
+            prefabIcon.sortingOrder = trait.Owner.Drawer.SortingOrder + 10;
+            prefabSubheader.sortingOrder = trait.Owner.Drawer.SortingOrder + 10;
+
             Vector3 scale1 = Vector3.one * 0.75f;
             Vector3 scale2 = Vector3.one * 1.00f;
             Vector3 scale3 = Vector3.one * 0.75f;
@@ -79,7 +83,7 @@ namespace Game.Cards
 
             scaleTween1.Play();
 
-            await UniTask.Delay((int)(ACTIVATION_DUR_DISPLAY * 1000));
+            await UniTask.Delay((int)(ACTIVATION_DUR_DISPLAY * 1000 / DOTween.timeScale));
 
             colorTween1.Play();
             scaleTween2.Play();

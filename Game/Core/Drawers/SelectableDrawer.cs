@@ -61,10 +61,10 @@ namespace Game
             _selectionRenderer.color = Color.white;
             return _selectionTween = DOTween.To(() => _selectionRenderer.size, v => _selectionRenderer.size = v, normalSize, 0.5f).SetEase(Ease.OutCubic);
         }
-        // TODO: make pulsing?
         public Tween AnimShowOutline()
         {
             _outlineTween.Kill();
+            _outlineRenderer.sortingOrder = 700;
             _outlineRenderer.transform.position = transform.position;
             _outlineRenderer.color = Color.white;
             _outlineTween = DOVirtual.Float(0, 1, 1, null).SetLoops(-1).OnComplete(() =>

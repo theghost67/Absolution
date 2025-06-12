@@ -14,7 +14,7 @@ namespace Game.Sleeves
     /// </summary>
     public class TableSleeveDrawer : Drawer
     {
-        const int SORT_ORDER_START_VALUE = 100;
+        const int SORT_ORDER_START_VALUE = 300;
         const int SORT_ORDER_PER_CARD = 8;
         const float ANIM_DURATION = 0.33f;
 
@@ -142,7 +142,6 @@ namespace Game.Sleeves
 
             _posYTween.Kill();
             transform.localPosition = transform.localPosition.SetY(_normalPosY);
-            gameObject.SetActive(true);
         }
         public void MoveOutInstantly()
         {
@@ -151,7 +150,62 @@ namespace Game.Sleeves
 
             _posYTween.Kill();
             transform.localPosition = transform.localPosition.SetY(_moveOutPosY);
-            gameObject.SetActive(false);
+        }
+
+        public UniTask UpdateCardsPosAndOrderAnimated()
+        {
+            if (IsDestroying) return UniTask.CompletedTask;
+            const int THRESHOLD = 3;
+            const float DISTANCE = TableCardDrawer.WIDTH - TableCardDrawer.WIDTH * 0.25f;
+
+            int cardsCount = attached.Count;
+            Vector3[] cardsPositions = attached.Select(c => c.Drawer.transform.localPosition).ToArray();
+            Tween lastTween = null;
+
+            if (transform.childCount > THRESHOLD)
+                _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
+            else _alignSettings.distance.x = DISTANCE;
+
+            DOTween.Kill(attached.Guid);
+            _alignSettings.ApplyTo(attached.Select(c => c.Drawer.transform).ToArray());
+            for (int i = 0; i < attached.Count; i++)
+            {
+                ITableSleeveCard card = attached[i];
+                float newPosX = card.Drawer.transform.localPosition.x;
+                card.Drawer.SortingOrderDefault = SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD;
+                bool playSoftAnimation = _shownCardsGuids.Contains(card.Guid) || ((card as TableFieldCard)?.FieldsAttachments ?? 0) > 0;
+                if (playSoftAnimation)
+                {
+                    card.Drawer.transform.localPosition = cardsPositions[i];
+                    lastTween = card.Drawer.transform.DOLocalMove(new Vector3(newPosX, 0), ANIM_DURATION).SetEase(Ease.OutQuad).SetId(attached.Guid);
+                }
+                else // plays 'add' animation
+                {
+                    card.Drawer.transform.localPosition = new Vector3(newPosX, _moveOutPosY);
+                    if (_isPulledOut)
+                         lastTween = card.OnPullOut(true);
+                    else lastTween = card.Drawer.transform.DOLocalMoveY(0, ANIM_DURATION).SetEase(Ease.OutQuad);
+                }
+            }
+            return lastTween.AsyncWaitForCompletion();
+        }
+        public void UpdateCardsPosAndOrderInstantly()
+        {
+            if (IsDestroying) return;
+            const int THRESHOLD = 3;
+            const float DISTANCE = TableCardDrawer.WIDTH - TableCardDrawer.WIDTH * 0.25f;
+
+            int cardsCount = attached.Count;
+            float[] cardsY = new float[cardsCount].FillBy(i => attached[i].Drawer.transform.position.y);
+
+            if (transform.childCount > THRESHOLD)
+                _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
+            else _alignSettings.distance.x = DISTANCE;
+
+            DOTween.Kill(attached.Guid);
+            _alignSettings.ApplyTo(i => attached[i].Drawer.transform, cardsCount);
+            for (int i = 0; i < cardsCount; i++)
+                attached[i].Drawer.SortingOrderDefault = SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD;
         }
 
         protected override void SetCollider(bool value)
@@ -187,61 +241,6 @@ namespace Game.Sleeves
             card.DestroyDrawer(instantly);
         }
 
-        UniTask UpdateCardsPosAndOrderAnimated()
-        {
-            if (IsDestroying) return UniTask.CompletedTask;
-            const int THRESHOLD = 3;
-            const float DISTANCE = TableCardDrawer.WIDTH - TableCardDrawer.WIDTH * 0.25f;
-
-            int cardsCount = attached.Count;
-            Vector3[] cardsPositions = attached.Select(c => c.Drawer.transform.localPosition).ToArray();
-            Tween lastTween = null;
-
-            if (transform.childCount > THRESHOLD)
-                _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
-            else _alignSettings.distance.x = DISTANCE;
-
-            DOTween.Kill(attached.Guid);
-            _alignSettings.ApplyTo(attached.Select(c => c.Drawer.transform).ToArray());
-            for (int i = 0; i < attached.Count; i++)
-            {
-                ITableSleeveCard card = attached[i];
-                float newPosX = card.Drawer.transform.localPosition.x;
-                card.Drawer.SortingOrderDefault = SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD;
-                if (_shownCardsGuids.Contains(card.Guid))
-                {
-                    card.Drawer.transform.localPosition = cardsPositions[i];
-                    lastTween = card.Drawer.transform.DOLocalMoveX(newPosX, ANIM_DURATION).SetEase(Ease.OutQuad).SetId(attached.Guid);
-                }
-                else // plays 'add' animation
-                {
-                    card.Drawer.transform.localPosition = new Vector3(newPosX, _moveOutPosY);
-                    if (_isPulledOut)
-                         lastTween = card.OnPullOut(true);
-                    else lastTween = card.Drawer.transform.DOLocalMoveY(0, ANIM_DURATION).SetEase(Ease.OutQuad);
-                }
-            }
-            return lastTween.AsyncWaitForCompletion();
-        }
-        void UpdateCardsPosAndOrderInstantly()
-        {
-            if (IsDestroying) return;
-            const int THRESHOLD = 3;
-            const float DISTANCE = TableCardDrawer.WIDTH - TableCardDrawer.WIDTH * 0.25f;
-
-            int cardsCount = attached.Count;
-            float[] cardsY = new float[cardsCount].FillBy(i => attached[i].Drawer.transform.position.y);
-
-            if (transform.childCount > THRESHOLD)
-                _alignSettings.distance.x = cardsCount < 4 ? DISTANCE : DISTANCE * (1 - (0.03f * cardsCount));
-            else _alignSettings.distance.x = DISTANCE;
-
-            DOTween.Kill(attached.Guid);
-            _alignSettings.ApplyTo(i => attached[i].Drawer.transform, cardsCount);
-            for (int i = 0; i < cardsCount; i++)
-                attached[i].Drawer.SortingOrderDefault = SORT_ORDER_START_VALUE + i * SORT_ORDER_PER_CARD;
-        }
-
         void OnMovedOut()
         {
             _isMovedOut = true;
@@ -257,7 +256,7 @@ namespace Game.Sleeves
             if (Input.GetKeyDown(KeyCode.Tab))
             {
                 if (_isPulledOut)
-                     PullIn();
+                    PullIn();
                 else PullOut();
             }
         }

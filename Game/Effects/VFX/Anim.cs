@@ -40,7 +40,8 @@ namespace Game.Effects
                 }
             });
         }
-        public static Tween DOATextPopUp(this TextMeshPro textmesh, float delay, float2 rotZRange = default, Action onComplete = null)
+        public static Tween DOATextPopUp(this TextMeshPro textmesh, float delay, Color startColor = default, Color endColor = default, 
+            float2 rotZRange = default, bool doNotScale = false, Action onComplete = null)
         {
             const float Y_RANGE_MAX = 15 * Global.NORMAL_TO_PIXEL;
             const float Y_RANGE_MIN = -15 * Global.NORMAL_TO_PIXEL;
@@ -49,12 +50,21 @@ namespace Game.Effects
             float yStart = textmesh.transform.position.y + Y_RANGE_MAX;
             float yEnd = textmesh.transform.position.y + Y_RANGE_MIN;
 
+            if (startColor.a != 0)
+                textmesh.color = startColor;
             textmesh.transform.eulerAngles = Vector3.forward * Random.Range(rotZRange.x, rotZRange.y).InversedIf(rotatesToLeft);
 
             Sequence sequence = DOTween.Sequence(textmesh);
-            sequence.Append(textmesh.transform.DOMoveY(yStart, 0.5f).SetEase(Ease.OutBack));
-            sequence.Append(textmesh.DOColor(Utils.clearWhite, 0.5f).SetDelay(delay));
-            sequence.Append(textmesh.transform.DOMoveY(yEnd, 0.5f).SetDelay(delay).SetEase(Ease.InQuad));
+            sequence.AppendCallback(() =>
+            {
+                if (endColor.a != 0)
+                    sequence.Append(textmesh.DOColor(endColor, 0.5f).SetDelay(1.0f));
+                sequence.Append(textmesh.DOFade(0, 0.5f).SetDelay(1.0f + delay));
+                if (!doNotScale)
+                    sequence.Append(textmesh.transform.DOScale(Vector3.zero, 2.0f + delay).SetEase(Ease.InBack));
+                sequence.Append(textmesh.transform.DOMoveY(yStart, 0.5f).SetEase(Ease.OutBack));
+            });
+            sequence.AppendInterval(1.5f + delay);
             sequence.OnComplete(() =>
             {
                 onComplete?.Invoke();

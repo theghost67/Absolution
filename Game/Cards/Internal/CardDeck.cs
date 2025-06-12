@@ -3,13 +3,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Game.Cards
 {
     /// <summary>
     /// Класс, представляющий изменяемую колоду из карт типа <see cref="FloatCard"/> и <see cref="FieldCard"/>.
     /// </summary>
-    public class CardDeck : IEnumerable<Card>, ISerializable, ICloneable, IDisposable
+    public class CardDeck : IEnumerable<Card>, ICloneable, IDisposable
     {
         public const int LIMIT = 16;
 
@@ -95,27 +96,37 @@ namespace Game.Cards
             floatCards = new Collection<FloatCard>(this);
             _allCards = new List<Card>();
         }
-        public CardDeck(SerializationDict dict)
+        public CardDeck(int statPointsPerCard) : this()
         {
-            throw new NotImplementedException();
-            //List<SerializationDict> fieldCardsDictList = dict.DeserializeKeyAs<List<SerializationDict>>("field");
-            //List<SerializationDict> floatCardsDictList = dict.DeserializeKeyAs<List<SerializationDict>>("float");
+            GetCardsCount(statPointsPerCard, out int fieldCardsCount, out int floatCardsCount);
+            int fieldCardsCountRandom = UnityEngine.Random.Range(4, (fieldCardsCount * 1.4f).Ceiling()).ClampedMax(LIMIT - floatCardsCount);
+            float randomToActualCountRatio = (float)fieldCardsCountRandom / fieldCardsCount;
+            int pointsSum = (statPointsPerCard * fieldCardsCount / randomToActualCountRatio).Ceiling();
+            List<float> pointsRatios = new(capacity: fieldCardsCount);
 
-            //IEnumerable<FieldCard> loadedFieldCards = floatCardsDictList.Select(sd =>
-            //{
-            //    string cardId = sd.DeserializeKeyAs<string>("id");
-            //    Card cardOriginal = CardBrowser.GetCardSource(cardId);
-            //    return new FieldCard(sd, cardOriginal);
-            //});
-            //IEnumerable<FloatCard> loadedFloatCards = fieldCardsDictList.Select(sd =>
-            //{
-            //    string cardId = sd.DeserializeKeyAs<string>("id");
-            //    FloatCard cardOriginal = CardBrowser.FloatCards[cardId];
-            //    return new FloatCard(sd, cardOriginal);
-            //});
+            // generate ratios
+            for (int i = 0; i < fieldCardsCount; i++)
+                pointsRatios.Add(UnityEngine.Random.Range(0.25f, 4f));
 
-            //fieldCards = new Collection<FieldCard>(this, loadedFieldCards);
-            //floatCards = new Collection<FloatCard>(this, loadedFloatCards);
+            // normalize
+            float statPointsRatiosSum = pointsRatios.Sum();
+            for (int i = 0; i < fieldCardsCount; i++)
+                pointsRatios[i] /= statPointsRatiosSum;
+
+            // generate cards using ratios (to make more diverse deck)
+            for (int i = 0; i < fieldCardsCount; i++)
+            {
+                if (LimitReached) break;
+                int points = Convert.ToInt32(pointsRatios[i] * pointsSum);
+                FieldCard card = CardBrowser.NewFieldRandom().ShuffleMainStats().UpgradeWithTraitAdd(points);
+                fieldCards.Add(card);
+            }
+
+            for (int i = 0; i < floatCardsCount; i++)
+            {
+                if (LimitReached) break;
+                floatCards.Add(CardBrowser.NewFloatRandom());
+            }
         }
         protected CardDeck(CardDeck other) : this()
         {
@@ -126,6 +137,22 @@ namespace Game.Cards
                 floatCards.Add((FloatCard)srcCard.Clone());
         }
 
+        public static void GetCardsCount(int pointsPerCard, out int fieldCardsCount, out int floatCardsCount)
+        {
+            fieldCardsCount = pointsPerCard switch
+            {
+                >= 56 => 13,
+                >= 48 => 12,
+                >= 40 => 11,
+                >= 32 => 10,
+                >= 24 => 9,
+                >= 16 => 8,
+                >= 8  => 6,
+                _     => 4,
+            };
+            floatCardsCount = pointsPerCard < 28 ? 0 : Convert.ToInt32(Mathf.Log((pointsPerCard - 12) / 16f));
+        }
+
         public void Dispose()
         {
             Clear();
@@ -133,18 +160,6 @@ namespace Game.Cards
         public object Clone()
         {
             return new CardDeck(this);
-        }
-        public SerializationDict Serialize()
-        {
-            var dict = new SerializationDict();
-
-            var floatCardsDictList = new List<SerializationDict>(floatCards.Select(c => c.Serialize()));
-            var fieldCardsDictList = new List<SerializationDict>(fieldCards.Select(c => c.Serialize()));
-
-            dict.Add("float", floatCardsDictList);
-            dict.Add("field", fieldCardsDictList);
-
-            return dict;
         }
 
         public void AddRange(CardDeck deck)

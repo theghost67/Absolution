@@ -44,14 +44,14 @@ namespace Game
 
                 if (linkArgs.isCard)
                 {
-                    Card card = (Card)linkArgs.src;
+                    Card card = (Card)linkArgs.data;
                     CardDescriptiveArgs args = (CardDescriptiveArgs)linkArgs;
                     list.Add(card.DescDynamic(args));
                     list.AddRange(DescLinksTextsRecursive(card.DescLinks(args), usedLinks));
                 }
                 else
                 {
-                    Trait trait = (Trait)linkArgs.src;
+                    Trait trait = (Trait)linkArgs.data;
                     TraitDescriptiveArgs args = (TraitDescriptiveArgs)linkArgs;
                     list.Add(trait.DescDynamic(args));
                     list.AddRange(DescLinksTextsRecursive(trait.DescLinks(args), usedLinks));
@@ -61,21 +61,19 @@ namespace Game
         }
         static CardDescriptiveArgs CardArgsCreator(ITableCard card, out DescLinkCollection links)
         {
-            CardDescriptiveArgs args = new(card.Data.id);
-            links = args.src.DescLinks(args);
+            CardDescriptiveArgs args = new(card);
+            links = args.data.DescLinks(args);
             args.linkFormat = false;
             args.linksAreAvailable = links.Count > 0;
-            args.turnAge = card.TurnAge;
             return args;
         }
         static TraitDescriptiveArgs TraitArgsCreator(ITableTrait trait, out DescLinkCollection links)
         {
-            TraitDescriptiveArgs args = new(trait.Data.id);
+            TraitDescriptiveArgs args = new(trait);
             args.linkFormat = false;
-            args.turnAge = trait.TurnAge;
             args.turnsDelay = trait.TurnDelay;
             args.stacks = trait.GetStacks();
-            links = args.src.DescLinks(args);
+            links = args.data.DescLinks(args);
             args.linksAreAvailable = links.Count > 0;
             return args;
         }
