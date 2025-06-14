@@ -49,7 +49,7 @@ namespace Game.Traits
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             BattleFieldCard killer = e.source.AsBattleFieldCard();
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
+            if (trait == null || trait.Owner == null) return;
             if (killer == null) return;
 
             await trait.AnimActivation();

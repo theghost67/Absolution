@@ -30,23 +30,21 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на любой вражеской карте</color>\nЕсли у цели < {_healthF.Format(args.stacks)} здоровья, " +
+            return $"<color>При активации на любой вражеской карте</color>\nЕсли у цели ≤ {_healthF.Format(args.stacks)} здоровья, " +
                    $"мгновенно убивает её (игнор. неуязвимости и восстановления), добавляя копию убитой карты с исходными характеристиками в " +
                    $"рукав стороны-владельца (должно быть место). Даёт {_etherF.Format(args.stacks)} эфира. Перезарядка: {CD} х.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsLinear(8, stacks);
+            return PointsLinear(12, stacks);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return base.IsUsable(e) && e.isInBattle && e.target.Card != null && !((IBattleTrait)e.trait).Side.Sleeve.IsFull;
+            return base.IsUsable(e) && e.isInBattle && e.target.Card != null && e.target.Card.Health <= _healthF.ValueInt(e.traitStacks);
         }
         protected override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
-            
-
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField target = (BattleField)e.target;
             BattleFieldCard owner = trait.Owner;

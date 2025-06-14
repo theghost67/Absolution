@@ -44,9 +44,7 @@ namespace Game.Traits
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
-            if (result.Entity.Storage.ContainsKey(KEY))
-                return BattleWeight.One(result.Entity);
-            else return BattleWeight.Zero(result.Entity);
+            return BattleWeight.One(result.Entity);
         }
 
         public override bool IsUsableInSleeve()
@@ -83,7 +81,7 @@ namespace Game.Traits
             BattleTerritory terr = (BattleTerritory)sender;
             IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
             BattleFieldCard card = (BattleFieldCard)e.card;
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
+            if (trait == null) return;
             card.OnInitiationPreSent.Add(trait.GuidStr, OnInitiationPreSent, -1);
         }
         async UniTask ContinuousAttach_Remove(object sender, TableFieldAttachArgs e)
@@ -91,7 +89,7 @@ namespace Game.Traits
             BattleTerritory terr = (BattleTerritory)sender;
             IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
             BattleFieldCard card = (BattleFieldCard)e.card;
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
+            if (trait == null) return;
             card.OnInitiationPreSent.Remove(trait.GuidStr);
         }
 
@@ -100,7 +98,7 @@ namespace Game.Traits
             BattleFieldCard attacker = (BattleFieldCard)sender;
             BattleTerritory terr = attacker.Territory;
             IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null || trait.Owner.IsKilled) return;
+            if (trait == null || trait.Owner == null || trait.Owner.IsKilled) return;
 
             bool fromSleeve = trait.Side.Sleeve.Contains(trait.Owner as ITableSleeveCard);
             if (!trait.Storage.ContainsKey(KEY) && fromSleeve) return;

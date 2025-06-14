@@ -22,7 +22,7 @@ namespace Game.Traits
             desc = "Тупо сечёт, что среди деревьев будет выделяться... Нас эта хрень где угодно может поджидать.";
 
             rarity = Rarity.Rare;
-            tags = TraitTag.Static;
+            tags = TraitTag.None;
             range = BattleRange.none;
         }
         protected tShift(tShift other) : base(other) { }

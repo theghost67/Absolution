@@ -54,6 +54,7 @@ namespace Game
             Commands.Add(new cmdData());
             Commands.Add(new cmdDeckCard());
             Commands.Add(new cmdDeckGen());
+            Commands.Add(new cmdDeckTest());
             Commands.Add(new cmdHelp());
             Commands.Add(new cmdMove());
             Commands.Add(new cmdPointsTest());

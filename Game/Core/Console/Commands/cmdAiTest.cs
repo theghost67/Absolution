@@ -263,7 +263,17 @@ namespace Game.Console
 
             protected override CardDeck DeckCreator()
             {
-                return new CardDeck(_points);
+                int stage = _points switch
+                {
+                    >= 56 => 7,
+                    >= 48 => 6,
+                    >= 40 => 5,
+                    >= 32 => 4,
+                    >= 24 => 3,
+                    >= 16 => 2,
+                    _ => 1,
+                };
+                return new CardDeck(stage, _points);
             }
             protected override BattleSleeve SleeveCreator(Transform parent)
             {

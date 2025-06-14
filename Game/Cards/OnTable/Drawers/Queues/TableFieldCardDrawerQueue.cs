@@ -60,6 +60,7 @@ namespace Game.Cards
             _finishTween.Kill();
             setDrawer.HideStoredElementsInstantly();
             drawer.ShowBgInstantly();
+            TableEventManager.Add("card_queue", drawer.attached.Guid);
 
             GameObject lastPrefab = null;
             while (_queue.Count > 0)
@@ -74,6 +75,7 @@ namespace Game.Cards
             }
 
             End:
+            TableEventManager.Remove("card_queue", drawer.attached.Guid);
             _finishTween = DOVirtual.DelayedCall(0.25f, FinishTweenOnComplete);
             _isRunning = false;
             _isAnyRunning = false;

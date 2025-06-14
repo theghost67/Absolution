@@ -12,6 +12,7 @@ namespace Game.Traits
     {
         const string ID = "scorching_flame";
         static readonly TraitStatFormula _strengthF = new(true, 0.25f, 0.25f);
+        ITableTrait _preReceiveTrait;
 
         public tScorchingFlame() : base(ID)
         {
@@ -43,16 +44,28 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
+            {
                 trait.Owner.OnInitiationPostReceived.Add(trait.GuidStr, OnOwnerInitiationPostReceived);
+                trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived);
+            }
             else if (trait.WasRemoved(e))
+            {
                 trait.Owner.OnInitiationPostReceived.Remove(trait.GuidStr);
+                trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
+            }
         }
-        static async UniTask OnOwnerInitiationPostReceived(object sender, BattleInitiationRecvArgs e)
+        async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationRecvArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
-            IBattleTrait trait = owner.Traits.Any(ID);
-            if (trait == null || trait.Owner == null || e.Sender.IsKilled) return;
+            ITableTrait trait = owner.Traits.Any(ID);
+            _preReceiveTrait = trait;
+        }
+        async UniTask OnOwnerInitiationPostReceived(object sender, BattleInitiationRecvArgs e)
+        {
+            BattleFieldCard owner = (BattleFieldCard)sender;
+            if (_preReceiveTrait == null || e.Sender.IsKilled) return;
 
+            ITableTrait trait = _preReceiveTrait;
             int damage = (int)Mathf.Ceil(e.Strength * _strengthF.Value(trait.GetStacks()));
             await trait.AnimActivationShort();
             await e.Sender.Health.AdjustValue(-damage, trait);

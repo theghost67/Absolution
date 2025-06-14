@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using Game.Territories;
 using System.Linq;
 
 namespace Game.Cards
@@ -24,6 +25,11 @@ namespace Game.Cards
         {
             return $"Даёт стороне-владельцу золото, равное количеству установленных карт на его стороне территории.";
         }
+        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleFloatCard> result)
+        {
+            return new(result.Entity, 1 + result.Entity.Side.CalculateCurrencyWeight("gold", result.Entity.Guid) * 2);
+        }
+
         public override bool IsUsable(TableFloatCardUseArgs e)
         {
             return e.isInBattle;

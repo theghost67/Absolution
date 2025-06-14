@@ -10,7 +10,7 @@ namespace Game.Traits
     public class tBloodthirstiness : PassiveTrait
     {
         const string ID = "bloodthirstiness";
-        static readonly TraitStatFormula _strengthF = new(true, 0, 0.25f);
+        static readonly TraitStatFormula _strengthF = new(true, 0.10f, 0.10f);
 
         public tBloodthirstiness() : base(ID)
         {
@@ -30,7 +30,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(20, stacks);
+            return PointsExponential(12, stacks, 1, 1.8f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

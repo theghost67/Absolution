@@ -112,9 +112,9 @@ namespace Game.Traits
                     if (Data.IsUsable(new TableActiveTraitUseArgs(this, possibleTarget)))
                         list.Add(possibleTarget);
                 }
+                if (list.Count == 0 && Data.range == BattleRange.none && Data.IsUsable(new TableActiveTraitUseArgs(this, _owner.Field)))
+                    list.Add(_owner.Field);
             }
-            if (list.Count == 0 && Data.range == BattleRange.none && Data.IsUsable(new TableActiveTraitUseArgs(this, Owner.Field)))
-                list.Add(Owner.Field);
             return list;
         }
         bool AimFilter(BattleField aimedField)

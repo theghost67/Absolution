@@ -44,12 +44,12 @@ namespace Game.Traits
             if (e.canSeeTarget)
             {
                 await trait.AnimDetectionOnSeen(target);
-                await target.Traits.Passives.AdjustStacks(TRAIT_ID, 1, trait, trait.GuidStr);
+                await target.Traits.Passives.AdjustStacks(TRAIT_ID, 1, trait);
             }
             else
             {
                 await trait.AnimDetectionOnUnseen(target);
-                await target.Traits.Passives.RevertStacks(TRAIT_ID, trait.GuidStr);
+                await target.Traits.Passives.AdjustStacks(TRAIT_ID, -1, trait);
             }
         }
     }

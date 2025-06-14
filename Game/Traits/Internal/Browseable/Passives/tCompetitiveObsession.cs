@@ -31,10 +31,10 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            bool hasBonus = args.data.storage.TryGetValue(STRENGTH_STORAGE_ID, out object bonus);
+            args.data.storage.TryGetValue(STRENGTH_STORAGE_ID, out object bonus);
             string text = $"<color>После победы в сражении, если владелец выжил</color>\n" +
                           $"Навсегда увеличивает силу владельца на {_strengthF.Format(args.stacks, true)}.";
-            if (hasBonus)
+            if (bonus != null && (float)bonus != 0)
                 text += $" Текущий бонус: <color=green>{(float)bonus * 100}%</color>.";
             return text;
         }

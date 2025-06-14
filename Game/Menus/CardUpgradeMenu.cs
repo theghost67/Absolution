@@ -695,11 +695,9 @@ namespace Game.Menus
 
             void UpdateTexts()
             {
-                float defPoints = menu._sleeve.Cast<CardToUpgrade>().Sum(c => c.DefaultPoints).Rounded(0);
                 float curPoints = menu._sleeve.Cast<CardToUpgrade>().Sum(c => c.CurrentPoints).Rounded(0);
-
-                _normalText = $"СБРОСИТЬ ВСЁ<color=grey><size=75%>\nизначально: {defPoints} ОП\nсейчас: {curPoints} ОП";
-                _hoverText = $"<u>СБРОСИТЬ ВСЁ</u><color=grey><size=75%>\nизначально: {defPoints} ОП\nсейчас: {curPoints} ОП";
+                _normalText = $"СБРОСИТЬ ВСЁ<color=grey><size=75%>\nсейчас: {curPoints} ОП";
+                _hoverText = $"<u>СБРОСИТЬ ВСЁ</u><color=grey><size=75%>\nсейчас: {curPoints} ОП";
 
                 textMesh.text = _normalText;
             }
@@ -739,11 +737,9 @@ namespace Game.Menus
                 gameObject.SetActive(selected != null);
                 if (selected == null) return;
 
-                float defPoints = selected.DefaultPoints.Rounded(0);
                 float curPoints = selected.CurrentPoints.Rounded(0);
-
-                _normalText = $"СБРОСИТЬ КАРТУ<color=grey><size=75%>\nизначально: {defPoints} ОП\nсейчас: {curPoints} ОП";
-                _hoverText = $"<u>СБРОСИТЬ КАРТУ</u><color=grey><size=75%>\nизначально: {defPoints} ОП\nсейчас: {curPoints} ОП";
+                _normalText = $"СБРОСИТЬ КАРТУ<color=grey><size=75%>\nсейчас: {curPoints} ОП";
+                _hoverText = $"<u>СБРОСИТЬ КАРТУ</u><color=grey><size=75%>\nсейчас: {curPoints} ОП";
 
                 textMesh.text = _normalText;
             }

@@ -96,12 +96,13 @@ namespace Game.Cards
             floatCards = new Collection<FloatCard>(this);
             _allCards = new List<Card>();
         }
-        public CardDeck(int statPointsPerCard) : this()
+        public CardDeck(int stage, int statPointsPerCard) : this()
         {
-            GetCardsCount(statPointsPerCard, out int fieldCardsCount, out int floatCardsCount);
+            GetCardsCount(stage, out int fieldCardsCount, out int floatCardsCount);
             int fieldCardsCountRandom = UnityEngine.Random.Range(4, (fieldCardsCount * 1.4f).Ceiling()).ClampedMax(LIMIT - floatCardsCount);
-            float randomToActualCountRatio = (float)fieldCardsCountRandom / fieldCardsCount;
-            int pointsSum = (statPointsPerCard * fieldCardsCount / randomToActualCountRatio).Ceiling();
+            float randomToActualCountRatio = ((float)fieldCardsCountRandom / fieldCardsCount).ClampedMin(1);
+            int pointsSum = statPointsPerCard * fieldCardsCount;
+            fieldCardsCount = fieldCardsCountRandom;
             List<float> pointsRatios = new(capacity: fieldCardsCount);
 
             // generate ratios
@@ -137,20 +138,30 @@ namespace Game.Cards
                 floatCards.Add((FloatCard)srcCard.Clone());
         }
 
-        public static void GetCardsCount(int pointsPerCard, out int fieldCardsCount, out int floatCardsCount)
+        public static void GetCardsCount(int stage, out int fieldCardsCount, out int floatCardsCount)
         {
-            fieldCardsCount = pointsPerCard switch
+            fieldCardsCount = stage switch
             {
-                >= 56 => 13,
-                >= 48 => 12,
-                >= 40 => 11,
-                >= 32 => 10,
-                >= 24 => 9,
-                >= 16 => 8,
-                >= 8  => 6,
-                _     => 4,
+                7 => 12,
+                6 => 11,
+                5 => 10,
+                4 => 9,
+                3 => 8,
+                2 => 6,
+                1 => 4,
+                _ => 4,
             };
-            floatCardsCount = pointsPerCard < 28 ? 0 : Convert.ToInt32(Mathf.Log((pointsPerCard - 12) / 16f));
+            floatCardsCount = stage switch
+            {
+                7 => 4,
+                6 => 3,
+                5 => 2,
+                4 => 1,
+                3 => 0,
+                2 => 0,
+                1 => 0,
+                _ => 0,
+            };
         }
 
         public void Dispose()

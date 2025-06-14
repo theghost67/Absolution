@@ -38,6 +38,10 @@ namespace Game.Traits
         {
             return new() { new CardDescriptiveArgs(CARD_ID) { linkStats = CardDescriptiveArgs.normalStats } };
         }
+        public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
+        {
+            return new(result.Entity, 0, 0.08f);
+        }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {

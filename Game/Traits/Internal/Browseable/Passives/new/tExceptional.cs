@@ -33,7 +33,7 @@ namespace Game.Traits
             desc = "Я Мистер Исключительный! Не Мистер Ни-то ни-сё, Мистер... Исключительный!";
 
             rarity = Rarity.Rare;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = BattleRange.none;
         }
         protected tExceptional(tExceptional other) : base(other) { }

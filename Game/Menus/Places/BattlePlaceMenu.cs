@@ -642,7 +642,7 @@ namespace Game.Menus
             {
                 if (isMe)
                      return Player.Deck;
-                else return new CardDeck(isMe ? _demoLocStageForPlayer : _demoLocStageForEnemy);
+                else return new CardDeck(_demoDifficulty, isMe ? _demoLocStageForPlayer : _demoLocStageForEnemy);
             }
             protected override BattleSleeve SleeveCreator(Transform parent)
             {

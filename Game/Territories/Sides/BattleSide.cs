@@ -215,11 +215,52 @@ namespace Game.Territories
         public float CalculateWeight(params int[] excludedWeights)
         {
             float baseWeight = CalculateBaseWeight(excludedWeights);
-            float goldWeight = CalculateCurrencyWeight(Gold, excludedWeights);
-            float etherWeight = CalculateCurrencyWeight(Ether, excludedWeights);
+            float goldWeight = CalculateCurrencyWeight("gold", excludedWeights);
+            float etherWeight = CalculateCurrencyWeight("ether", excludedWeights);
             float sum = baseWeight + goldWeight + etherWeight;
             return sum;
         }
+        public float CalculateBaseWeight(params int[] excludedWeights)
+        {
+            if (_isKilled)
+                return -int.MaxValue;
+            List<BattleWeight> allWeights = new();
+            float healthWeight = _health;
+            IEnumerable<IBattleCard> sleeveCards = Sleeve.Cards;
+            IBattleCard[] affordableCards = sleeveCards.Where(c => CanAfford(c)).ToArray();
+            foreach (IBattleCard card in affordableCards)
+            {
+                if (excludedWeights.Contains(card.Guid)) continue;
+                BattleWeight weight = card.CalculateWeight(excludedWeights);
+                float multiplier = 4f;
+                weight.absolute /= multiplier;
+                weight.relative /= multiplier;
+                allWeights.Add(weight);
+            }
+            allWeights.AddRange(Fields().WithCard().Select(f => f.Card.CalculateWeight(excludedWeights)));
+            return BattleWeight.Float(healthWeight, allWeights);
+        }
+        public float CalculateCurrencyWeight(string currencyId, params int[] excludedWeights)
+        {
+            if (_isKilled)
+                return 0;
+            TableStat currencyStat = currencyId == "gold" ? Gold : Ether;
+            List<BattleWeight> allWeights = new();
+            IEnumerable<IBattleCard> sleeveCards = Sleeve.Cards;
+            IBattleCard[] currencyCards = sleeveCards.Where(c => c.Data.price.currency.id == currencyStat.Id).ToArray();
+            int cardsCurrencySum = currencyCards.Sum(c => c.Price);
+            float multiplier = 0.5f * (currencyStat / (float)cardsCurrencySum).Clamped(-1, 1);
+            foreach (IBattleCard card in currencyCards)
+            {
+                if (excludedWeights.Contains(card.Guid)) continue;
+                BattleWeight weight = card.CalculateWeight(excludedWeights);
+                weight.absolute *= multiplier;
+                weight.relative *= multiplier;
+                allWeights.Add(weight);
+            }
+            return BattleWeight.Float(0, allWeights);
+        }
+
         public async UniTask TryKill(BattleKillMode mode, ITableEntrySource source)
         {
             if (_killBlock) return;
@@ -317,46 +358,6 @@ namespace Game.Territories
             TableStat stat = (TableStat)sender;
             BattleSide side = (BattleSide)stat.Owner;
             return side.TryKill(BattleKillMode.Default, e.source);
-        }
-
-        private float CalculateBaseWeight(params int[] excludedWeights)
-        {
-            if (_isKilled)
-                return -int.MaxValue;
-            List<BattleWeight> allWeights = new();
-            float healthWeight = _health;
-            IEnumerable<IBattleCard> sleeveCards = Sleeve.Cards;
-            IBattleCard[] affordableCards = sleeveCards.Where(c => CanAfford(c)).ToArray();
-            foreach (IBattleCard card in affordableCards)
-            {
-                if (excludedWeights.Contains(card.Guid)) continue;
-                BattleWeight weight = card.CalculateWeight(excludedWeights);
-                float multiplier = 4f;
-                weight.absolute /= multiplier;
-                weight.relative /= multiplier;
-                allWeights.Add(weight);
-            }
-            allWeights.AddRange(Fields().WithCard().Select(f => f.Card.CalculateWeight(excludedWeights)));
-            return BattleWeight.Float(healthWeight, allWeights);
-        }
-        private float CalculateCurrencyWeight(TableStat currencyStat, int[] excludedWeights)
-        {
-            if (_isKilled)
-                return 0;
-            List<BattleWeight> allWeights = new();
-            IEnumerable<IBattleCard> sleeveCards = Sleeve.Cards;
-            IBattleCard[] currencyCards = sleeveCards.Where(c => c.Data.price.currency.id == currencyStat.Id).ToArray();
-            int cardsCurrencySum = currencyCards.Sum(c => c.Price);
-            float multiplier = 0.5f * (currencyStat / (float)cardsCurrencySum).Clamped(0, 1);
-            foreach (IBattleCard card in currencyCards)
-            {
-                if (excludedWeights.Contains(card.Guid)) continue;
-                BattleWeight weight = card.CalculateWeight(excludedWeights);
-                weight.absolute *= multiplier;
-                weight.relative *= multiplier;
-                allWeights.Add(weight);
-            }
-            return BattleWeight.Float(0, allWeights);
         }
     }
 }

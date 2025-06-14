@@ -36,11 +36,17 @@ namespace Game.Cards
         {
             return new TableFieldCard(this, parent);
         }
+
         public override float Points()
         {
             float points = health.ClampedMin(0) + strength.ClampedMin(0) * 2;
             foreach (TraitListElement element in traits)
                 points += element.Trait.Points(this, element.Stacks);
+            return points * MoxiePointsScale(moxie) * PricePointsScale(price);
+        }
+        public float PointsWithoutTraits()
+        {
+            float points = health.ClampedMin(0) + strength.ClampedMin(0) * 2;
             return points * MoxiePointsScale(moxie) * PricePointsScale(price);
         }
 
