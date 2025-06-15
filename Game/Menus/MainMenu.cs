@@ -168,7 +168,7 @@ namespace Game.Menus
         }
         void UpdateTip()
         {
-            int indexOfIndex = _tipsIndecies.GetRandomIndex();
+            int indexOfIndex = _tipsIndecies.RandomIndexSafe();
             int index = _tipsIndecies[indexOfIndex];
             _tipsIndecies.RemoveAt(indexOfIndex);
             if (_tipsIndecies.Count == 0)
@@ -178,7 +178,7 @@ namespace Game.Menus
 
         void OnFlickeringTweenUpdate()
         {
-            int value = UnityEngine.Random.Range(0, 400);
+            int value = Utils.RandomIntSafe(0, 400);
             _controlsGO.SetActive(value != 2);
             _tipsGO.SetActive(value != 3);
         }

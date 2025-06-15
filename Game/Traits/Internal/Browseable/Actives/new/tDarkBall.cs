@@ -13,9 +13,10 @@ namespace Game.Traits
     public class tDarkBall : ActiveTrait
     {
         const string ID = "dark_ball";
+        const string KEY = "dark_stacks";
         static readonly TraitStatFormula _chargesPerDeathF = new(false, 1, 0);
         static readonly TraitStatFormula _directDamageF = new(false, 0, 4);
-        static readonly TraitStatFormula _splashDamageF = new(false, 0, 2);
+        static readonly TraitStatFormula _splashDamageF = new(false, 0, _directDamageF.valuePerStack / 2);
         static readonly TerritoryRange _chargesRange = TerritoryRange.ownerDouble;
 
         public tDarkBall() : base(ID)
@@ -32,9 +33,20 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на поле рядом напротив</color>\nНаносит {_directDamageF.Format(args.stacks)} урона цели и " +
-                   $"{_splashDamageF.Format(args.stacks)} соседним от цели картам. Получает {_chargesPerDeathF.Format(args.stacks)} зарядов после смерти " +
-                   $"карты рядом с владельцем. Этот навык можно использовать только при более, чем одном заряде.";
+            object darkStacks = null;
+            args.table?.Storage.TryGetValue(KEY, out darkStacks);
+            string str = $"<color>При активации на поле рядом напротив</color>\nНаносит {_directDamageF.Format(args.stacks)} урона цели и " +
+                         $"{_splashDamageF.Format(args.stacks)} соседним от цели картам. Получает {_chargesPerDeathF.Format(args.stacks)} зарядов тьмы после смерти " +
+                         $"карты рядом с владельцем. Этот навык можно использовать только при наличии одного или более зарядов тьмы.";
+            if (darkStacks != null)
+                str += $" Зарядов тьмы: <color=#FF00FF>{(int)darkStacks}</color>.";
+            return str;
+        }
+        public override BattleWeight Weight(IBattleTrait trait)
+        {
+            int darkStacks = (int)trait.Storage[KEY];
+            float damage = _directDamageF.ValueInt(trait.GetStacks());
+            return new(trait, darkStacks * damage);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -51,16 +63,17 @@ namespace Game.Traits
             if (!e.isInBattle) return;
 
             IBattleTrait trait = (IBattleTrait)e.trait;
+            trait.Storage[KEY] = 0;
 
             if (trait.WasAdded(e))
-                trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add);
+                await trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add, trait.Owner);
             else if (trait.WasRemoved(e))
-                trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
+                await trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
-            return base.IsUsable(e) && e.isInBattle && e.traitStacks > 1;
+            return base.IsUsable(e) && e.isInBattle && (int)e.trait.Storage[KEY] > 0;
         }
         protected override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
@@ -82,7 +95,7 @@ namespace Game.Traits
                 await card.Health.AdjustValue(-directDamage, trait);
             }
 
-            await trait.AdjustStacks(-1, owner.Side);
+            trait.Storage[KEY] = (int)trait.Storage[KEY] - 1;
         }
 
         async UniTask ContinuousAttach_Add(object sender, TableFieldAttachArgs e)
@@ -111,7 +124,9 @@ namespace Game.Traits
             bool isInRange = trait.Territory.Fields(trait.Field.pos, _chargesRange).Contains(card.Field);
             if (!isInRange) return;
 
-            await trait.AdjustStacks(_chargesPerDeathF.ValueInt(trait.GetStacks()), trait);
+            int charges = _chargesPerDeathF.ValueInt(trait.GetStacks());
+            trait.Storage[KEY] = (int)trait.Storage[KEY] + charges;
+            await trait.AnimActivationShort();
         }
     }
 }

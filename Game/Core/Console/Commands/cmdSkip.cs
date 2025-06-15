@@ -15,7 +15,7 @@ namespace Game.Console
         class StageArg : CommandArg
         {
             public const string ID = "stage";
-            public const string DESC = "этап, до которого нужно пропускать сражения";
+            public const string DESC = "этап, до которого нужно пропускать сражения, используйте 'f' для принудительного пропуска";
             public StageArg(Command command) : base(command, ValueType.Optional, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
             {
@@ -41,6 +41,8 @@ namespace Game.Console
         {
             int stage = (int)(args.ContainsKey(StageArg.ID) ? args[StageArg.ID].value : SKIP_CUR);
             bool forceSkip = stage == SKIP_FORCE;
+            if (forceSkip)
+                stage = SKIP_CUR;
 
             if (!forceSkip && TableEventManager.CountAll() != 0)
             {

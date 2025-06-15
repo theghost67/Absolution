@@ -56,7 +56,7 @@ namespace Game.Cards
             _eventGuid = card.GuidStr;
             _sideFinder = side.Finder;
 
-            terr.ContinuousAttachHandler_Add(_eventGuid, ContinuousAttach_Add);
+            await terr.ContinuousAttachHandler_Add(_eventGuid, ContinuousAttach_Add);
             terr.OnStartPhase.Add(_eventGuid, OnStartPhase);
         }
 
@@ -64,7 +64,7 @@ namespace Game.Cards
         {
             BattleTerritory terr = (BattleTerritory)sender;
             BattleSide side = (BattleSide)_sideFinder.FindInBattle(terr);
-            terr.ContinuousAttachHandler_Remove(_eventGuid, ContinuousAttach_Remove);
+            await terr.ContinuousAttachHandler_Remove(_eventGuid, ContinuousAttach_Remove);
             terr.OnStartPhase.Remove(_eventGuid);
             if (side.Drawer != null)
             {

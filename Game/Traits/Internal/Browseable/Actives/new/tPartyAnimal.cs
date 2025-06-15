@@ -4,6 +4,7 @@ using Game.Cards;
 using Game.Effects;
 using Game.Palette;
 using Game.Territories;
+using GreenOne;
 using UnityEngine;
 
 namespace Game.Traits
@@ -95,7 +96,7 @@ namespace Game.Traits
             _animSeq.AppendCallback(() =>
             {
                 if (owner.Field == null || owner.Drawer == null || !owner.Drawer.gameObject.activeInHierarchy) return;
-                float rotation = Random.Range(10, 30);
+                float rotation = Utils.RandomIntSafe(10, 30);
                 owner.Drawer.FlipPortraitX();
                 owner.Drawer.transform.localEulerAngles = new Vector3(0, 0, owner.Drawer.PortraitIsFlipped.x ? rotation : -rotation);
                 owner.Drawer.transform.DOAShake();

@@ -68,7 +68,7 @@ namespace Game.Traits
                 trait.Owner.Territory.OnStartPhase.Remove(trait.GuidStr);
                 trait.Storage.Remove(SHIELD_HEALTH_CUR_KEY);
                 trait.Storage.Remove(SHIELD_RESTORE_KEY);
-                trait.Owner.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
+                await trait.Owner.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
             }
         }
 
@@ -78,7 +78,7 @@ namespace Game.Traits
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null || !owner.FirstFieldAttachment)
             {
-                trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
+                await trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
                 return;
             }
 
@@ -90,7 +90,7 @@ namespace Game.Traits
             trait.Storage[SHIELD_HEALTH_MAX_KEY] = health;
             trait.Storage[SHIELD_HEALTH_CUR_KEY] = health;
             trait.Storage[SHIELD_RESTORE_KEY] = healthRestore;
-            trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add);
+            await trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add, trait.Owner);
         }
         async UniTask OnTerritoryOnStartPhase(object sender, EventArgs e)
         {
@@ -133,7 +133,7 @@ namespace Game.Traits
         {
             BattleFieldCard card = (BattleFieldCard)sender;
             IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(card.Territory);
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null || e.ReceiverCard.IsKilled || e.handled || e.Strength <= 0) return;
+            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null || e.handled || e.Strength <= 0) return;
 
             bool isInRange = trait.Territory.Fields(trait.Field.pos, trait.Data.range.potential).Contains(card.Field);
             if (!isInRange) return;

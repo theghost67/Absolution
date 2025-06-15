@@ -1,6 +1,8 @@
 using Cysharp.Threading.Tasks;
 using Game.Cards;
+using Game.Effects;
 using Game.Territories;
+using System;
 using UnityEngine;
 
 namespace Game.Traits
@@ -12,7 +14,6 @@ namespace Game.Traits
     {
         const string ID = "scorching_flame";
         static readonly TraitStatFormula _strengthF = new(true, 0.25f, 0.25f);
-        ITableTrait _preReceiveTrait;
 
         public tScorchingFlame() : base(ID)
         {
@@ -46,29 +47,33 @@ namespace Game.Traits
             if (trait.WasAdded(e))
             {
                 trait.Owner.OnInitiationPostReceived.Add(trait.GuidStr, OnOwnerInitiationPostReceived);
-                trait.Owner.OnInitiationPreReceived.Add(trait.GuidStr, OnOwnerInitiationPreReceived);
+                trait.Owner.OnPostKilled.Add(trait.GuidStr, OnOwnerPostKilled);
             }
             else if (trait.WasRemoved(e))
             {
                 trait.Owner.OnInitiationPostReceived.Remove(trait.GuidStr);
-                trait.Owner.OnInitiationPreReceived.Remove(trait.GuidStr);
+                trait.Owner.OnPostKilled.Remove(trait.GuidStr);
             }
         }
-        async UniTask OnOwnerInitiationPreReceived(object sender, BattleInitiationRecvArgs e)
-        {
-            BattleFieldCard owner = (BattleFieldCard)sender;
-            ITableTrait trait = owner.Traits.Any(ID);
-            _preReceiveTrait = trait;
-        }
+
         async UniTask OnOwnerInitiationPostReceived(object sender, BattleInitiationRecvArgs e)
         {
-            BattleFieldCard owner = (BattleFieldCard)sender;
-            if (_preReceiveTrait == null || e.Sender.IsKilled) return;
+            await OnOwnerHitReceived((BattleFieldCard)sender, e.Sender, e.Strength);
+        }
+        async UniTask OnOwnerPostKilled(object sender, BattleKillAttemptArgs e)
+        {
+            await OnOwnerHitReceived((BattleFieldCard)sender, e.source.AsBattleFieldCard(), e.damage);
+        }
 
-            ITableTrait trait = _preReceiveTrait;
-            int damage = (int)Mathf.Ceil(e.Strength * _strengthF.Value(trait.GetStacks()));
+        async UniTask OnOwnerHitReceived(BattleFieldCard owner, BattleFieldCard sender, int strength)
+        {
+            if (owner == null || sender == null || strength < 1) return;
+            ITableTrait trait = owner.Traits.Any(ID);
+            if (trait == null || sender.IsKilled) return;
+            int damage = (int)Mathf.Ceil(strength * _strengthF.Value(trait.GetStacks()));
             await trait.AnimActivationShort();
-            await e.Sender.Health.AdjustValue(-damage, trait);
+            sender.Drawer?.CreateTextAsDamage(damage, false);
+            await sender.Health.AdjustValue(-damage, trait);
         }
     }
 }

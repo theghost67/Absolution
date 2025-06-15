@@ -799,7 +799,7 @@ namespace Game.Menus
             _fleeButton.SetTooltip(() => "Шанс побега: 100%.");
 
             #if !DEMO
-            _territory = new pTerritory(this, playerMovesFirst: true /*UnityEngine.Random.value > 0.5f*/, sizeX: 5);
+            _territory = new pTerritory(this, playerMovesFirst: true /*Utils.RandomValueSafe > 0.5f*/, sizeX: 5);
             _territory.player = _territory.player;
             _territory.enemy = _territory.enemy;
             #endif
@@ -821,7 +821,6 @@ namespace Game.Menus
         }
         public void Skip(bool force)
         {
-            // TODO: remove this function
             if (_territory == null) return;
             if (_territory.DrawersAreNull) return;
 
@@ -833,6 +832,16 @@ namespace Game.Menus
                 side.Health.OnPreSet.Add(null, async (s, e) => e.deltaValue = -side.Health);
                 _ = side.Health.AdjustValue(1, null);
             }
+        }
+        public void Restart(bool force)
+        {
+			if (_territory == null) return;
+			if (_territory.DrawersAreNull) return;
+
+            SetBellState(false);
+            SetFleeState(false);
+            _demoDifficulty--;
+            demo_OnBattleStart(false);
         }
 
         void TryFlee()
@@ -1047,6 +1056,9 @@ namespace Game.Menus
         }
         async void demo_OnBattleEndBase()
         {
+            if (_demoDifficulty == 1)
+                _demoPointsSavedForUpgrade = 0;
+
             int pointsPerCard = demo_DifficultyToLocStage(_demoDifficulty + 1);
             int cardsCount = demo_DifficultyToFieldCardsCount(_demoDifficulty + 1);
             _demoPointsForUpgrade = demo_DifficultyToPlayerUpgradePoints(_demoDifficulty + 1);
@@ -1096,7 +1108,7 @@ namespace Game.Menus
 
             _territory?.Dispose();
             _territory = new pTerritory(this, demo_DifficultyToPlayerIfFirst(_demoDifficulty), sizeX: 5);
-            _territory.Enemy.ai.Style = (BattleAI.PlayStyle)UnityEngine.Random.Range(0, 3);
+            _territory.Enemy.ai.Style = (BattleAI.PlayStyle)Utils.RandomIntUnsafe(0, 3);
 
             SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
             await UniTask.Delay(500);
@@ -1191,7 +1203,7 @@ namespace Game.Menus
                 if (colors[i].Length == 7)
                     palettes.Add(colors[i]);
             }
-            return palettes.GetRandom();
+            return palettes.RandomSafe();
         }
         static string demo_TimeSpanFormat()
         {

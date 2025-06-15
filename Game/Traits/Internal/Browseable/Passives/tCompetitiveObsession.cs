@@ -14,7 +14,6 @@ namespace Game.Traits
     {
         const string ID = "competitive_obsession";
         static readonly TraitStatFormula _strengthF = new(true, 0, 0.10f);
-        static readonly Random _rand = new();
         const string STRENGTH_STORAGE_ID = "strength";
 
         public tCompetitiveObsession() : base(ID)
@@ -51,7 +50,7 @@ namespace Game.Traits
                 if (!e.trait.Data.storage.ContainsKey(STRENGTH_STORAGE_ID))
                     e.trait.Data.storage[STRENGTH_STORAGE_ID] = 0f;
                 if (e.isInBattle && !((IBattleTrait)e.trait).Side.isMe)
-                    e.trait.Data.storage[STRENGTH_STORAGE_ID] = Menu.GetCurrent() is BattlePlaceMenu menu ? _rand.Next(0, menu.DemoDifficulty) : 0f;
+                    e.trait.Data.storage[STRENGTH_STORAGE_ID] = Menu.GetCurrent() is BattlePlaceMenu menu ? Utils.RandomIntSafe(0, menu.DemoDifficulty) : 0f;
 
                 float strengthRel = (float)e.trait.Data.storage[STRENGTH_STORAGE_ID];
                 if (strengthRel > 0)

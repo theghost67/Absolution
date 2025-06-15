@@ -11,6 +11,7 @@ namespace Game.Traits
     {
         const string ID = "look";
         static readonly TraitStatFormula _reduceF = new(true, 0.75f, 0.25f);
+        int _activationTurn = -1;
 
         public tLook() : base(ID)
         {
@@ -27,7 +28,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             return $"<color>Перед совершением атаки на союзную карту рядом</color>\n" +
-                   $"Переведёт атаку на владельца и уменьшит силу атаки на {_reduceF.Format(args.stacks, true)}. Тратит один заряд.";
+                   $"Переведёт атаку на владельца и уменьшит силу атаки на {_reduceF.Format(args.stacks, true)}. Активируется один раз за ход.";
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -50,6 +51,9 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(victim.Territory);
             BattleFieldCard owner = trait.Owner;
             if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null || victim.IsKilled || owner.IsKilled) return;
+
+            if (_activationTurn == trait.TurnAge) return;
+            _activationTurn = trait.TurnAge;
 
             await trait.AnimActivation();
             await e.Strength.AdjustValueScale(-_reduceF.Value(trait.GetStacks()), trait);

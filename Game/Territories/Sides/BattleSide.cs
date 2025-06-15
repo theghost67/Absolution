@@ -267,11 +267,12 @@ namespace Game.Territories
             if (_isKilled) return;
 
             _killBlock = true;
+            int damage = ((int)_health).ClampedMin(0);
             if (_health > 0)
                 await _health.SetValue(0, source);
             _killBlock = false;
 
-            BattleKillAttemptArgs args = new(this, null, mode, source);
+            BattleKillAttemptArgs args = new(this, damage, null, mode, source);
             Drawer?.transform.DOAShake();
             await _onDeathsDoor.Invoke(this, args);
             if (_health > 0 || args.handled) return;

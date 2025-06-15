@@ -260,26 +260,7 @@ namespace Game.Territories
         {
             if (!CanObserve())
                 return;
-
-            _observingCards = new List<BattleFieldCard>(TableTerritory.MAX_SIZE);
-            _potentialTargets = GetPotentialTargetsOf(observingPoint.Field);
-
-            if (Range.potential.targetIsSingle)
-            {
-                _aimedTarget = _potentialTargets.First();
-                _possibleTargets = new BattleField[1][];
-                _possibleTargets[0] = GetSplashTargetsOf(_aimedTarget);
-            }
-            else
-            {
-                _possibleTargets = new BattleField[_potentialTargets.Length][];
-                for (int i = 0; i < _potentialTargets.Length; i++)
-                {
-                    BattleField potentialTarget = _potentialTargets[i];
-                    _possibleTargets[i] = GetSplashTargetsOf(potentialTarget);
-                }
-            }
-
+            SetFieldArrays();
             foreach (BattleField field in observingPoint.Territory.Fields())
             {
                 if (field.Card != null)
@@ -312,8 +293,12 @@ namespace Game.Territories
         {
             if (_observingCards == null || _potentialTargets == null)
             {
-                Debug.LogWarning("Battle area arrays are null.");
-                return UniTask.CompletedTask;
+                SetFieldArrays();
+                if (_observingCards == null || _potentialTargets == null)
+                {
+                    Debug.LogWarning($"Battle area arrays are null.\nObserver: {observer}, point: {observingPoint}");
+                    return UniTask.CompletedTask;
+                }
             }
             bool wasInRange = _observingCards.Contains(target);
             bool isInRange = _potentialTargets.Contains(target.Field);
@@ -330,6 +315,29 @@ namespace Game.Territories
             }
         }
 
+        void SetFieldArrays()
+        {
+            if (observingPoint.Field == null) return;
+
+            _observingCards = new List<BattleFieldCard>(TableTerritory.MAX_SIZE);
+            _potentialTargets = GetPotentialTargetsOf(observingPoint.Field);
+
+            if (Range.potential.targetIsSingle)
+            {
+                _aimedTarget = _potentialTargets.First();
+                _possibleTargets = new BattleField[1][];
+                _possibleTargets[0] = GetSplashTargetsOf(_aimedTarget);
+            }
+            else
+            {
+                _possibleTargets = new BattleField[_potentialTargets.Length][];
+                for (int i = 0; i < _potentialTargets.Length; i++)
+                {
+                    BattleField potentialTarget = _potentialTargets[i];
+                    _possibleTargets[i] = GetSplashTargetsOf(potentialTarget);
+                }
+            }
+        }
         void SetFieldAimEvents(BattleField field)
         {
             BattleField[] splashTargets = GetSplashTargetsOf(field);

@@ -1,5 +1,6 @@
 using DG.Tweening;
 using Game.Palette;
+using GreenOne;
 using MyBox;
 using System.Collections.Generic;
 using Unity.Mathematics;
@@ -104,7 +105,7 @@ namespace Game.Backgrounds
             }
             for (int i = 0; i < count; i++)
             {
-                int index = squaresAvailable.GetRandomIndex();
+                int index = squaresAvailable.RandomIndexSafe();
                 int2 squarePos = squaresAvailable[index];
                 squaresAvailable.RemoveAt(index);
                 squares[i] = _squares[squarePos.x, squarePos.y];

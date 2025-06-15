@@ -48,12 +48,12 @@ namespace Game.Traits
 
             if (trait.WasAdded(e))
             {
-                trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add);
+                await trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add, trait.Owner);
                 trait.Territory.OnStartPhase.Add(trait.GuidStr, OnTerritoryStartPhase);
             }
             else if (trait.WasRemoved(e))
             {
-                trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
+                await trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
                 trait.Territory.OnStartPhase.Remove(trait.GuidStr);
             }
         }

@@ -34,11 +34,12 @@ namespace Game.Territories
         }
         public bool Equals(BattleWeightResult<T> other)
         {
-            return GetHashCode().Equals(other.GetHashCode());
+            return Equals((IBattleWeightResult)other);
         }
         public bool Equals(IBattleWeightResult other)
         {
-            return WeightDeltaAbs == other.WeightDeltaAbs;
+            return (weightDeltaAbs == other.WeightDeltaAbs || float.IsNaN(weightDeltaAbs) && float.IsNaN(other.WeightDeltaAbs)) &&
+                   (weightDeltaRel == other.WeightDeltaRel || float.IsNaN(weightDeltaRel) && float.IsNaN(other.WeightDeltaRel));
         }
 
         public int CompareTo(BattleWeightResult<T> other)

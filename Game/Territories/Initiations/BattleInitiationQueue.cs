@@ -196,9 +196,9 @@ namespace Game.Territories
         const string RECEIVER_TAG = "Initiation receiver";
 
         // also invokes initiation receive
-        async UniTask AnimInitiationToField(BattleField field, BattleInitiationSendArgs sArgs)
+        async UniTask AnimInitiationToField(BattleField field, BattleInitiationSendArgs sArgs, bool redirected = false)
         {
-            if (field.Card != null)
+            if (!redirected && field.Card != null)
             {
                 await AnimInitiationToCard(field.Card, sArgs);
                 return;
@@ -221,7 +221,7 @@ namespace Game.Territories
             await InvokeRecvArgsEvent(rArgs, isPreInvoke: false);
             HideInitiationPreview(rArgs.ReceiverField, instantly: true);
         }
-        async UniTask AnimInitiationToCard(BattleFieldCard card, BattleInitiationSendArgs sArgs)
+        async UniTask AnimInitiationToCard(BattleFieldCard card, BattleInitiationSendArgs sArgs, bool redirected = false)
         {
             if (card.IsKilled) return;
 
@@ -234,9 +234,11 @@ namespace Game.Territories
                 await AnimInitiationBlank(card.Field);
                 return;
             }
-            if (rArgs.ReceiverField.Card != card) // initiation can be redirected in OnInitiationPreReceived method
+            if (!redirected && rArgs.ReceiverField.Card != card) // initiation can be redirected in OnInitiationPreReceived method
             {
-                await AnimInitiationToField(rArgs.ReceiverField, sArgs); 
+                if (rArgs.ReceiverCard == null)
+                    await AnimInitiationToField(rArgs.ReceiverField, sArgs, true);
+                else await AnimInitiationToCard(rArgs.ReceiverCard, sArgs, true);
                 return;
             }
 

@@ -1,11 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
+using Random = System.Random;
 
 namespace GreenOne
 {
@@ -14,11 +15,9 @@ namespace GreenOne
     /// </summary>
     public static class Utils
     {
-        #region Variables
         public static readonly Color clearWhite = new(1, 1, 1, 0);
-        #endregion
+        public static readonly Random rand = new();
 
-        #region Functions
         public static float RadianToDegrees(float radian) => radian * (180 / Mathf.PI);
         public static float DegreesToRadian(float degrees) => degrees * (Mathf.PI / 180);
 
@@ -63,9 +62,96 @@ namespace GreenOne
 
             return color;
         }
+
+        #region Random
+        public static T RandomUnsafe<T>(this T[] collection)
+        {
+            return collection[RandomIntUnsafe(0, collection.Length)];
+        }
+        public static T RandomUnsafe<T>(this IList<T> collection)
+        {
+            return collection[RandomIntUnsafe(0, collection.Count)];
+        }
+        public static T RandomUnsafe<T>(this IEnumerable<T> collection)
+        {
+            return collection.ElementAt(RandomIntUnsafe(0, collection.Count()));
+        }
+        public static int RandomIndexUnsafe<T>(this IEnumerable<T> collection)
+        {
+            return RandomIntUnsafe(0, collection.Count());
+        }
+
+        public static T RandomSafe<T>(this T[] collection)
+        {
+            return collection[RandomIntSafe(0, collection.Length)];
+        }
+        public static T RandomSafe<T>(this IList<T> collection)
+        {
+            return collection[RandomIntSafe(0, collection.Count)];
+        }
+        public static T RandomSafe<T>(this IEnumerable<T> collection)
+        {
+            return collection.ElementAt(RandomIntSafe(0, collection.Count()));
+        }
+        public static int RandomIndexSafe<T>(this IEnumerable<T> collection)
+        {
+            return RandomIntSafe(0, collection.Count());
+        }
+
+        public static float RandomValueUnsafe()
+        {
+            return UnityEngine.Random.value;
+        }
+        public static int RandomIntUnsafe(int min, int max)
+        {
+            return UnityEngine.Random.Range(min, max);
+        }
+        public static float RandomFloatUnsafe(float min, float max)
+        {
+            return UnityEngine.Random.Range(min, max);
+        }
+
+        public static float RandomValueSafe()
+        {
+            return RandomFloatSafe(0, 1);
+        }
+        public static int RandomIntSafe(int min, int max)
+        {
+            return rand.Next(min, max);
+        }
+        public static float RandomFloatSafe(float min, float max)
+        {
+            const float PRECISION = 100000;
+            return rand.Next((min * PRECISION).Ceiling(), (max * PRECISION).Ceiling()) / PRECISION;
+        }
+
+        public static int RangedInt(this int value, int range)
+        {
+            return Utils.RandomIntSafe(value - range, value + range + 1);
+        }
+        public static int RangedInt(this float value, float range)
+        {
+            return Utils.RandomIntSafe((value - range).Rounded(), (value + range).Rounded());
+        }
+
+        public static float Ranged(this int value, int range)
+        {
+            return Utils.RandomFloatSafe((float)value - range, (float)value + range);
+        }
+        public static float Ranged(this int value, float range)
+        {
+            return Utils.RandomFloatSafe(value - range, value + range);
+        }
+        public static float Ranged(this float value, int range)
+        {
+            return Utils.RandomFloatSafe(value - range, value + range + 1);
+        }
+        public static float Ranged(this float value, float range)
+        {
+            return Utils.RandomFloatSafe(value - range, value + range);
+        }
         #endregion
 
-        #region Extensions
         public static T TryGetValue<T>(this IReadOnlyList<T> list, int index)
         {
             if (index >= 0 && index < list.Count)
@@ -281,40 +367,6 @@ namespace GreenOne
             return value < other ? value : other;
         }
 
-        public static int RangedInt(this int value, int range)
-        {
-            return Random.Range(value - range, value + range + 1);
-        }
-        public static int RangedInt(this int value, float range)
-        {
-            return (int)Random.Range(value - range, value + range + 1);
-        }
-        public static int RangedInt(this float value, int range)
-        {
-            return (int)Random.Range(value - range, value + range);
-        }
-        public static int RangedInt(this float value, float range)
-        {
-            return (int)Random.Range(value - range, value + range);
-        }
-
-        public static float Ranged(this int value, int range)
-        {
-            return Random.Range((float)value - range, (float)value + range);
-        }
-        public static float Ranged(this int value, float range)
-        {
-            return Random.Range(value - range, value + range);
-        }
-        public static float Ranged(this float value, int range)
-        {
-            return Random.Range(value - range, value + range + 1);
-        }
-        public static float Ranged(this float value, float range)
-        {
-            return Random.Range(value - range, value + range);
-        }
-
         public static int Clamped(this int value, int min, int max)
         {
             return Mathf.Clamp(value, min, max);
@@ -366,7 +418,6 @@ namespace GreenOne
         {
             return value.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
         }
-        #endregion
     }
 }
 

@@ -1,4 +1,5 @@
-﻿using MyBox;
+﻿using GreenOne;
+using MyBox;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -239,7 +240,7 @@ namespace Game.Cards
 
         public static CardCurrency GetCurrencyRandom()
         {
-            return _currencies.Values.GetRandom();
+            return _currencies.Values.RandomSafe();
         }
         public static FieldCard GetFieldRandom()
         {
@@ -257,20 +258,20 @@ namespace Game.Cards
         public static FieldCard ShuffleMainStats(this FieldCard card)
         {
             if (PlayerConfig.shufflePrice)
-                card.price.value = Random.Range(0, 6);
-            card.moxie = Random.Range(0, 6);
+                card.price.value = Utils.RandomIntSafe(0, 6);
+            card.moxie = Utils.RandomIntSafe(0, 6);
             return card;
         }
         public static FieldCard ShuffleAllStats(this FieldCard card)
         {
             int sum = card.strength + card.health;
-            int rand = Random.Range(0, sum);
+            int rand = Utils.RandomIntSafe(0, sum);
             card.health = rand;
             card.strength = sum - rand;
             #if SHUFFLE_PRICE
-            card.price.value = Random.Range(0, 6);
+            card.price.value = Utils.RandomIntSafe(0, 6);
             #endif
-            card.moxie = Random.Range(0, 6);
+            card.moxie = Utils.RandomIntSafe(0, 6);
             return card;
         }
 

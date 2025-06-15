@@ -3,6 +3,7 @@ using DG.Tweening;
 using Game.Cards;
 using Game.Menus;
 using Game.Palette;
+using GreenOne;
 using MyBox;
 using System;
 using System.Collections.Generic;
@@ -260,7 +261,21 @@ namespace Game.Territories
                 _phaseCycleEnabled = true;
             };
         }
-        
+
+        // if (observer != null) will wait when it will be placed on territory
+        public async UniTask ContinuousAttachHandler_Add(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler, BattleFieldCard observer, int priority = 0)
+        {
+            string extraGuid = $"{observer.Guid}:{guid}.cont";
+            UniTask OnFieldPostAttached(object sender, TableFieldAttachArgs e)
+            {
+                observer.OnFieldPostAttached.Remove(extraGuid);
+                return ContinuousAttachHandler_Add(guid, handler, priority);
+            }
+            if (observer != null && observer.Field == null)
+                 observer.OnFieldPostAttached.Add(extraGuid, OnFieldPostAttached, priority);
+            else await ContinuousAttachHandler_Add(guid, handler, priority);
+        }
+
         public UniTask<BattleFieldCard> PlaceFieldCard(FieldCard data, BattleField field, ITableEntrySource source)
         {
             if (data == null || field == null) 

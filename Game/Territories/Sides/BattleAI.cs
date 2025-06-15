@@ -2,6 +2,7 @@
 using Game.Cards;
 using Game.Sleeves;
 using Game.Traits;
+using GreenOne;
 using MyBox;
 using System;
 using System.Collections;
@@ -21,7 +22,6 @@ namespace Game.Territories
         const int TURN_DELAY_MS = 500;
         const int ITERATIONS_MAX = 128;
 
-        static readonly Random _rand = new();
         readonly BattleSide _side;
 
         public static bool IsAnyMakingTurn => _isAnyMakingTurn;
@@ -168,23 +168,31 @@ namespace Game.Territories
                 return;
             }
 
+            int eventsCount = TableEventManager.CountAll();
             TableConsole.LogToFile("ai", $"TURN STARTED");
             _isMakingTurn = true;
             _isAnyMakingTurn = true;
+            try
+            {
 
-            int eventsCount = TableEventManager.CountAll();
-            await MakeTurn_Await(eventsCount);
-            await MakeTurn_Cards(eventsCount);
-            await MakeTurn_Await(eventsCount);
-            await MakeTurn_Traits(eventsCount);
-            await MakeTurn_Await(eventsCount);
-
-            _isMakingTurn = false;
-            _isAnyMakingTurn = false;
-            TableConsole.LogToFile("ai", $"TURN ENDED");
-
-            await _side.Territory.NextPhase();
-            await MakeTurn_Await(eventsCount);
+                await MakeTurn_Await(eventsCount);
+                await MakeTurn_Cards(eventsCount);
+                await MakeTurn_Await(eventsCount);
+                await MakeTurn_Traits(eventsCount);
+                await MakeTurn_Await(eventsCount);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                _isMakingTurn = false;
+                _isAnyMakingTurn = false;
+                TableConsole.LogToFile("ai", $"TURN ENDED");
+                await _side.Territory.NextPhase();
+                await MakeTurn_Await(eventsCount);
+            }
         }
         public static IBattleWeightResult GetBestUseResult(IBattleObject obj, params int[] excludedWeights)
         {
@@ -209,7 +217,7 @@ namespace Game.Territories
 
             if (iterations++ > ITERATIONS_MAX)
             {
-                Debug.LogError("too many iterations.");
+                Debug.LogError("Too many iterations, cards skipped.");
                 return;
             }
             float2 sidesWeight = GetSidesWeight(_side);
@@ -306,13 +314,15 @@ namespace Game.Territories
         async UniTask MakeTurn_Traits(int eventsCount)
         {
             int iterations = 0;
+            List<BattleActiveTraitWeightResult> lastResults = null;
             Start:
             if (!_side.Territory.DrawersAreNull)
                 await UniTask.WhenAll(MakeTurn_Await(eventsCount), UniTask.Delay(TURN_DELAY_MS));
 
             if (iterations++ > ITERATIONS_MAX)
             {
-                Debug.LogError("too many iterations.");
+                string lastResultsStr = string.Join(",\n", lastResults);
+                Debug.LogWarning($"Too many iterations, traits skipped.\n{lastResultsStr}");
                 return;
             }
             float2 sidesWeight = GetSidesWeight(_side);
@@ -368,6 +378,8 @@ namespace Game.Territories
 
             await UniTask.Delay(TURN_DELAY_MS);
             await activeTrait.TryUse(bestResult.Field);
+
+            lastResults = results;
             goto Start;
         }
         UniTask MakeTurn_Await(int eventsCount)
@@ -514,7 +526,13 @@ namespace Game.Territories
                     finalResults.Add(result);
             }
 
-            return finalResults[_rand.Next(0, finalResults.Count)];
+            if (finalResults.Count != 0)
+                return finalResults[Utils.RandomIntSafe(0, finalResults.Count)];
+            else
+            {
+                Debug.LogWarning("AI final results are empty, but initial results are not.");
+                return null;
+            }
         }
 
         static bool UseVirtual(Action<BattleTerritory>? useFunc, BattleSide aiSide, float2 sidesWeight, out float2 deltas)

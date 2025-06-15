@@ -51,34 +51,31 @@ namespace Game.Cards
             _eventGuid = card.GuidStr;
             _sideFinder = side.Finder;
 
-            terr.ContinuousAttachHandler_Add(_eventGuid, ContinuousAttach_Add);
+            await terr.ContinuousAttachHandler_Add(_eventGuid, ContinuousAttach_Add);
             terr.OnNextPhase.Add(_eventGuid, OnNextPhase);
         }
 
-        UniTask OnNextPhase(object sender, EventArgs e)
+        async UniTask OnNextPhase(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             if (terr.IsStartPhase())
-                terr.ContinuousAttachHandler_Remove(_eventGuid, ContinuousAttach_Remove);
-            return UniTask.CompletedTask;
+                await terr.ContinuousAttachHandler_Remove(_eventGuid, ContinuousAttach_Remove);
         }
-        UniTask ContinuousAttach_Add(object sender, TableFieldAttachArgs e)
+        async UniTask ContinuousAttach_Add(object sender, TableFieldAttachArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             BattleSide side = (BattleSide)_sideFinder.FindInBattle(terr);
             bool isInRange = _range.OverlapFromPlayerPos().Contains(e.field.pos);
             if (isInRange && (e.card.FirstFieldAttachment || e.source == null))
-                 return e.card.Traits.AdjustStacks(TRAIT_ID, 1, side);
-            else return UniTask.CompletedTask;
+                 await e.card.Traits.AdjustStacks(TRAIT_ID, 1, side);
         }
-        UniTask ContinuousAttach_Remove(object sender, TableFieldAttachArgs e)
+        async UniTask ContinuousAttach_Remove(object sender, TableFieldAttachArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             BattleSide side = (BattleSide)_sideFinder.FindInBattle(terr);
             bool isInRange = _range.OverlapFromPlayerPos().Contains(e.field.pos);
             if (isInRange && (e.card.FirstFieldAttachment || e.source == null))
-                return e.card.Traits.AdjustStacks(TRAIT_ID, -1, side);
-            else return UniTask.CompletedTask;
+                await e.card.Traits.AdjustStacks(TRAIT_ID, -1, side);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Game
             set
             {
                 _fileName = value;
-                _filePath = Path.Combine(Application.persistentDataPath, _fileName);
+                _filePath = Path.Combine(_persistentPath, _fileName);
                 _fileStream?.Dispose();
                 Directory.CreateDirectory(Path.GetDirectoryName(_filePath));
                 _fileStream = new(_filePath);
@@ -34,6 +34,7 @@ namespace Game
         public static bool IsVisible => _isVisible;
 
         static readonly List<string> _latestCommands = new();
+        static readonly string _persistentPath = Application.persistentDataPath;
         static string _filePath;
         static string _fileName;
         static StreamWriter _fileStream;
@@ -58,6 +59,7 @@ namespace Game
             Commands.Add(new cmdHelp());
             Commands.Add(new cmdMove());
             Commands.Add(new cmdPointsTest());
+            Commands.Add(new cmdRestart());
             Commands.Add(new cmdSideCard());
             Commands.Add(new cmdSideCardPlace());
             Commands.Add(new cmdSideStat());

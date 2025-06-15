@@ -21,23 +21,24 @@ namespace Game
             if (Count == 0) return;
             TableEventManager.Add("table", Id);
             List<string> unsubbedIds = new(Count);
-            try
+            for (int i = 0; i < Count; i++)
             {
-                for (int i = 0; i < Count; i++)
+                Subscriber sub = GetSub(i);
+                if (!sub.isIncluded) continue;
+                if (!sub.isSubscribed)
+                    unsubbedIds.Add(sub.id);
+                else
                 {
-                    Subscriber sub = GetSub(i);
-                    if (!sub.isIncluded) continue;
-                    if (!sub.isSubscribed)
-                        unsubbedIds.Add(sub.id);
-                    else await sub.@delegate(sender, e);
+                    try { await sub.@delegate(sender, e); }
+                    catch (Exception ex)
+                    { 
+                        Debug.LogError($"Table event void exception. Method: {sub.@delegate}"); 
+                        Debug.LogException(ex);
+                    }
                 }
             }
-            catch (Exception ex) { throw ex; }
-            finally
-            {
-                PostInvokeCleanUp(unsubbedIds);
-                TableEventManager.Remove("table", Id);
-            }
+            PostInvokeCleanUp(unsubbedIds);
+            TableEventManager.Remove("table", Id);
         }
         public async UniTask InvokeIncluding(object sender, EventArgs e, string[] ids)
         {
@@ -72,23 +73,20 @@ namespace Game
             if (Count == 0) return;
             TableEventManager.Add("table", Id);
             List<string> unsubbedIds = new(Count);
-            try
+            for (int i = 0; i < Count; i++)
             {
-                for (int i = 0; i < Count; i++)
+                Subscriber sub = GetSub(i);
+                if (!sub.isIncluded) continue;
+                if (!sub.isSubscribed)
+                    unsubbedIds.Add(sub.id);
+                else
                 {
-                    Subscriber sub = GetSub(i);
-                    if (!sub.isIncluded) continue;
-                    if (!sub.isSubscribed)
-                        unsubbedIds.Add(sub.id);
-                    else await sub.@delegate(sender, e);
+                    try { await sub.@delegate(sender, e); }
+                    catch (Exception ex) { Debug.LogError($"Table event exception, method: {sub.@delegate.Method}.\n{ex}\n{ex.StackTrace}"); }
                 }
             }
-            catch (Exception ex) { throw ex; }
-            finally
-            {
-                PostInvokeCleanUp(unsubbedIds);
-                TableEventManager.Remove("table", Id);
-            }
+            PostInvokeCleanUp(unsubbedIds);
+            TableEventManager.Remove("table", Id);
         }
         public async UniTask InvokeIncluding(object sender, T e, string[] ids)
         {

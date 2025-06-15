@@ -98,20 +98,19 @@ namespace Game.Territories
             _card = card;
             if (Drawer != null)
                 await Drawer.AnimAttachCard(card.Drawer).AsyncWaitForCompletion();
-            await _onCardAttached.Invoke(this, new TableFieldAttachArgs(card, this, source));
             await card.TryAttachToField(this, source);
+            await _onCardAttached.Invoke(this, new TableFieldAttachArgs(card, this, source));
         }
         public async UniTask DetatchCard(ITableEntrySource source)
         {
             if (_card == null) return;
             TableFieldCard card = _card;
 
-            await _onCardDetatched.Invoke(this, new TableFieldAttachArgs(card, this, source));
-
             _card = null;
             if (Drawer != null)
                 await Drawer.AnimDetatchCard(card.Drawer).AsyncWaitForCompletion();
             await card.TryAttachToField(null, source);
+            await _onCardDetatched.Invoke(this, new TableFieldAttachArgs(card, this, source));
         }
 
         protected override Drawer DrawerCreator(Transform parent)

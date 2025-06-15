@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using Random = System.Random;
 
 namespace Game.Cards
 {
@@ -22,6 +22,7 @@ namespace Game.Cards
 
         public readonly Collection<FieldCard> fieldCards;
         public readonly Collection<FloatCard> floatCards;
+
         readonly List<Card> _allCards;
 
         /// <summary>
@@ -99,7 +100,7 @@ namespace Game.Cards
         public CardDeck(int stage, int statPointsPerCard) : this()
         {
             GetCardsCount(stage, out int fieldCardsCount, out int floatCardsCount);
-            int fieldCardsCountRandom = UnityEngine.Random.Range(4, (fieldCardsCount * 1.4f).Ceiling()).ClampedMax(LIMIT - floatCardsCount);
+            int fieldCardsCountRandom = Utils.RandomIntSafe(4, (fieldCardsCount * 1.4f).Ceiling()).ClampedMax(LIMIT - floatCardsCount);
             float randomToActualCountRatio = ((float)fieldCardsCountRandom / fieldCardsCount).ClampedMin(1);
             int pointsSum = statPointsPerCard * fieldCardsCount;
             fieldCardsCount = fieldCardsCountRandom;
@@ -107,7 +108,7 @@ namespace Game.Cards
 
             // generate ratios
             for (int i = 0; i < fieldCardsCount; i++)
-                pointsRatios.Add(UnityEngine.Random.Range(0.25f, 4f));
+                pointsRatios.Add(Utils.RandomIntSafe(25, 400) / 100f);
 
             // normalize
             float statPointsRatiosSum = pointsRatios.Sum();

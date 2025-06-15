@@ -48,7 +48,9 @@ namespace Game.Traits
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
 
-            IEnumerable<BattleFieldCard> cards = trait.Side.Fields().WithCard().Select(f => f.Card);
+            BattleFieldCard[] cards = trait.Territory.Fields(owner.Field.pos, TerritoryRange.ownerAllNotSelf).WithCard().Select(f => f.Card).ToArray();
+            if (cards.Length == 0) return;
+
             int moxie = 0;
             foreach (BattleFieldCard card in cards)
             {

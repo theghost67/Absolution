@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using GreenOne;
 using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -58,7 +59,7 @@ namespace Game.Traits
             IBattleTrait trait = owner.Traits.Any(ID);
             if (trait.Owner.Drawer == null) return;
             if (trait.Owner.Data.id != "bmo") return;
-            int index = Random.Range(0, 6);
+            int index = Utils.RandomIntSafe(0, 6);
             if (index == 0) return;
             Sprite sprite = Resources.Load<Sprite>($"Sprites/Cards/Portraits/bmo_{index}");
             trait.Owner.OnDrawerCreated += (s, e) => trait.Owner.Drawer.RedrawPortrait(sprite);

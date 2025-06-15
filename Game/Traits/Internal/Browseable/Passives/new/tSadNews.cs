@@ -49,8 +49,6 @@ namespace Game.Traits
             if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
 
             BattleFieldCard owner = trait.Owner;
-            if (owner.IsKilled || owner.Field == null) return;
-
             int stacks = trait.GetStacks();
             int moxie = -_moxieF.ValueInt(stacks);
             int strength = _strengthF.ValueInt(stacks);

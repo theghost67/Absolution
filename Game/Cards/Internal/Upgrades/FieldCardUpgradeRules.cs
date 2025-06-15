@@ -54,7 +54,7 @@ namespace Game.Cards
 
         public static int TraitsCountRandom(float points)
         {
-            return Random.Range(0, (TraitsCount(points) * Random.Range(0.5f, 1.25f)).Ceiling() + 1);
+            return Utils.RandomIntSafe(0, (TraitsCount(points) * Utils.RandomFloatSafe(0.5f, 1.25f)).Ceiling() + 1);
         }
         public static int TraitsCount(float points)
         {
@@ -80,10 +80,10 @@ namespace Game.Cards
             int cardTraitsCount = card.traits.Count;
             int allTraitsCount = traitsCount + cardTraitsCount;
 
-            float healthFreq = Random.value;
-            float strengthFreq = Random.value * 2;
+            float healthFreq = Utils.RandomValueSafe();
+            float strengthFreq = Utils.RandomValueSafe() * 2;
 
-            float statsPointsShare = points * Random.value;
+            float statsPointsShare = points * Utils.RandomValueSafe();
             float statsPointsShareCurrent = 0;
 
             float traitsPointsShare = points - statsPointsShare;
@@ -124,7 +124,7 @@ namespace Game.Cards
             SkipPossibleTraitsAmplifying:
             Dictionary<string, float> cardTraitsStackable = new(capacity: allTraitsCount); // traitId, frequency
             foreach (Trait trait in card.traits.Select(e => e.Trait).Where(t => !t.tags.HasFlag(TraitTag.Static)))
-                cardTraitsStackable.Add(trait.id, Random.value);
+                cardTraitsStackable.Add(trait.id, Utils.RandomValueSafe());
 
             for (int i = cardTraitsCount; i < allTraitsCount; i++)
             {
@@ -151,7 +151,7 @@ namespace Game.Cards
                 }
 
                 if (!traitSrc.tags.HasFlag(TraitTag.Static) && !cardTraitsStackable.ContainsKey(traitId)) // if is stackable
-                    cardTraitsStackable.TryAdd(traitId, Random.value);
+                    cardTraitsStackable.TryAdd(traitId, Utils.RandomValueSafe());
             }
             #endregion
 

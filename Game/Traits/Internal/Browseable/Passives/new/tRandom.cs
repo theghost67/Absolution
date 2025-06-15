@@ -5,6 +5,7 @@ using MyBox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Game.Traits
 {
@@ -19,6 +20,7 @@ namespace Game.Traits
         const float EV5_STRENGTH_BONUS = 0.25f;
         const float EV6_HEALTH_RESTORE = 0.33f;
         const int EV7_MOXIE_DEBUFF = 2;
+
         static readonly List<Event> _events = new()
         {
             // do NOT use 0 as ID
@@ -30,6 +32,7 @@ namespace Game.Traits
             new(6, 20, $"увеличивает здоровье всех остальных союзных карт на {EV6_HEALTH_RESTORE * 100}%"), 
             new(7, 20, $"уменьшает инициативу всех остальных карт на {EV7_MOXIE_DEBUFF} ед."),
         };
+        string _guid;
 
         private class Event
         {
@@ -54,7 +57,7 @@ namespace Game.Traits
             tags = TraitTag.Static;
             range = new BattleRange(TerritoryRange.all);
         }
-        protected tRandom(tRandom other) : base(other) { }
+        protected tRandom(tRandom other) : base(other) { _guid = other._guid; }
         public override object Clone() => new tRandom(this);
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
@@ -80,11 +83,12 @@ namespace Game.Traits
 
             IBattleTrait trait = (IBattleTrait)e.trait;
             trait.Storage[LAST_EV_KEY] = 0;
+            _guid = trait.GuidStr;
 
             if (trait.WasAdded(e))
-                trait.Territory.OnStartPhase.Add(trait.GuidStr, OnTerritoryStartPhase);
+                trait.Territory.OnStartPhase.Add(_guid, OnTerritoryStartPhase);
             else if (trait.WasRemoved(e))
-                trait.Territory.OnStartPhase.Remove(trait.GuidStr);
+                trait.Territory.OnStartPhase.Remove(_guid);
         }
         async UniTask OnTerritoryStartPhase(object sender, EventArgs e)
         {
@@ -96,10 +100,6 @@ namespace Game.Traits
             if (owner.IsKilled || owner.Field == null) return;
 
             await trait.AnimActivation();
-            int lastEventId = (int)trait.Storage[LAST_EV_KEY];
-            if (lastEventId == 3)
-                terr.ContinuousAttachHandler_Remove(trait.GuidStr, Ev3_ContinuousAttach_Remove);
-
             IEnumerable<BattleFieldCard> cards;
             Event newEvent = _events.GetWeightedRandom(e => e.probability);
             trait.Storage[LAST_EV_KEY] = newEvent.id;
@@ -120,7 +120,8 @@ namespace Game.Traits
                     break;
 
                 case 3:
-                    terr.ContinuousAttachHandler_Add(trait.GuidStr, Ev3_ContinuousAttach_Add);
+                    await terr.ContinuousAttachHandler_Add(_guid, Ev3_ContinuousAttach_Add);
+                    terr.OnStartPhase.Add(_guid, Ev3_OnTerrStartPhase);
                     break;
 
                 case 4:
@@ -149,23 +150,25 @@ namespace Game.Traits
             }
         }
 
-        UniTask Ev3_ContinuousAttach_Add(object sender, TableFieldAttachArgs e)
+        async UniTask Ev3_OnTerrStartPhase(object sender, EventArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
-            IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
-            BattleFieldCard card = (BattleFieldCard)e.card;
-            if (!card.IsKilled)
-                 return card.Strength.AdjustValueScale(EV3_STRENGTH_BONUS, trait, trait.GuidGen(3));
-            else return UniTask.CompletedTask;
+            await terr.ContinuousAttachHandler_Remove(_guid, Ev3_ContinuousAttach_Remove);
+            terr.OnStartPhase.Remove(_guid);
         }
-        UniTask Ev3_ContinuousAttach_Remove(object sender, TableFieldAttachArgs e)
+        async UniTask Ev3_ContinuousAttach_Add(object sender, TableFieldAttachArgs e)
         {
             BattleTerritory terr = (BattleTerritory)sender;
             IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
             BattleFieldCard card = (BattleFieldCard)e.card;
-            if (!card.IsKilled)
-                return card.Strength.RevertValueScale(trait.GuidGen(3));
-            else return UniTask.CompletedTask;
+            await card.Strength.AdjustValueScale(EV3_STRENGTH_BONUS, trait, _guid);
+        }
+        async UniTask Ev3_ContinuousAttach_Remove(object sender, TableFieldAttachArgs e)
+        {
+            BattleTerritory terr = (BattleTerritory)sender;
+            IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
+            BattleFieldCard card = (BattleFieldCard)e.card;
+            await card.Strength.RevertValueScale(_guid);
         }
     }
 }

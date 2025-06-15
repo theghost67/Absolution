@@ -55,9 +55,9 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
-                trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add);
+                await trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add, trait.Owner);
             else if (trait.WasRemoved(e))
-                trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
+                await trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
         }
 
         async UniTask ContinuousAttach_Add(object sender, TableFieldAttachArgs e)

@@ -17,6 +17,7 @@ namespace Game.Console
         const string ID = "aitest";
         const string DESC = "выполняет тестирование системы ИИ на виртуальных сражениях";
 
+        static readonly string _persistentPath = Application.persistentDataPath;
         static bool _executing;
         static int _points;
 
@@ -389,7 +390,7 @@ namespace Game.Console
                 catch (Exception ex)
                 {
                     TableConsole.Log($"Ошибка во время теста #{i + 1}.", LogType.Error);
-                    string path = $"{Application.persistentDataPath}\\{ID}\\{i + 1}-error.log";
+                    string path = $"{_persistentPath}\\{ID}\\{i + 1}-error.log";
                     Directory.CreateDirectory(Path.GetDirectoryName(path));
                     File.WriteAllText(path, $"{ex}\n\n{ex.StackTrace}");
                 }

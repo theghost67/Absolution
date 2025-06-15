@@ -25,26 +25,24 @@ namespace Game
             bool result = true;
             TableEventManager.Add("table", Id);
             List<string> unsubbedIds = new(Count);
-            try
+            for (int i = 0; i < Count; i++)
             {
-                for (int i = 0; i < Count; i++)
+                Subscriber sub = GetSub(i);
+                if (!sub.isIncluded) continue;
+                if (!sub.isSubscribed)
+                    unsubbedIds.Add(sub.id);
+                else
                 {
-                    Subscriber sub = GetSub(i);
-                    if (!sub.isSubscribed)
-                        unsubbedIds.Add(sub.id);
-                    else if (!await sub.@delegate(sender, e))
+                    try { result &= await sub.@delegate(sender, e); }
+                    catch (Exception ex)
                     {
-                        result = false;
-                        break;
+                        Debug.LogError($"Table event bool exception. Method: {sub.@delegate}");
+                        Debug.LogException(ex);
                     }
                 }
             }
-            catch (Exception ex) { throw ex; }
-            finally
-            {
-                PostInvokeCleanUp(unsubbedIds);
-                TableEventManager.Remove("table", Id);
-            }
+            PostInvokeCleanUp(unsubbedIds);
+            TableEventManager.Remove("table", Id);
             return result;
         }
         public async UniTask<bool> InvokeANDIncluding(object sender, EventArgs e, params string[] ids)

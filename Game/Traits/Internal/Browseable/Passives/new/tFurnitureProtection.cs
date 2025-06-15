@@ -31,8 +31,8 @@ namespace Game.Traits
         {
             object mode = null;
             args.table?.Storage.TryGetValue(KEY, out mode);
-            string str = $"<color>Перед совершением атаки на пустое поле любой вражеской картой</color>\n" +
-                         $"Владелец переместится на это поле прежде, чем противник совершит атаку.\n\n" +
+            string str = $"<color>Перед совершением атаки на пустое союзное поле любой картой</color>\n" +
+                         $"Владелец переместится на это поле прежде, чем карта совершит атаку.\n\n" +
                          $"<color>При активации на территории или в рукаве</color>\nПереключает режим в-рукаве, при включённом состоянии, " +
                          $"навык может активироваться даже если владелец находится в рукаве. При активации таким способом, понижает инициативу владельца на {_moxieF.Format(args.stacks, true)}.";
             if (mode != null)
@@ -71,9 +71,9 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
-                trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add);
+                await trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add, trait.Owner);
             else if (trait.WasRemoved(e))
-                trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
+                await trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
         }
 
         async UniTask ContinuousAttach_Add(object sender, TableFieldAttachArgs e)
@@ -82,7 +82,7 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
             BattleFieldCard card = (BattleFieldCard)e.card;
             if (trait == null) return;
-            card.OnInitiationPreSent.Add(trait.GuidStr, OnInitiationPreSent, -1);
+            card.OnInitiationPreSent.Add(trait.GuidStr, OnInitiationPreSent);
         }
         async UniTask ContinuousAttach_Remove(object sender, TableFieldAttachArgs e)
         {

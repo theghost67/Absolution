@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using GreenOne;
 using MyBox;
 
 namespace Game.Traits
@@ -60,7 +61,7 @@ namespace Game.Traits
 
         private void RedrawOwnerName(TableFieldCard owner)
         {
-            string name = _names.GetRandom();
+            string name = _names.RandomSafe();
             owner.Data.name = name;
             owner.Drawer?.RedrawHeader(name);
         }

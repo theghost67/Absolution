@@ -46,13 +46,13 @@ namespace Game.Effects
             const float Y_RANGE_MAX = 15 * Global.NORMAL_TO_PIXEL;
             const float Y_RANGE_MIN = -15 * Global.NORMAL_TO_PIXEL;
 
-            bool rotatesToLeft = Random.value > 0.5f;
+            bool rotatesToLeft = Utils.RandomValueSafe() > 0.5f;
             float yStart = textmesh.transform.position.y + Y_RANGE_MAX;
             float yEnd = textmesh.transform.position.y + Y_RANGE_MIN;
 
             if (startColor.a != 0)
                 textmesh.color = startColor;
-            textmesh.transform.eulerAngles = Vector3.forward * Random.Range(rotZRange.x, rotZRange.y).InversedIf(rotatesToLeft);
+            textmesh.transform.eulerAngles = Vector3.forward * Utils.RandomFloatUnsafe(rotZRange.x, rotZRange.y).InversedIf(rotatesToLeft);
 
             Sequence sequence = DOTween.Sequence(textmesh);
             sequence.AppendCallback(() =>

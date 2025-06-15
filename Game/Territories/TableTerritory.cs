@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using Game.Cards;
 using GreenOne;
 using System;
 using System.Collections.Generic;
@@ -205,28 +206,35 @@ namespace Game.Territories
 
         // use to invoke handler on all currently placed cards and all cards that will be attached later
         // if (source == null) handler was invoked on a already placed card
-        public void ContinuousAttachHandler_Add(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler, int priority = 0)
+
+        public async UniTask ContinuousAttachHandler_Add(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler, int priority = 0)
         {
             foreach (TableField field in Fields().WithCard())
-                handler.Invoke(this, new TableFieldAttachArgs(field.Card, field, null));
+                await handler.Invoke(this, new TableFieldAttachArgs(field.Card, field, null));
             _onAnyCardAttachedToField.Add(guid, handler, priority);
         }
-        public void ContinuousAttachHandler_Remove(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler)
+        public async UniTask ContinuousAttachHandler_Remove(string guid, IdEventVoidHandlerAsync<TableFieldAttachArgs> handler)
         {
             foreach (TableField field in Fields().WithCard())
-                handler.Invoke(this, new TableFieldAttachArgs(field.Card, field, null));
+                await handler.Invoke(this, new TableFieldAttachArgs(field.Card, field, null));
             _onAnyCardAttachedToField.Remove(guid);
         }
 
         protected virtual UniTask OnAnyCardAttachedToFieldBase_TOP(object sender, TableFieldAttachArgs e)
         {
-            TableTerritory terr = e.field.Territory;
-            return terr._onAnyCardAttachedToField.Invoke(terr, e);
+            TableField field = (TableField)sender;
+            TableTerritory terr = field?.Territory;
+            if (field != null && terr != null)
+                 return terr._onAnyCardAttachedToField.Invoke(terr, e);
+            else return UniTask.CompletedTask;
         }
         protected virtual UniTask OnAnyCardDetatchedFromFieldBase_TOP(object sender, TableFieldAttachArgs e)
         {
-            TableTerritory terr = e.field.Territory;
-            return terr._onAnyCardDetatchedFromField.Invoke(terr, e);
+            TableField field = (TableField)sender;
+            TableTerritory terr = field?.Territory;
+            if (field != null && terr != null)
+                return terr._onAnyCardDetatchedFromField.Invoke(terr, e);
+            else return UniTask.CompletedTask;
         }
 
         protected virtual TableField FieldCreator(int x, int y)

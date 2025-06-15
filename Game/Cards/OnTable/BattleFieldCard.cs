@@ -218,11 +218,14 @@ namespace Game.Cards
             if (_isKilled) return;
 
             _killBlock = true;
+            int damage = ((int)Health).ClampedMin(0);
+            if (damage == 0)
+                damage = -Health.LastEntryValue().Ceiling();
             if (Health > 0)
                 await Health.SetValue(0, source);
             _killBlock = false;
 
-            BattleKillAttemptArgs args = new(this, Field, mode, source);
+            BattleKillAttemptArgs args = new(this, damage, Field, mode, source);
             if (args.handled)
             {
                 await _onEvadedBeingKilled.Invoke(this, args);
@@ -233,7 +236,7 @@ namespace Game.Cards
             await _onPreKilled.Invoke(this, args);
             if (_isKilled) return; // can be killed inside of the event
 
-            args = new(this, Field, mode, source);
+            args = new(this, damage, Field, mode, source);
             if (args.handled)
             {
                 await _onEvadedBeingKilled.Invoke(this, args);

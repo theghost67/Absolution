@@ -1,6 +1,5 @@
 ﻿using Game.Territories;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Game
 {
@@ -9,6 +8,9 @@ namespace Game
     /// </summary>
     public class TableEntryDict : Dictionary<string, TableEntry>, ITableEntryDict
     {
+        public TableEntry Last => _last;
+        TableEntry _last;
+
         public TableEntryDict() : base() { }
         public TableEntryDict(int capacity) : base(capacity) { }
         public TableEntryDict(IReadOnlyDictionary<string, TableEntry> collection) : base(collection) { }
@@ -43,7 +45,10 @@ namespace Game
         void AddInternal(string key, TableEntry value)
         {
             if (!ContainsKey(key))
-                 base.Add(key, value);
+            {
+                _last = value;
+                base.Add(key, value);
+            }
             else UnityEngine.Debug.LogWarning($"TableEntryDict key already exists: {key}. Value: {value.value}, source: {value.source}.");
         }
     }

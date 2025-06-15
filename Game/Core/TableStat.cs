@@ -150,6 +150,15 @@ namespace Game
         // use entryId and RevertValue to revert applied effect instead of calling AdjustValue with negative value
         // (as value can be modified by OnPreSet event)
 
+        public float LastEntryValue()
+        {
+            return _valueEntries.Last.value;
+        }
+        public float LastEntryValueScale()
+        {
+            return _valueScaleEntries.Last.value;
+        }
+
         public float EntryValue(string entryId)
         {
             if (_valueEntries.TryGetValue(entryId, out TableEntry entry))
@@ -192,6 +201,13 @@ namespace Game
 
         async UniTask AdjustValue(float value, ITableEntrySource source, string entryId, bool isRelative, bool asDefault)
         {
+            TableEntryDict entries = isRelative ? _valueScaleEntries : _valueEntries;
+            if (entryId != null && entries.ContainsKey(entryId))
+            {
+                Debug.LogWarning($"Adjust value key already exists: {entryId}. Value: {value}, source: {source}.");
+                return;
+            }
+
             PreSetArgs preArgs = new(_value, value, isRelative, source);
             foreach (var preSetSub in _onPreSet)
             {
