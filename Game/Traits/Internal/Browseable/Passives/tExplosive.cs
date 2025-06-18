@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Effects;
 using Game.Territories;
@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tExplosive() : base(ID)
         {
-            name = "Взрывоопасно";
-            desc = "Я, кажется, на мину наступил.";
+            name = Translator.GetString("trait_explosive_1");
+            desc = Translator.GetString("trait_explosive_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,8 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После смерти владельца</color>\n" +
-                   $"Наносит рядомстоящим вражеским картам {_strengthF.Format(args.stacks)} урона.";
+            return Translator.GetString("trait_explosive_3", _strengthF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -62,7 +62,7 @@ namespace Game.Traits
             await trait.AnimActivation();
             foreach (BattleField field in fields)
             {
-                field.Card.Drawer?.CreateTextAsSpeech($"Бах\n<size=50%>-{strength}", Color.red);
+                field.Card.Drawer?.CreateTextAsSpeech(Translator.GetString("trait_explosive_4", strength), Color.red);
                 await field.Card.Health.AdjustValue(-strength, trait);
             }
         }

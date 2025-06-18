@@ -1,4 +1,4 @@
-﻿using Game.Cards;
+using Game.Cards;
 using Game.Menus;
 using Game.Traits;
 using GreenOne.Console;
@@ -10,12 +10,12 @@ namespace Game.Console
     public class cmdCardTrait : Command
     {
         const string ID = "cardtrait";
-        const string DESC = "добавляет значение к зарядам навыка наведённой карты";
+        static readonly string DESC = Translator.GetString("command_card_trait_1");
 
         class IdArg : CommandArg
         {
             const string ID = "id";
-            const string DESC = "ID навыка";
+            static readonly string DESC = Translator.GetString("command_card_trait_2");
 
             public IdArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -28,7 +28,7 @@ namespace Game.Console
         class ValueArg : CommandArg
         {
             const string ID = "value";
-            const string DESC = "прибавляемое значение к характеристике";
+            static readonly string DESC = Translator.GetString("command_card_trait_3");
 
             public ValueArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -49,13 +49,13 @@ namespace Game.Console
         {
             if (TableEventManager.CountAll() != 0)
             {
-                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_card_trait_4"), LogType.Error);
                 return;
             }
             TableCardDrawer drawer = (TableCardDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is TableCardDrawer);
             if (drawer == null)
             {
-                TableConsole.Log("Наведите курсор на карту, значение зарядов навыка которой нужно изменить.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_card_trait_5"), LogType.Error);
                 return;
             }
 
@@ -65,7 +65,7 @@ namespace Game.Console
 
             if (!card.Data.isField)
             {
-                TableConsole.Log($"Карты способностей не могут иметь заряды навыков.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_card_trait_6"), LogType.Error);
                 return;
             }
 
@@ -74,7 +74,7 @@ namespace Game.Console
             if (trait.isPassive)
                  _ = fieldCard.Traits.Passives.AdjustStacks(id, value, Menu.GetCurrent());
             else _ = fieldCard.Traits.Actives.AdjustStacks(id, value, Menu.GetCurrent());
-            TableConsole.Log($"Заряды навыка ({id}) карты были изменена на {value} (от: меню).", LogType.Log);
+            TableConsole.Log(Translator.GetString("command_card_trait_7", id, value), LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

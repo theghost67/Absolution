@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tCamper() : base(ID)
         {
-            name = "Кэмпер";
-            desc = "А прикинь он щас *вжух* и исчезнет?";
+            name = Translator.GetString("trait_camper_1");
+            desc = Translator.GetString("trait_camper_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,7 +27,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>Пока присутствует на территории</color>\nРядомстоящие вражеские карты временно получают навык <nobr><u>{traitName}</u></nobr>.";
+            return Translator.GetString("trait_camper_3", traitName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

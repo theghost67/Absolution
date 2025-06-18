@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tFeed() : base(ID)
         {
-            name = "Накорми зверей";
-            desc = "Зайчик выйди по скорей, мясом накорми зверей.";
+            name = Translator.GetString("trait_feed_1");
+            desc = Translator.GetString("trait_feed_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После убийства карты владельцем</color>\nУменьшает инициативу на {_moxieF.Format(args.stacks)} и " +
-                   $"навсегда увеличивает силу владельца на {_strengthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_feed_3", _moxieF.Format(args.stacks), _strengthF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

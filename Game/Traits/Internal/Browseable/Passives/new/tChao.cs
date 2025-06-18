@@ -13,7 +13,7 @@ namespace Game.Traits
 
         public tChao() : base(ID)
         {
-            name = "Чао, чао, чао!";
+            name = Translator.GetString("trait_chao_1");
             desc = "O partigiano, portami via! O bella ciao, bella ciao, bella ciao, ciao, ciao!";
 
             rarity = Rarity.Epic;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После смерти владельца</color>\nУничтожит своего убийцу.";
+            return Translator.GetString("trait_chao_2");
         }
         public override float Points(FieldCard owner, int stacks)
         {

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Effects;
 using Game.Menus;
 using Game.Sleeves;
@@ -496,7 +496,7 @@ namespace Game.Cards
             if (card.Field == null || card._isKilled) return;
             if (++card._phaseAge <= MOXIE_PRIORITY_VALUE) return;
 
-            card.Drawer.CreateTextAsSpeech("* СТАРОСТЬ *", Color.red);
+            card.Drawer.CreateTextAsSpeech(Translator.GetString("battle_field_card_1"), Color.red);
             await card.TryKill(BattleKillMode.IgnoreEverything, null);
         }
         async UniTask OnStartPhase(object sender, EventArgs e)

@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cVanga : FieldCard
     {
         public cVanga() : base("vanga", "prediction", "old_authority")
         {
-            name = "Ванга";
-            desc = "Недавно нанятый оперативник, обладающий экстрасенсорными способностями. Состоит в секретном проекте МК ВАНГУЛЬТРА." + 
-                   "Отчёты проекта подтвердили получаемое тактическое преимущество во время боевых операций при участии Ванги.";
+            name = Translator.GetString("card_vanga_1");
+            desc = Translator.GetString("card_vanga_2") + 
+                   Translator.GetString("card_vanga_3");
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

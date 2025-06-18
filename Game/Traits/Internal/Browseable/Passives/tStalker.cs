@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,7 +14,7 @@ namespace Game.Traits
 
         public tStalker() : base(ID)
         {
-            name = "Преследователь";
+            name = Translator.GetString("trait_stalker_1");
             desc = "...";
 
             rarity = Rarity.Rare;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После совершения атаки владельцем</color>\n" +
-                   $"Если владелец не атаковал цель ранее, увеличивает свою силу на {_strengthF.Format(args.stacks, true)}. Эффект делится на количество целей при атаке.";
+            return Translator.GetString("trait_stalker_2", _strengthF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

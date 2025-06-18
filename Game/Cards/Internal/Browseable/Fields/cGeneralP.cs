@@ -1,13 +1,13 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cGeneralP : FieldCard
     {
         public cGeneralP() : base("general_p", "order_of_attack", "order_of_defence", "tactician")
         {
-            name = "Генерал П";
-            desc = "Матёрый воитель, участвующий во множестве исторических сражений, а тажке переживший времена Великой Сегрегации и Эпохи Вавулизации. " + 
-                   "Его тактический ум способен просчитывать исход битвы за десятки ходов вперёд. Однако, мало кто одобряет его радикальные приказы, " +
-                   "зачастую приводящие в гарантированному взаимоуничтожению.";
+            name = Translator.GetString("card_general_p_1");
+            desc = Translator.GetString("card_general_p_2") + 
+                   Translator.GetString("card_general_p_3");
+
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 3);

@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tChess() : base(ID)
         {
-            name = "Сыграем?";
-            desc = "Миш, у меня для тебя одно важное признание. В отличие от тебя трёхлетнего, я играть не умею. Поэтому мы тебе нашли достойного противника.";
+            name = Translator.GetString("trait_chess_1");
+            desc = Translator.GetString("trait_chess_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на незанятом союзном поле</color>\nПеремещает владельца на указанное поле. " +
-                   $"После успешного перемещения, владелец получит {_strengthF.Format(args.stacks)} силы и понизит свою инициативу на {_moxieF.Format(args.stacks, true)}. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_chess_3", _strengthF.Format(args.stacks), _moxieF.Format(args.stacks, true), CD);
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

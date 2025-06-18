@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tBloodthirstiness() : base(ID)
         {
-            name = "Кровожадность";
-            desc = "Ещё, ЕЩЁ! Мне нужно больше крови!";
+            name = Translator.GetString("trait_bloodthirstiness_1");
+            desc = Translator.GetString("trait_bloodthirstiness_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После убийства любой карты владельцем</color>\nУвеличивает силу владельца на {_strengthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_bloodthirstiness_3", _strengthF.Format(args.stacks, true));
         }
         public override float Points(FieldCard owner, int stacks)
         {

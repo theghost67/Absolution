@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Traits;
 using MyBox;
 using UnityEngine;
@@ -84,25 +84,25 @@ namespace Game.Cards
             CardCurrency priceCurrency = attached.Data.price.currency;
             string priceCurrencyStr = priceCurrency.name.Colored(priceCurrency.color);
             int priceDefault = attached.Data.price.value;
-            return $"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault}.\nТекущее: {attached.Price.ToStringRich(priceDefault)} ед.\n<color=grey><i>Стоимость: цена установки на территорию.";
+            return Translator.GetString("table_field_card_drawer_1", priceCurrencyStr, priceDefault, attached.Price.ToStringRich(priceDefault));
         }
         protected override string UpperRightIconTooltip()
         {
             int moxieDefault = attached.Data.moxie;
             int initiationOrder = (attached as BattleFieldCard)?.InitiationOrder ?? -1;
             if (initiationOrder == -1)
-                 return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.ToStringRich(moxieDefault)} ед.\n<color=grey><i>Инициатива: быстрота действий.";
-            else return $"По умолчанию: {moxieDefault}.\nТекущее: {attached.Moxie.ToStringRich(moxieDefault)} ед.\nПозиция в очереди: {initiationOrder}.\n<color=grey><i>Инициатива: быстрота действий.";
+                 return Translator.GetString("table_field_card_drawer_2", moxieDefault, attached.Moxie.ToStringRich(moxieDefault));
+            else return Translator.GetString("table_field_card_drawer_3", moxieDefault, attached.Moxie.ToStringRich(moxieDefault), initiationOrder);
         }
         protected override string LowerLeftIconTooltip()
         {
             int healthDefault = attached.Data.health;
-            return $"По умолчанию: {healthDefault} ед.\nТекущее: {attached.Health.ToStringRich(healthDefault)} ед.\n<color=grey><i>Здоровье: смерть при достижении нуля.";
+            return Translator.GetString("table_field_card_drawer_4", healthDefault, attached.Health.ToStringRich(healthDefault));
         }
         protected override string LowerRightIconTooltip()
         {
             int strengthDefault = attached.Data.strength;
-            return $"По умолчанию: {strengthDefault} ед.\nТекущее: {attached.Strength.ToStringRich(strengthDefault)} ед.\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.";
+            return Translator.GetString("table_field_card_drawer_5", strengthDefault, attached.Strength.ToStringRich(strengthDefault));
         }
 
         protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)

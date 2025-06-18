@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using GreenOne;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tSummarizing() : base(ID)
         {
-            name = "Резюмирование";
-            desc = "Приговор может быть смертельнее всякого оружия.";
+            name = Translator.GetString("trait_summarizing_1");
+            desc = Translator.GetString("trait_summarizing_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,8 +29,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>После получения атаки на владельца</color>\n" +
-                   $"Увеличивает количество зарядов навыка <nobr><color><u>{traitName}</u></color></nobr> на {_stacksF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_summarizing_3", traitName, _stacksF.Format(args.stacks, true));
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

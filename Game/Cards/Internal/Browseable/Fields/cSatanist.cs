@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cSatanist : FieldCard
     {
         public cSatanist() : base("satanist", "sacrifice")
         {
-            name = "Козёл-сатанист";
-            desc = "Перед очередным жертвоприношением козы во имя всевышних сил, рядом стоящий козёл возмутился (откуда он там взялся - непонятно) " +
-                   "и решил отомстить - теперь он приносит в жертву людей во славу сатане.";
+            name = Translator.GetString("card_satanist_1");
+            desc = Translator.GetString("card_satanist_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 3);

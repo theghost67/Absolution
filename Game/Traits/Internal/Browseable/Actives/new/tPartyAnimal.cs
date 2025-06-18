@@ -22,8 +22,8 @@ namespace Game.Traits
 
         public tPartyAnimal() : base(ID)
         {
-            name = "Тусовщик";
-            desc = "Слушай, ты всё делаешь неверно. Смотри и учись, раз, два, три!";
+            name = Translator.GetString("trait_party_animal_1");
+            desc = Translator.GetString("trait_party_animal_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -36,12 +36,12 @@ namespace Game.Traits
         {
             object isInDanceMode = null;
             args.table?.Storage.TryGetValue(KEY, out isInDanceMode);
-            string str = $"<color>При активации на территории</color>\nПереключает режим тусовщика. " +
-                         $"Пока находится в режиме тусовщика, владелец игнорирует все внешние попытки наложения навыков.";
+            string str = Translator.GetString("trait_party_animal_3");
+
             if (isInDanceMode != null)
             {
-                string danceModeStr = ((bool)isInDanceMode) == true ? "<color=green>ВКЛ</color>" : "<color=red>ВЫКЛ</color>";
-                str += $" Режим тусовщика: {danceModeStr}.";
+                string danceModeStr = ((bool)isInDanceMode) == true ? Translator.GetString("trait_party_animal_4") : Translator.GetString("trait_party_animal_5");
+                str += Translator.GetString("trait_party_animal_6", danceModeStr);
             }
             return str;
         }

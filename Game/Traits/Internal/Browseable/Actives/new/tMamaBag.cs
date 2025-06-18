@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tMamaBag() : base(ID)
         {
-            name = "У мамочки новая сумочка";
-            desc = "Да-да-да, ставь рынок наконец!";
+            name = Translator.GetString("trait_mama_bag_1");
+            desc = Translator.GetString("trait_mama_bag_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -28,7 +28,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>При активации на незанятом союзном поле рядом</color>\nУстанавливает карту <nobr><u>{cardName}</u></nobr> на указанное поле. Тратит все заряды.";
+            return Translator.GetString("trait_mama_bag_3", cardName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

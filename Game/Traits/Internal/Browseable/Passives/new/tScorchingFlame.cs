@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tScorchingFlame() : base(ID)
         {
-            name = "Обжигающее пламя";
-            desc = "О, какой ты горячий...";
+            name = Translator.GetString("trait_scorching_flame_1");
+            desc = Translator.GetString("trait_scorching_flame_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,8 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После получения атаки владельцем</color>\nМгновенно наносит атакующему урон, равный {_strengthF.Format(args.stacks, true)}. " +
-                   $"Активируется даже после смерти владельца.";
+            return Translator.GetString("trait_scorching_flame_3", _strengthF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

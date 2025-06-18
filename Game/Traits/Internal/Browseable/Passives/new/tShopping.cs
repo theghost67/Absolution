@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tShopping() : base(ID)
         {
-            name = "Шоппинг";
-            desc = "Не забудь, кто тебя выручил.";
+            name = Translator.GetString("trait_shopping_1");
+            desc = Translator.GetString("trait_shopping_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После смерти любой вражеской карты</color>\nСторона-владелец получает 1 ед. золота.";
+            return Translator.GetString("trait_shopping_3");
         }
 
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)

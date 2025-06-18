@@ -25,8 +25,8 @@ namespace Game.Traits
 
         public tScreenShield() : base(ID)
         {
-            name = "Экранный щит";
-            desc = "Всем укрыться за щит! ..Хорошо, что Бастиона здесь нет.";
+            name = Translator.GetString("trait_screen_shield_1");
+            desc = Translator.GetString("trait_screen_shield_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -37,12 +37,10 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            string str = $"<color>При первой установке владельца на территорию</color>\nСоздаёт \"щит\" владельца, защищающий карты рядом, включая владельца. " +
-                         $"Щит перемещается вместе с владельцем и имеет {_healthF.Format(args.stacks)} здоровья. " +
-                         $"В начале каждого хода на территории щит восстанавливает {_restoreF.Format(args.stacks)} от здоровья, вплоть до максимума. " +
-                         $"После разрушения щита, тратит все заряды.";
+            string str = Translator.GetString("trait_screen_shield_3", _healthF.Format(args.stacks), _restoreF.Format(args.stacks));
+
             if (args.table != null && args.table.Storage.ContainsKey(SHIELD_HEALTH_CUR_KEY))
-                str += $"\nТекущее здоровье щита: <color=green>{args.table.Storage[SHIELD_HEALTH_CUR_KEY]}</color> (+{args.table.Storage[SHIELD_RESTORE_KEY]}/ход)";
+                str += Translator.GetString("trait_screen_shield_4", args.table.Storage[SHIELD_HEALTH_CUR_KEY], args.table.Storage[SHIELD_RESTORE_KEY]);
             return str;
         }
         public override float Points(FieldCard owner, int stacks)
@@ -146,7 +144,7 @@ namespace Game.Traits
             shieldHealth -= initialStrength;
             if (shieldHealth <= 0)
             {
-                trait.Owner.Drawer?.CreateTextAsSpeech($"{trait.Data.name}\nразрушен!", Color.red);
+                trait.Owner.Drawer?.CreateTextAsSpeech(Translator.GetString("trait_screen_shield_5", trait.Data.name), Color.red);
                 await trait.SetStacks(0, trait);
             }
             else

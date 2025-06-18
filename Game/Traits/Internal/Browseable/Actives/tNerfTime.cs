@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Collections.Generic;
@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tNerfTime() : base(ID)
         {
-            name = "Время нёрфа";
-            desc = "Нам кажется, что этот персонаж слишком силён. Мы удаляем все навыки данного персонажа.";
+            name = Translator.GetString("trait_nerf_time_1");
+            desc = Translator.GetString("trait_nerf_time_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -30,9 +30,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на любой вражеской карте</color>\n" +
-                   $"Удаляет все навыки у цели, а также понижает её инициативу на {_enemyMoxieF.Format(args.stacks)} и характеристики на {_enemyStatsF.Format(args.stacks)}, " +
-                   $"понижает инициативу всех союзных карт, кроме себя, на {_allyMoxieF.Format(args.stacks, true)}. Тратит один заряд.";
+            return Translator.GetString("trait_nerf_time_3", _enemyMoxieF.Format(args.stacks), _enemyStatsF.Format(args.stacks), _allyMoxieF.Format(args.stacks, true));
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tInnocence() : base(ID)
         {
-            name = "Невинность";
-            desc = "Такой симпатичный, одинокий... Возьмём его с собой?";
+            name = Translator.GetString("trait_innocence_1");
+            desc = Translator.GetString("trait_innocence_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,7 +27,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>После убийства владельца</color>\nДаст убийце навык <nobr><u>{traitName}</u></nobr>.";
+            return Translator.GetString("trait_innocence_3", traitName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {
@@ -54,6 +54,7 @@ namespace Game.Traits
             if (trait == null || trait.Owner == null || killer == null) return;
 
             await trait.AnimActivation();
+            killer.Data.traits.Passives.AdjustStacks(TRAIT_ID, 1);
             await killer.Traits.Passives.AdjustStacks(TRAIT_ID, 1, trait);
         }
     }

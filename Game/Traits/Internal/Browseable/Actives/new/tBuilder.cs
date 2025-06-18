@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tBuilder() : base(ID)
         {
-            name = "Постройка";
-            desc = "Знаете, Москва не за день строилась, с чего-то нужно начинать.";
+            name = Translator.GetString("trait_builder_1");
+            desc = Translator.GetString("trait_builder_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -29,10 +29,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>При активации на поле рядом с владельцем</color>\n" +
-                   $"Создаёт карту <nobr><u>{cardName}</u></nobr> на указанном поле. Перезарядка: {CD} х.\n\n" +
-                   $"<color>При активации на карте рядом с владельцем</color>\n" +
-                   $"Если у цели меньше {_healthF.Format(args.stacks)} здоровья, убивает её. Не вызывает перезарядку навыка.";
+            return Translator.GetString("trait_builder_3", cardName, CD, _healthF.Format(args.stacks));
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

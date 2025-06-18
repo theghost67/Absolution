@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tMeaty() : base(ID)
         {
-            name = "Мясистый";
-            desc = "Попробуй пробить вот такую защиту!";
+            name = Translator.GetString("trait_meaty_1");
+            desc = Translator.GetString("trait_meaty_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении союзной карты с навыком {name} рядом с владельцем</color>\nУвеличивает здоровье владельца на {_healthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_meaty_3", name, _healthF.Format(args.stacks, true));
         }
         public override float Points(FieldCard owner, int stacks)
         {

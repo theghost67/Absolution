@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tImmortality() : base(ID)
         {
-            name = "Бессмертие";
-            desc = "Дисбаланс.";
+            name = Translator.GetString("trait_immortality_1");
+            desc = Translator.GetString("trait_immortality_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Постоянный эффект в бою</color>\nНе позволяет убить владельца понижением здоровья.\n\n" +
-                   $"<color>Каждый ход на территории</color>\nПонижает количество зарядов на {_stacksRemove.Format(args.stacks, true)}.\n\n";
+            return Translator.GetString("trait_immortality_3", _stacksRemove.Format(args.stacks, true));
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

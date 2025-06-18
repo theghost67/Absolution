@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cTerrorist : FieldCard
     {
         public cTerrorist() : base("terrorist", "on_lookout")
         {
-            name = "Террорист";
-            desc = "Является частью террористической организации Пердящие микрофоны, чья цель - взорвать некие точки B. Никто так и не понял, что это означает, " +
-                   "поэтому правительство вынуждено отправлять свой лучший спецназ в атакуемые террористами места, чтобы уничтожить их раз и навсегда.";
+            name = Translator.GetString("card_terrorist_1");
+            desc = Translator.GetString("card_terrorist_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

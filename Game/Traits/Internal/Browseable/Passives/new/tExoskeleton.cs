@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tExoskeleton() : base(ID)
         {
-            name = "Экзоскелет";
-            desc = "Эластичный живой биоматериал поверх титанового экзоскелета.";
+            name = Translator.GetString("trait_exoskeleton_1");
+            desc = Translator.GetString("trait_exoskeleton_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,7 +28,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При получении любого урона или лечения</color>\nСнижает получаемый урон или лечение на {_valueF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_exoskeleton_3", _valueF.Format(args.stacks, true));
         }
         public override float Points(FieldCard owner, int stacks)
         {

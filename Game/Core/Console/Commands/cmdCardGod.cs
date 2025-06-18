@@ -1,4 +1,4 @@
-﻿using Game.Cards;
+using Game.Cards;
 using Game.Menus;
 using Game.Traits;
 using GreenOne.Console;
@@ -10,14 +10,14 @@ namespace Game.Console
     public class cmdCardGod : Command
     {
         const string ID = "cardgod";
-        const string DESC = "выдаёт все игровые навыки наведённой карте поля";
+        static readonly string DESC = Translator.GetString("command_card_god_1");
         const string IGNORE_TRAIT_ID = "military_service";
 
         public cmdCardGod() : base(ID, DESC) { }
         class StageArg : CommandArg
         {
             public const string ID = ";";
-            public const string DESC = "игнорирует навык " + IGNORE_TRAIT_ID;
+            public static readonly string DESC = Translator.GetString("command_card_god_2") + IGNORE_TRAIT_ID;
             public StageArg(Command command) : base(command, ValueType.Flag, ID, DESC) { }
         }
 
@@ -25,13 +25,13 @@ namespace Game.Console
         {
             if (TableEventManager.CountAll() != 0)
             {
-                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_card_god_3"), LogType.Error);
                 return;
             }
             TableFieldCardDrawer drawer = (TableFieldCardDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is TableFieldCardDrawer);
             if (drawer == null)
             {
-                TableConsole.Log("Наведите курсор на карту, значение характеристики которой нужно изменить.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_card_god_4"), LogType.Error);
                 return;
             }
 
@@ -45,7 +45,7 @@ namespace Game.Console
                 data.traits.AdjustStacks(trait.id, 1);
                 card.Traits.AdjustStacks(trait.id, 1, menu);
             }
-            TableConsole.Log($"Карте выданы все навыки (от: меню).", LogType.Log);
+            TableConsole.Log(Translator.GetString("command_card_god_5"), LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[] { new StageArg(this) };
     }

@@ -1,4 +1,4 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using Game.Effects;
 using Game.Palette;
 using GreenOne;
@@ -31,6 +31,7 @@ namespace Game.Menus
         readonly GameObject _tipsGO;
 
         readonly LogoDrawer _logoDrawer;
+        readonly LanguageDrawer _langDrawer;
 
         static Tween _flickeringTween;
         static Tween _tipsTween;
@@ -77,6 +78,35 @@ namespace Game.Menus
                 _menu.StartTheGame();
             }
         }
+        class LanguageDrawer : Drawer
+        {
+            readonly string[] _languages;
+            int _langIndex;
+            SpriteRenderer _renderer;
+            TextMeshPro _text;
+
+            public LanguageDrawer(MainMenu menu) : base(null, menu.Transform.Find("Language icon"))
+            {
+                _languages = Translator.SupportedLanguages;
+                _langIndex = Translator.SupportedLanguages.FirstIndex(s => s == Translator.CurrentLanguage);
+                _renderer = gameObject.GetComponent<SpriteRenderer>();
+                _text = menu.Transform.Find<TextMeshPro>("Language");
+                ChangePointer = true;
+                Color = Color.white;
+
+                string language = Translator.SupportedLanguages[_langIndex];
+                _renderer.sprite = Resources.Load<Sprite>($"Localization/Icons/{language}");
+            }
+            protected override void OnMouseClickBase(object sender, DrawerMouseEventArgs e)
+            {
+                base.OnMouseClickBase(sender, e);
+                _langIndex = (_langIndex + 1) % _languages.Length;
+                string language = Translator.SupportedLanguages[_langIndex];
+                _renderer.sprite = Resources.Load<Sprite>($"Localization/Icons/{language}");
+                _text.text = "RESTART TO APPLY";
+                Translator.CurrentLanguage = language;
+            }
+        }
 
         static MainMenu() 
         {
@@ -85,32 +115,32 @@ namespace Game.Menus
             _prefab = Resources.Load<GameObject>($"Prefabs/Menus/{ID}");
             _tips = new string[]
             {
-                "Только начинаете играть? Не используйте переброс карт или навыков, играйте как ляжет рука. Также, вы можете игнорировать навыки противника - вы узнаете о них в процессе игры.",
-                "Не стоит использовать перемотку, если вы начинающий игрок. Так можно и проморгать важные моменты.",
-				"Карты способностей имеют мощные эффекты, полезные на любом этапе сражения. Всегда неплохо захватить с собой парочку.",
-                "Высокая стоимость или низкая инициатива карты облегчает её улучшение. Так же работает и в обратную сторону.",
-                "Вы всегда ходите первым на нечётных этапах, но зато ходите последним на чётных. P.S.: последним ходить лучше.",
-                "Маленький размер колоды позволяет создать мощные карты. Однако, это довольно рискованная тактика, так как она позволит противнику изнеможить эти карты.",
-                "Редкость навыка зачастую определяет сложность его использования, а не общую силу. Хотя, в умелых руках они становятся действительно сильными.",
-                "Не знаете, как победить мощную карту противника? Что ж, запасайтесь сосисками и прицельными навыками. Сказал бы я в версии 1.3...",
-                "Навыки перемещения карт позволяют оперативно защищаться или атаковать, не тратя при этом никаких ресурсов.",
-                "Часто, победа наступает тогда, когда у противника заканчиваются карты в руке. Война на истощение? Да, похоже на то.",
-                "Слишком легко? Попробуйте пройти игру с режимом психа, не улучшать карты или ограничить максимум карт в колоде. Только не надо делать всё сразу...",
-                "Слишком сложно? Попробуйте найти мощную синергию навыков или использовать \"подлые\" подходы, по типу прицельной атаки одного поля или особых карт способностей.",
-                "Затишье перед бурей никогда не приводит к чему-либо хорошему.",
-                "На первом ходу лучшим решением будет защитить все свои поля картами.",
-                "Победа присуждается только в начале хода. Если и вы, и противник будете мертвы к началу хода - вы всё равно проиграете.",
-                "Пройти хардкорный режим далеко не так просто. Только игроки с превосходной колодой, знанием механик игры и каплей удачи могут бросить ему вызов.",
-				"Ускорение сражения не влияет на таймер прохождения. Готовы устроить спидран?",
-                "Не хватает золота или эфира? Что ж, некоторые карты помогут вам подзаработать. Однако, вряд ли эти карты будут мощными.",
-                "Слышали про <color=#00FFFF>Метку создателя</color>? Только настоящие эксперты карточных сражений смогут собрать их все, не умерев по пути.",
-                "Хотите новых ощущений? Или, может, просто захотелось посмеяться? Тогда добро пожаловать в режим хаоса! Нажмите \'E\', чтобы начать веселье.",
-                "Если захотелось пощекотать нервы в режиме психа, вот вам один совет: навыки, восстанавливающие здоровье стороне-владельцу могут дать вам право на ошибку!",
-                "Массовая атака несёт в себе большую угрозу. Представьте что будет, если усилить эту атаку?",
-                "Размер колоды, так же, как и размер руки, ограничен шестнадцатью картами.",
-                "В игре много контента, не пытайтесь изучить его весь сразу. Просто плывите по течению и наслаждайтесь внезапными событиями.",
-                "Некоторые способности карт могут активироваться прямо в рукаве. Вот это фокусы!",
-                "В отличие от вас, противник может улучшать свои карты перед первым раундом. Да уж, жизнь несправедлива."
+                Translator.GetString("main_menu_1"),
+                Translator.GetString("main_menu_2"),
+				Translator.GetString("main_menu_3"),
+                Translator.GetString("main_menu_4"),
+                Translator.GetString("main_menu_5"),
+                Translator.GetString("main_menu_6"),
+                Translator.GetString("main_menu_7"),
+                Translator.GetString("main_menu_8"),
+                Translator.GetString("main_menu_9"),
+                Translator.GetString("main_menu_10"),
+                Translator.GetString("main_menu_11"),
+                Translator.GetString("main_menu_12"),
+                Translator.GetString("main_menu_13"),
+                Translator.GetString("main_menu_14"),
+                Translator.GetString("main_menu_15"),
+                Translator.GetString("main_menu_16"),
+				Translator.GetString("main_menu_17"),
+                Translator.GetString("main_menu_18"),
+                Translator.GetString("main_menu_19"),
+                Translator.GetString("main_menu_20"),
+                Translator.GetString("main_menu_21"),
+                Translator.GetString("main_menu_22"),
+                Translator.GetString("main_menu_23"),
+                Translator.GetString("main_menu_24"),
+                Translator.GetString("main_menu_25"),
+                Translator.GetString("main_menu_26")
             };
             _tipsIndecies = Enumerable.Range(0, _tips.Length).ToList();
             _firstTimeOpened = true;
@@ -118,6 +148,7 @@ namespace Game.Menus
         public MainMenu() : base(ID, _prefab)
         {
             _logoDrawer = new LogoDrawer(this);
+            _langDrawer = new LanguageDrawer(this);
 
             _psychoModeGO = Transform.Find("Mode text").gameObject;
             _versionGO = Transform.Find("Version").gameObject;
@@ -131,7 +162,11 @@ namespace Game.Menus
             _controlsTMP = _controlsGO.GetComponent<TextMeshPro>();
             _tipsTMP = _tipsGO.GetComponent<TextMeshPro>();
 
-            _versionTMP.text = $"Версия игры: {Application.version}";
+            _versionTMP.text = Translator.GetString("main_menu_27", Application.version);
+            _leaderboardsTMP.text = Translator.GetString("main_menu_28");
+
+            _controlsTMP.text = Translator.GetString("main_menu_29");
+
             SFX.MusicVolumeScale = 2f;
             UpdateTip();
         }
@@ -142,6 +177,7 @@ namespace Game.Menus
 
             Global.OnUpdate += OnUpdate;
             _logoDrawer.ColliderEnabled = true;
+            _langDrawer.ColliderEnabled = true;
 
             _flickeringTween.Kill();
             _flickeringTween = DOVirtual.Float(0, 0, 120000, v => OnFlickeringTweenUpdate()).SetUpdate(UpdateType.Fixed);
@@ -163,6 +199,7 @@ namespace Game.Menus
         {
             Global.OnUpdate -= OnUpdate;
             _logoDrawer.ColliderEnabled = false;
+            _langDrawer.ColliderEnabled = false;
             DOVirtual.Float(2, 1, 2, v => SFX.MusicVolumeScale = v);
             _ = Player.StartTheGame(this);
         }
@@ -204,17 +241,17 @@ namespace Game.Menus
             if (PlayerConfig.psychoMode && PlayerConfig.chaosMode)
             {
                 _psychoModeTMP.color = Color.magenta;
-                _psychoModeTMP.text = "ФУЛЛ ХАОС: ПРИГОТОВЬТЕСЬ СТРАДАТЬ\nРЕЖИМ ПСИХА + РЕЖИМ ХАОСА.";
+                _psychoModeTMP.text = Translator.GetString("main_menu_30");
             }
             else if (PlayerConfig.psychoMode)
             {
                 _psychoModeTMP.color = Color.red;
-                _psychoModeTMP.text = "РЕЖИМ ПСИХА: У ВАС НЕТ ПРАВА НА ОШИБКУ\nМАКС. ЗДОРОВЬЕ ОГРАНИЧЕНО ДО 1 ЕД.";
+                _psychoModeTMP.text = Translator.GetString("main_menu_31");
             }
             else if (PlayerConfig.chaosMode)
             {
                 _psychoModeTMP.color = Color.cyan;
-                _psychoModeTMP.text = "РЕЖИМ ХАОСА: ДА НАЧНЁТСЯ ВЕСЕЛЬЕ!\nУ КАРТ ДОБАВЛЯЮТСЯ СЛУЧАЙНЫЕ НАВЫКИ.";
+                _psychoModeTMP.text = Translator.GetString("main_menu_32");
             }
 
             bool isAnyMode = PlayerConfig.psychoMode || PlayerConfig.chaosMode;

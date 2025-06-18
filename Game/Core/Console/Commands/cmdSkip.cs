@@ -1,4 +1,4 @@
-﻿using Game.Menus;
+using Game.Menus;
 using GreenOne.Console;
 using UnityEngine;
 
@@ -7,7 +7,7 @@ namespace Game.Console
     public class cmdSkip : Command
     {
         const string ID = "skip";
-        const string DESC = "пропускает сражение";
+        static readonly string DESC = Translator.GetString("command_skip_1");
         const int SKIP_CUR = -1;
         const int SKIP_FORCE = -2;
 
@@ -15,7 +15,7 @@ namespace Game.Console
         class StageArg : CommandArg
         {
             public const string ID = "stage";
-            public const string DESC = "этап, до которого нужно пропускать сражения, используйте 'f' для принудительного пропуска";
+            public static readonly string DESC = Translator.GetString("command_skip_2");
             public StageArg(Command command) : base(command, ValueType.Optional, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
             {
@@ -46,12 +46,12 @@ namespace Game.Console
 
             if (!forceSkip && TableEventManager.CountAll() != 0)
             {
-                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_skip_3"), LogType.Error);
                 return;
             }
             if (Menu.GetCurrent() is not BattlePlaceMenu menu)
             {
-                TableConsole.Log("Текущее меню не является местом сражения.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_skip_4"), LogType.Error);
                 return;
             }
 
@@ -59,14 +59,14 @@ namespace Game.Console
             {
                 if (stage <= menu.DemoDifficulty)
                 {
-                    TableConsole.Log("Этап должен быть выше, чем текущий этап сражения.", LogType.Error);
+                    TableConsole.Log(Translator.GetString("command_skip_5"), LogType.Error);
                     return;
                 }
                 else menu.DemoDifficulty = stage - 1;
             }
 
             menu.Skip(forceSkip);
-            string output = forceSkip ? $"Сражение пропущено принудительно (может вызвать ошибки)." : "Сражение пропущено.";
+            string output = forceSkip ? Translator.GetString("command_skip_6") : Translator.GetString("command_skip_7");
             TableConsole.Log(output, LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[] { new StageArg(this) };

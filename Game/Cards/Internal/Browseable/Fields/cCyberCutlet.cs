@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cCyberCutlet : FieldCard
     {
         public cCyberCutlet() : base("cyber_cutlet", "meaty", "competitive_obsession")
         {
-            name = "Киберкотлета";
-            desc = "Несколько лет исследований и опасных (и негуманных) экспериментов от учёных, " +
-                   "и вот оно - человек и котлета в одном экземпляре. Чувствует себя одиноко в этом мире.";
+            name = Translator.GetString("card_cyber_cutlet_1");
+            desc = Translator.GetString("card_cyber_cutlet_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

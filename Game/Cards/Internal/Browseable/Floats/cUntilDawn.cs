@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Effects;
 using Game.Palette;
@@ -21,8 +21,8 @@ namespace Game.Cards
 
         public cUntilDawn() : base(ID)
         {
-            name = "Дожить до рассвета";
-            desc = "Итак... ты хочешь приступить к этой \"игре\"?";
+            name = Translator.GetString("card_until_dawn_1");
+            desc = Translator.GetString("card_until_dawn_2");
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
@@ -33,7 +33,7 @@ namespace Game.Cards
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"До следующего хода, все карты на территории получают навык <nobr><u>{traitName}</u></nobr>. В начале следующего хода владелец восстановит 50% от своего здоровья.";
+            return Translator.GetString("card_until_dawn_3", traitName);
         }
         public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
         {
@@ -68,7 +68,7 @@ namespace Game.Cards
             terr.OnStartPhase.Remove(_eventGuid);
             if (side.Drawer != null)
             {
-                TextMeshPro text = VFX.CreateText("РАССВЕТ", ColorPalette.C1.ColorCur, Global.Root, 1.5f);
+                TextMeshPro text = VFX.CreateText(Translator.GetString("card_until_dawn_4"), ColorPalette.C1.ColorCur, Global.Root, 1.5f);
                 Sequence seq = DOTween.Sequence(text);
                 text.color = Color.white.WithAlpha(0);
                 seq.Append(text.DOFade(1, 0.25f));

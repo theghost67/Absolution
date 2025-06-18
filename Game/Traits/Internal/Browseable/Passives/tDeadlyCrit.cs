@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Linq;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tDeadlyCrit() : base(ID)
         {
-            name = "Смертельный крит";
-            desc = "Давай, бей Фантомку.";
+            name = Translator.GetString("trait_deadly_crit_1");
+            desc = Translator.GetString("trait_deadly_crit_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением {ATTACKS_NEEDED}-й атаки владельца на карту</color>\n" +
-                   $"Увеличивает силу атаки на {_strengthF.Format(args.stacks, true)}. Если целей несколько - все должны быть картами.";
+            return Translator.GetString("trait_deadly_crit_3", ATTACKS_NEEDED, _strengthF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

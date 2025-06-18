@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Collections.Generic;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tScope() : base(ID)
         {
-            name = "Прицел";
-            desc = "Глубокий вдох и...";
+            name = Translator.GetString("trait_scope_1");
+            desc = Translator.GetString("trait_scope_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на вражеском поле рядом</color>\nУказанная цель станет целью будущих атак владельца.\n\n" +
-                   $"<color>При перемещении владельца</color>\nДеактивирует эффект данного навыка, если цель более не досягаема.";
+            return Translator.GetString("trait_scope_3");
+
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {

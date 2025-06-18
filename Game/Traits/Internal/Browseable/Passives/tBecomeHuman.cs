@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tBecomeHuman() : base(ID)
         {
-            name = "Стать человеком";
-            desc = "Ты просто долбанная машина!.. Разумеется, Лейтенант, я машина. А вы ожидали чего-то другого?";
+            name = Translator.GetString("trait_become_human_1");
+            desc = Translator.GetString("trait_become_human_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -29,8 +29,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(OBS_CARD_ID).name;
-            return $"<color>При появлении карты <nobr><u>{cardName}</u></nobr> на союзной стороне</color>\n" +
-                   $"Увеличивает силу владельца на {_strengthF.Format(args.stacks)} и его инициативу на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_become_human_3", cardName, _strengthF.Format(args.stacks), _moxieF.Format(args.stacks, true));
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

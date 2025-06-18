@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tSpecialAttack() : base(ID)
         {
-            name = "Особая атака";
-            desc = "Да, это моя особая атака. Я буду просто стоять здесь.";
+            name = Translator.GetString("trait_special_attack_1");
+            desc = Translator.GetString("trait_special_attack_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Постоянный эффект во время боя</color>\nУвеличивает инициативу владельца на {_moxieF.Format(args.stacks)}\n\n" +
-                   $"<color>Перед совершением атаки владельцем</color>\nЕсли на вражеской территории нет противников, пропускает ход.";
+            return Translator.GetString("trait_special_attack_3", _moxieF.Format(args.stacks));
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

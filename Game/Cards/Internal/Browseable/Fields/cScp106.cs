@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cScp106 : FieldCard
     {
         public cScp106() : base("scp_106", "tea", "pocket_dimension 2", "play_with_victim", "old_authority")
         {
-            name = "Дед";
-            desc = "Игривый дед, любящий поиграть со своей жертвой перед её смертью. Появляется в самых неожиданных местах - за углом, в стене, в штанах. " +
-                     "Изначально кажется, что этот дед дружелюбен и безвреден, но как только он достанет свою гнилую [ДАННЫЕ УДАЛЕНЫ] из кармана, вам будет не до смеха.";
+            name = Translator.GetString("card_scp106_1");
+            desc = Translator.GetString("card_scp106_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);

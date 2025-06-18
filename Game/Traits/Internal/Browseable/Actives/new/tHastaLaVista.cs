@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tHastaLaVista() : base(ID)
         {
-            name = "Аста ла виста";
-            desc = "I'll be back. Наверное.";
+            name = Translator.GetString("trait_hasta_la_vista_1");
+            desc = Translator.GetString("trait_hasta_la_vista_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -27,9 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на территории</color>\nСовершает атаку цели напротив силой в {_damageF.Format(args.stacks)}, " +
-                   $"после чего забирает союзные карты рядом, а затем и владельца, в рукав стороны-владельца. Даёт столько же валюты, " +
-                   $"сколько стоят забранные карты, исключая владельца. Тратит все заряды.";
+            return Translator.GetString("trait_hasta_la_vista_3", _damageF.Format(args.stacks));
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

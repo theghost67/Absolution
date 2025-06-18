@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tOldAuthority() : base(ID)
         {
-            name = "Пожилой авторитет";
-            desc = "Слушай, зачем нам махаться друг с другом? Пойдём попьём чаю.";
+            name = Translator.GetString("trait_old_authority_1");
+            desc = Translator.GetString("trait_old_authority_2");
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки владельца</color>\nОтменяет атаку на цель, если у неё есть навык <i>{name}</i>.";
+            return Translator.GetString("trait_old_authority_3", name);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tPoisonGrenade() : base(ID)
         {
-            name = "Чумная граната";
-            desc = "Медленная, мучительная смерть.";
+            name = Translator.GetString("trait_poison_grenade_1");
+            desc = Translator.GetString("trait_poison_grenade_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -30,9 +30,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При активации на вражеском поле рядом</color>\n" +
-                   $"Наносит рядомстоящим от цели картам, включая цель, навык <u><color>{traitName}</color></u> с {_stacksF.Format(args.stacks)} зарядов. " +
-                   $"Перезарядка: {CD} х.";
+            return Translator.GetString("trait_poison_grenade_3", traitName, _stacksF.Format(args.stacks), CD);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

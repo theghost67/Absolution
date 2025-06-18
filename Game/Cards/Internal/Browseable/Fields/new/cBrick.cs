@@ -4,9 +4,9 @@ namespace Game.Cards
     {
         public cBrick() : base("brick", "bricky_taste")
         {
-            name = "Кирпич";
-            desc = "Как же хочется сейчас перекусить свежевыпеченным кирпичом! А с соусом, ммм... Объедение... Что? Уже и пошутить нельзя? " +
-                   "Ну, а что ещё можно сказать? Это просто кирпич! Можете с его помощью дом построить, либо об голову кому-нибудь разбить. Решайте сами.";
+            name = Translator.GetString("card_brick_1");
+            desc = Translator.GetString("card_brick_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

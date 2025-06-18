@@ -1,4 +1,4 @@
-﻿using Game.Menus;
+using Game.Menus;
 using GreenOne.Console;
 using UnityEngine;
 
@@ -7,7 +7,7 @@ namespace Game.Console
     public class cmdAiMove : Command
     {
         const string ID = "aimove";
-        const string DESC = "выполняет ход игрока, используя ИИ";
+        static readonly string DESC = Translator.GetString("command_ai_move_1");
 
         public cmdAiMove() : base(ID, DESC) { }
 
@@ -15,17 +15,17 @@ namespace Game.Console
         {
             if (TableEventManager.CountAll() != 0)
             {
-                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_ai_move_2"), LogType.Error);
                 return;
             }
             if (Menu.GetCurrent() is not BattlePlaceMenu menu)
             {
-                TableConsole.Log("Текущее меню не содержит территорию сражения.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_ai_move_3"), LogType.Error);
                 return;
             }
             _ = menu.Territory.Player.ai.MakeTurn();
             menu.SetPlayerControls(false);
-            TableConsole.Log($"Выполнение хода с помощью ИИ...", LogType.Log);
+            TableConsole.Log(Translator.GetString("command_ai_move_4"), LogType.Log);
         }
     }
 }

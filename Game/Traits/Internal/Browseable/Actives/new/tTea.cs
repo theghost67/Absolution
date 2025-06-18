@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tTea() : base(ID)
         {
-            name = "Хочешь чаю?";
-            desc = "Уже наливаю! :)";
+            name = Translator.GetString("trait_tea_1");
+            desc = Translator.GetString("trait_tea_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -28,9 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После смерти любой вражеской карты</color>\nДаёт {_stacksPerDeathF.Format(args.stacks)} зарядов навыка.\n\n" +
-                   $"<color>При активации на вражеской карте рядом</color>\nУменьшает инициативу цели на {_moxieF.Format(args.stacks)} и " +
-                   $"её силу на {_strengthF.Format(args.stacks, true)}. Тратит один заряд. Активация возможна только при наличии двух и более зарядов.";
+            return Translator.GetString("trait_tea_3", _stacksPerDeathF.Format(args.stacks), _moxieF.Format(args.stacks), _strengthF.Format(args.stacks, true));
+
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

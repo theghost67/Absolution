@@ -1,4 +1,4 @@
-﻿using GreenOne.Console;
+using GreenOne.Console;
 using System.Linq;
 using UnityEngine;
 
@@ -7,12 +7,12 @@ namespace Game.Console
     public class cmdHelp : Command
     {
         const string ID = "help";
-        const string DESC = "выводит все существующие команды";
+        static readonly string DESC = Translator.GetString("command_help_1");
 
         class CmdArg : CommandArg
         {
             const string ID = "cmd";
-            const string DESC = "существующая в консоли команда";
+            static readonly string DESC = Translator.GetString("command_help_2");
             public CmdArg(Command command) : base(command, ValueType.Optional, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
             {

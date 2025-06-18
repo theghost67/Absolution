@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tVaccinated() : base(ID)
         {
-            name = "Вакцинирован";
-            desc = "Ты вакцинирован, Макс.";
+            name = Translator.GetString("trait_vaccinated_1");
+            desc = Translator.GetString("trait_vaccinated_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,7 +28,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\nНаносит {_damageF.Format(args.stacks)} урона владельцу, тратит все заряды.";
+            return Translator.GetString("trait_vaccinated_3", _damageF.Format(args.stacks));
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

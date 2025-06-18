@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tEgo() : base(ID)
         {
-            name = "Э.Г.О.";
-            desc = "Добро пожаловать в Библиотеку Руин.";
+            name = Translator.GetString("trait_ego_1");
+            desc = Translator.GetString("trait_ego_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -30,9 +30,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на любой вражеской карте</color>\nЕсли у цели ≤ {_healthF.Format(args.stacks)} здоровья, " +
-                   $"мгновенно убивает её (игнор. неуязвимости и восстановления), добавляя копию убитой карты с исходными характеристиками в " +
-                   $"рукав стороны-владельца (должно быть место). Даёт {_etherF.Format(args.stacks)} эфира. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_ego_3", _healthF.Format(args.stacks), _etherF.Format(args.stacks), CD);
+
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -53,7 +52,7 @@ namespace Game.Traits
             trait.SetCooldown(CD);
             await target.Card.TryKill(BattleKillMode.IgnoreEverything, trait);
             if (!owner.Side.Sleeve.Add(copy))
-                owner.Drawer?.CreateTextAsSpeech("Полная рука!", Color.red);
+                owner.Drawer?.CreateTextAsSpeech(Translator.GetString("trait_ego_4"), Color.red);
         }
     }
 }

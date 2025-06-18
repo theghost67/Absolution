@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tLightningSpeed() : base(ID)
         {
-            name = "Молниеностность";
-            desc = "Быстрее быстрого, скорее скорого. Скорость. Я - скорость.";
+            name = Translator.GetString("trait_lightning_speed_1");
+            desc = Translator.GetString("trait_lightning_speed_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на незанятом союзном поле</color>\nПеремещает владельца на выбранное поле. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_lightning_speed_3", CD);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

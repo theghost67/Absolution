@@ -1,4 +1,4 @@
-﻿using Game.Console;
+using Game.Console;
 using GreenOne;
 using GreenOne.Console;
 using System;
@@ -79,11 +79,11 @@ namespace Game
         {
             if (string.IsNullOrEmpty(line)) return;
             try { Command.ExecuteLine(line); }
-            catch (ArgDuplicateException e) { Log($"Указан дубликат аргумента {e.argId}.", LogType.Error); }
-            catch (ArgValueException e) { Log($"Указано неверное значение аргумента {e.argId}.", LogType.Error); }
-            catch (ArgCountException) { Log($"Указано неверное количество аргументов.", LogType.Error); }
-            catch (ComplexArgException) { Log($"Ошибка обработки аргумента как комплексного (с указанием \"\").", LogType.Error); }
-            catch (NamedArgException) { Log($"Ошибка обработки аргумента как именнованного (с указанием =).", LogType.Error); }
+            catch (ArgDuplicateException e) { Log(Translator.GetString("table_console_1", e.argId), LogType.Error); }
+            catch (ArgValueException e) { Log(Translator.GetString("table_console_2", e.argId), LogType.Error); }
+            catch (ArgCountException) { Log(Translator.GetString("table_console_3"), LogType.Error); }
+            catch (ComplexArgException) { Log(Translator.GetString("table_console_4"), LogType.Error); }
+            catch (NamedArgException) { Log(Translator.GetString("table_console_5"), LogType.Error); }
 
             LogToFile("console", line);
             _latestCommands.Add(line);
@@ -114,6 +114,8 @@ namespace Game
             string str;
             if (type == LogType.Error || type == LogType.Exception)
                  str = $"<color=red>{text}</color>\n";
+            else if (type == LogType.Warning)
+                 str = $"<color=yellow>{text}</color>\n";
             else str = $"{text}\n";
             UnityMainThreadDispatcher.Enqueue(() => _outputTextMesh.text += str);
         }

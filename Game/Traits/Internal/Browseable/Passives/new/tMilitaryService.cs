@@ -20,8 +20,8 @@ namespace Game.Traits
 
         public tMilitaryService() : base(ID)
         {
-            name = "Призванный";
-            desc = "Добро пожаловать в семью Дерьмо Проджект.";
+            name = Translator.GetString("trait_military_service_1");
+            desc = Translator.GetString("trait_military_service_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -34,10 +34,9 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении навыка</color>\nЗабирает карту по делам, понижая её инициативу на {_moxieF.Format(args.stacks)}.\n\n" + 
-                   $"<color>При исчезновении навыка</color>\nВозвращает карту на её исходное поле. Если исходное поле занято, " +
-                   $"даёт стоимость цели стороне-владельцу и возвращает её в рукав.\n\n" +
-                   $"<color>В начале хода, вне зависимости от позиции</color>\nТратит все заряды.";
+            return Translator.GetString("trait_military_service_3", _moxieF.Format(args.stacks)) + 
+                   Translator.GetString("trait_military_service_4");
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

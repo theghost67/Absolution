@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cFengMine : FieldCard
     {
         public cFengMine() : base("feng_mine", "explosive_mine", "adrenaline", "creators_mark")
         {
-            name = "Фэнг Мина";
-            desc = "Всемилюбимая жертва каждого убийцы. Возможно, что её вызывающий наряд привлекает этих маньяков, хотя Фэнг и не против лишний раз побегать от них. " +
-                   "До сих пор её никто не может поймать, а всё из-за фугасных мин, разрывающих тех самых убийц на куски. На самом деле, большинство из них уже не хотят за ней гнаться...";
+            name = Translator.GetString("card_feng_mine_1");
+            desc = Translator.GetString("card_feng_mine_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tCult() : base(ID)
         {
-            name = "Культ";
-            desc = "Меня начали интересовать тёмные, незримые большинством науки.";
+            name = Translator.GetString("trait_cult_1");
+            desc = Translator.GetString("trait_cult_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -30,10 +30,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на союзной карте рядом без навыка {name}</color>\nДаёт цели этот навык со стольким же количеством зарядов и " +
-                   $"понижает её инициативу на {_moxieF.Format(args.stacks, true)}. Наносит стороне-владельцу урон, равный {_damageF.Format(args.stacks)} от силы цели.\n\n" +
-                   $"<color>При получении зарядов навыка {name} владельцем, установленным на поле</color>\n" +
-                   $"Увеличивает здоровье и силу владельца на {_statsF.Format(args.stacks, true)}. При потере зарядов бонус будет утрачен.";
+            return Translator.GetString("trait_cult_3", name, _moxieF.Format(args.stacks, true), _damageF.Format(args.stacks), name, _statsF.Format(args.stacks, true));
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

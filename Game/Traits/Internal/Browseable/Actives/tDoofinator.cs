@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tDoofinator() : base(ID)
         {
-            name = "Фуфел-инатор";
-            desc = "Трепещи, Перри-утконос, Фуфел-инатор!";
+            name = Translator.GetString("trait_doofinator_1");
+            desc = Translator.GetString("trait_doofinator_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>При активации на вражеской карте рядом</color>\n" +
-                   $"Если здоровье цели ≤ {_healthF.Format(args.stacks)}, она превратится в карту {cardName} с такими же характеристиками, как у владельца. Тратит все заряды.";
+            return Translator.GetString("trait_doofinator_3", _healthF.Format(args.stacks), cardName);
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

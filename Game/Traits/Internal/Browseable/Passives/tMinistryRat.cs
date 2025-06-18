@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using System;
 using System.Linq;
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tMinistryRat() : base(ID)
         {
-            name = "Министерская крыса";
-            desc = "Вы все одинаковые.";
+            name = Translator.GetString("trait_ministry_rat_1");
+            desc = Translator.GetString("trait_ministry_rat_2");
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода, если владелец один на своей стороне территории</color>\n" +
-                   $"Перемещает владельца на вражеское поле напротив, если оно не занято. Тратит все заряды.";
+            return Translator.GetString("trait_ministry_rat_3");
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

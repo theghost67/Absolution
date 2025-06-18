@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cPhantom : FieldCard
     {
         public cPhantom() : base("phantom", "teleportation_bag 2", "deadly_crit")
         {
-            name = "Фантомка";
-            desc = "Множество лет скитаний по лесам научили её искуссным навыкам убийства, позволяя выдавать смертельные критические удары каждому, " +
-                   "кто встанет у неё на пути. Но спустя какое-то время она задумалась о своих действиях, и решила перестать таким заниматься. В лесах.";
+            name = Translator.GetString("card_phantom_1");
+            desc = Translator.GetString("card_phantom_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

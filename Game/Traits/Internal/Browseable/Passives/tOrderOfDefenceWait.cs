@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using System;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tOrderOfDefenceWait() : base(ID)
         {
-            name = "Приказ о защите (ждёт)";
-            desc = "Приказ получен, выдвигаюсь на позицию.";
+            name = Translator.GetString("trait_order_of_defence_wait_1");
+            desc = Translator.GetString("trait_order_of_defence_wait_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -30,8 +30,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>В начале хода на территории</color>\n" +
-                    $"Даёт владельцу навык <nobr><u>{traitName}</u></nobr> с {_stacksF.Format(args.stacks)} зарядов. Тратит все заряды.";
+            return Translator.GetString("trait_order_of_defence_wait_3", traitName, _stacksF.Format(args.stacks));
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

@@ -12,8 +12,8 @@ namespace Game.Cards
 
         public cNoed() : base(ID)
         {
-            name = "Никому не скрыться от смерти";
-            desc = "Любимый всеми убийцами мира тотем, позволяющий убить любую жертву одним движением пальца. Не можешь победить? Бери НОЕД.";
+            name = Translator.GetString("card_noed_1");
+            desc = Translator.GetString("card_noed_2");
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 3);
@@ -24,7 +24,7 @@ namespace Game.Cards
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"Даёт всем вражеским картам навык <nobr><u>{traitName}</u></nobr>.";
+            return Translator.GetString("card_noed_3", traitName);
         }
         public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
         {

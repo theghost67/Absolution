@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cCarl : FieldCard
     {
         public cCarl() : base("carl", "reporting", "ministry_rat")
         {
-            name = "Карл-0";
-            desc = "Карл Штейн, некогда занимающий должность смотрителя дома, решил окончательно перейти на сторону министерства," +
-                   "предав всех, кого он знал. Не следует переступать ему дорогу, если только вы не хотите оказаться за решёткой.";
+            name = Translator.GetString("card_carl_1");
+            desc = Translator.GetString("card_carl_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

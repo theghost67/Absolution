@@ -19,8 +19,8 @@ namespace Game.Traits
 
         public tLoad() : base(ID)
         {
-            name = "Загрузка данных";
-            desc = "ВЫПОЛНЯЮ ЗАГРУЗКУ СУЩЕСТВУЮЩЕГО ФАЙЛА СОХРАНЕНИЯ.";
+            name = Translator.GetString("trait_load_1");
+            desc = Translator.GetString("trait_load_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -31,8 +31,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале каждого {TURNS}-го хода</color>\n" +
-                   $"Восстанавливает стороне-владельцу столько же здоровья, сколько здоровье владельца. Может активироваться в рукаве.";
+            return Translator.GetString("trait_load_3", TURNS);
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

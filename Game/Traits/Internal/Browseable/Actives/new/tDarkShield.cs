@@ -20,8 +20,8 @@ namespace Game.Traits
 
         public tDarkShield() : base(ID)
         {
-            name = "Тёмный щит";
-            desc = "Вы будете служить мне вечно, мои воины.";
+            name = Translator.GetString("trait_dark_shield_1");
+            desc = Translator.GetString("trait_dark_shield_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -34,11 +34,10 @@ namespace Game.Traits
         {
             object darkStacks = null;
             args.table?.Storage.TryGetValue(KEY, out darkStacks);
-            string str = $"<color>При активации на территории</color>\nДарует союзным картам рядом {_healthBuffF.Format(args.stacks)} от здоровья владельца. " +
-                         $"Получает {_chargesPerKillF.Format(args.stacks)} зарядов тьмы после убийства карты владельцем. " +
-                         $"Этот навык можно использовать только при наличии одного или более зарядов тьмы.";
+            string str = Translator.GetString("trait_dark_shield_3", _healthBuffF.Format(args.stacks), _chargesPerKillF.Format(args.stacks));
+
             if (darkStacks != null)
-                str += $" Зарядов тьмы: <color=#FF00FF>{(int)darkStacks}</color>.";
+                str += Translator.GetString("trait_dark_shield_4", (int)darkStacks);
             return str;
         }
         public override BattleWeight Weight(IBattleTrait trait)

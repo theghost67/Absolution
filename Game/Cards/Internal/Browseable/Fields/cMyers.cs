@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cMyers : FieldCard
     {
         public cMyers() : base("michael_myers", "stalker", "camper", "mikelove")
         {
-            name = "Майкл Майерс";
-            desc = "Один из самых жутких убийц, Майкл Майерс, перед тем, как убить свою цель, пристально наблюдал за ней на расстоянии в своей зловещей маске, заставляя её паниковать. " +
-                   "Под действием паники, его жертвы всегда действовали нелогично и просто тупо, раскрывая свою уязвимость.";
+            name = Translator.GetString("card_myers_1");
+            desc = Translator.GetString("card_myers_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tMyStory() : base(ID)
         {
-            name = "Это моя история";
-            desc = "Это история о человеке по имени Стенли.";
+            name = Translator.GetString("trait_my_story_1");
+            desc = Translator.GetString("trait_my_story_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -29,8 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на территории</color>\nДо следующего хода, владелец игнорирует любой урон и любые внешние попытки наложения навыков на него. " +
-                   $"На следующем ходу, тратит все заряды. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_my_story_3", CD);
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

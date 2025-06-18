@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using UnityEngine;
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tShootingPassion() : base(ID)
         {
-            name = "Стрелковый азарт";
-            desc = "Только убивая, они чувствуют, что живут.";
+            name = Translator.GetString("trait_shooting_passion_1");
+            desc = Translator.GetString("trait_shooting_passion_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После любой убийства карты владельцем</color>\n" +
-                   $"увеличивает инициативу владельца на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_shooting_passion_3", _moxieF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

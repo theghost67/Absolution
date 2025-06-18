@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System;
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tBlock() : base(ID)
         {
-            name = "Блок";
-            desc = "И что ты сделаешь? Что ты сделаешь?";
+            name = Translator.GetString("trait_block_1");
+            desc = Translator.GetString("trait_block_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки на владельца</color>\n" +
-                   $"Уменьшает количество зарядов на 1 и силу атаки до нуля.";
+            return Translator.GetString("trait_block_3");
+
         }
         //public override BattleWeight Weight(IBattleTrait trait)
         //{

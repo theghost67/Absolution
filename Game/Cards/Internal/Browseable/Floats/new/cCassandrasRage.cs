@@ -10,8 +10,8 @@ namespace Game.Cards
 
         public cCassandrasRage() : base(ID)
         {
-            name = "Кассандра в ярости";
-            desc = $"Как я вижу, твоя колония пребывает в безмятежности? Да, приятное зрелище. Даже слишком. Пара ядерных ударов это исправит.";
+            name = Translator.GetString("card_cassandras_rage_1");
+            desc = Translator.GetString("card_cassandras_rage_2");
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 3);
@@ -21,7 +21,7 @@ namespace Game.Cards
 
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return $"Понижает здоровье и силу всех вражеских карт на 100%.";
+            return Translator.GetString("card_cassandras_rage_3");
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

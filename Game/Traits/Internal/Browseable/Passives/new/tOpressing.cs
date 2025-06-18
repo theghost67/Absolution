@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tOpressing() : base(ID)
         {
-            name = "Угнетатель";
-            desc = "Да как же ты меня З#%&?@!...";
+            name = Translator.GetString("trait_opressing_1");
+            desc = Translator.GetString("trait_opressing_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -30,8 +30,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После убийства карты владельцем</color>\nПовышает инициативу владельца на {_moxieBuffF.Format(args.stacks)} и его силу на " +
-                   $"{_strengthBuffF.Format(args.stacks)}, но понижает инициативу всех остальных союзных карт на {_moxieDebuffF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_opressing_3", _moxieBuffF.Format(args.stacks), _strengthBuffF.Format(args.stacks), _moxieDebuffF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

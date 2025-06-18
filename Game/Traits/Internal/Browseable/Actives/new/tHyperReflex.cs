@@ -26,8 +26,8 @@ namespace Game.Traits
 
         public tHyperReflex() : base(ID)
         {
-            name = "Сверхрефлекс";
-            desc = "Я быстрый, как ветер!.. Сегодня штиль, идиот.";
+            name = Translator.GetString("trait_hyper_reflex_1");
+            desc = Translator.GetString("trait_hyper_reflex_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -39,12 +39,12 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             ReflexModeState reflexState = GetReflexModeState(args.table);
-            string str = "<color>При активации на территории или в рукаве</color>\nПереключает режим рефлекса. При включённом режиме рефлекса, " +
-                         "один раз за ход позволяет уклониться от атаки путём перемещения на соседнее поле (левое, правое).";
+            string str = Translator.GetString("trait_hyper_reflex_3");
+
             if (reflexState != ReflexModeState.Removed)
             {
-                string reflexModeStr = reflexState != ReflexModeState.Disabled ? "<color=green>ВКЛ</color>" : "<color=red>ВЫКЛ</color>";
-                str += $" Режим рефлекса: {reflexModeStr}.";
+                string reflexModeStr = reflexState != ReflexModeState.Disabled ? Translator.GetString("trait_hyper_reflex_4") : Translator.GetString("trait_hyper_reflex_5");
+                str += Translator.GetString("trait_hyper_reflex_6", reflexModeStr);
             }
             return str;
         }
@@ -65,13 +65,13 @@ namespace Game.Traits
 
             if (reflexMode == ReflexModeState.Disabled)
             {
-                await e.AnimActivationShort($"{name}: ВКЛ");
+                await e.AnimActivationShort(Translator.GetString("trait_hyper_reflex_7", name));
                 owner.OnInitiationPreReceived.Add(trait.GuidStr, OnInitiationPreReceived);
                 SetReflexModeState(trait, ReflexModeState.Enabled);
             }
             else
             {
-                await e.AnimActivationShort($"{name}: ВЫКЛ");
+                await e.AnimActivationShort(Translator.GetString("trait_hyper_reflex_8", name));
                 owner.OnInitiationPreReceived.Remove(trait.GuidStr);
                 SetReflexModeState(trait, ReflexModeState.Disabled);
             }

@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tCheats() : base(ID)
         {
-            name = "Читы";
-            desc = "Даже читы тебе не помогут.";
+            name = Translator.GetString("trait_cheats_1");
+            desc = Translator.GetString("trait_cheats_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Пока находится на поле</color>\nРаскрывает рукав противника.";
+            return Translator.GetString("trait_cheats_3");
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -48,7 +48,7 @@ namespace Game.Traits
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
+            if (trait == null || trait.Owner == null) return;
             if (owner.Drawer == null) return;
 
             bool hadField = owner.LastField != null;

@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cWilson() : base("starve_wilson", "hardened", "dont_starve")
         {
-            name = "Уилсон";
-            desc = "Как-то раз Уилсон решил довериться Максвеллу, построив механизм невероятной сложности по его чертежам. Механизм заработал, и не спрашивая мнения Уилсона" +
-                   "затянул его внутрь себя. Уилсон оказался в Постоянной. Долгие годы он был вынужден питаться мясом монстров и пережаренными ягодами, в полном одиночестве. " +
-                   "Но это его только закалило.";
+            name = Translator.GetString("card_wilson_1");
+            desc = Translator.GetString("card_wilson_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tPocketDimension() : base(ID)
         {
-            name = "Карманное измерение";
-            desc = "Не ждал меня?";
+            name = Translator.GetString("trait_pocket_dimension_1");
+            desc = Translator.GetString("trait_pocket_dimension_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\n" +
-                   $"Перемещает владельца на поле напротив вражеской карты с наименьшим здоровьем. Тратит один заряд.";
+            return Translator.GetString("trait_pocket_dimension_3");
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

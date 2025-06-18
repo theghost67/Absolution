@@ -19,8 +19,8 @@ namespace Game.Traits
 
         public tMindSplit() : base(ID)
         {
-            name = "Разделение сознания";
-            desc = "Зачем работать, когда чёрные могут сделать всю работу за тебя? Ой, в смысле-";
+            name = Translator.GetString("trait_mind_split_1");
+            desc = Translator.GetString("trait_mind_split_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -32,10 +32,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>При активации на незанятом поле рядом</color>\nУменьшает силу и здоровье владельца на значение, равное половине этих характеристик, и создаёт " +
-                   $"карту <nobr><u>{cardName}</u></nobr> на указанном поле со здоровьем, силой и инициативой, равными половине этих характеристик владельца. " +
-                   $"Стоимость и инициатива клона копируются у владельца. Навык можно применять, пока здоровье владельца не равно единице. Перезарядка: {CD} х.\n\n" +
-                   $"<color>При активации на карте <nobr><u>{cardName}</u></nobr></color>\nУбивает карту (игнор восстановления) и переносит её силу и здоровье владельцу. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_mind_split_3", cardName, CD, cardName, CD);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {
@@ -86,7 +84,7 @@ namespace Game.Traits
                 await clone.TryKill(BattleKillMode.IgnoreHealthRestore, trait);
                 if (!clone.IsKilled)
                 {
-                    clone.Drawer?.CreateTextAsSpeech("Не хочешь возвращаться\nк папочке?", Color.red);
+                    clone.Drawer?.CreateTextAsSpeech(Translator.GetString("trait_mind_split_4"), Color.red);
                     return;
                 }
                 await owner.Health.AdjustValue(cloneHealth, trait);

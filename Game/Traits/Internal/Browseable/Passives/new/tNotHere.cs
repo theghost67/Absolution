@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tNotHere() : base(ID)
         {
-            name = "Меня здесь нет";
-            desc = "...Он ушёл?";
+            name = Translator.GetString("trait_not_here_1");
+            desc = Translator.GetString("trait_not_here_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед получением атаки владельцем</color>\nОтменяет атаку на себя.\n\n" +
-                   $"<color>После убийства карты владельцем или в начале {TURN_AGE_TO_REMOVE}-го хода на территории</color>\nТратит все заряды.";
+            return Translator.GetString("trait_not_here_3", TURN_AGE_TO_REMOVE);
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

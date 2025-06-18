@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cRussian : FieldCard
     {
         public cRussian() : base("russian", "look_of_despair")
         {
-            name = "Россиянин";
-            desc = "Насмотревшись на серость, окружающую его на протяжении всей жизни, он сам стал серым и унылым. " +
-                   "Большинство просто избегают зрительного контакта с ним или делают вид, что его нет, лишь бы не стать таким же.";
+            name = Translator.GetString("card_russian_1");
+            desc = Translator.GetString("card_russian_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);

@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tSunrisingFlame() : base(ID)
         {
-            name = "Пламя восходящего солнца";
-            desc = "Ещё один шаг, и я сожгу тебя заживо.";
+            name = Translator.GetString("trait_sunrising_flame_1");
+            desc = Translator.GetString("trait_sunrising_flame_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -29,9 +29,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При активации на территории</color>\nУбивает владельца (игнор. восстановления и неуязвимости), " +
-                   $"равномерно накладывая навык {traitName} на всех противников. " +
-                   $"Общее количество накладываемых зарядов равняется здоровью владельца, делённому на количество противников.";
+            return Translator.GetString("trait_sunrising_flame_3", traitName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

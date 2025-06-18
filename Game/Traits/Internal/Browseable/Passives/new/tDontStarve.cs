@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tDontStarve() : base(ID)
         {
-            name = "Не голодать";
-            desc = "О, чёрт! Я забыл взять еды! Чарли, не поделишься?";
+            name = Translator.GetString("trait_dont_starve_1");
+            desc = Translator.GetString("trait_dont_starve_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -27,7 +27,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После установки на поле</color>\nУвеличивает своё здоровье на {_healthF.Format(args.stacks)} за каждое пустое союзное поле. Тратит все заряды.";
+            return Translator.GetString("trait_dont_starve_3", _healthF.Format(args.stacks));
         }
         public override float Points(FieldCard owner, int stacks)
         {

@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cMercy : FieldCard
     {
         public cMercy() : base("mercy", "healing_beam", "empowering_beam", "heroes_never_die")
         {
-            name = "Мёрси";
-            desc = "Карманный ангел-спаситель, способный создать из кого угодно машину смерти. Хотите безграничную мощь? Попробуйте карманного ангела. " +
-                   "Защитите её от всяких безумцев с луками и катанами - и она ваша.";
+            name = Translator.GetString("card_mercy_1");
+            desc = Translator.GetString("card_mercy_2");
+
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 3);

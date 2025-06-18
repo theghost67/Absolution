@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Collections.Generic;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tPrediction() : base(ID)
         {
-            name = "Предсказание";
-            desc = "Я предсказываю, что ты прочтёшь этот текст. Скорее всего, ровно один раз.";
+            name = Translator.GetString("trait_prediction_1");
+            desc = Translator.GetString("trait_prediction_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении любой союзной карты на территории</color>\n" +
-                   $"увеличивает инициативу цели на {_moxieF.Format(args.stacks, true)}. Эффект пропадает в случае, если: заряды истощаются, карта перестаёт быть союзной или владелец погибает.";
+            return Translator.GetString("trait_prediction_3", _moxieF.Format(args.stacks, true));
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

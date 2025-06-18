@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
 using Game.Sleeves;
@@ -660,11 +660,8 @@ namespace Game.Menus
         {
             public InfoButtonDrawer(CardUpgradeMenu menu) : base(menu, menu.Transform.Find("Info button"))
             {
-                const string TEXT = "Нажмите ЛКМ или ПКМ по иконке характеристики, чтобы увеличить или уменьшить её значение. " +
-                                    "Нажатие мышью на навык изменит изначальное количество его зарядов. " +
-                                    "Зажатие клавиш Ctrl/Shift увеличит количество совершаемых улучшений за раз. " +
-                                    "\n\nДоступные характеристики для изменения:\n- Инициатива\n- Здоровье\n- Сила";
-                SetTooltip(TEXT);
+                string text = Translator.GetString("card_upgrade_menu_1");
+                SetTooltip(text);
                 SetTooltipAlign(HorizontalAlignmentOptions.Right);
             }
         }
@@ -696,8 +693,8 @@ namespace Game.Menus
             void UpdateTexts()
             {
                 float curPoints = menu._sleeve.Cast<CardToUpgrade>().Sum(c => c.CurrentPoints).Rounded(0);
-                _normalText = $"СБРОСИТЬ ВСЁ<color=grey><size=75%>\nсейчас: {curPoints} ОП";
-                _hoverText = $"<u>СБРОСИТЬ ВСЁ</u><color=grey><size=75%>\nсейчас: {curPoints} ОП";
+                _normalText = Translator.GetString("card_upgrade_menu_2", curPoints);
+                _hoverText = Translator.GetString("card_upgrade_menu_3", curPoints);
 
                 textMesh.text = _normalText;
             }
@@ -709,6 +706,7 @@ namespace Game.Menus
 
             public ResetThisButtonDrawer(CardUpgradeMenu menu) : base(menu, menu.Transform.Find("Center button")) 
             {
+                UpdateTexts();
                 gameObject.SetActive(false);
                 menu.OnSelectedChanged += UpdateTexts;
                 menu.OnDeckPointsChanged += delta => UpdateTexts();
@@ -738,19 +736,22 @@ namespace Game.Menus
                 if (selected == null) return;
 
                 float curPoints = selected.CurrentPoints.Rounded(0);
-                _normalText = $"СБРОСИТЬ КАРТУ<color=grey><size=75%>\nсейчас: {curPoints} ОП";
-                _hoverText = $"<u>СБРОСИТЬ КАРТУ</u><color=grey><size=75%>\nсейчас: {curPoints} ОП";
+                _normalText = Translator.GetString("card_upgrade_menu_4", curPoints);
+                _hoverText = Translator.GetString("card_upgrade_menu_5", curPoints);
 
                 textMesh.text = _normalText;
             }
         }
         class FinishButtonDrawer : ButtonDrawer
         {
-            const string NORMAL_TEXT = "ЗАВЕРШИТЬ >><color=grey><size=75%>\nпринять изменения";
-            const string HOVER_OK_TEXT = "<u>ЗАВЕРШИТЬ >></u><color=grey><size=75%>\nпринять изменения";
-            const string HOVER_ERR_TEXT = "<color=red><u>ЗАВЕРШИТЬ >></u><color=grey><size=75%>\nпринять изменения";
+            static readonly string NORMAL_TEXT = Translator.GetString("card_upgrade_menu_6");
+            static readonly string HOVER_OK_TEXT = Translator.GetString("card_upgrade_menu_7");
+            static readonly string HOVER_ERR_TEXT = Translator.GetString("card_upgrade_menu_8");
 
-            public FinishButtonDrawer(CardUpgradeMenu menu) : base(menu, menu.Transform.Find("Right button")) { }
+            public FinishButtonDrawer(CardUpgradeMenu menu) : base(menu, menu.Transform.Find("Right button"))
+            {
+                textMesh.text = NORMAL_TEXT;
+            }
 
             protected override void OnMouseEnterBase(object sender, DrawerMouseEventArgs e)
             {
@@ -835,13 +836,13 @@ namespace Game.Menus
         void WriteCurrentState(string desc)
         {
             if (desc != "")
-                desc = desc.Insert(0, "<color=grey>// ТЕКУЩЕЕ СОСТОЯНИЕ //</color>\n\n");
+                desc = desc.Insert(0, Translator.GetString("card_upgrade_menu_9"));
             _descLeftTextMesh.text = desc;
         }
         void WriteUpgradedState(string desc)
         {
             if (desc != "")
-                desc = desc.Insert(0, "<color=#408040>// БУДУЩЕЕ СОСТОЯНИЕ //</color>\n\n");
+                desc = desc.Insert(0, Translator.GetString("card_upgrade_menu_10"));
             _descRightTextMesh.text = desc;
         }
 
@@ -853,10 +854,10 @@ namespace Game.Menus
             string upgradePriceStr = (-upgradedPointsDelta.Clamped(-9999, 9999).Rounded(0)).ToSignedString();
             string downgradePriceStr = (-downgradedPointsDelta.Clamped(-9999, 9999).Rounded(0)).ToSignedString();
 
-            _infoLeftTextMesh.text = $"УЛУЧШИТЬ:\n{upgradePriceStr} ОП";
+            _infoLeftTextMesh.text = Translator.GetString("card_upgrade_menu_11", upgradePriceStr);
             _infoLeftTextMesh.color = upgradedPointsDelta == 0 ? Color.gray : Color.white;
 
-            _infoRightTextMesh.text = $"УХУДШИТЬ:\n{downgradePriceStr} ОП";
+            _infoRightTextMesh.text = Translator.GetString("card_upgrade_menu_12", downgradePriceStr);
             _infoRightTextMesh.color = downgradedPointsDelta == 0 ? Color.gray : Color.white;
         }
         void UpgradeInfoHide() 
@@ -900,7 +901,7 @@ namespace Game.Menus
             else if (_pointsAvailable < 0)
                  pointsStr = $"<color=red>{points}</color>";
             else pointsStr = points.ToString();
-            _headerTextMesh.text = $"УЛУЧШИТЕ СВОИ КАРТЫ\n<size=75%>доступных очков прокачки: {pointsStr} ОП.";
+            _headerTextMesh.text = Translator.GetString("card_upgrade_menu_13", pointsStr);
         }
     }
 }

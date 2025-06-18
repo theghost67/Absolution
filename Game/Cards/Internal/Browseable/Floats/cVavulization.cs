@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +11,9 @@ namespace Game.Cards
 
         public cVavulization() : base("vavulization")
         {
-            name = "Вавулизация";
-            desc = "Глобальная Вавулизация населения, которую однажды желал инициировать Мошев для поддержания " +
-                   "умеренно-деградантского интеллектуального уровня населения и его последующего порабощения.";
+            name = Translator.GetString("card_vavulization_1");
+            desc = Translator.GetString("card_vavulization_2");
+
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 5);
@@ -24,9 +24,8 @@ namespace Game.Cards
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"Для активации требуется карта {cardName} на территории стороны-владельца. " +
-                   $"Превращает всех противников в карту <nobr><u>{cardName}</u><nobr> (без навыков). " +
-                   $"Карта может защититься от превращения, если только её нельзя убить.";
+            return Translator.GetString("card_vavulization_3", cardName, cardName);
+
         }
         public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
         {

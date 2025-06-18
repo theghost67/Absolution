@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tGrannyAlliance() : base(ID)
         {
-            name = "Альянс бабуль";
-            desc = "Чем нас больше, тем мы страшнее!";
+            name = Translator.GetString("trait_granny_alliance_1");
+            desc = Translator.GetString("trait_granny_alliance_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>При появлении карты <nobr>{cardName}</nobr> рядом с владельцем</color>\nУвеличивает силу владельца на {_strengthF.Format(args.stacks)}, " +
-                    "однако, при смерти одной из таких карт, владелец так же умрёт от атакующего.";
+            return Translator.GetString("trait_granny_alliance_3", cardName, _strengthF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

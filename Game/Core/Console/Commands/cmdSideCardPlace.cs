@@ -1,4 +1,4 @@
-﻿using Game.Cards;
+using Game.Cards;
 using Game.Menus;
 using Game.Territories;
 using GreenOne.Console;
@@ -10,12 +10,12 @@ namespace Game.Console
     public class cmdSideCardPlace : Command
     {
         const string ID = "sidecardplace";
-        const string DESC = "создаёт и устанавливает карту на наведённое поле сражения";
+        static readonly string DESC = Translator.GetString("command_side_card_place_1");
 
         class IdArg : CommandArg
         {
             const string ID = "id";
-            const string DESC = "ID для создания карты";
+            static readonly string DESC = Translator.GetString("command_side_card_place_2");
 
             public IdArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -28,7 +28,7 @@ namespace Game.Console
         class PointsArg : CommandArg
         {
             const string ID = "points";
-            const string DESC = "количество очков для улучшения карты";
+            static readonly string DESC = Translator.GetString("command_side_card_place_3");
 
             public PointsArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -50,12 +50,12 @@ namespace Game.Console
         {
             if (TableEventManager.CountAll() != 0)
             {
-                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_side_card_place_4"), LogType.Error);
                 return;
             }
             if (Menu.GetCurrent() is not IMenuWithTerritory menu || menu.Territory is not BattleTerritory territory)
             {
-                TableConsole.Log("Текущее меню не содержит территорию сражения.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_side_card_place_5"), LogType.Error);
                 return;
             }
 
@@ -67,7 +67,7 @@ namespace Game.Console
 
             if ((field == null && isFieldCard) || (field != null && field.Card != null))
             {
-                TableConsole.Log($"Невозможно установить карту на данную позицию.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_side_card_place_6"), LogType.Error);
                 return;
             }
 
@@ -76,7 +76,7 @@ namespace Game.Console
                  territory.PlaceFieldCard(fCard.ShuffleMainStats().UpgradeWithTraitAdd(points), field, null);
             else territory.PlaceFloatCard((FloatCard)card, field?.Side ?? territory.Player, null);
 
-            TableConsole.Log($"Карта {id} создана и установлена (от: null, принадлежит владельцу поля).", LogType.Log);
+            TableConsole.Log(Translator.GetString("command_side_card_place_7", id), LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

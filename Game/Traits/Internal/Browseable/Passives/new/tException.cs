@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tException() : base(ID)
         {
-            name = "Исключение";
-            desc = "Вас пора исключить.";
+            name = Translator.GetString("trait_exception_1");
+            desc = Translator.GetString("trait_exception_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После убийства любой карты владельцем</color>\nУбивает карты с таким же идентификатором, как у жертвы.";
+            return Translator.GetString("trait_exception_3");
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

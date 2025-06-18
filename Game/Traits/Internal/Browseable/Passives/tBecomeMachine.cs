@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using UnityEngine;
@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tBecomeMachine() : base(ID)
         {
-            name = "Стать машиной";
-            desc = "Я думал- Я думал, что...";
+            name = Translator.GetString("trait_become_machine_1");
+            desc = Translator.GetString("trait_become_machine_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -30,8 +30,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(OBS_CARD_ID).name;
-            return $"<color>При появлении карты <nobr><u>{cardName}</u></nobr> на вражеской стороне</color>\n" +
-                   $"Уменьшает силу владельца на {_strengthF.Format(args.stacks)} и его инициативу на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_become_machine_3", cardName, _strengthF.Format(args.stacks), _moxieF.Format(args.stacks, true));
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

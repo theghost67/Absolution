@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tDoubleAttack() : base(ID)
         {
-            name = "Двойная атака";
-            desc = "И тебе по лицу, и тебе по лицу!";
+            name = Translator.GetString("trait_double_attack_1");
+            desc = Translator.GetString("trait_double_attack_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед каждой последующей атакой владельца</color>\n" +
-                   $"Если цель атаки только одна - карты рядом с целью так же станут целями (исключая первоначальную цель). Сила атаки будет распределена равномерно.";
+            return Translator.GetString("trait_double_attack_3");
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

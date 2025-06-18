@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using UnityEngine;
@@ -17,7 +17,7 @@ namespace Game.Traits
         public tItsGuard() : base(ID)
         {
             name = "It's a guard!";
-            desc = "ОУ ЩИТ, ИТС ДЖАГЕР!";
+            desc = Translator.GetString("trait_its_guard_1");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -28,9 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении вражеской карты рядом с владельцем</color>\n" +
-                   $"Если поле напротив цели свободно, перемещает владельца на это поле и атакует цель с силой в {_strengthF.Format(args.stacks, true)} от силы владельца. " +
-                   $"Не сработает, если цель расположена напротив владельца. Эффект может быть активирован только один раз за ход.";
+            return Translator.GetString("trait_its_guard_2", _strengthF.Format(args.stacks, true));
+
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {

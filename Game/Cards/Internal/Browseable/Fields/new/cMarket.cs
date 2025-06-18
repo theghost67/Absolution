@@ -1,11 +1,11 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cMarket : FieldCard
     {
         public cMarket() : base("market", "shopping")
         {
-            name = "Чёрный рынок";
-            desc = "Кто готов к шопингу?";
+            name = Translator.GetString("card_market_1");
+            desc = Translator.GetString("card_market_2");
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 0);

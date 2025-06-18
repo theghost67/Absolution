@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tPlunder() : base(ID)
         {
-            name = "Разграбление";
-            desc = "Мы войдём в историю.";
+            name = Translator.GetString("trait_plunder_1");
+            desc = Translator.GetString("trait_plunder_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -30,8 +30,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки на карту владельцем</color>\nУвеличивает урон атаки на {_strengthF.Format(args.stacks)} за каждую " +
-                   $"пустую ячейку стоимости цели (макс. {MAX_EFFECT_STACKS}). Если целей несколько, будет учитываться минимальная стоимость среди целей.";
+            return Translator.GetString("trait_plunder_3", _strengthF.Format(args.stacks), MAX_EFFECT_STACKS);
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

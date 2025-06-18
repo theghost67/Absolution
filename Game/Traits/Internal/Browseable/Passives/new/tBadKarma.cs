@@ -17,7 +17,7 @@ namespace Game.Traits
 
         public tBadKarma() : base(ID)
         {
-            name = "Плохая карма";
+            name = Translator.GetString("trait_bad_karma_1");
             desc = "Listen, mark my words, one daaay; you will paaay, you will paaaaaay! Karma's gonna come collect your debt!";
 
             rarity = Rarity.Rare;
@@ -30,8 +30,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>После накопления {TRAIT_STACKS} ед. зарядов</color>\nВ начале каждого хода будет пытаться установить карту <nobr><u>{cardName}</u></nobr> напротив владельца. " +
-                   $"Тратит все заряды, если карта была успешно установлена.";
+            return Translator.GetString("trait_bad_karma_2", TRAIT_STACKS, cardName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

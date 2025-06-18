@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cClues : FieldCard
     {
         public cClues() : base("clues", "summarizing")
         {
-            name = "Улики";
-            desc = "Совершенно секретная информация, которая используется против вас. Любое ваше действие, указанное в этих бумагах, " +
-                   "будет достаточным аргументом, чтобы заставить вас замолчать навсегда. Возможно, стоит избавиться от этих улик?";
+            name = Translator.GetString("card_clues_1");
+            desc = Translator.GetString("card_clues_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 0);

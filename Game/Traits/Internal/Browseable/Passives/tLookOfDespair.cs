@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tLookOfDespair() : base(ID)
         {
-            name = "Взгляд отчаяния";
-            desc = "Я видел некоторое дерьмо...";
+            name = Translator.GetString("trait_look_of_despair_1");
+            desc = Translator.GetString("trait_look_of_despair_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении карты напротив владельца</color>\nУменьшает инициативу цели на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_look_of_despair_3", _moxieF.Format(args.stacks, true));
         }
 
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)

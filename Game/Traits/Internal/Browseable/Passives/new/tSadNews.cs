@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tSadNews() : base(ID)
         {
-            name = "Печальные вести";
-            desc = "Вынужден вас расстроить - вы скоро нас покинете.";
+            name = Translator.GetString("trait_sad_news_1");
+            desc = Translator.GetString("trait_sad_news_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Будучи на территории, после смерти любой карты</color>\nПонижает инициативу владельца на {_moxieF.Format(args.stacks)} " +
-                   $"и повышает его силу на {_strengthF.Format(args.stacks)}";
+            return Translator.GetString("trait_sad_news_3", _moxieF.Format(args.stacks), _strengthF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Effects;
 using Game.Territories;
@@ -21,8 +21,8 @@ namespace Game.Traits
 
         public tWeaving() : base(ID)
         {
-            name = "Пряжение";
-            desc = "Со временем коконы подарили мне ещё больше друзей.";
+            name = Translator.GetString("trait_weaving_1");
+            desc = Translator.GetString("trait_weaving_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -36,7 +36,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>В начале хода на территории</color>\nДаёт стороне-владельцу карту <nobr><color><u>{cardName}</u></color></nobr>. Тратит все заряды.";
+            return Translator.GetString("trait_weaving_3", cardName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {
@@ -83,7 +83,7 @@ namespace Game.Traits
             newCard.strength = formula;
 
             if (!trait.Side.Sleeve.Add(newCard))
-                owner.Drawer?.CreateTextAsSpeech("Полная рука!", UnityEngine.Color.red);
+                owner.Drawer?.CreateTextAsSpeech(Translator.GetString("trait_weaving_4"), UnityEngine.Color.red);
             await trait.SetStacks(0, trait);
         }
     }

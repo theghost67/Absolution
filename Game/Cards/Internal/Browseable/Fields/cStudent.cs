@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cStudent : FieldCard
     {
         public cStudent() : base("student", "scholar")
         {
-            name = "Студент";
-            desc = "Прошло несколько лет с тех пор, как он поступил в так называемое ЧУПО КЖК. Он рассчитывал, что получит актуальные " +
-                   "знания по его любимой профессии, но на самом деле он получил только разочарование. Печальная история.";
+            name = Translator.GetString("card_student_1");
+            desc = Translator.GetString("card_student_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

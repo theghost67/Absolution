@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tHammerOut() : base(ID)
         {
-            name = "Молот ушёл!";
-            desc = "Он ушёл, но обещал вернуться.";
+            name = Translator.GetString("trait_hammer_out_1");
+            desc = Translator.GetString("trait_hammer_out_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,8 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на любой вражеской карте</color>\nНаносит цели {_damageF.Format(args.stacks)} урона и " +
-                   $"понижает её инициативу на {_moxieF.Format(args.stacks, true)}. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_hammer_out_3", _damageF.Format(args.stacks), _moxieF.Format(args.stacks, true), CD);
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

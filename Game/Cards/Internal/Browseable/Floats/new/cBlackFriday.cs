@@ -10,10 +10,9 @@ namespace Game.Cards
 
         public cBlackFriday() : base(ID)
         {
-            name = "Чёрная пятница";
-            desc = "Некто заметил чёрную карту, валявшуюся на полу, на ней было выгравировано название - Чёрная пятница. Попробовал расплатиться ею, пользователь осознал, " +
-                   "что эта карта позволяет покупать товары с огромными скидками, даже если таковых нет. Неизвестный скупал машины, магазины, танки, компании. " +
-                   "Его активность быстро обнаружили представители Фонда, забрав карточку-аномалию и его самого с собой.";
+            name = Translator.GetString("card_black_friday_1");
+            desc = Translator.GetString("card_black_friday_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);
@@ -23,7 +22,7 @@ namespace Game.Cards
 
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return $"Даёт стороне-владельцу золото, равное количеству установленных карт на его стороне территории.";
+            return Translator.GetString("card_black_friday_3");
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleFloatCard> result)
         {

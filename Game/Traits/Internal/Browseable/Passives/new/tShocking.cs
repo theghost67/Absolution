@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tShocking() : base(ID)
         {
-            name = "Шокирующий";
-            desc = "Ы-хы-хы-хы!";
+            name = Translator.GetString("trait_shocking_1");
+            desc = Translator.GetString("trait_shocking_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -27,7 +27,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>После совершения атаки владельцем</color>\nНакладывает на цель навык <nobr><u>{traitName}</u></nobr>, если он у неё отсутствует.";
+            return Translator.GetString("trait_shocking_3", traitName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

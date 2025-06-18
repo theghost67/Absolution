@@ -4,9 +4,9 @@ namespace Game.Cards
     {
         public c626() : base("626", "naga_kwista", "multipaw")
         {
-            name = "Образец 626";
-            desc = "Инопланетный образец, полученный в результате экспериментов злого гения. Этот малыш способен поднимать вес в 3000 раз больше себя, " +
-                   "съедать целые автобусы и харкать кислотой на расстояние до 100 метров! Был способен. Сейчас он послушный пёсик одной Гавайской девочки...";
+            name = Translator.GetString("card_626_1");
+            desc = Translator.GetString("card_626_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);

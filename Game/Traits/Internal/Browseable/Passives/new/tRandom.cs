@@ -24,13 +24,13 @@ namespace Game.Traits
         static readonly List<Event> _events = new()
         {
             // do NOT use 0 as ID
-            new(1, 4,  $"уничтожает все остальные карты (сначала вражеские)"), 
-            new(2, 6,  $"уничтожает все вражеские карты"),
-            new(3, 10, $"увеличивает силу всех карт на {EV3_STRENGTH_BONUS * 100}% до следующего хода"), 
-            new(4, 20, $"уничтожает все союзные карты рядом"),
-            new(5, 20, $"увеличивает силу союзных карт рядом на {EV5_STRENGTH_BONUS * 100}%"), 
-            new(6, 20, $"увеличивает здоровье всех остальных союзных карт на {EV6_HEALTH_RESTORE * 100}%"), 
-            new(7, 20, $"уменьшает инициативу всех остальных карт на {EV7_MOXIE_DEBUFF} ед."),
+            new(1, 4,  Translator.GetString("trait_random_1")), 
+            new(2, 6,  Translator.GetString("trait_random_2")),
+            new(3, 10, Translator.GetString("trait_random_3", EV3_STRENGTH_BONUS * 100)), 
+            new(4, 20, Translator.GetString("trait_random_4")),
+            new(5, 20, Translator.GetString("trait_random_5", EV5_STRENGTH_BONUS * 100)), 
+            new(6, 20, Translator.GetString("trait_random_6", EV6_HEALTH_RESTORE * 100)), 
+            new(7, 20, Translator.GetString("trait_random_7", EV7_MOXIE_DEBUFF)),
         };
         string _guid;
 
@@ -50,8 +50,8 @@ namespace Game.Traits
 
         public tRandom() : base(ID)
         {
-            name = "ТОЛЬКО НЕ ЭТО";
-            desc = "ВЫ ЗАЧЕМ ЕГО РАЗБЛОКИРОВАЛИ???";
+            name = Translator.GetString("trait_random_8");
+            desc = Translator.GetString("trait_random_9");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -62,14 +62,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории, активирует <b>случайное</b> событие из нижеперечисленных</color>\n" +
-                   $"1. [{_events[0].probability}%] {_events[0].desc}\n" +
-                   $"2. [{_events[1].probability}%] {_events[1].desc}\n" +
-                   $"3. [{_events[2].probability}%] {_events[2].desc}\n" +
-                   $"4. [{_events[3].probability}%] {_events[3].desc}\n" +
-                   $"5. [{_events[4].probability}%] {_events[4].desc}\n" +
-                   $"6. [{_events[5].probability}%] {_events[5].desc}\n" +
-                   $"7. [{_events[6].probability}%] {_events[6].desc}";
+            return Translator.GetString("trait_random_10", _events[0].probability, _events[0].desc, _events[1].probability, _events[1].desc, _events[2].probability, _events[2].desc, _events[3].probability, _events[3].desc, _events[4].probability, _events[4].desc, _events[5].probability, _events[5].desc, _events[6].probability, _events[6].desc);
+
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -104,7 +98,7 @@ namespace Game.Traits
             Event newEvent = _events.GetWeightedRandom(e => e.probability);
             trait.Storage[LAST_EV_KEY] = newEvent.id;
 
-            await trait.AnimActivationShort($"СОБЫТИЕ #{newEvent.id}");
+            await trait.AnimActivationShort(Translator.GetString("trait_random_11", newEvent.id));
             switch (newEvent.id)
             {
                 case 1:

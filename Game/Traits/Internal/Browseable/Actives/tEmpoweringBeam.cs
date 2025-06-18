@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tEmpoweringBeam() : base(ID)
         {
-            name = "Усиливающий луч";
-            desc = "Покажи им!";
+            name = Translator.GetString("trait_empowering_beam_1");
+            desc = Translator.GetString("trait_empowering_beam_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -27,7 +27,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на союзной карте рядом</color>\nУвеличивает силу цели на {_strengthF.Format(args.stacks, true)}. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_empowering_beam_3", _strengthF.Format(args.stacks, true), CD);
         }
         public override float Points(FieldCard owner, int stacks)
         {

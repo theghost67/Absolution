@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cScp173 : FieldCard
     {
         public cScp173() : base("scp_173", "turning_point")
         {
-            name = "Печенька";
-            desc = "Разумная бетонная скульптура, перемещающаяся с высокой скоростью, когда её не видят. " +
-                   "Крайне враждебен к каждому человеку и пытается [ДАННЫЕ УДАЛЕНЫ], ломая его шею. Лучше не проморгайте её.";
+            name = Translator.GetString("card_scp173_1");
+            desc = Translator.GetString("card_scp173_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);

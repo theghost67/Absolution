@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using Unity.Mathematics;
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tScopePlus() : base(ID)
         {
-            name = "Прицел+";
-            desc = "Глубокий вдох и... Ещё один глубокий вдох и...";
+            name = Translator.GetString("trait_scope_plus_1");
+            desc = Translator.GetString("trait_scope_plus_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на любом вражеском поле</color>\nУказанная цель станет целью будущих атак владельца.";
+            return Translator.GetString("trait_scope_plus_3");
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {

@@ -1,11 +1,11 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cArchivist : FieldCard
     {
         public cArchivist() : base("archivist", "search_in_archive")
         {
-            name = "Сотрудник Архива";
-            desc = "Самый обыкновенный, ничем не примечательный сотрудник архива. Но это не значит, что он не сможет найти на вас компромат.";
+            name = Translator.GetString("card_archivist_1");
+            desc = Translator.GetString("card_archivist_2");
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

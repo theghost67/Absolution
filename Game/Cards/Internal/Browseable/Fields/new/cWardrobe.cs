@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cWardrobe() : base("wardrobe", "furniture_protection")
         {
-            name = "Шкаф";
-            desc = "Абсолютно лучшее средство защиты против любых угроз. Этот шкаф, походу, сделали из вибраниума, иначе невозможно понять, " +
-                   "как он вообще способен выдерживать удары такой космической силы. Поняв свою силу, шкаф обрёл самосознание и " +
-                   "сделал своим долгом защищать всё, что ему дорого (трусы на нижней полке).";
+            name = Translator.GetString("card_wardrobe_1");
+            desc = Translator.GetString("card_wardrobe_2");
+
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

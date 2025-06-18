@@ -22,7 +22,7 @@ namespace Game.Traits
         public tBadTime() : base(ID)
         {
             name = "<color=red>BAD TIME</color>";
-            desc = "Какой прекрасный сегодня день. Птички поют, цветочки растут. В такой день, такие дети как ты... ДОЛЖНЫ ГОРЕТЬ В АДУ.";
+            desc = Translator.GetString("trait_bad_time_1");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -35,9 +35,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\nИзменяет множитель силы в зависимости от инициативы вражеских карт, " +
-                   $"1 ед. инициативы = {_strengthF.Format(args.stacks)} силы. Если сумма вражеской инициативы ≥ {ENEMY_MOXIE_THRESHOLD} ед., " +
-                   $"пока условие выполняется, даёт владельцу +{MOXIE_TO_GIVE} ед. инициативы. Сбрасывает эффект при отрицательной сумме инициативы.";
+            return Translator.GetString("trait_bad_time_2", _strengthF.Format(args.stacks), ENEMY_MOXIE_THRESHOLD, MOXIE_TO_GIVE);
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

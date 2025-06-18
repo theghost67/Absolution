@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using UnityEngine;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tAriRecord() : base(ID)
         {
-            name = "УРС запись";
-            desc = "Это не первая жертва убийцы. Значит, будут ещё.";
+            name = Translator.GetString("trait_ari_record_1");
+            desc = Translator.GetString("trait_ari_record_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,8 +29,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>После смерти союзной карты рядом с владельцем</color>\n" +
-                   $"Даёт владельцу навык <nobr><u>{traitName}</u></nobr> с {_traitsF.Format(args.stacks)} зарядами.";
+            return Translator.GetString("trait_ari_record_3", traitName, _traitsF.Format(args.stacks));
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

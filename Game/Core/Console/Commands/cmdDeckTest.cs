@@ -1,4 +1,4 @@
-﻿using Game.Cards;
+using Game.Cards;
 using GreenOne;
 using GreenOne.Console;
 using System;
@@ -10,12 +10,12 @@ namespace Game.Console
     public class cmdDeckTest : Command
     {
         const string ID = "decktest";
-        const string DESC = "тестирует распределения очков колоды для игрока и ИИ";
+        static readonly string DESC = Translator.GetString("command_deck_test_1");
 
         class StageArg : CommandArg
         {
             const string ID = "stage";
-            const string DESC = "этап, для которого создаётся колода";
+            static readonly string DESC = Translator.GetString("command_deck_test_2");
 
             public StageArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -41,11 +41,11 @@ namespace Game.Console
             int pointsPerCardForEnemy = GetPointsPerCardForEnemy(stage);
             CardDeck playerDeck = new(stage, pointsPerCardForPlayer);
             CardDeck enemyDeck = new(stage, pointsPerCardForEnemy);
-            TableConsole.Log($"Тест колод, этап {stage}.", LogType.Log);
-            TableConsole.Log($"Игрок: карт полей = {playerDeck.fieldCards.Count}, карт способностей = {playerDeck.fieldCards.Count}.", LogType.Log);
-            TableConsole.Log($"       очков на карту = {pointsPerCardForPlayer}, сумма очков = {playerDeck.Points}, сумма без навыков: {playerDeck.fieldCards.Sum(c => c.PointsWithoutTraits())}.", LogType.Log);
-            TableConsole.Log($"Противник: карт полей = {enemyDeck.fieldCards.Count}, карт способностей = {enemyDeck.fieldCards.Count}.", LogType.Log);
-            TableConsole.Log($"           очков на карту = {pointsPerCardForEnemy}, сумма очков = {enemyDeck.Points}, сумма без навыков: {enemyDeck.fieldCards.Sum(c => c.PointsWithoutTraits())}.", LogType.Log);
+            TableConsole.Log(Translator.GetString("command_deck_test_3", stage), LogType.Log);
+            TableConsole.Log(Translator.GetString("command_deck_test_4", playerDeck.fieldCards.Count, playerDeck.fieldCards.Count), LogType.Log);
+            TableConsole.Log(Translator.GetString("command_deck_test_5", pointsPerCardForPlayer, playerDeck.Points, playerDeck.fieldCards.Sum(c => c.PointsWithoutTraits())), LogType.Log);
+            TableConsole.Log(Translator.GetString("command_deck_test_6", enemyDeck.fieldCards.Count, enemyDeck.fieldCards.Count), LogType.Log);
+            TableConsole.Log(Translator.GetString("command_deck_test_7", pointsPerCardForEnemy, enemyDeck.Points, enemyDeck.fieldCards.Sum(c => c.PointsWithoutTraits())), LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

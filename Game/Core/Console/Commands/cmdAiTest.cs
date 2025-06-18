@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
@@ -15,7 +15,7 @@ namespace Game.Console
     public class cmdAiTest : Command
     {
         const string ID = "aitest";
-        const string DESC = "выполняет тестирование системы ИИ на виртуальных сражениях";
+        static readonly string DESC = Translator.GetString("command_ai_test_1");
 
         static readonly string _persistentPath = Application.persistentDataPath;
         static bool _executing;
@@ -24,7 +24,7 @@ namespace Game.Console
         class PointsArg : CommandArg
         {
             const string ID = "points";
-            const string DESC = "количество очков улучшений у каждой карты колоды (1-..)";
+            static readonly string DESC = Translator.GetString("command_ai_test_2");
 
             public PointsArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -41,7 +41,7 @@ namespace Game.Console
         class CountArg : CommandArg
         {
             const string ID = "count";
-            const string DESC = "количество повторений (1-1000)";
+            static readonly string DESC = Translator.GetString("command_ai_test_3");
 
             public CountArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -340,7 +340,7 @@ namespace Game.Console
         {
             if (_executing)
             {
-                TableConsole.Log("Команда находится в процессе выполнения.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_ai_test_4"), LogType.Error);
                 return;
             }
             _executing = true;
@@ -389,18 +389,18 @@ namespace Game.Console
                 }
                 catch (Exception ex)
                 {
-                    TableConsole.Log($"Ошибка во время теста #{i + 1}.", LogType.Error);
+                    TableConsole.Log(Translator.GetString("command_ai_test_5", i + 1), LogType.Error);
                     string path = $"{_persistentPath}\\{ID}\\{i + 1}-error.log";
                     Directory.CreateDirectory(Path.GetDirectoryName(path));
                     File.WriteAllText(path, $"{ex}\n\n{ex.StackTrace}");
                 }
                 finally
                 {
-                    TableConsole.Log($"Тест #{i + 1} завершён.", LogType.Log);
+                    TableConsole.Log(Translator.GetString("command_ai_test_6", i + 1), LogType.Log);
                     terr.Dispose();
                 }
             }
-            TableConsole.Log("Тестирование завершено!", LogType.Log);
+            TableConsole.Log(Translator.GetString("command_ai_test_7"), LogType.Log);
             TableConsole.FileName = "Console.log";
             _executing = false;
         }

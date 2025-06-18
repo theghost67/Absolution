@@ -16,7 +16,7 @@ namespace Game.Traits
 
         public tParkour() : base(ID)
         {
-            name = "Паркур!";
+            name = Translator.GetString("trait_parkour_1");
             desc = "This. Is. Parkour.";
 
             rarity = Rarity.Rare;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на незанятом союзном поле</color>\nПеремещает владельца на указанное поле. " +
-                   $"После успешного перемещения, владелец уменьшит своё здоровье на {_healthF.Format(args.stacks)} и получит {_strengthF.Format(args.stacks)} силы. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_parkour_2", _healthF.Format(args.stacks), _strengthF.Format(args.stacks), CD);
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

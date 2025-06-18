@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using Game.Traits;
 using System;
@@ -16,8 +16,8 @@ namespace Game.Cards
 
         public cObjectOfObsession() : base(ID)
         {
-            name = "Объект одержимости";
-            desc = "Бросить все планы. Игнорировать всех остальных. Сфокусироваться только на одной цели. И УНИЧТОЖИТЬ ЕЁ.";
+            name = Translator.GetString("card_object_of_obsession_1");
+            desc = Translator.GetString("card_object_of_obsession_2");
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 1);
@@ -28,7 +28,7 @@ namespace Game.Cards
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"До следующего хода, все союзные карты на территории получают навык <nobr><u>{traitName}</u></nobr>.";
+            return Translator.GetString("card_object_of_obsession_3", traitName);
         }
         public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
         {

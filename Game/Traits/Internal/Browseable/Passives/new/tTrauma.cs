@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tTrauma() : base(ID)
         {
-            name = "Травма";
-            desc = "Беги! Верно... ты же не можешь. Хе-хе.";
+            name = Translator.GetString("trait_trauma_1");
+            desc = Translator.GetString("trait_trauma_2");
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
@@ -29,7 +29,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Пока присутствует</color>\nБлокирует возможность лечения владельца любыми источниками.";
+            return Translator.GetString("trait_trauma_3");
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

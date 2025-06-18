@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tExposed() : base(ID)
         {
-            name = "Уязвимость";
-            desc = "Куда подевался весь твой альтруизм, а?";
+            name = Translator.GetString("trait_exposed_1");
+            desc = Translator.GetString("trait_exposed_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -28,7 +28,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После получения атаки владельцем</color>\nУбивает владельца, даже если атака не нанесла урон.";
+            return Translator.GetString("trait_exposed_3");
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

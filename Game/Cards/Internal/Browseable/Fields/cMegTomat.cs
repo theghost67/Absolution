@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cMegTomat : FieldCard
     {
         public cMegTomat() : base("meg_tomat", "sprinter", "adrenaline")
         {
-            name = "Мэг Томат";
-            desc = "Атлетическая спортсменка, любящая взрывать всё на своём пути и несущаяся проявить себя с первых секунд. " +
-                   "По этой же причине она не раз получала по своей кислой мине. Но, как говорится, быстрые ноги-";
+            name = Translator.GetString("card_meg_tomat_1");
+            desc = Translator.GetString("card_meg_tomat_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

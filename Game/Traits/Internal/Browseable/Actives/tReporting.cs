@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tReporting() : base(ID)
         {
-            name = "Составление рапорта";
-            desc = "Я ведь напишу куда нужно.";
+            name = Translator.GetString("trait_reporting_1");
+            desc = Translator.GetString("trait_reporting_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -27,8 +27,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>При активации на любой вражеской карте</color>\n" +
-                   $"Устанавливает карту <nobr><u>{cardName}</u></nobr> на поле напротив цели, если поле напротив свободно. Тратит один заряд.";
+            return Translator.GetString("trait_reporting_3", cardName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

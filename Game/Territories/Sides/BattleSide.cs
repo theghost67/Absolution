@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Effects;
 using Game.Sleeves;
@@ -22,7 +22,7 @@ namespace Game.Territories
         public new BattleSideDrawer Drawer => ((TableObject)this).Drawer as BattleSideDrawer;
         public ITableEventVoid<BattleKillAttemptArgs> OnDeathsDoor => _onDeathsDoor;
 
-        public override string TableName => isMe ? Player.Name : "Противник";
+        public override string TableName => isMe ? Player.Name : Translator.GetString("battle_side_1");
         public override string TableNameDebug => isMe ? "player" : "enemy";
 
         public BattleSleeve Sleeve => _sleeve;

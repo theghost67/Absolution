@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cMichaelScott() : base("michael_scott", "parkour", "mikelove")
         {
-            name = "Майкл Скотт";
-            desc = "Майкл Скотт является управляющим одного из филиалов бумажной компании Дандр Миффлин. Его уникальные методики переговоров, съёмки, ходьбы, " +
-                   "документирования, соблазнения, полемики, паркура, танцев, жестикулирования и дыхания делают его незаменимым сотрудником компании. " +
-                   "А в этой компании есть легендарный Дуайт Шрут. Или Шрют? Да какая разница! Чёрт, место для описания кончается... ПАРКУР!";
+            name = Translator.GetString("card_michael_scott_1");
+            desc = Translator.GetString("card_michael_scott_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

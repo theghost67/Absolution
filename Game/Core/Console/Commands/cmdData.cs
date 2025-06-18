@@ -1,4 +1,4 @@
-﻿using GreenOne.Console;
+using GreenOne.Console;
 using System.Diagnostics;
 using UnityEngine;
 
@@ -7,7 +7,7 @@ namespace Game.Console
     public class cmdData : Command
     {
         const string ID = "data";
-        const string DESC = "открывает папку с файлами игры";
+        static readonly string DESC = Translator.GetString("command_data_1");
 
         public cmdData() : base(ID, DESC) { }
         protected override void Execute(CommandArgInputDict args)
@@ -17,7 +17,7 @@ namespace Game.Console
                 ProcessStartInfo info = new(Application.persistentDataPath) { UseShellExecute = true };
                 Process.Start(info);
             }
-            catch { TableConsole.Log($"Не удалось запустить папку с данными (путь: {Application.persistentDataPath})", LogType.Error); }
+            catch { TableConsole.Log(Translator.GetString("command_data_2", Application.persistentDataPath), LogType.Error); }
         }
     }
 }

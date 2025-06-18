@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tDoctor() : base(ID)
         {
-            name = "Доктор";
-            desc = "Посмотрим, что можно сделать...";
+            name = Translator.GetString("trait_doctor_1");
+            desc = Translator.GetString("trait_doctor_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,8 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\nВосстанавливает {_healthF.Format(args.stacks)} здоровья рядомстояющей " +
-                   $"союзной карте с наименьшим здоровьем.";
+            return Translator.GetString("trait_doctor_3", _healthF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

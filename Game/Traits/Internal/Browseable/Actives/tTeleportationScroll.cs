@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tTeleportationScroll() : base(ID)
         {
-            name = "Свиток телепортации";
-            desc = "ТП на мид.";
+            name = Translator.GetString("trait_teleportation_scroll_1");
+            desc = Translator.GetString("trait_teleportation_scroll_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на пустом союзном поле</color>\nПеремещает владельца на указанное поле. Тратит один заряд.";
+            return Translator.GetString("trait_teleportation_scroll_3");
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

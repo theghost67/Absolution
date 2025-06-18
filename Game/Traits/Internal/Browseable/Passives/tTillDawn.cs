@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tTillDawn() : base(ID)
         {
-            name = "Жить до рассвета";
-            desc = "Как долго ты будешь продолжать эту игру, Джошуа?";
+            name = Translator.GetString("trait_till_dawn_1");
+            desc = Translator.GetString("trait_till_dawn_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -30,8 +30,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале следующего хода на территории</color>\n" +
-                   $"Восстанавливает {_healthF.Format(args.stacks)} здоровья и {_moxieF.Format(args.stacks)} инициативы. Тратит все заряды.";
+            return Translator.GetString("trait_till_dawn_3", _healthF.Format(args.stacks), _moxieF.Format(args.stacks));
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

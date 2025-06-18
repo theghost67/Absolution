@@ -19,8 +19,8 @@ namespace Game.Traits
 
         public tMiracleAftertaste() : base(ID)
         {
-            name = "Чудодейственное послевкусие";
-            desc = "Это что же значит? ..Да, Лёва, да, через 5 минут тебе беда Лёва, да.";
+            name = Translator.GetString("trait_miracle_aftertaste_1");
+            desc = Translator.GetString("trait_miracle_aftertaste_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -31,9 +31,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении</color>\nПовышает инициативу владельца на {_moxieBuffF.Format(args.stacks)} " +
-                   $"и его атаку на {_strengthBuffF.Format(args.stacks, true)}. В конце следующего хода уменьшает инициативу владельца на {_moxieDebuffF.Format(args.stacks)} " +
-                   $"и понижает его здоровье и силу на {_statsDebuffF.Format(args.stacks)}, удаляет все заряды (ранее наложенные бонусы тоже удаляются).";
+            return Translator.GetString("trait_miracle_aftertaste_3", _moxieBuffF.Format(args.stacks), _strengthBuffF.Format(args.stacks, true), _moxieDebuffF.Format(args.stacks), _statsDebuffF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

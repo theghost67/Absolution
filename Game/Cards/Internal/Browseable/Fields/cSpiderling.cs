@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cSpiderling : FieldCard
     {
         public cSpiderling() : base("spiderling", "weaver")
         {
-            name = "Паукообразный";
-            desc = "Разумный прямоходящий паук, питающийся мясом монстров и обречённый скитаться в одиночестве. Он пытался подружиться с кем-то из соседей, " +
-                     "но они оказались настоящими свиньями и даже не впустили его в дом. Единственные друзья, которые у него есть - паучьи коконы.";
+            name = Translator.GetString("card_spiderling_1");
+            desc = Translator.GetString("card_spiderling_2");
+
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

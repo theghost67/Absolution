@@ -4,9 +4,9 @@ namespace Game.Cards
     {
         public cMongol() : base("mongol", "brawl")
         {
-            name = "Пьяный монгол";
-            desc = "Этого монгола сторонятся почти все барные заведения. Как только он оказывается в подобном, все точно знают - " +
-                   "скоро от бара останутся только щепки и голый фундамент. Как-то раз он даже привёл медведя в бар и устроил с ним поножовщину, во история была!";
+            name = Translator.GetString("card_mongol_1");
+            desc = Translator.GetString("card_mongol_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

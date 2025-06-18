@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using Microsoft.SqlServer.Server;
@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tWhiteBombing() : base(ID)
         {
-            name = "Белоснежная бомбардировка";
-            desc = "Чёрт, это опять те голуби, бежим отсюда, пока не поздно!";
+            name = Translator.GetString("trait_white_bombing_1");
+            desc = Translator.GetString("trait_white_bombing_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -32,8 +32,8 @@ namespace Game.Traits
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
             string format = _stacksMoxieF.Format(args.stacks);
-            return $"<color>При активации на союзном поле</color>\nТратит все заряды, создаёт на всех пустых полях своей территории карты <nobr><color><u>{cardName}</u></color></nobr>.\n\n" +
-                   $"<color>При активации на вражеском поле</color>\nТратит все заряды, инициатива всех карт на территории напротив будет уменьшена на {format}.";
+            return Translator.GetString("trait_white_bombing_3", cardName, format);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

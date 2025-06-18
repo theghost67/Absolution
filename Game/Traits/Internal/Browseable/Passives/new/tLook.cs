@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tLook() : base(ID)
         {
-            name = "Я присмотрю за тобой";
-            desc = "Большой брат присмотрит за тобой, малыш.";
+            name = Translator.GetString("trait_look_1");
+            desc = Translator.GetString("trait_look_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки на союзную карту рядом</color>\n" +
-                   $"Переведёт атаку на владельца и уменьшит силу атаки на {_reduceF.Format(args.stacks, true)}. Активируется один раз за ход.";
+            return Translator.GetString("trait_look_3", _reduceF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

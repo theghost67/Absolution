@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tFoodPoisoning() : base(ID)
         {
-            name = "Пищевое отравление";
-            desc = "Может всё же не будем это есть?";
+            name = Translator.GetString("trait_food_poisoning_1");
+            desc = Translator.GetString("trait_food_poisoning_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После смерти владельца</color>\nУменьшает силу и здоровье атакующего на {_healthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_food_poisoning_3", _healthF.Format(args.stacks, true));
         }
         public override float Points(FieldCard owner, int stacks)
         {

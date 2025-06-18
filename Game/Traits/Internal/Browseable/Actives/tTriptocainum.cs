@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tTriptocainum() : base(ID)
         {
-            name = "Триптокаинум";
-            desc = "КОКАИНУМ!";
+            name = Translator.GetString("trait_triptocainum_1");
+            desc = Translator.GetString("trait_triptocainum_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации</color>\n" +
-                   $"Увеличивает силу владельца на {_strengthF.Format(args.stacks, true)}. После каждой последующей атаки владельца, он окажется на пороге смерти (игнор. здоровья). Перезарядка: {CD} х.";
+            return Translator.GetString("trait_triptocainum_3", _strengthF.Format(args.stacks, true), CD);
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

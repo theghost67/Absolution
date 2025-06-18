@@ -14,7 +14,7 @@ namespace Game.Traits
         public tGottaGo() : base(ID)
         {
             name = "Gotta go fast!";
-            desc = "Попробуй догони!";
+            desc = Translator.GetString("trait_gotta_go_1");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -25,8 +25,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на незанятом поле рядом</color>\nЕсли дальше от цели по горизонтали есть карты, " +
-                   $"перемещает ближайшую карту к владельцу её на указанное поле.";
+            return Translator.GetString("trait_gotta_go_2");
+
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

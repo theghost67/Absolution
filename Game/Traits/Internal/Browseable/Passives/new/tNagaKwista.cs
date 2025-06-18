@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tNagaKwista() : base(ID)
         {
-            name = "Нага квиста!";
-            desc = "Созданый для того, чтобы сеять хаос, он будет уничтожать всё на своём пути!";
+            name = Translator.GetString("trait_naga_kwista_1");
+            desc = Translator.GetString("trait_naga_kwista_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -29,9 +29,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(BONUS_TRAIT_ID).name;
-            return $"<color>Перед совершением атаки владельцем</color>\nИзменяет цель атаки на карту рядом напротив с наименьшим здоровьем. " +
-                   $"Игнорируется, если изначальных целей атаки несколько или если конечная цель не изменяется. Если у владельца есть навык <nobr><u>{traitName}</u></nobr>, " +
-                   $"цели будут выбираться по всей вражеской территории.";
+            return Translator.GetString("trait_naga_kwista_3", traitName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

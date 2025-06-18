@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using System;
 
@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tTimeToDecideMachine() : base(ID)
         {
-            name = "Время решать (машина)";
-            desc = "Простите, лейтенант.";
+            name = Translator.GetString("trait_time_to_decide_machine_1");
+            desc = Translator.GetString("trait_time_to_decide_machine_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\n" +
-                   $"Переходит на вражеское поле напротив и тратит все заряды, если поле не занято.";
+            return Translator.GetString("trait_time_to_decide_machine_3");
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

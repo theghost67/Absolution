@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tOrigamiVictim() : base(ID)
         {
-            name = "Жертва Мастера Оригами";
-            desc = "ШООООООООООООН!";
+            name = Translator.GetString("trait_origami_victim_1");
+            desc = Translator.GetString("trait_origami_victim_2");
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
@@ -28,8 +28,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При активации на любой вражеской карте</color>\n" +
-                   $"Накладывает на цель навык <nobr><u>{traitName}</u></nobr>. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_origami_victim_3", traitName, CD);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

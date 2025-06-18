@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tSentence() : base(ID)
         {
-            name = "Приговор";
-            desc = "Вынесение приговора!";
+            name = Translator.GetString("trait_sentence_1");
+            desc = Translator.GetString("trait_sentence_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,7 +27,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на территории</color>\nУвеличивает силу следующей инициации на {_strengthF.Format(args.stacks, true)}. После усиления, тратит все заряды. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_sentence_3", _strengthF.Format(args.stacks, true), CD);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

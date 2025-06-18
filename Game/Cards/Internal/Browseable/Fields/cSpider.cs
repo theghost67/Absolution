@@ -1,11 +1,11 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cSpider : FieldCard
     {
         public cSpider() : base("spider")
         {
-            name = "Паук";
-            desc = "Пушистый и злой комочек нашего паукообразного.";
+            name = Translator.GetString("card_spider_1");
+            desc = Translator.GetString("card_spider_2");
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 0);

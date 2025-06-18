@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tInsight() : base(ID)
         {
-            name = "Озарение";
-            desc = "Сейчас тебя озарит и ты молча уйдёшь, верно?";
+            name = Translator.GetString("trait_insight_1");
+            desc = Translator.GetString("trait_insight_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -31,9 +31,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>Постоянный эффект в бою на территории</color>\nДаёт {_turnStacks.Format(args.stacks)} зарядов каждый ход. " +
-                   $"Активация навыка возможна только при накоплении {_requiredStacks.Format(args.stacks)} зарядов.\n\n" +
-                   $"<color>При активации на союзной карте рядом</color>\nДаёт цели <nobr><u>{traitName}</u></nobr>, тратит {_useStacks.Format(args.stacks)} зарядов.";
+            return Translator.GetString("trait_insight_3", _turnStacks.Format(args.stacks), _requiredStacks.Format(args.stacks), traitName, _useStacks.Format(args.stacks));
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

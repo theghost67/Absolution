@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tOnLookout() : base(ID)
         {
-            name = "На стрёме";
-            desc = "Давай, проходи, я прикрою.";
+            name = Translator.GetString("trait_on_lookout_1");
+            desc = Translator.GetString("trait_on_lookout_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении карты напротив владельца</color>\n" +
-                   $"Атакует цель с силой в {_strengthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_on_lookout_3", _strengthF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

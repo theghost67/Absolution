@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cGavenko : FieldCard
     {
         public cGavenko() : base("gavenko", "testing", "old_authority")
         {
-            name = "Гавенко";
-            desc = "Всемирно известный тестировщик ПО, изобрёвший такие термины, как: вёкщит, висио, " +
-                   "распараливание и ретон, которые используются в современном мире IT практически ежедневно.";
+            name = Translator.GetString("card_gavenko_1");
+            desc = Translator.GetString("card_gavenko_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 3);

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
@@ -61,7 +61,7 @@ namespace Game
 
         static Player()
         {
-            Name = "Игрок";
+            Name = Translator.GetString("player_1");
             _deck = new();
         }
 

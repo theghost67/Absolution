@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tTurningPoint() : base(ID)
         {
-            name = "Переломный момент";
-            desc = "Персонал класса D, подойдите ближе к аномалии.";
+            name = Translator.GetString("trait_turning_point_1");
+            desc = Translator.GetString("trait_turning_point_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -25,8 +25,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении карты напротив владельца</color>\n" +
-                   $"Если инициатива цели будет меньше, чем инициатива владельца, цель сразу получит урон, равный силе владельца.";
+            return Translator.GetString("trait_turning_point_3");
+
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {

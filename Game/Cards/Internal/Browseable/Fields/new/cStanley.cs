@@ -4,9 +4,9 @@ namespace Game.Cards
     {
         public cStanley() : base("stanley", "my_story", "sprinter")
         {
-            name = "Стенли";
-            desc = "Работник компании, чья обязанность заключается в нажимании появляющихся на экране кнопок. И Стенли был доволен этой работой. Можно сказать, " +
-                   "он был счастлив. Но в один день, все его коллеги внезапно исчезли...";
+            name = Translator.GetString("card_stanley_1");
+            desc = Translator.GetString("card_stanley_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

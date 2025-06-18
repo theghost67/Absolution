@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cBmo() : base("bmo", "load", "ooo")
         {
-            name = "БиМо";
-            desc = $"БИо-МОдифицированный электронный механизм, который готов о вас позаботиться. Поверьте, он не заставит вас скучать." +
-                   $"В этой коробчке есть тысячи игр, миллионы терабайтов информации, и немыслимое количество утилит, " +
-                   $"способных адаптироваться к любой ситуации и к любому пользователю. И к любому противнику.";
+            name = Translator.GetString("card_bmo_1");
+            desc = Translator.GetString("card_bmo_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

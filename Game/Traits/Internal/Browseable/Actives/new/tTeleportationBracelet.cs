@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tTeleportationBracelet() : base(ID)
         {
-            name = "Браслет телепортации";
-            desc = "Незаменимый друг любого вора.";
+            name = Translator.GetString("trait_teleportation_bracelet_1");
+            desc = Translator.GetString("trait_teleportation_bracelet_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на незанятом союзном поле</color>\n" +
-                   $"Перемещает владельца на указанное поле, даёт ему {_statsF.Format(args.stacks)} к стоимости и инициативе. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_teleportation_bracelet_3", _statsF.Format(args.stacks), CD);
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

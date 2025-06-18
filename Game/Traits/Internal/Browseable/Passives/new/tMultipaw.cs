@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tMultipaw() : base(ID)
         {
-            name = "Многолапость";
-            desc = "Сейчас ты получишь и в пузо, и в лицо.";
+            name = Translator.GetString("trait_multipaw_1");
+            desc = Translator.GetString("trait_multipaw_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После совершения атаки владельцем</color>\nСовершает дополнительную атаку , если данный навык не был активирован на этом ходу.\n\n" +
-                   $"<color>Постоянный эффект в бою</color>\nПонижает силу на {_strength.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_multipaw_3", _strength.Format(args.stacks, true));
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

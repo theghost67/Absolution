@@ -4,9 +4,9 @@ namespace Game.Cards
     {
         public cRandy() : base("randy", "random")
         {
-            name = "Рэнди отбитый";
-            desc = "ЭЙ! КТО ЕГО ВЫПУСТИЛ!? НЕУЖЕЛИ ВЫ ХОТИТЕ, ЧТОБЫ ЭТОТ БЕЗУМНЫЙ РАССКАЗЧИК ВЫНЕС ВАМ МОЗГ СВОЕЙ СЛУЧАЙНОСТЬЮ!? " +
-                   "Что ж, удачи вам в попытках контролировать его хаотичную натуру...";
+            name = Translator.GetString("card_randy_1");
+            desc = Translator.GetString("card_randy_2");
+
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 3);

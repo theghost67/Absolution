@@ -21,8 +21,8 @@ namespace Game.Traits
 
         public tExecution() : base(ID)
         {
-            name = "<color=#FF00FF>Казнь</color>";
-            desc = "Готовься.";
+            name = Translator.GetString("trait_execution_1");
+            desc = Translator.GetString("trait_execution_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -36,10 +36,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При активации на цели с {TRAIT_STACKS} и более зарядами навыка <nobr><u>{traitName}</u></nobr></color>\n" +
-                   $"Совершает атаку на цель с силой в {_strengthF.Format(args.stacks, true)}. Если цель была убита после данной атаки, " +
-                   $"навсегда удаляет её из колоды стороны-владельца и убивает владельца (игнор. всего). Тратит все заряды.\n\n" +
-                   $"<color>Постоянный эффект</color>\nУвеличивает инициативу владельца на {_moxieF.Format(args.stacks)} ед.";
+            return Translator.GetString("trait_execution_3", TRAIT_STACKS, traitName, _strengthF.Format(args.stacks, true), _moxieF.Format(args.stacks));
+
         }
         public override BattleWeight Weight(IBattleTrait trait)
         {

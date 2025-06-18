@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cCadence() : base("cadence", "death_chord", "evasion")
         {
-            name = "Каденс";
-            desc = "Кто знал, что монстров можно уничтожать со стилем? Каденс жарит во всех смыслах! Её навыки игры на гитаре на столько невыносимы, " +
-                   "что все монстры в её измерении поумирали. Но ей всё мало... Она хочет уничтожить ИХ ВСЕХ. Со стилем, конечно же. " +
-                   "Хм, дежавю...";
+            name = Translator.GetString("card_cadence_1");
+            desc = Translator.GetString("card_cadence_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);

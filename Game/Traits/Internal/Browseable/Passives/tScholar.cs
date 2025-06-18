@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tScholar() : base(ID)
         {
-            name = "Ученик";
-            desc = "Изучает различные темы и вопросы.";
+            name = Translator.GetString("trait_scholar_1");
+            desc = Translator.GetString("trait_scholar_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После убийства любой вражеской карты союзником</color>\nДаёт владельцу {_strengthF.Format(args.stacks)} силы. " +
-                   $"Навык не сработает, если убийство было совершено владельцем.";
+            return Translator.GetString("trait_scholar_3", _strengthF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

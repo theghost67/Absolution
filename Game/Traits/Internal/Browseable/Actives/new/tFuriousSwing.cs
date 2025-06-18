@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tFuriousSwing() : base(ID)
         {
-            name = "Яростный замах";
-            desc = "Да... иди сюда.";
+            name = Translator.GetString("trait_furious_swing_1");
+            desc = Translator.GetString("trait_furious_swing_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -30,8 +30,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на вражеской карте напротив</color>\nНаносит цели {_verticalF.Format(args.stacks)} урона. Перезарядка: {CD} х.\n\n" +
-                   $"<color>При активации на вражеской карте поблизости</color>\nНаносит всем вражеским картам рядом {_horizontalF.Format(args.stacks)} урона. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_furious_swing_3", _verticalF.Format(args.stacks), CD, _horizontalF.Format(args.stacks), CD);
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
@@ -57,19 +57,19 @@ namespace Game.Traits
             bool isOpposite = owner.Field.Opposite == target;
             if (isOpposite)
             {
-                int damage = -_verticalF.ValueInt(e.traitStacks);
+                int damage = _verticalF.ValueInt(e.traitStacks);
                 target.Drawer.CreateTextAsDamage(damage, false);
-                await target.Card.Health.AdjustValue(damage, trait);
+                await target.Card.Health.AdjustValue(-damage, trait);
             }
             else
             {
-                int damage = -_horizontalF.ValueInt(e.traitStacks);
-                BattleFieldCard[] cards = owner.Territory.Fields(owner.Field.Opposite.pos, TerritoryRange.oppositeTriple).WithCard().Select(f => f.Card).ToArray();
+                int damage = _horizontalF.ValueInt(e.traitStacks);
+                BattleFieldCard[] cards = owner.Territory.Fields(owner.Field.pos, TerritoryRange.oppositeTriple).WithCard().Select(f => f.Card).ToArray();
                 foreach (BattleFieldCard card in cards)
                 {
-                    target.Drawer.CreateTextAsDamage(damage, false);
+                    card.Drawer.CreateTextAsDamage(damage, false);
                     if (!card.IsKilled)
-                        await card.Health.AdjustValue(damage, trait);
+                        await card.Health.AdjustValue(-damage, trait);
                 }
             }
         }

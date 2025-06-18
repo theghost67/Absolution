@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tAdrenaline() : base(ID)
         {
-            name = "Адреналин";
-            desc = "Последний рывок до выхода.";
+            name = Translator.GetString("trait_adrenaline_1");
+            desc = Translator.GetString("trait_adrenaline_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -25,8 +25,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед смертью владельца</color>\n" +
-                   $"Восстанавливает здоровье владельца до 1 единицы. Тратит все заряды.";
+            return Translator.GetString("trait_adrenaline_3");
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

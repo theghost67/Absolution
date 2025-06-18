@@ -1,10 +1,9 @@
 using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Effects;
-using Game.Palette;
 using Game.Territories;
 using System;
-using UnityEngine;
+using System.Linq;
 
 namespace Game.Traits
 {
@@ -19,8 +18,8 @@ namespace Game.Traits
 
         public tDeathChord() : base(ID)
         {
-            name = "Аккорд смерти";
-            desc = "Сейчас ты услышишь свою последнюю мелодию.";
+            name = Translator.GetString("trait_death_chord_1");
+            desc = Translator.GetString("trait_death_chord_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -33,10 +32,10 @@ namespace Game.Traits
         {
             object chords = null;
             args.table?.Storage.TryGetValue(KEY, out chords);
-            string str = $"<color>Каждый следующий ход на территории</color>\nПолучает {_chordsF.Format(args.stacks)} аккордов.\n\n" +
-                         $"<color>При активации на территории с аккордами > 0</color>\nНаносит всем противникам урон, равный накопленным аккордам, и удаляет все аккорды.";
+            string str = Translator.GetString("trait_death_chord_3", _chordsF.Format(args.stacks));
+
             if (chords != null && (int)chords > 0)
-                str += $" Накопленных аккордов: <color>{chords}</color>.";
+                str += Translator.GetString("trait_death_chord_4", chords);
             return str;
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
@@ -46,7 +45,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsLinear(16, stacks);
+            return PointsLinear(12, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
@@ -71,13 +70,15 @@ namespace Game.Traits
         }
         protected override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
-            
-
             IBattleTrait trait = (IBattleTrait)e.trait;
-            BattleField target = (BattleField)e.target;
             BattleFieldCard owner = trait.Owner;
-            await owner.TryAttachToField(target, trait);
-            await trait.AdjustStacks(-1, owner.Side);
+            BattleFieldCard[] targets = owner.Territory.Fields(owner.Field.pos, TerritoryRange.oppositeAll).WithCard().Select(f => f.Card).ToArray();
+            int damage = _chordsF.ValueInt(e.traitStacks);
+            foreach (BattleFieldCard target in targets)
+            {
+                target.Drawer?.CreateTextAsDamage(damage, false);
+                await target.Health.AdjustValue(-damage, trait);
+            }
         }
 
         async UniTask OnTerritoryStartPhase(object sender, EventArgs e)

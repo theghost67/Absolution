@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 
 namespace Game.Cards
@@ -9,9 +9,9 @@ namespace Game.Cards
 
         public cSatelliteSurveillance() : base(ID)
         {
-            name = "Спутниковая слежка";
-            desc = "Совместно разработанная с Агентством технология массовой слежки позволяет в считанные секунды найти любое существо на планете. " +
-                   "Параллельно ведутся работы над техникой для орбитального удара, но это уже совсем другая история.";
+            name = Translator.GetString("card_satellite_surveillance_1");
+            desc = Translator.GetString("card_satellite_surveillance_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 0);
@@ -21,7 +21,7 @@ namespace Game.Cards
 
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return "Раскрывает руку противника до конца боя. Если рука противника уже раскрыта, раскрывает его золото и эфир.";
+            return Translator.GetString("card_satellite_surveillance_3");
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

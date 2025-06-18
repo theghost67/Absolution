@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using System.Collections.Generic;
 
@@ -11,8 +11,8 @@ namespace Game.Cards
 
         public cCodeInterception() : base(ID)
         {
-            name = "План \"Перехват\"";
-            desc = "По коням! Вперёд, вперёд, вперёд!";
+            name = Translator.GetString("card_code_interception_1");
+            desc = Translator.GetString("card_code_interception_2");
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 3);
@@ -23,8 +23,8 @@ namespace Game.Cards
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"Создаёт карты <nobr><u>{cardName}</u></nobr> напротив каждой вражеской карты (если поле напротив сводобно). " +
-                   $"Здоровье карты будет равняться сумме здоровья и силы карты напротив.";
+            return Translator.GetString("card_code_interception_3", cardName);
+
         }
         public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
         {

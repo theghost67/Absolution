@@ -20,8 +20,8 @@ namespace Game.Traits
 
         public tFlame() : base(ID)
         {
-            name = "Пламя";
-            desc = "О нет, это оно! Не паникуем, не паникуем, НЕ ПАНИКУЕМ, МАТЬ ТВОЮ! ААААААА!";
+            name = Translator.GetString("trait_flame_1");
+            desc = Translator.GetString("trait_flame_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -32,8 +32,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В конце хода на территории</color>\nНаносит {_damageF.Format(args.stacks)} ед. урона владельцу.\n\n" +
-                   $"<color>После смерти владельца на территории</color>\nСоседние союзные карты получают {_propagationF.Format(args.stacks)} от зарядов {name} на владельце. Не сработает, если заряд всего один.";
+            return Translator.GetString("trait_flame_3", _damageF.Format(args.stacks), _propagationF.Format(args.stacks), name);
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

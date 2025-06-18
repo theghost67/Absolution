@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tPoison() : base(ID)
         {
-            name = "Яд";
-            desc = "Выпей яду.";
+            name = Translator.GetString("trait_poison_1");
+            desc = Translator.GetString("trait_poison_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -28,7 +28,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В конце хода на территории</color>\nНаносит {_damageF.Format(args.stacks)} урона владельцу.";
+            return Translator.GetString("trait_poison_3", _damageF.Format(args.stacks));
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

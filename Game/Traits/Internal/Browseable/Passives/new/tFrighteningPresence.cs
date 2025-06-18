@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tFrighteningPresence() : base(ID)
         {
-            name = "Пугающее присутствие";
-            desc = "Мне страшно стоять рядом с ним...";
+            name = Translator.GetString("trait_frightening_presence_1");
+            desc = Translator.GetString("trait_frightening_presence_2");
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
@@ -28,7 +28,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Пока присутствует на территории</color>\nВременно понижает инициативу всех рядомстояющих карт на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_frightening_presence_3", _moxieF.Format(args.stacks, true));
         }
 
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)

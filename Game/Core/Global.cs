@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
@@ -110,7 +110,7 @@ namespace Game
                 CardBrowser.AllIndexed.TryGetValue(id, out Card card);
                 if (card == null) continue;
                 card.frequency = 0;
-                TableConsole.Log($"Карта отключена: {id}.", LogType.Log);
+                TableConsole.Log(Translator.GetString("global_1", id), LogType.Log);
             }
         }
         static void DisableTraits()
@@ -122,7 +122,7 @@ namespace Game
                 TraitBrowser.AllIndexed.TryGetValue(id, out Trait trait);
                 if (trait == null) continue;
                 trait.frequency = 0;
-                TableConsole.Log($"Навык отключён: {id}.", LogType.Log);
+                TableConsole.Log(Translator.GetString("global_2", id), LogType.Log);
             }
         }
 
@@ -146,7 +146,7 @@ namespace Game
             //Time.fixedDeltaTime = 1 / 20f;
 
             UpdateCameraSize();
-            //Translator.Initialize(); // TODO: restore
+            Translator.Initialize();
             TraitBrowser.Initialize();
             CardBrowser.Initialize();
             AudioBrowser.Initialize();

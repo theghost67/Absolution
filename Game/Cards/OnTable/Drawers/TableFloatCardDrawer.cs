@@ -1,4 +1,4 @@
-﻿using MyBox;
+using MyBox;
 using UnityEngine;
 
 namespace Game.Cards
@@ -13,7 +13,7 @@ namespace Game.Cards
         {
             attached = card;
 
-            RedrawSubheader("Способность");
+            RedrawSubheader(Translator.GetString("table_float_card_drawer_1"));
             RedrawIcons();
             RedrawOutlineInstantly();
 
@@ -29,19 +29,19 @@ namespace Game.Cards
 
             int priceDefault = attached.Data.price.value;
             int priceCurrent = attached.Price;
-            return $"Валюта: {priceCurrencyStr}\nПо умолчанию: {priceDefault} ед.\nТекущее: {priceCurrent} ед.\n<color=grey><i>Стоимость: цена установки на территорию.";
+            return Translator.GetString("table_float_card_drawer_2", priceCurrencyStr, priceDefault, priceCurrent);
         }
         protected override string UpperRightIconTooltip()
         {
-            return $"Отсутствует у карт способностей\n<color=grey><i>Инициатива: определяет быстроту действий.";
+            return Translator.GetString("table_float_card_drawer_3");
         }
         protected override string LowerLeftIconTooltip()
         {
-            return $"Отсутствует у карт способностей\n<color=grey><i>Здоровье: по достижении нуля наступает смерть.";
+            return Translator.GetString("table_float_card_drawer_4");
         }
         protected override string LowerRightIconTooltip()
         {
-            return $"Отсутствует у карт способностей\n<color=grey><i>Сила: наносимый урон здоровью собственными атаками.";
+            return Translator.GetString("table_float_card_drawer_5");
         }
     }
 }

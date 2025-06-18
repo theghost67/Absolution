@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tInvestment() : base(ID)
         {
-            name = "Инвестировал...";
-            desc = "Инвестировал в говно.";
+            name = Translator.GetString("trait_investment_1");
+            desc = Translator.GetString("trait_investment_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -29,9 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После первой установки владельца на поле</color>\nПонижает стоимость владельца до нуля.\n\n" +
-                   $"<color>В начале каждого второго хода на территории</color>\nПовышает стоимость владельца на 1 ед. (не более {_limitF.Format(args.stacks)}).\n\n" +
-                   $"<color>После смерти владельца</color>\nДаёт стороне-владельцу стоимость владельца на момент смерти.";
+            return Translator.GetString("trait_investment_3", _limitF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

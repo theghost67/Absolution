@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tFennecSoul() : base(ID)
         {
-            name = "Феннекийская душа";
-            desc = "Учился у худших.";
+            name = Translator.GetString("trait_fennec_soul_1");
+            desc = Translator.GetString("trait_fennec_soul_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед получением атаки владельцем</color>\nПеренаправляет атаку на поле, принадлежащее владельцу.\n\n" +
-                   $"<color>В начале хода на территории</color>\nТратит все заряды.";
+            return Translator.GetString("trait_fennec_soul_3");
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

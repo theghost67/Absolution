@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tWeNeedYou() : base(ID)
         {
-            name = "Нам нужен ТЫ";
-            desc = "Годен.";
+            name = Translator.GetString("trait_we_need_you_1");
+            desc = Translator.GetString("trait_we_need_you_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,8 +29,8 @@ namespace Game.Traits
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
             string counterTraitName = TraitBrowser.GetTrait(COUNTER_TRAIT_ID).name;
-            return $"<color>При активации на любой карте рядом</color>\nДаёт цели навык <nobr><u>{traitName}</u></nobr>. " +
-                   $"Тратит один заряд. Не сработает на целях с навыком <nobr><u>{counterTraitName}</u></nobr>.";
+            return Translator.GetString("trait_we_need_you_3", traitName, counterTraitName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

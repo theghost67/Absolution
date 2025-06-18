@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using GreenOne;
 using System;
@@ -17,7 +17,7 @@ namespace Game.Territories
         public const int MAX_HEIGHT = 2;
         public const int MAX_SIZE = MAX_WIDTH * MAX_HEIGHT;
 
-        public override string TableName => "Территория" + (_fieldsDrawersAreNull ? " (виртуальная)" : "");
+        public override string TableName => Translator.GetString("table_territory_1") + (_fieldsDrawersAreNull ? Translator.GetString("table_territory_2") : "");
         public override string TableNameDebug => $"territory+{GuidStr}";
         public bool DrawersAreNull => _fieldsDrawersAreNull;
 

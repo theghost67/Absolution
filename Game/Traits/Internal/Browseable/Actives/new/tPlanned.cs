@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tPlanned() : base(ID)
         {
-            name = "Я всё спланировал";
-            desc = "Я спланировал всё, но не ЭТО.";
+            name = Translator.GetString("trait_planned_1");
+            desc = Translator.GetString("trait_planned_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на любой союзной карте, кроме владельца</color>\n" +
-                   $"Удаляет все навыки цели (сначала пассивные), даёт {_statsF.Format(args.stacks)} ко всем характеристикам цели за каждый её отдельный навык. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_planned_3", _statsF.Format(args.stacks), CD);
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

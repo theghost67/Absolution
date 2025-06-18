@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tFurnitureProtection() : base(ID)
         {
-            name = "Защита мебели";
-            desc = "Кто съел мою еду в холодильнике? Кто сидел в моём кресле!? О, видимо, он ещё здесь, хе-хе.";
+            name = Translator.GetString("trait_furniture_protection_1");
+            desc = Translator.GetString("trait_furniture_protection_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -31,14 +31,12 @@ namespace Game.Traits
         {
             object mode = null;
             args.table?.Storage.TryGetValue(KEY, out mode);
-            string str = $"<color>Перед совершением атаки на пустое союзное поле любой картой</color>\n" +
-                         $"Владелец переместится на это поле прежде, чем карта совершит атаку.\n\n" +
-                         $"<color>При активации на территории или в рукаве</color>\nПереключает режим в-рукаве, при включённом состоянии, " +
-                         $"навык может активироваться даже если владелец находится в рукаве. При активации таким способом, понижает инициативу владельца на {_moxieF.Format(args.stacks, true)}.";
+            string str = Translator.GetString("trait_furniture_protection_3", _moxieF.Format(args.stacks, true));
+
             if (mode != null)
             {
-                string modeStr = (bool)mode ? "<color=green>ВКЛ</color>" : "<color=red>ВЫКЛ</color>";
-                str += $" Режим в-рукаве: {modeStr}.";
+                string modeStr = (bool)mode ? Translator.GetString("trait_furniture_protection_4") : Translator.GetString("trait_furniture_protection_5");
+                str += Translator.GetString("trait_furniture_protection_6", modeStr);
             }
             return str;
         }

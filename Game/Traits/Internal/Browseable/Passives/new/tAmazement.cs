@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tAmazement() : base(ID)
         {
-            name = "Потрясение";
-            desc = "Вау. Я потрясён.";
+            name = Translator.GetString("trait_amazement_1");
+            desc = Translator.GetString("trait_amazement_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -31,7 +31,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При убийстве трёх вражеских карт любым источником за один ход</color>\nДаёт <nobr><u>{traitName}</u></nobr> всем остальным картам на вражеской территории.";
+            return Translator.GetString("trait_amazement_3", traitName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

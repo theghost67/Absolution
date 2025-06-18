@@ -4,8 +4,8 @@ namespace Game.Cards
     {
         public cDeath() : base("death", "execution")
         {
-            name = "Смерть";
-            desc = "Твоё приключение подошло к концу.";
+            name = Translator.GetString("card_death_1");
+            desc = Translator.GetString("card_death_2");
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 5);

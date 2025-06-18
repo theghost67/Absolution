@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tAlcoRage() : base(ID)
         {
-            name = "Алкогольное безумие";
-            desc = "Вы разнесли мне половину бара!";
+            name = Translator.GetString("trait_alco_rage_1");
+            desc = Translator.GetString("trait_alco_rage_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После убийства вражеской карты владельцем</color>\n" +
-                   $"Восстанавливает себе {_healthF.Format(args.stacks)} здоровья и уменьшает свою инициативу на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_alco_rage_3", _healthF.Format(args.stacks), _moxieF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

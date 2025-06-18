@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Palette;
 using Game.Traits;
@@ -46,7 +46,7 @@ namespace Game.Cards
             SpriteRenderer prefabIcon = prefabTransform.Find<SpriteRenderer>("Icon");
             TextMeshPro prefabSubheader = prefabTransform.Find<TextMeshPro>("Subheader");
 
-            prefabHeader.text = activated ? "активация" : "деактивация"; 
+            prefabHeader.text = activated ? Translator.GetString("table_field_card_drawer_queue_activation_1") : Translator.GetString("table_field_card_drawer_queue_activation_2"); 
             prefabIcon.sprite = Resources.Load<Sprite>(data.spritePath); // TODO: use traitInList.Drawer.sprite
             prefabSubheader.text = data.name; // TODO: use traitInList.Drawer.text
 

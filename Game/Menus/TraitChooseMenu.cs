@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
@@ -36,6 +36,7 @@ namespace Game.Menus
 
         readonly Transform _traitsParent;
         readonly TextMeshPro _selectedCardText;
+        readonly TextMeshPro _headerTextMesh;
         readonly RerollButtonDrawer _rerollButton;
         readonly DeclineButtonDrawer _declineButton;
         readonly ArrowsAnim[] _arrows;
@@ -308,7 +309,7 @@ namespace Game.Menus
                 _renderer = gameObject.GetComponent<SpriteRenderer>();
                 _paletteElement = gameObject.GetComponent<ColorPaletteSpriteElement>();
                 _paletteElement.setColorOnStart = false;
-                SetTooltip(() => $"Перебросить карты ({_menu._rerollsLeft}x). Обновите ассортимент карт, если текущий выбор вас не устраивает.");
+                SetTooltip(() => Translator.GetString("trait_choose_menu_1", _menu._rerollsLeft));
             }
 
             protected override void SetColor(Color value)
@@ -340,7 +341,7 @@ namespace Game.Menus
                 _renderer = transform.GetComponent<SpriteRenderer>();
                 _paletteElement = gameObject.GetComponent<ColorPaletteSpriteElement>();
                 _paletteElement.setColorOnStart = false;
-                SetTooltip(() => "<color=red>Отказаться от навыка.</color> Полезно, когда выбирать из того, что есть, не хочется.");
+                SetTooltip(() => Translator.GetString("trait_choose_menu_2"));
             }
             public void SetColor()
             {
@@ -387,9 +388,12 @@ namespace Game.Menus
 
             _traits = Array.Empty<TraitToChoose>();
             _traitsParent = Transform.Find("Traits");
+            _headerTextMesh = Transform.Find<TextMeshPro>("Header text");
             _selectedCardText = Transform.Find<TextMeshPro>("Selected card text");
             _rerollButton = new RerollButtonDrawer(this);
             _declineButton = new DeclineButtonDrawer(this);
+
+            _headerTextMesh.text = Translator.GetString("trait_choose_menu_3");
             _arrows = new ArrowsAnim[]
             {
                 new(Transform.Find("Arrows 1"), 30, 3.6f, -3.68f),
@@ -464,7 +468,7 @@ namespace Game.Menus
         void SelectCard(CardToChoose card)
         {
             _chosenCard = card;
-            _selectedCardText.text = $"> КАРТА: {card.Data.name.ToUpper()} <";
+            _selectedCardText.text = Translator.GetString("trait_choose_menu_4", card.Data.name.ToUpper());
             _selectedCardText.DOKill();
             _selectedCardText.alpha = 1;
             _selectedCardText.transform.DOKill();
@@ -484,12 +488,12 @@ namespace Game.Menus
                 return;
             if (chosenTrait != null && _chosenCard == null)
             {
-                chosenTrait.Drawer.CreateTextAsSpeech("ВЫБЕРИТЕ КАРТУ", Color.red);
+                chosenTrait.Drawer.CreateTextAsSpeech(Translator.GetString("trait_choose_menu_5"), Color.red);
                 return;
             }
             if (chosenTrait != null && chosenTrait.Data.tags.HasFlag(TraitTag.Static) && _chosenCard.Traits.Any(chosenTrait.Data.id) != null)
             {
-                chosenTrait.Drawer.CreateTextAsSpeech("СТАТИЧНЫЙ НАВЫК", Color.red);
+                chosenTrait.Drawer.CreateTextAsSpeech(Translator.GetString("trait_choose_menu_6"), Color.red);
                 return;
             }
 

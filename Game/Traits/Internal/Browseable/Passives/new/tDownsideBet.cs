@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tDownsideBet() : base(ID)
         {
-            name = "Ставка на понижение";
-            desc = "Так, у меня остались деньги, можем ещё отыграться.";
+            name = Translator.GetString("trait_downside_bet_1");
+            desc = Translator.GetString("trait_downside_bet_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После смерти любой союзной карты стоиостью в 2 ед. и выше</color>\nДаёт стороне-владельцу 1 ед. валюты убитой карты.";
+            return Translator.GetString("trait_downside_bet_3");
         }
 
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)

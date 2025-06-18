@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cHitman : FieldCard
     {
         public cHitman() : base("hitman", "scope", "stealth")
         {
-            name = "Хитман";
-            desc = "Всю жизнь выполнял контракты и расстреливал свои цели направо и налево. Никто не знает, " +
-                   "сколько человек пали от его пули, но, без сомнений, свои контракты он выполнит, чего бы это не стоило.";
+            name = Translator.GetString("card_hitman_1");
+            desc = Translator.GetString("card_hitman_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

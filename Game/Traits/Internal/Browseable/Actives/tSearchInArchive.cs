@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Linq;
@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tSearchInArchive() : base(ID)
         {
-            name = "Порыться в архивах";
-            desc = "Сейчас, где же оно? О, нашёл, тут сказано, что вы...";
+            name = Translator.GetString("trait_search_in_archive_1");
+            desc = Translator.GetString("trait_search_in_archive_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -30,7 +30,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>При активации</color>\nСоздаёт рядом с собой карты <nobr><color><u>{cardName}</u></color></nobr>. Тратит все заряды.";
+            return Translator.GetString("trait_search_in_archive_3", cardName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

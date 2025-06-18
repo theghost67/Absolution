@@ -1,4 +1,4 @@
-﻿#define DEMO // demo version code
+#define DEMO // demo version code
 
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
@@ -746,7 +746,7 @@ namespace Game.Menus
                 await base.OnStartPhaseBase_TOP(sender, e);
                 pTerritory terr = (pTerritory)sender;
                 if (!terr.DrawersAreNull)
-                    await VFX.CreateText($"ХОД {terr.Turn}", Color.white, Vector3.zero).DOATextPopUp(0.5f, doNotScale: true).AsyncWaitForCompletion();
+                    await VFX.CreateText(Translator.GetString("battle_place_menu_1", terr.Turn), Color.white, Vector3.zero).DOATextPopUp(0.5f, doNotScale: true).AsyncWaitForCompletion();
             }
             protected override async UniTask OnEnemyPhaseBase_TOP(object sender, EventArgs e)
             {
@@ -793,10 +793,10 @@ namespace Game.Menus
             _bg.manualLightUp = true;
 
             _turnButton.OnMouseClick += (s, e) => TryEndTurn();
-            _turnButton.SetTooltip(() => $"Завершить ход {_territory.Turn}.");
+            _turnButton.SetTooltip(() => Translator.GetString("battle_place_menu_2", _territory.Turn));
 
             _fleeButton.OnMouseClick += (s, e) => TryFlee();
-            _fleeButton.SetTooltip(() => "Шанс побега: 100%.");
+            _fleeButton.SetTooltip(() => Translator.GetString("battle_place_menu_3"));
 
             #if !DEMO
             _territory = new pTerritory(this, playerMovesFirst: true /*Utils.RandomValueSafe > 0.5f*/, sizeX: 5);
@@ -1033,23 +1033,23 @@ namespace Game.Menus
 
             if (Territory.Player.Health <= 0)
             {
-                demo_CreateBattleEndText(Transform, "СМЕРТЬ", "Смерть это часть пути.", "Не сдаваться", "Сдаться");
+                demo_CreateBattleEndText(Transform, Translator.GetString("battle_place_menu_4"), Translator.GetString("battle_place_menu_5"), Translator.GetString("battle_place_menu_6"), Translator.GetString("battle_place_menu_7"));
                 Global.OnUpdate += demo_EndChoiceOnUpdate;
             }
             else if (_demoDifficulty == DEMO_DIFFICULTY_MID)
             {
-                demo_CreateBattleEndText(Transform, "ПЕРЕПУТЬЕ", "Дальше лежит дорога страданий.", "Начать хардкор", "Уйти");
+                demo_CreateBattleEndText(Transform, Translator.GetString("battle_place_menu_8"), Translator.GetString("battle_place_menu_9"), Translator.GetString("battle_place_menu_10"), Translator.GetString("battle_place_menu_11"));
                 Global.OnUpdate += demo_StageFiveChoiceOnUpdate;
             }
             else if (_demoDifficulty == DEMO_DIFFICULTY_MAX)
             {
                 if (PlayerConfig.psychoMode && PlayerConfig.chaosMode)
-                    demo_CreateBattleEndText(Transform, "<color=#FF00FF>ФИНАЛ ФУЛЛ ХАОСА</color>", "Наконец этот мир ждёт Искупление.", "Пройти путь заново", "Уйти");
+                    demo_CreateBattleEndText(Transform, Translator.GetString("battle_place_menu_12"), Translator.GetString("battle_place_menu_13"), Translator.GetString("battle_place_menu_14"), Translator.GetString("battle_place_menu_15"));
                 else if (PlayerConfig.psychoMode)
-                    demo_CreateBattleEndText(Transform, "<color=#FF0000>ФИНАЛ ПСИХА</color>", "Альтернативное виденье даёт преимущество.", "Пройти путь заново", "Уйти");
+                    demo_CreateBattleEndText(Transform, Translator.GetString("battle_place_menu_16"), Translator.GetString("battle_place_menu_17"), Translator.GetString("battle_place_menu_18"), Translator.GetString("battle_place_menu_19"));
                 else if (PlayerConfig.chaosMode)
-                    demo_CreateBattleEndText(Transform, "<color=#00FFFF>ФИНАЛ ХАОСА</color>", "Хаос стремится к порядку.", "Пройти путь заново", "Уйти");
-                else demo_CreateBattleEndText(Transform, "ФИНАЛ", "Можно насладиться проделанной работой.", "Пройти путь заново", "Уйти");
+                    demo_CreateBattleEndText(Transform, Translator.GetString("battle_place_menu_20"), Translator.GetString("battle_place_menu_21"), Translator.GetString("battle_place_menu_22"), Translator.GetString("battle_place_menu_23"));
+                else demo_CreateBattleEndText(Transform, Translator.GetString("battle_place_menu_24"), Translator.GetString("battle_place_menu_25"), Translator.GetString("battle_place_menu_26"), Translator.GetString("battle_place_menu_27"));
                 Global.OnUpdate += demo_EndChoiceOnUpdate;
             }
             else demo_OnBattleEndBase();
@@ -1112,10 +1112,10 @@ namespace Game.Menus
 
             SpriteRenderer bg = VFX.CreateScreenBG(firstOpening ? Color.black : Color.clear);
             await UniTask.Delay(500);
-            string text1 = $"ЭТАП {_demoDifficulty}/{DEMO_DIFFICULTY_MID}";
+            string text1 = Translator.GetString("battle_place_menu_28", _demoDifficulty, DEMO_DIFFICULTY_MID);
             string text2Hex = ColorPalette.C2.Hex;
-            string text2 = $"\n<size=50%><color={text2Hex}>угроза: {_demoLocStageForPlayer}    сложность: {_demoDifficultyScale * 100}%";
-            string text3 = _territory.PlayerMovesFirst ? $"\nвы ходите первым" : "\nвы ходите последним";
+            string text2 = Translator.GetString("battle_place_menu_29", text2Hex, _demoLocStageForPlayer, _demoDifficultyScale * 100);
+            string text3 = _territory.PlayerMovesFirst ? Translator.GetString("battle_place_menu_30") : Translator.GetString("battle_place_menu_31");
 
             TextMeshPro bgText = VFX.CreateText(text1, Color.white, bg.transform);
             bgText.transform.position = Vector2.up * 136;
@@ -1218,7 +1218,7 @@ namespace Game.Menus
             SpriteRenderer bg = VFX.CreateScreenBG(Color.clear, transform);
             bg.name = "Black bg";
             await bg.DOFade(1, 0.5f).AsyncWaitForCompletion();
-            TextMeshPro text = VFX.CreateText($"{header}<size=50%>\n{desc}\n\nвремя: {demo_TimeSpanFormat()}\n\n<size=50%>[Enter] {enterKeyDesc}\n[Esc] {escKeyDesc}", Color.white, transform);
+            TextMeshPro text = VFX.CreateText(Translator.GetString("battle_place_menu_32", header, desc, demo_TimeSpanFormat(), enterKeyDesc, escKeyDesc), Color.white, transform);
             text.sortingOrder = 600;
             text.transform.DOAShake();
             text.name = "Black text";

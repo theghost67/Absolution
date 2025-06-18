@@ -1,11 +1,11 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cHysteric : FieldCard
     {
         public cHysteric() : base("hysteric", "ultrasonic_scream")
         {
-            name = "Истеричка";
-            desc = "Довольно раздражительна. Возможно слишком. А ещё может одним визгом разбить все стёкла в радиусе ста метров.";
+            name = Translator.GetString("card_hysteric_1");
+            desc = Translator.GetString("card_hysteric_2");
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

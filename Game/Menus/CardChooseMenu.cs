@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
@@ -217,7 +217,7 @@ namespace Game.Menus
                 _renderer = gameObject.GetComponent<SpriteRenderer>();
                 _paletteElement = gameObject.GetComponent<ColorPaletteSpriteElement>();
                 _paletteElement.setColorOnStart = false;
-                SetTooltip(() => $"Перебросить карты ({_menu._rerollsLeft}x). Обновите ассортимент карт, если текущий выбор вас не устраивает.");
+                SetTooltip(() => Translator.GetString("card_choose_menu_1", _menu._rerollsLeft));
             }
 
             protected override void SetColor(Color value)
@@ -249,7 +249,7 @@ namespace Game.Menus
                 _renderer = transform.GetComponent<SpriteRenderer>();
                 _paletteElement = gameObject.GetComponent<ColorPaletteSpriteElement>();
                 _paletteElement.setColorOnStart = false;
-                SetTooltip(() => "<color=red>Отказаться от карты.</color> Полезно, когда выбирать из того, что есть, не хочется.");
+                SetTooltip(() => Translator.GetString("card_choose_menu_2"));
             }
             public void SetColor()
             {
@@ -299,6 +299,8 @@ namespace Game.Menus
             _descTextMesh = Transform.Find<TextMeshPro>("Desc text");
             _rerollButton = new RerollButtonDrawer(this);
             _declineButton = new DeclineButtonDrawer(this);
+
+            _headerTextMesh.text = Translator.GetString("card_choose_menu_3");
             _arrows = new ArrowsAnim[]
             {
                 new(Transform.Find("Arrows 1"), 50, -3.6f, 3.68f),
@@ -384,7 +386,7 @@ namespace Game.Menus
                 return;
             if (chosenCard != null && Player.Deck.LimitReached)
             {
-                chosenCard.Drawer.CreateTextAsSpeech("ПРЕДЕЛ КОЛОДЫ", Color.red);
+                chosenCard.Drawer.CreateTextAsSpeech(Translator.GetString("card_choose_menu_4"), Color.red);
                 return;
             }
 

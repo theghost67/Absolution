@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cLoba() : base("loba", "mama_bag", "teleportation_bracelet", "creators_mark")
         {
-            name = "Лоба";
-            desc = "Эта мамочка предпочитает женский подход. Зачистка рынка это её ежедневное занятие. И зачищает она его по-разному. " +
-                   "Иногда забирает все самые лучшие товары. А иногда забирает жизни самых лучших людей... Можете долго на неё не засматриваться, вы ей не интересны." +
-                   "Если, конечно, у вас нет Крабера.";
+            name = Translator.GetString("card_loba_1");
+            desc = Translator.GetString("card_loba_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

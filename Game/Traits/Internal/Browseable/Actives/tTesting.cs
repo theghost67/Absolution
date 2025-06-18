@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Effects;
 using Game.Territories;
@@ -19,8 +19,8 @@ namespace Game.Traits
 
         public tTesting() : base(ID)
         {
-            name = "Тестирование";
-            desc = "Итак, начинаем ТЕСТИРОВАНИЕ.";
+            name = Translator.GetString("trait_testing_1");
+            desc = Translator.GetString("trait_testing_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -31,8 +31,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации</color>\nТестирует карты все карты напротив владельца на прочность - " +
-                   $"если её инициатива ≤ {_moxieF.Format(args.stacks)}, ей будет нанесено {_strengthF.Format(args.stacks)} урона. Тратит все заряды.";
+            return Translator.GetString("trait_testing_3", _moxieF.Format(args.stacks), _strengthF.Format(args.stacks));
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

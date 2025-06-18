@@ -1,4 +1,4 @@
-﻿using Game.Cards;
+using Game.Cards;
 using Game.Menus;
 using GreenOne.Console;
 using System.Linq;
@@ -9,26 +9,26 @@ namespace Game.Console
     public class cmdCardStat : Command
     {
         const string ID = "cardstat";
-        const string DESC = "добавляет значение к характеристике наведённой карты";
+        static readonly string DESC = Translator.GetString("command_card_stat_1");
 
         class IdArg : CommandArg
         {
             const string ID = "id";
-            const string DESC = "ID характеристики";
+            static readonly string DESC = Translator.GetString("command_card_stat_2");
 
             public IdArg(Command command) : base(command, ValueType.Required | ValueType.Fixed, ID, DESC) { }
             protected override FixedValue[] FixedValuesCreator() => new FixedValue[]
             {
-                new("price", "цена"),
-                new("moxie", "инициатива"),
-                new("health", "здоровье"),
-                new("strength", "сила"),
+                new("price", Translator.GetString("command_card_stat_3")),
+                new("moxie", Translator.GetString("command_card_stat_4")),
+                new("health", Translator.GetString("command_card_stat_5")),
+                new("strength", Translator.GetString("command_card_stat_6")),
             };
         }
         class ValueArg : CommandArg
         {
             const string ID = "value";
-            const string DESC = "прибавляемое значение к характеристике";
+            static readonly string DESC = Translator.GetString("command_card_stat_7");
 
             public ValueArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -49,13 +49,13 @@ namespace Game.Console
         {
             if (TableEventManager.CountAll() != 0)
             {
-                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_card_stat_8"), LogType.Error);
                 return;
             }
             TableCardDrawer drawer = (TableCardDrawer)Drawer.SelectedDrawers.FirstOrDefault(d => d is TableCardDrawer);
             if (drawer == null)
             {
-                TableConsole.Log("Наведите курсор на карту, значение характеристики которой нужно изменить.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_card_stat_9"), LogType.Error);
                 return;
             }
 
@@ -67,11 +67,11 @@ namespace Game.Console
             {
                 if (id != "price")
                 {
-                    TableConsole.Log("Карта способности не имеет данной характеристики.", LogType.Error);
+                    TableConsole.Log(Translator.GetString("command_card_stat_10"), LogType.Error);
                     return;
                 }
                 card.Price.AdjustValue(value, Menu.GetCurrent());
-                TableConsole.Log($"Характеристика ({id}) карты была изменена на {value} (от: меню).", LogType.Log);
+                TableConsole.Log(Translator.GetString("command_card_stat_11", id, value), LogType.Log);
                 return;
             }
 
@@ -86,7 +86,7 @@ namespace Game.Console
             };
 
             stat.AdjustValue(value, Menu.GetCurrent());
-            TableConsole.Log($"Характеристика ({id}) карты была изменена на {value} (от: меню).", LogType.Log);
+            TableConsole.Log(Translator.GetString("command_card_stat_12", id, value), LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

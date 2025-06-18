@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cGhost() : base("ghost", "boo", "not_here", "creators_mark")
         {
-            name = "Призрак";
-            desc = "Крайне редкое создание, обладающее необыкновенной любопытностью. Не обладая стареющим телом, он " +
-                   "решил посвятить своё время на изучение мира и существ, обитающих в нём. Он побывал не просто в сотнях, " +
-                   "а в тысячах мест, пробуя себя в новых ролях и смотря на развитие ситуаций со стороны.";
+            name = Translator.GetString("card_ghost_1");
+            desc = Translator.GetString("card_ghost_2");
+
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 1);

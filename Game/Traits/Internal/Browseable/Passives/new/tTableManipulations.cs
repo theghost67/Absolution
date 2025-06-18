@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tTableManipulations() : base(ID)
         {
-            name = "Подстольные манипуляции";
-            desc = "У меня есть пара тысяч тузов в рукаве.";
+            name = Translator.GetString("trait_table_manipulations_1");
+            desc = Translator.GetString("trait_table_manipulations_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После первой установки любой карты, пока владелец находится на территории</color>\n" +
-                   $"Даст {_valueF.Format(args.stacks)} той же валюты, что и установленной карты.";
+            return Translator.GetString("trait_table_manipulations_3", _valueF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {
@@ -72,7 +72,7 @@ namespace Game.Traits
         {
             BattleFieldCard card = (BattleFieldCard)sender;
             IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(card.Territory);
-            if (trait == null || trait.Side != card.Side || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null || !trait.Owner.FirstFieldAttachment) return;
+            if (trait == null || trait.Side != card.Side || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null || !card.FirstFieldAttachment) return;
 
             await trait.AnimActivation();
             int value = _valueF.ValueInt(trait.GetStacks());

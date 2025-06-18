@@ -1,4 +1,4 @@
-﻿using Game.Cards;
+using Game.Cards;
 using Game.Menus;
 using Game.Territories;
 using GreenOne.Console;
@@ -10,12 +10,12 @@ namespace Game.Console
     public class cmdSideCard : Command
     {
         const string ID = "sidecard";
-        const string DESC = "создаёт и добавляет карту в рукав";
+        static readonly string DESC = Translator.GetString("command_side_card_1");
 
         class IdArg : CommandArg
         {
             const string ID = "id";
-            const string DESC = "ID для создания карты";
+            static readonly string DESC = Translator.GetString("command_side_card_2");
 
             public IdArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -28,7 +28,7 @@ namespace Game.Console
         class PointsArg : CommandArg
         {
             const string ID = "points";
-            const string DESC = "количество очков для улучшения карты";
+            static readonly string DESC = Translator.GetString("command_side_card_3");
 
             public PointsArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -47,13 +47,13 @@ namespace Game.Console
         class SideArg : CommandArg
         {
             const string ID = "side";
-            const string DESC = "сторона, которой будет выдана карта (p/e)";
+            static readonly string DESC = Translator.GetString("command_side_card_4");
 
             public SideArg(Command command) : base(command, ValueType.Required | ValueType.Fixed, ID, DESC) { }
             protected override FixedValue[] FixedValuesCreator() => new FixedValue[]
             {
-                new("p", "сторона игрока"),
-                new("e", "сторона противника"),
+                new("p", Translator.GetString("command_side_card_5")),
+                new("e", Translator.GetString("command_side_card_6")),
             };
         }
 
@@ -63,12 +63,12 @@ namespace Game.Console
         {
             if (TableEventManager.CountAll() != 0)
             {
-                TableConsole.Log("Невозможно выполнить команду из-за выполняемых в данный момент событий.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_side_card_7"), LogType.Error);
                 return;
             }
             if (Menu.GetCurrent() is not IMenuWithTerritory menu || menu.Territory is not BattleTerritory territory)
             {
-                TableConsole.Log("Текущее меню не содержит территорию сражения.", LogType.Error);
+                TableConsole.Log(Translator.GetString("command_side_card_8"), LogType.Error);
                 return;
             }
 
@@ -85,8 +85,8 @@ namespace Game.Console
                  result = territory.Player.Sleeve.Add(card);
             else result = territory.Enemy.Sleeve.Add(card);
             if (result)
-                TableConsole.Log($"Карта {id} создана и выдана в рукав.", LogType.Log);
-            else TableConsole.Log($"Не удалось выдать карту в рукав. Вероятно, из-за полной руки.", LogType.Log);
+                TableConsole.Log(Translator.GetString("command_side_card_9", id), LogType.Log);
+            else TableConsole.Log(Translator.GetString("command_side_card_10"), LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

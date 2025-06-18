@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Menus;
 using Game.Territories;
@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tCompetitiveObsession() : base(ID)
         {
-            name = "Соревновательная одержимость";
-            desc = "Раз на раз в кс пойдём, выйдем.";
+            name = Translator.GetString("trait_competitive_obsession_1");
+            desc = Translator.GetString("trait_competitive_obsession_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -31,10 +31,10 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             args.data.storage.TryGetValue(STRENGTH_STORAGE_ID, out object bonus);
-            string text = $"<color>После победы в сражении, если владелец выжил</color>\n" +
-                          $"Навсегда увеличивает силу владельца на {_strengthF.Format(args.stacks, true)}.";
+            string text = Translator.GetString("trait_competitive_obsession_3", _strengthF.Format(args.stacks, true));
+
             if (bonus != null && (float)bonus != 0)
-                text += $" Текущий бонус: <color=green>{(float)bonus * 100}%</color>.";
+                text += Translator.GetString("trait_competitive_obsession_4", (float)bonus * 100);
             return text;
         }
         public override float Points(FieldCard owner, int stacks)

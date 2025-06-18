@@ -12,9 +12,9 @@ namespace Game.Cards
 
         public cShockTherapy() : base(ID)
         {
-            name = "Электрошоковая терапия";
-            desc = "Внимание: электрошоковая терапия может привести к необратимым неврологическим изменениям, " +
-                   "просьба принимать решение о назначении данной процедуры только в крайнем случае. Комментарии врача: Ы-ХЫ-ХЫ-ХЫ-ХЫ-ХЫ!";
+            name = Translator.GetString("card_shock_therapy_1");
+            desc = Translator.GetString("card_shock_therapy_2");
+
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
@@ -25,7 +25,7 @@ namespace Game.Cards
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"Даёт всем вражеским картам навык <nobr><u>{traitName}</u></nobr>.";
+            return Translator.GetString("card_shock_therapy_3", traitName);
         }
         public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
         {

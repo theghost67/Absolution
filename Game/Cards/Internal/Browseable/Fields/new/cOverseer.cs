@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cOverseer() : base("overseer", "look")
         {
-            name = "Смотритель";
-            desc = "Он будет за вами присматривать. Но не в том смысле, в котором вы подумали. Он будет следить за каждым вашим шагом, прикрываясь добряком и " +
-                   "подмечивая самые незначительные на первый взгляд особенности вашей жизни. И как только настанет удобный момент, он продаст вас с потрохами, " +
-                   "заработав лишние пару тысяч себе в карман. Он, случаем, не дружит с Карлом?";
+            name = Translator.GetString("card_overseer_1");
+            desc = Translator.GetString("card_overseer_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

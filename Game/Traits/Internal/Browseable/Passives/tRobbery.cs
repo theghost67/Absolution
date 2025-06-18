@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,7 +15,7 @@ namespace Game.Traits
 
         public tRobbery() : base(ID)
         {
-            name = "Это ограбление!";
+            name = Translator.GetString("trait_robbery_1");
             desc = "Guys, the drill, go get it.";
 
             rarity = Rarity.Epic;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После убийства карты владельцем</color>\n" +
-                   $"Даёт {_goldF.Format(args.stacks)} золота стороне-владельцу и понижает инициативу владельца на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_robbery_2", _goldF.Format(args.stacks), _moxieF.Format(args.stacks, true));
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

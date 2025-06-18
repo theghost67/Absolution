@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tRunner() : base(ID)
         {
-            name = "Бегущая";
-            desc = "Эй, бегущая! У меня есть кое-какое задание для тебя! ...Только не это.";
+            name = Translator.GetString("trait_runner_1");
+            desc = Translator.GetString("trait_runner_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После перемещения владельца на новое поле</color>\nВосстанавливает {_healthF.Format(args.stacks)} здоровья владельцу.";
+            return Translator.GetString("trait_runner_3", _healthF.Format(args.stacks));
         }
         public override float Points(FieldCard owner, int stacks)
         {

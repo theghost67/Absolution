@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tSelfDestruction() : base(ID)
         {
-            name = "Самоуничтожение";
-            desc = "Нет, не трогай кнопку самоуничтожения!";
+            name = Translator.GetString("trait_self_destruction_1");
+            desc = Translator.GetString("trait_self_destruction_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации</color>\nУбивает владельца. Да, вот так просто.";
+            return Translator.GetString("trait_self_destruction_3");
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {

@@ -1,4 +1,4 @@
-﻿using Game.Cards;
+using Game.Cards;
 using GreenOne.Console;
 using System.Linq;
 using UnityEngine;
@@ -8,12 +8,12 @@ namespace Game.Console
     public class cmdDeckCard : Command
     {
         const string ID = "deckcard";
-        const string DESC = "создаёт и добавляет карту в колоду игрока";
+        static readonly string DESC = Translator.GetString("command_deck_card_1");
 
         class IdArg : CommandArg
         {
             const string ID = "id";
-            const string DESC = "ID для создания карты";
+            static readonly string DESC = Translator.GetString("command_deck_card_2");
 
             public IdArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -26,7 +26,7 @@ namespace Game.Console
         class PointsArg : CommandArg
         {
             const string ID = "points";
-            const string DESC = "количество очков для улучшения карты";
+            static readonly string DESC = Translator.GetString("command_deck_card_3");
 
             public PointsArg(Command command) : base(command, ValueType.Required, ID, DESC) { }
             public override bool TryParseValue(string str, out object value)
@@ -62,7 +62,7 @@ namespace Game.Console
                 Player.Deck.floatCards.Add(floatCard);
             }
 
-            TableConsole.Log($"Карта {id} создана и выдана в колоду игрока.", LogType.Log);
+            TableConsole.Log(Translator.GetString("command_deck_card_4", id), LogType.Log);
         }
         protected override CommandArg[] ArgumentsCreator() => new CommandArg[]
         {

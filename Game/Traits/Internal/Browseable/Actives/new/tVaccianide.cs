@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tVaccianide() : base(ID)
         {
-            name = "Вакцианид";
-            desc = "Жизнь - это причина умереть.";
+            name = Translator.GetString("trait_vaccianide_1");
+            desc = Translator.GetString("trait_vaccianide_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -32,10 +32,8 @@ namespace Game.Traits
         {
             string traitName1 = TraitBrowser.GetTrait(TRAIT_ID_1).name;
             string traitName2 = TraitBrowser.GetTrait(TRAIT_ID_2).name;
-            return $"<color>При активации на союзной карте рядом, включая владельца</color>\n" +
-                   $"Восстанавливает {_vaccineF.Format(args.stacks)} здоровья цели, даёт ей столько же зарядов навыка <nobr><u>{traitName1}</u></nobr>. Перезарядка: {CD} х.\n\n" +
-                   $"<color>При активации на вражеской карте рядом</color>\n" +
-                   $"Наносит {_cianideF.Format(args.stacks)} урона цели, даёт ей столько же зарядов навыка <nobr><u>{traitName2}</u></nobr>. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_vaccianide_3", _vaccineF.Format(args.stacks), traitName1, CD, _cianideF.Format(args.stacks), traitName2, CD);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

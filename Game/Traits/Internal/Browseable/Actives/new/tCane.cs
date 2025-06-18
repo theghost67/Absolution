@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tCane() : base(ID)
         {
-            name = "Трость боли";
-            desc = "Эй, чувак! Я инвалид!";
+            name = Translator.GetString("trait_cane_1");
+            desc = Translator.GetString("trait_cane_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -27,7 +27,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на карте рядом с владельцем</color>\nСовершает атаку на цель с силой в {_strengthF.Format(args.stacks, true)}. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_cane_3", _strengthF.Format(args.stacks, true), CD);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

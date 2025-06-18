@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tHack() : base(ID)
         {
-            name = "Взлом";
-            desc = "Инициализация absolution_cracker.exe... Инициализация завершена! Ожидание блокировки аккаунта за эксплойты...";
+            name = Translator.GetString("trait_hack_1");
+            desc = Translator.GetString("trait_hack_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После установки владельца на территорию впервые</color>\nВозвращает стоимость установки владельца.";
+            return Translator.GetString("trait_hack_3");
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

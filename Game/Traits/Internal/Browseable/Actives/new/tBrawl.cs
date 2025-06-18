@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tBrawl() : base(ID)
         {
-            name = "Потасовка";
-            desc = "Так, всем здрасьте. Я... позволите?";
+            name = Translator.GetString("trait_brawl_1");
+            desc = Translator.GetString("trait_brawl_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -29,9 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на союзной карте рядом</color>\nБерёт цель и <color=red>кидает</color> её на поле напротив владельца. Если поле занято," +
-                   $"наносит карте на занятом поле урон, равный силе брошенной карты. Брошенная карта также получает урон, равный силе карты на поле. После броска," +
-                   $"брошенная карта попытается занять поле напротив владельца, иначе вернётся на свою исходную позицию. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_brawl_3", CD);
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

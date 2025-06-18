@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tTeleportationBag() : base(ID)
         {
-            name = "Сумка телепортации";
-            desc = "Всегда с собой ношу несколько свитков на экстренные случаи.";
+            name = Translator.GetString("trait_teleportation_bag_1");
+            desc = Translator.GetString("trait_teleportation_bag_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -27,7 +27,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При активации на любой союзной карте</color>\nДаёт цели навык <nobr><u>{traitName}</u></nobr>. Тратит один заряд.";
+            return Translator.GetString("trait_teleportation_bag_3", traitName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

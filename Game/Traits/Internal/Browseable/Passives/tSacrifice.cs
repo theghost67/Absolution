@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System;
@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tSacrifice() : base(ID)
         {
-            name = "Жертвенный дар";
-            desc = "Прими же нашу смиренную жертву!";
+            name = Translator.GetString("trait_sacrifice_1");
+            desc = Translator.GetString("trait_sacrifice_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -29,8 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\n" +
-                   $"Убивает союзные карты рядом и переносит их силу и здоровье владельцу.";
+            return Translator.GetString("trait_sacrifice_3");
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -66,7 +66,7 @@ namespace Game.Traits
                 await field.Card.TryKill(BattleKillMode.Default, trait);
                 if (!(field.Card?.IsKilled ?? true))
                 {
-                    owner.Drawer?.RedrawHeaderTypingWithReset("Не дёргайся!");
+                    owner.Drawer?.RedrawHeaderTypingWithReset(Translator.GetString("trait_sacrifice_4"));
                     continue;
                 }
 

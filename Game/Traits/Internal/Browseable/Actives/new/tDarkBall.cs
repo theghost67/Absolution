@@ -21,8 +21,8 @@ namespace Game.Traits
 
         public tDarkBall() : base(ID)
         {
-            name = "Тёмный шар";
-            desc = "Дочь тьмы уничтожит всех своими тёмными шарами.";
+            name = Translator.GetString("trait_dark_ball_1");
+            desc = Translator.GetString("trait_dark_ball_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -35,11 +35,10 @@ namespace Game.Traits
         {
             object darkStacks = null;
             args.table?.Storage.TryGetValue(KEY, out darkStacks);
-            string str = $"<color>При активации на поле рядом напротив</color>\nНаносит {_directDamageF.Format(args.stacks)} урона цели и " +
-                         $"{_splashDamageF.Format(args.stacks)} соседним от цели картам. Получает {_chargesPerDeathF.Format(args.stacks)} зарядов тьмы после смерти " +
-                         $"карты рядом с владельцем. Этот навык можно использовать только при наличии одного или более зарядов тьмы.";
+            string str = Translator.GetString("trait_dark_ball_3", _directDamageF.Format(args.stacks), _splashDamageF.Format(args.stacks), _chargesPerDeathF.Format(args.stacks));
+
             if (darkStacks != null)
-                str += $" Зарядов тьмы: <color=#FF00FF>{(int)darkStacks}</color>.";
+                str += Translator.GetString("trait_dark_ball_4", (int)darkStacks);
             return str;
         }
         public override BattleWeight Weight(IBattleTrait trait)

@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tDarkPlans() : base(ID)
         {
-            name = "Тёмные планы";
-            desc = "Она готова предать даже своих друзей для достижения её цели.";
+            name = Translator.GetString("trait_dark_plans_1");
+            desc = Translator.GetString("trait_dark_plans_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -27,7 +27,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После установки на поле</color>\nКрадёт 1 ед. инициативы со всех карт на союзной территории. Тратит все заряды.";
+            return Translator.GetString("trait_dark_plans_3");
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

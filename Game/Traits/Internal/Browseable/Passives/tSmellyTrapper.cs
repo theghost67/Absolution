@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System;
@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tSmellyTrapper() : base(ID)
         {
-            name = "Вонючий капканщик";
-            desc = "Фу, убери говно!";
+            name = Translator.GetString("trait_smelly_trapper_1");
+            desc = Translator.GetString("trait_smelly_trapper_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -30,8 +30,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>При первой установке на поле и в начале хода на территории</color>\n" +
-                   $"Расставляет рядом с владельцем карты <nobr><u>{cardName}</u></nobr>. Тратит по заряду за каждую установленную карту.";
+            return Translator.GetString("trait_smelly_trapper_3", cardName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

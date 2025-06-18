@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tOoo() : base(ID)
         {
-            name = "УУУрождённый";
-            desc = "Эй! Знаешь что? Знаешь, приятель, я готовился, и сейчас тебе покажу!..";
+            name = Translator.GetString("trait_ooo_1");
+            desc = Translator.GetString("trait_ooo_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении карты с навыком {name} рядом с владельцем</color>\n" +
-                   $"Увеличивает инциативу владельца на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_ooo_3", name, _moxieF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

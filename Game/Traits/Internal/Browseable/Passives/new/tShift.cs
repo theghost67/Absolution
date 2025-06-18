@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tShift() : base(ID)
         {
-            name = "Смещение";
-            desc = "Тупо сечёт, что среди деревьев будет выделяться... Нас эта хрень где угодно может поджидать.";
+            name = Translator.GetString("trait_shift_1");
+            desc = Translator.GetString("trait_shift_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -30,8 +30,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\nПеремещается на поле правее, пропуская занятые поля. Дойдя до конца, перемещается налево. " +
-                   $"Увеличивает силу владельца на {_strengthF.Format(args.stacks, true)}. Навык не сработает, если заняты все поля.";
+            return Translator.GetString("trait_shift_3", _strengthF.Format(args.stacks, true));
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

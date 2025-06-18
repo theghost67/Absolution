@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cPigeon : FieldCard
     {
         public cPigeon() : base("pigeon", "pigeon_fright", "white_bombing", "creators_mark")
         {
-            name = "Голубь";
-            desc = "Этот голубь прожил большую часть своей жизни в городской среде. Имеет в запасе множество сюрпризов, " +
-                   "готовых свалиться на голову.";
+            name = Translator.GetString("card_pigeon_1");
+            desc = Translator.GetString("card_pigeon_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 1);

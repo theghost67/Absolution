@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tAvenger() : base(ID)
         {
-            name = "Мститель";
-            desc = "Мстители... к бою!";
+            name = Translator.GetString("trait_avenger_1");
+            desc = Translator.GetString("trait_avenger_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -29,7 +29,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При установке на поле</color>\nРядомстоящие союзные карты за исключением владельца получают <nobr><u>{traitName}</u></nobr>, тратит все заряды.";
+            return Translator.GetString("trait_avenger_3", traitName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

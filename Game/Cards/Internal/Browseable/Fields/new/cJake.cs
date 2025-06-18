@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cJake() : base("jake", "party_animal", "mutated")
         {
-            name = "Джейк";
-            desc = "Джейк-псина- ой, то есть Джейк-пёс повидал множество различных тварей и живёт более, чем спокойной жизнью. Вероятно, из-за того, что " +
-                   "он может растягиваться как ненормальный, что делает его неубиваемым ни от ран, ни от болезней. Жаль, что он слишком ленив, " +
-                   "чтобы использовать свои силы на полную. В последнее время он просто шатается по клубам и отжигает на танцполе.";
+            name = Translator.GetString("card_jake_1");
+            desc = Translator.GetString("card_jake_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

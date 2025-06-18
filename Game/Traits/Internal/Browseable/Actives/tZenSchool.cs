@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tZenSchool() : base(ID)
         {
-            name = "Школа дзена";
-            desc = "Познай путь дзена, брат мой.";
+            name = Translator.GetString("trait_zen_school_1");
+            desc = Translator.GetString("trait_zen_school_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return "<color>При активации на любой союзной карте</color>\n" +
-                   $"Перенаправляет всю силу цели в её здоровье: 1 ед. силы = {_healthF.Format(args.stacks)} здоровья. Так же восстанавливает своё здоровье на то же значение. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_zen_school_3", _healthF.Format(args.stacks), CD);
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

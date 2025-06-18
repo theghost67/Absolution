@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cEntrepreneur() : base("entrepreneur", "hired")
         {
-            name = "Предприниматель";
-            desc = "Его уволили с десятой по счёту работы, и он решил открыть свой бизнес. Ну, если подпольную продажу рабов можно назвать бизнесом. " +
-                   "Теперь он скитается по разным неприметным подвалам со своей труппой, демонстрируя свой эксклюзивный товар доверенным лицам... Да уж... " +
-                   "Надеюсь, его лавочку рано или поздно прикроют, как и его самого.";
+            name = Translator.GetString("card_entrepreneur_1");
+            desc = Translator.GetString("card_entrepreneur_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

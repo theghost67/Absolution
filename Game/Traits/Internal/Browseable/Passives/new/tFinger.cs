@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tFinger() : base(ID)
         {
-            name = "Палец унижения";
-            desc = "Ха, ты пенопласт!";
+            name = Translator.GetString("trait_finger_1");
+            desc = Translator.GetString("trait_finger_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При появлении карты напротив владельца</color>\nУменьшает инициативу цели на {_moxieF.Format(args.stacks, true)} " +
-                   $"и её силу на {_strengthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_finger_3", _moxieF.Format(args.stacks, true), _strengthF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

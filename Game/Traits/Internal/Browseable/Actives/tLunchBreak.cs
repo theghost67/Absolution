@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tLunchBreak() : base(ID)
         {
-            name = "Перекус";
-            desc = "Неплохо было бы подкрепиться.";
+            name = Translator.GetString("trait_lunch_break_1");
+            desc = Translator.GetString("trait_lunch_break_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string healthF = _healthF.Format(args.stacks, true);
-            return $"<color>При активации на карте рядом</color>\nЛечит цель на {healthF}. Перезарядка: {CD} х.\n\n" +
-                   $"<color>При активации на поле рядом</color>\nЛечит сторону, которая владеет этим полем, на {healthF}. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_lunch_break_3", healthF, CD, healthF, CD);
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

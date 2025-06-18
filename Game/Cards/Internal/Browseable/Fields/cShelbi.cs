@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cShelbi : FieldCard
     {
         public cShelbi() : base("shelbi", "origami_victim", "origami_killer")
         {
-            name = "Детектив Шелби";
-            desc = "Мастерский детектив, тайно расследующий дело о Мастере Оригами. Говорят, убийца топит своих жертв в дождевой воде. " + 
-                   "Так жестоко. И низко. Убийцей точно не может оказаться наш добрячок.";
+            name = Translator.GetString("card_shelbi_1");
+            desc = Translator.GetString("card_shelbi_2") + 
+                   Translator.GetString("card_shelbi_3");
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 3);

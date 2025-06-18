@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using GreenOne;
@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tOrderOfDefence() : base(ID)
         {
-            name = "Приказ о защите";
-            desc = "Стоять насмерть!";
+            name = Translator.GetString("trait_order_of_defence_1");
+            desc = Translator.GetString("trait_order_of_defence_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -31,9 +31,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID_TO_GIVE).name;
-            return $"<color>При активации</color>\n" +
-                   $"Все карты рядом с владельцем получают навык <nobr><u>{traitName}</u></nobr> с двумя зарядами. " +
-                   $"Уменьшает здоровье у стороны-владельца на {_healthDecF.Format(args.stacks, true)}. Тратит все заряды.";
+            return Translator.GetString("trait_order_of_defence_3", traitName, _healthDecF.Format(args.stacks, true));
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

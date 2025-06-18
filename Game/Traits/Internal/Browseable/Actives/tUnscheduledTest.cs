@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Effects;
 using Game.Palette;
@@ -22,8 +22,8 @@ namespace Game.Traits
 
         public tUnscheduledTest() : base(ID)
         {
-            name = "Внеплановая контрольная";
-            desc = "Начинаем контрольную работу!";
+            name = Translator.GetString("trait_unscheduled_test_1");
+            desc = Translator.GetString("trait_unscheduled_test_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -35,8 +35,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(IGNORED_TRAIT_ID).name;
-            return $"<color>При активации</color>\nТратит все заряды и испытывает каждую карту на территории напротив - " +
-                   $"если её инициатива ≤ {_moxieF.Format(args.stacks)}, она получит {_strengthF.Format(args.stacks)} урона. Карты с навыком <nobr><u>{traitName}</u></nobr> не получают урона.";
+            return Translator.GetString("trait_unscheduled_test_3", _moxieF.Format(args.stacks), _strengthF.Format(args.stacks), traitName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {
@@ -70,10 +70,10 @@ namespace Game.Traits
                 if (card.Moxie > moxie) continue;
                 if (card.Traits.Passive("scholar") != null)
                 {
-                    card.Drawer.CreateTextAsSpeech("Ученик", ColorPalette.CP.ColorCur);
+                    card.Drawer.CreateTextAsSpeech(Translator.GetString("trait_unscheduled_test_4"), ColorPalette.CP.ColorCur);
                     continue;
                 }
-                card.Drawer.CreateTextAsSpeech($"Кол\n<size=50%>-{strength}", Color.red);
+                card.Drawer.CreateTextAsSpeech(Translator.GetString("trait_unscheduled_test_5", strength), Color.red);
                 await card.Health.AdjustValue(-strength, trait);
             }
             await trait.SetStacks(0, trait.Side);

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using System;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tTactician() : base(ID)
         {
-            name = "Тактик";
-            desc = "Мастерски владеет тактическими приёмами.";
+            name = Translator.GetString("trait_tactician_1");
+            desc = Translator.GetString("trait_tactician_2");
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
@@ -27,7 +27,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале каждого второго хода на территории</color>\nУвеличивает инициативу владельца на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_tactician_3", _moxieF.Format(args.stacks, true));
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

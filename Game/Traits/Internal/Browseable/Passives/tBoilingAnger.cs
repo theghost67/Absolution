@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tBoilingAnger() : base(ID)
         {
-            name = "Кипящая злость";
-            desc = "Кажется, с каждой секундой ей становится только хуже.";
+            name = Translator.GetString("trait_boiling_anger_1");
+            desc = Translator.GetString("trait_boiling_anger_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -28,7 +28,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\nУвеличивает силу владельца на {_strengthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_boiling_anger_3", _strengthF.Format(args.stacks, true));
         }
         public override float Points(FieldCard owner, int stacks)
         {

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Collections.Generic;
@@ -19,8 +19,8 @@ namespace Game.Traits
 
         public tTimeToDecide() : base(ID)
         {
-            name = "Время решать";
-            desc = "Не делай этого, Коннор.";
+            name = Translator.GetString("trait_time_to_decide_1");
+            desc = Translator.GetString("trait_time_to_decide_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -32,8 +32,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При активации на союзном поле</color>\nСтановится девиантом, получая {_moxieF.Format(args.stacks)} инициативы или вдвое больше, если на союзных полях есть карты с таким же навыком. Тратит все заряды.\n\n" +
-                   $"<color>При активации на вражеском поле</color>\nОстаётся машиной, получая бонус в {_healthIncF.Format(args.stacks)} к здоровью и {_strengthIncF.Format(args.stacks)} к силе. Даёт владельцу навык <nobr><u>{traitName}</u></nobr>. Тратит все заряды.";
+            return Translator.GetString("trait_time_to_decide_3", _moxieF.Format(args.stacks), _healthIncF.Format(args.stacks), _strengthIncF.Format(args.stacks), traitName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

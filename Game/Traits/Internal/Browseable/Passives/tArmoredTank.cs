@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tArmoredTank() : base(ID)
         {
-            name = "Бронетанк";
-            desc = "Да у него непробиваемый слой защиты! Что это может быть?";
+            name = Translator.GetString("trait_armored_tank_1");
+            desc = Translator.GetString("trait_armored_tank_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки на владельца</color>\nУменьшает силу атаки на {_strengthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_armored_tank_3", _strengthF.Format(args.stacks, true));
         }
         public override float Points(FieldCard owner, int stacks)
         {

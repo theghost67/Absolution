@@ -16,7 +16,7 @@ namespace Game.Traits
 
         public tCreatorsMark() : base(ID)
         {
-            name = "Метка создателя";
+            name = Translator.GetString("trait_creators_mark_1");
             desc = $"<color={ColorPalette.CP.Hex}>null</color>";
 
             rarity = Rarity.Epic;
@@ -28,7 +28,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"Интересно, что произойдёт, если разместить пять уникальных карт с таким навыком на территории? Хм, интересно...";
+            return Translator.GetString("trait_creators_mark_2");
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

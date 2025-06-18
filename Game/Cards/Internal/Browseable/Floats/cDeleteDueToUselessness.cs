@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Effects;
 using Game.Territories;
 using Game.Traits;
@@ -11,8 +11,8 @@ namespace Game.Cards
     {
         public cDeleteDueToUselessness() : base("delete_due_to_uselessness")
         {
-            name = "Удалить из-за ненадобности";
-            desc = "Описание удалили из-за ненадобности.";
+            name = Translator.GetString("card_delete_due_to_uselessness_1");
+            desc = Translator.GetString("card_delete_due_to_uselessness_2");
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
@@ -22,7 +22,7 @@ namespace Game.Cards
 
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return "Уничтожает все карты со стоимостью ≤ 0 ед. или атакой ≤ 0 ед., возвращая по 1 ед. золота за каждую убитую карту владельцу.";
+            return Translator.GetString("card_delete_due_to_uselessness_3");
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {
@@ -47,7 +47,7 @@ namespace Game.Cards
                 if (!fieldCard.IsKilled) continue;
 
                 killedCardsCount++;
-                fieldCard.Drawer.CreateTextAsSpeech("НЕ НУЖЕН", Color.red);
+                fieldCard.Drawer.CreateTextAsSpeech(Translator.GetString("card_delete_due_to_uselessness_4"), Color.red);
             }
             await card.Side.Gold.AdjustValue(killedCardsCount, card);
         }

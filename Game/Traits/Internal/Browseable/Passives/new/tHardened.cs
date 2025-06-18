@@ -21,8 +21,8 @@ namespace Game.Traits
 
         public tHardened() : base(ID)
         {
-            name = "Закалённый";
-            desc = "После тысячи дней выживания в Константе, меня уже ничего не удивит...";
+            name = Translator.GetString("trait_hardened_1");
+            desc = Translator.GetString("trait_hardened_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -35,10 +35,10 @@ namespace Game.Traits
         {
             object value = null;
             bool hasKey = args.table?.Storage.TryGetValue(VALUE_KEY, out value) ?? false;
-            string str = $"<color>Перед совершением атаки на владельца</color>\nУменьшает силу атаки на {_valueBaseF.Format(args.stacks, true)}. " +
-                         $"В начале каждого второго хода на территории это значение увеличивается на {_valuePerTurnF.Format(args.stacks, true)}.";
+            string str = Translator.GetString("trait_hardened_3", _valueBaseF.Format(args.stacks, true), _valuePerTurnF.Format(args.stacks, true));
+
             if (hasKey)
-                str += $" Текущее значение: {value}.";
+                str += Translator.GetString("trait_hardened_4", value);
             return str;
         }
         public override float Points(FieldCard owner, int stacks)

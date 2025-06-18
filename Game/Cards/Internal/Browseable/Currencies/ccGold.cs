@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Game.Cards
 {
@@ -6,8 +6,8 @@ namespace Game.Cards
     {
         public ccGold() : base("gold")
         {
-            name = "Золото";
-            desc = "Распространённая валюта, представляющая материальную ценность самых разных объектов.";
+            name = Translator.GetString("currency_gold_1");
+            desc = Translator.GetString("currency_gold_2");
             iconPath = "";
             color = new Color(1, 1, 0);
         }

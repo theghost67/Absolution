@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tStealth() : base(ID)
         {
-            name = "Стелс";
-            desc = "Стелс.";
+            name = Translator.GetString("trait_stealth_1");
+            desc = Translator.GetString("trait_stealth_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -28,8 +28,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>После убийства любой карты владельцем с одной атаки</color>\n" +
-                   $"накладывает на владельца навык <nobr><u>{traitName}</u></nobr>.";
+            return Translator.GetString("trait_stealth_3", traitName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -15,9 +15,9 @@ namespace Game.Traits
 
         public tOrigamiKiller() : base(ID)
         {
-            name = "Мастер Оригами";
-            desc = "Хорошо. Я Мастер Оригами. Я сажаю жертв в машину. Топлю в дождевой воде. Потом бросаю на пустыре с оригами, " +
-                   "зажатой в кулаке, и орхидеей на груди. А всё потому, что мне скучно, мистер Шелби.";
+            name = Translator.GetString("trait_origami_killer_1");
+            desc = Translator.GetString("trait_origami_killer_2");
+
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,8 +29,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>После смерти любой карты <nobr><u>{cardName}</u></nobr> от любого источника</color>\n" +
-                   $"увеличивает силу владельца на {_strengthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_origami_killer_3", cardName, _strengthF.Format(args.stacks, true));
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

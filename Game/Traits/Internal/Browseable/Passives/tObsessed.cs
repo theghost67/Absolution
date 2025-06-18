@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Collections.Generic;
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tObsessed() : base(ID)
         {
-            name = "Одержимость";
-            desc = "Я хочу только одного: уничтожить тебя.";
+            name = Translator.GetString("trait_obsessed_1");
+            desc = Translator.GetString("trait_obsessed_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -29,8 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки владельца</color>\n" +
-                   $"Меняет цель атаки на вражескую карту с наибольшим количеством здоровья. Тратит все заряды.";
+            return Translator.GetString("trait_obsessed_3");
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

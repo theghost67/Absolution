@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using GreenOne;
 using System.Collections.Generic;
@@ -12,8 +12,8 @@ namespace Game.Cards
 
         public cKalenskiyProtocol() : base("kalenskiy_protocol")
         {
-            name = "Протокол Каленский";
-            desc = "Можно ли обернуть коллизию себе на пользу?";
+            name = Translator.GetString("card_kalenskiy_protocol_1");
+            desc = Translator.GetString("card_kalenskiy_protocol_2");
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);
@@ -23,8 +23,8 @@ namespace Game.Cards
 
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return $"Переносит инициативу всех карт на своей территории в их силу: -1 ед. инициативы в +{MOXIE_TO_STRENGTH_REL * 100}% силы. " +
-                   $"Перенос более {MAX_MOXIE_TO_STRENGTH} инициативы не даёт бонус к силе.";
+            return Translator.GetString("card_kalenskiy_protocol_3", MOXIE_TO_STRENGTH_REL * 100, MAX_MOXIE_TO_STRENGTH);
+
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

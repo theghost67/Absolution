@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tBoom() : base(ID)
         {
-            name = "БУМ!";
-            desc = "Шшш...";
+            name = Translator.GetString("trait_boom_1");
+            desc = Translator.GetString("trait_boom_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -29,7 +29,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале следующего хода на территории</color>\nВзрывается, нанося всем картам рядом (включая союзные) {_strengthF.Format(args.stacks)} ед. урона и уничтожая владельца. Тратит все заряды.";
+            return Translator.GetString("trait_boom_3", _strengthF.Format(args.stacks));
         }
         public override float Points(FieldCard owner, int stacks)
         {

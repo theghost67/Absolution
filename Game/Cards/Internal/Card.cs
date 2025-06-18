@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Game.Cards
 {
     /// <summary>
-    /// Абстрактный базовый класс для данных игровой карты.
+    /// РђР±СЃС‚СЂР°РєС‚РЅС‹Р№ Р±Р°Р·РѕРІС‹Р№ РєР»Р°СЃСЃ РґР»СЏ РґР°РЅРЅС‹С… РёРіСЂРѕРІРѕР№ РєР°СЂС‚С‹.
     /// </summary>
     public abstract class Card : Unique, IDescriptive, ICloneable
     {
@@ -104,35 +104,46 @@ namespace Game.Cards
                 throw new ArgumentException(nameof(args));
 
             StringBuilder sb = new();
-            sb.Append($"<size=150%>{name}</size>\n<i>");
-            switch (rarity)
-            {
-                case Rarity.None: sb.Append("Обычная"); break;
-                case Rarity.Rare: sb.Append("Редкая"); break;
-                case Rarity.Epic: sb.Append("Особая"); break;
-                default: throw new NotSupportedException();
-            }
-            if (isField)
-                 sb.Append(" карта поля</i>\n\n");
-            else sb.Append(" карта способности</i>\n\n");
+            sb.Append($"<size=150%>{name}</size>\n");
+			if (isField)
+			{
+				switch (rarity)
+				{
+					case Rarity.None: sb.Append(Translator.GetString("card_1")); break;
+					case Rarity.Rare: sb.Append(Translator.GetString("card_2")); break;
+					case Rarity.Epic: sb.Append(Translator.GetString("card_3")); break;
+					default: throw new NotSupportedException();
+				}
+			}
+			else
+			{
+				switch (rarity)
+				{
+					case Rarity.None: sb.Append(Translator.GetString("card_4")); break;
+					case Rarity.Rare: sb.Append(Translator.GetString("card_5")); break;
+					case Rarity.Epic: sb.Append(Translator.GetString("card_6")); break;
+					default: throw new NotSupportedException();
+				}
+			}
 
+			sb.Append("\n\n");
             sb.Append(contents);
             if (contents != "")
                 sb.Append("\n\n");
 
             if (args.linkFormat)
             {
-                if (args.linkStats[0] >= 0) sb.AppendLine($"Стоимость: {price.currency.name}, {args.linkStats[0]} ед.");
-                if (args.linkStats[1] >= 0) sb.AppendLine($"Инициатива: {args.linkStats[1]} ед.");
-                if (args.linkStats[2] >= 0) sb.AppendLine($"Здоровье: {args.linkStats[2]} ед.");
-                if (args.linkStats[3] >= 0) sb.AppendLine($"Сила: {args.linkStats[3]} ед.");
+                if (args.linkStats[0] >= 0) sb.AppendLine(Translator.GetString("card_7", price.currency.name, args.linkStats[0]));
+                if (args.linkStats[1] >= 0) sb.AppendLine(Translator.GetString("card_8", args.linkStats[1]));
+                if (args.linkStats[2] >= 0) sb.AppendLine(Translator.GetString("card_9", args.linkStats[2]));
+                if (args.linkStats[3] >= 0) sb.AppendLine(Translator.GetString("card_10", args.linkStats[3]));
 
                 if (args.linkTraits.Length == 0)
                 {
-                    sb.Append("Навыки: нет.");
+                    sb.Append(Translator.GetString("card_11"));
                     return sb.ToString();
                 }
-                sb.Append("Навыки: ");
+                sb.Append(Translator.GetString("card_12"));
                 foreach (TraitStacksPair pair in args.linkTraits)
                 {
                     Trait trait = TraitBrowser.GetTrait(pair.id);
@@ -150,12 +161,12 @@ namespace Game.Cards
             int turnAge = args.table?.TurnAge ?? -1;
             if (turnAge > 0)
             {
-                sb.Append($"Установлена: {turnAge} х. назад\n");
+                sb.Append(Translator.GetString("card_13", turnAge));
                 extraLine = true;
             }
             else if (turnAge == 0)
             {
-                sb.Append("Установлена: на этом ходу\n");
+                sb.Append(Translator.GetString("card_14"));
                 extraLine = true;
             }
 
@@ -164,7 +175,7 @@ namespace Game.Cards
             if (extraLine)
                 sb.Append('\n');
 
-            sb.Append($"<i>«{desc}»");
+            sb.Append($"<i>В«{desc}В»");
             return sb.ToString();
         }
 

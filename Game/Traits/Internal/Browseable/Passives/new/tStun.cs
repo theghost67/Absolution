@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tStun() : base(ID)
         {
-            name = "Оглушение";
-            desc = "Я в доту зашёл что ли? Какое ещё оглушение!?";
+            name = Translator.GetString("trait_stun_1");
+            desc = Translator.GetString("trait_stun_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки владельцем</color>\nОтменит атаку, если она ещё не отменена, затем тратит все заряды.";
+            return Translator.GetString("trait_stun_3");
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

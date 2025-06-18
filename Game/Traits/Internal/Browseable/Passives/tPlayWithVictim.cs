@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tPlayWithVictim() : base(ID)
         {
-            name = "Поиграть с жертвой";
-            desc = "Мы с тобой остались совсем одни...";
+            name = Translator.GetString("trait_play_with_victim_1");
+            desc = Translator.GetString("trait_play_with_victim_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После совершения атаки на карту владельцем</color>\n" +
-                   $"Уменьшает силу цели на {_strengthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_play_with_victim_3", _strengthF.Format(args.stacks, true));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

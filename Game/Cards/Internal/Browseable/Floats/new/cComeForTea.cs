@@ -12,8 +12,8 @@ namespace Game.Cards
 
         public cComeForTea() : base(ID)
         {
-            name = "Зайти на чай";
-            desc = "По ночам Уничтожитель любит приходить на чай. Обычно, после его ухода весь город затихает. А на утро у уборщиков появляется много работы...";
+            name = Translator.GetString("card_come_for_tea_1");
+            desc = Translator.GetString("card_come_for_tea_2");
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 5);
@@ -23,7 +23,7 @@ namespace Game.Cards
 
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return $"Наносит всем картам на территории урон, равный половине от максимального здоровья стороны-владельца. Сначала наносит урон вражеским картам.";
+            return Translator.GetString("card_come_for_tea_3");
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

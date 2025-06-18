@@ -4,9 +4,9 @@ namespace Game.Cards
     {
         public cSpiderMan() : base("spider_man", "spider_suit", "amazement")
         {
-            name = "Человек-анекдот";
-            desc = "Супергерой, доводящий своих противников до смерти от смеха. Вероятно, один из самых жестоких супергероев, когда-либо существовавших. " +
-                   "К тому же, у него есть паутина, которой он может обездвижить своих противников, чтобы заставить слушать их анекдоты до остановки дыхания.";
+            name = Translator.GetString("card_spider_man_1");
+            desc = Translator.GetString("card_spider_man_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

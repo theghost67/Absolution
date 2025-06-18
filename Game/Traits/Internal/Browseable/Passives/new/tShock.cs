@@ -17,8 +17,8 @@ namespace Game.Traits
 
         public tShock() : base(ID)
         {
-            name = "Электрошок";
-            desc = "Ситуация становится электрошокирующе напряжённой.";
+            name = Translator.GetString("trait_shock_1");
+            desc = Translator.GetString("trait_shock_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -29,8 +29,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После совершения атаки владельцем</color>\n" +
-                   $"Мгновенно наносит урон рядомстоящим союзным картам, равный {_damageF.Format(args.stacks)} от силы атаки.";
+            return Translator.GetString("trait_shock_3", _damageF.Format(args.stacks));
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

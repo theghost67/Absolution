@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Collections.Generic;
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tWideSwing() : base(ID)
         {
-            name = "Широкий замах";
-            desc = "Я тебе щас как дам!";
+            name = Translator.GetString("trait_wide_swing_1");
+            desc = Translator.GetString("trait_wide_swing_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки владельцем</color>\n" +
-                   $"Если цель атаки только одна - карты рядом с целью так же станут целями. Сила атаки будет распределена равномерно.";
+            return Translator.GetString("trait_wide_swing_3");
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

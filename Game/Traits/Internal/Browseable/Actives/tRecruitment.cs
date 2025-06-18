@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tRecruitment() : base(ID)
         {
-            name = "Перевербовка";
-            desc = "Ты пойдёшь со мной.";
+            name = Translator.GetString("trait_recruitment_1");
+            desc = Translator.GetString("trait_recruitment_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на вражеской карте рядом</color>\n" +
-                   $"Переманивает цель на поле напротив неё, если её здоровье ≤ {_healthF.Format(args.stacks)} и поле напротив свободно. Тратит все заряды.";
+            return Translator.GetString("trait_recruitment_3", _healthF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

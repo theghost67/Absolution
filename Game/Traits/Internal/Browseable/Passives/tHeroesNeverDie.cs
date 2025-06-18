@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using UnityEngine;
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tHeroesNeverDie() : base(ID)
         {
-            name = "Герои не умирают";
-            desc = "Она танка воскресила...";
+            name = Translator.GetString("trait_heroes_never_die_1");
+            desc = Translator.GetString("trait_heroes_never_die_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>На пороге смерти стороны-владельца</color>\n" +
-                   $"Если владелец находится на территории, жертвует владельцем, передавая всё его здоровье стороне-владельцу. Тратит все заряды.";
+            return Translator.GetString("trait_heroes_never_die_3");
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

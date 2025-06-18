@@ -7,10 +7,9 @@ namespace Game.Cards
         static readonly double _points = Math.Round(TimeSpan.FromTicks(DateTime.Now.Ticks).TotalSeconds);
         public cJoy() : base("joy", "robbery", "creators_mark")
         {
-            name = "Джой";
-            desc = $"Одержимая компьютерными играми грабительница, превратившая городской террор в аркадную забаву. Ведёт нескончаемый счёт очков, " +
-                   $"которая она \"получает\" за устранение тазеров, бульдозеров и джеки-чанов. По-моему, она ещё и в сети его ведёт. Так, сейчас посмотрим..." +
-                   $"О, нашёл! {_points} очков! Ну что, впечатляет?";
+            name = Translator.GetString("card_joy_1");
+            desc = Translator.GetString("card_joy_2", _points);
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

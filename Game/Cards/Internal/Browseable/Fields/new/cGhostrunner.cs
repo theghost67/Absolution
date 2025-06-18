@@ -4,9 +4,9 @@ namespace Game.Cards
     {
         public cGhostrunner() : base("ghostrunner", "hyper_reflex")
         {
-            name = "Бегущая тень";
-            desc = "Неуловимый и сверхтехнологичный робот-охотник, который обрёл самосознание и решил перестать разрубать людей на куски, " +
-                   "переключившись на салаты. Но если его вывести из себя, то он может вернуться за старое.";
+            name = Translator.GetString("card_ghostrunner_1");
+            desc = Translator.GetString("card_ghostrunner_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 1);

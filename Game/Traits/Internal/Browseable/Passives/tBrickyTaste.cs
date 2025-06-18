@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tBrickyTaste() : base(ID)
         {
-            name = "Кирпичный привкус";
-            desc = "Ты сейчас кирпич зубами грызть будешь.";
+            name = Translator.GetString("trait_bricky_taste_1");
+            desc = Translator.GetString("trait_bricky_taste_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После совершения атаки или лечения владельца</color>\nУменьшает инициативу атакующего на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_bricky_taste_3", _moxieF.Format(args.stacks, true));
         }
         public override float Points(FieldCard owner, int stacks)
         {

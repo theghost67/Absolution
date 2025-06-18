@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tNineLives() : base(ID)
         {
-            name = "Девять жизней";
-            desc = "Всё в порядке, у меня ведь девять жизней! ...Да? И сколько жизней у тебя осталось?";
+            name = Translator.GetString("trait_nine_lives_1");
+            desc = Translator.GetString("trait_nine_lives_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -30,9 +30,8 @@ namespace Game.Traits
         {
             string livesStr = _initialLivesF.Format(args.stacks);
             string statsDebuffStr = _statsDebuffF.Format(args.stacks);
-            return $"<color>После смерти владельца</color>\nНавсегда даёт 1 ед. заряда навыка. Если зарядов было меньше {livesStr}, " +
-                   $"создаёт копию владельца с единственным навыком <u>{name}</u> и уменьшенными на {statsDebuffStr} характеристиками, " +
-                   $"помещая её в рукав стороны-владельца. Если на момент смерти зарядов было {livesStr} и более, навсегда удаляет карту из колоды, тратит все заряды.";
+            return Translator.GetString("trait_nine_lives_3", livesStr, name, statsDebuffStr, livesStr);
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

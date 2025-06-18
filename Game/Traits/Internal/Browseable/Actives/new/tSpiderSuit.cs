@@ -19,8 +19,8 @@ namespace Game.Traits
 
         public tSpiderSuit() : base(ID)
         {
-            name = "Костюм паука";
-            desc = "С большой стоимостью карты, приходит большая ответственность.";
+            name = Translator.GetString("trait_spider_suit_1");
+            desc = Translator.GetString("trait_spider_suit_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -33,12 +33,12 @@ namespace Game.Traits
         {
             object isInSpiderMode = null;
             args.table?.Storage.TryGetValue(KEY, out isInSpiderMode);
-            string str = $"<color>При активации на территории или в рукаве</color>\n" +
-                         $"Переключает режим паука. В режиме паука увеличивает инициативу владельца на {_moxieF.Format(args.stacks)}, но понижает его силу на {_strengthF.Format(args.stacks, true)}.";
+            string str = Translator.GetString("trait_spider_suit_3", _moxieF.Format(args.stacks), _strengthF.Format(args.stacks, true));
+
             if (isInSpiderMode != null)
             {
-                string spiderModeStr = (bool)isInSpiderMode ? "<color=green>ВКЛ</color>" : "<color=red>ВЫКЛ</color>";
-                str += $" Режим паука: {spiderModeStr}.";
+                string spiderModeStr = (bool)isInSpiderMode ? Translator.GetString("trait_spider_suit_4") : Translator.GetString("trait_spider_suit_5");
+                str += Translator.GetString("trait_spider_suit_6", spiderModeStr);
             }
             return str;
         }

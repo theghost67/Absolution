@@ -4,9 +4,9 @@ namespace Game.Cards
     {
         public cAlex() : base("alex", "finger")
         {
-            name = "Алекс";
-            desc = "Лев, который любит насмехаться над всем и вся. Серьёзно, он вас просто загнобит при первой встрече. " +
-                   "А ещё я слышал, что однажды он своих друзей чуть не слопал! Зоопарк какой-то...";
+            name = Translator.GetString("card_alex_1");
+            desc = Translator.GetString("card_alex_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 2);

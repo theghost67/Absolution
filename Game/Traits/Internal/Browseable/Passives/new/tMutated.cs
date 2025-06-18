@@ -20,8 +20,8 @@ namespace Game.Traits
 
         public tMutated() : base(ID)
         {
-            name = "Мутированный";
-            desc = "Как он вообще появился на свет? ...Не знаю, в пробирке вылупился, видимо.";
+            name = Translator.GetString("trait_mutated_1");
+            desc = Translator.GetString("trait_mutated_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -32,8 +32,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При уменьшении здоровья владельца</color>\nДаёт бонус к инициативе владельца в зависимости от его здоровья: " +
-                   $"+{MOXIE_PER_MISSING_HEALTH} ед. за каждые {MISSING_HEALTH_PERCENT}% отсутствующего здоровья";
+            return Translator.GetString("trait_mutated_3", MOXIE_PER_MISSING_HEALTH, MISSING_HEALTH_PERCENT);
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

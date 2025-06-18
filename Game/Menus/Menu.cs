@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Effects;
 using GreenOne;
 using System;
@@ -46,7 +46,7 @@ namespace Game.Menus
         public int FullDepth => _fullDepth;
         public virtual string LinkedMusicMixId => null; // see AudioBrowser
 
-        public string TableName => "Меню";
+        public string TableName => Translator.GetString("menu_1");
         public string TableNameDebug => _id;
 
         static readonly Transform _parent = Global.Root.Find("MENUS").transform;

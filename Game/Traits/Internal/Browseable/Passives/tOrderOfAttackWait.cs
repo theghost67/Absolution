@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using System;
 
@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tOrderOfAttackWait() : base(ID)
         {
-            name = "Приказ об атаке (ждёт)";
-            desc = "Приказ получен, выдвигаюсь на позицию.";
+            name = Translator.GetString("trait_order_of_attack_wait_1");
+            desc = Translator.GetString("trait_order_of_attack_wait_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -27,7 +27,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\nСовершит свою атаку. Тратит все заряды.";
+            return Translator.GetString("trait_order_of_attack_wait_3");
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

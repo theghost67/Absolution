@@ -4,9 +4,9 @@ namespace Game.Cards
     {
         public cSonic() : base("sonic", "gotta_go", "lightning_speed")
         {
-            name = "Соник";
-            desc = "Сверхскоростной синий ёж из дальних миров, прибывший на Землю ради того, чтобы поесть чипсов и посмотреть бейсбол. " +
-                   "Благодаря своей скорости, он может менять своё окружение под себя. И избавлять себя от проблем, разумеется! Совет от Соника - беги от слоника.";
+            name = Translator.GetString("card_sonic_1");
+            desc = Translator.GetString("card_sonic_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 0);

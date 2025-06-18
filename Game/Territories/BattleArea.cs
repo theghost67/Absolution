@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Effects;
 using System;
@@ -356,7 +356,7 @@ namespace Game.Territories
                 if (!e.isLmbDown) return;
                 if (!_aimFilter(field))
                 {
-                    fieldDrawer.CreateTextAsSpeech("НЕВЕРНАЯ ЦЕЛЬ", Color.red);
+                    fieldDrawer.CreateTextAsSpeech(Translator.GetString("battle_area_1"), Color.red);
                     return;
                 }
                 OnMouseLeave(sender, e);

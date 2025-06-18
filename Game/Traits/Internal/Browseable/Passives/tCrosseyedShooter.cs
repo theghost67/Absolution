@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using Unity.Mathematics;
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tCrosseyedShooter() : base(ID)
         {
-            name = "Косоглазый стрелок";
-            desc = "Я попал! Я попал в него! Это ведь он?";
+            name = Translator.GetString("trait_crosseyed_shooter_1");
+            desc = Translator.GetString("trait_crosseyed_shooter_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -26,8 +26,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки владельца</color>\n" +
-                   $"Атакует вражеские поля слева/справа по очереди (сначала левое, потом правое, затем снова левое и так далее).";
+            return Translator.GetString("trait_crosseyed_shooter_3");
+
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

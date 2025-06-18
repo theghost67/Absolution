@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tGrandThief() : base(ID)
         {
-            name = "Великий автоугонщик";
-            desc = "Ты забываешь тысячу мелочей каждый день. Пусть эта будет одна из них.";
+            name = Translator.GetString("trait_grand_thief_1");
+            desc = Translator.GetString("trait_grand_thief_2");
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При убийстве вражеской карты владельцем</color>\n" +
-                   $"Понижает стоимость всех остальных вражеских карт на территории на {_priceF.Format(args.stacks)} ед.";
+            return Translator.GetString("trait_grand_thief_3", _priceF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

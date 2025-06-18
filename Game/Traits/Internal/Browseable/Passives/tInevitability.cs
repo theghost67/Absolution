@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tInevitability() : base(ID)
         {
-            name = "Неотвратимость";
-            desc = "Я - сама неотвратимость.";
+            name = Translator.GetString("trait_inevitability_1");
+            desc = Translator.GetString("trait_inevitability_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После смерти любой карты на территории</color>\nУвеличивает здоровье владельца на {_healthF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_inevitability_3", _healthF.Format(args.stacks, true));
         }
         public override float Points(FieldCard owner, int stacks)
         {

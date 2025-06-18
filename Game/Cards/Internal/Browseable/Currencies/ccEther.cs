@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Game.Cards
 {
@@ -6,8 +6,8 @@ namespace Game.Cards
     {
         public ccEther() : base("ether")
         {
-            name = "Эфир";
-            desc = "Загадочная эссенция, наделённая силой духов, заключённых внутри неё.";
+            name = Translator.GetString("currency_ether_1");
+            desc = Translator.GetString("currency_ether_2");
             iconPath = "";
             color = new Color(1, 0, 1);
         }

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -13,8 +13,8 @@ namespace Game.Traits
 
         public tWayOut() : base(ID)
         {
-            name = "Побег";
-            desc = "С тобой или без тебя - я это сделаю.";
+            name = Translator.GetString("trait_way_out_1");
+            desc = Translator.GetString("trait_way_out_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -25,7 +25,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на территории</color>\nВозвращает владельца в рукав.";
+            return Translator.GetString("trait_way_out_3");
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

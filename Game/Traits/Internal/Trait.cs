@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Palette;
 using Game.Territories;
@@ -135,19 +135,30 @@ namespace Game.Traits
             string headColorHex = isPassive ? ColorPalette.CP.Hex : ColorPalette.CA.Hex;
             contents = contents.Replace("<color>", $"<color={headColorHex}>");
 
-            switch (rarity)
-            {
-                case Rarity.None: sb.Append("Обычный"); break;
-                case Rarity.Rare: sb.Append("Редкий"); break;
-                case Rarity.Epic: sb.Append("Особый"); break;
-                default: throw new NotSupportedException();
-            }
+			if (isPassive)
+			{
+				switch (rarity)
+				{
+					case Rarity.None: sb.Append(Translator.GetString("trait_1")); break;
+					case Rarity.Rare: sb.Append(Translator.GetString("trait_2")); break;
+					case Rarity.Epic: sb.Append(Translator.GetString("trait_3")); break;
+					default: throw new NotSupportedException();
+				}
+			}
+			else
+			{
+				switch (rarity)
+				{
+					case Rarity.None: sb.Append(Translator.GetString("trait_4")); break;
+					case Rarity.Rare: sb.Append(Translator.GetString("trait_5")); break;
+					case Rarity.Epic: sb.Append(Translator.GetString("trait_6")); break;
+					default: throw new NotSupportedException();
+				}
+			}
 
-            string staticStr = tags.HasFlag(TraitTag.Static) ? " (статичный)" : "";
-            if (isPassive)
-                 sb.Append($" пассивный навык{staticStr}</i>\n\n");
-            else sb.Append($" активный навык{staticStr}</i>\n\n");
-
+			if (tags.HasFlag(TraitTag.Static))
+				sb.Append(Translator.GetString("trait_7"));
+			sb.Append("</i>\n\n");
             sb.Append(contents);
             if (args.linkFormat) return sb.ToString();
             if (contents != "") 
@@ -159,13 +170,13 @@ namespace Game.Traits
             int turnsPassed = args.table?.TurnAge ?? -1;
             if (turnsPassed > 0)
             {
-                sb.Append($"Навык наложен: {turnsPassed} х. назад\n");
+                sb.Append(Translator.GetString("trait_8", turnsPassed));
                 extraLine = true;
             }
             int turnsDelay = args.turnsDelay;
             if (turnsDelay > 0)
             {
-                sb.Append($"Навык перезаряжается: {turnsDelay} х.\n");
+                sb.Append(Translator.GetString("trait_9", turnsDelay));
                 extraLine = true;
             }
 

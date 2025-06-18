@@ -18,8 +18,8 @@ namespace Game.Traits
 
         public tWeeds() : base(ID)
         {
-            name = "Целебные травы";
-            desc = "Звали доктора?";
+            name = Translator.GetString("trait_weeds_1");
+            desc = Translator.GetString("trait_weeds_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -30,10 +30,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на союзном поле рядом, включая владельца</color>\n" +
-                   $"Удаляет все навыки на цели (сначала пассивные) за исключением навыка <nobr><u>{name}</u></nobr>. Перезарядка: {CD} х.\n\n" +
-                   $"<color>В начале хода на территории</color>\nЕсли на прошлом ходу навык не был на перезарядке, " +
-                   $"восстанавливает {_healthF.Format(args.stacks)} здоровья союзным картам рядом, исключая владельца.";
+            return Translator.GetString("trait_weeds_3", name, CD, _healthF.Format(args.stacks));
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

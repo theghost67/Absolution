@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using UnityEngine;
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tReflection() : base(ID)
         {
-            name = "Отражение";
-            desc = "Посмотри на себя. Стоило ли оно того?";
+            name = Translator.GetString("trait_reflection_1");
+            desc = Translator.GetString("trait_reflection_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.None;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После совершения атаки на владельца</color>\n" +
-                   $"Атакует атакующего в ответ с силой, равной {_strengthF.Format(args.stacks)} от атаки.";
+            return Translator.GetString("trait_reflection_3", _strengthF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

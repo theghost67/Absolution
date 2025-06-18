@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tHired() : base(ID)
         {
-            name = "Ты нанят!";
-            desc = "Я зарабатываю по 1000$ в день. Как? Всё просто...";
+            name = Translator.GetString("trait_hired_1");
+            desc = Translator.GetString("trait_hired_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При активации на вражеской карте рядом</color>\nКоличество золота стороны-владельца уменьшится на значение, " +
-                   $"равное стоимости цели. Цель получит <nobr><u>{traitName}</u></nobr>.";
+            return Translator.GetString("trait_hired_3", traitName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

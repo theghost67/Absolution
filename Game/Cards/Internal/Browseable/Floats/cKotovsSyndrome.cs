@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Territories;
 using System.Collections.Generic;
 
@@ -11,8 +11,8 @@ namespace Game.Cards
 
         public cKotovsSyndrome() : base(ID)
         {
-            name = "Синдром Котова";
-            desc = "Психологическое расстройство, при котором появляется желание оскорблять и непристойно шутить тогда, когда это совсем не к месту.";
+            name = Translator.GetString("card_kotovs_syndrome_1");
+            desc = Translator.GetString("card_kotovs_syndrome_2");
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 2);
@@ -22,7 +22,7 @@ namespace Game.Cards
 
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
-            return $"Уменьшает инициативу всех противников на {MOXIE_DECREASE} ед.";
+            return Translator.GetString("card_kotovs_syndrome_3", MOXIE_DECREASE);
         }
         public override bool IsUsable(TableFloatCardUseArgs e)
         {

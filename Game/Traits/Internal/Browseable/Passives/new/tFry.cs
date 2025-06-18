@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tFry() : base(ID)
         {
-            name = "Зажарить с жюльеном";
-            desc = "Я тебя выпотрошу и приготовлю с овощным жюльеном.";
+            name = Translator.GetString("trait_fry_1");
+            desc = Translator.GetString("trait_fry_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,8 +29,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>После совершения атаки на карту владельцем</color>\nЕсли у цели нет навыка <nobr><u>{traitName}</u></nobr>, даёт цели этот навык с зарядами, " +
-                   $"равными {_stacksF.Format(args.stacks)} от силы атаки.";
+            return Translator.GetString("trait_fry_3", traitName, _stacksF.Format(args.stacks));
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

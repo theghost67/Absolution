@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tCianided() : base(ID)
         {
-            name = "Цианидрован";
-            desc = "Это что получается?.. Да, Лёва, да...";
+            name = Translator.GetString("trait_cianided_1");
+            desc = Translator.GetString("trait_cianided_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,7 +28,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>В начале хода на территории</color>\nВосстанавливает {_healF.Format(args.stacks)} здоровья владельцу, тратит все заряды.";
+            return Translator.GetString("trait_cianided_3", _healF.Format(args.stacks));
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

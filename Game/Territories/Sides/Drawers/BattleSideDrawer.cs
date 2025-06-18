@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Effects;
 using Game.Sleeves;
@@ -139,11 +139,11 @@ namespace Game.Territories
             if (!attached.isMe)
                 _healthText.text = $"{current}/{max}";
             else if (PlayerConfig.psychoMode && PlayerConfig.chaosMode)
-                _healthText.text = $"<color=#FF00FF>ФУЛЛ ХАОС";
+                _healthText.text = Translator.GetString("battle_side_drawer_1");
             else if (PlayerConfig.psychoMode)
-                 _healthText.text = $"<color=#FF0000>ПСИХ";
+                 _healthText.text = Translator.GetString("battle_side_drawer_2");
             else if (PlayerConfig.chaosMode)
-                 _healthText.text = $"{current}/{max} <color=#00FFFF>(ХАОС)";
+                 _healthText.text = Translator.GetString("battle_side_drawer_3", current, max);
             else _healthText.text = $"{current}/{max}";
             AnimHealthBar(current, max);
         }

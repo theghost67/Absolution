@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tExplosiveMine() : base(ID)
         {
-            name = "Фугасная мина";
-            desc = "Бесишься?";
+            name = Translator.GetString("trait_explosive_mine_1");
+            desc = Translator.GetString("trait_explosive_mine_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -29,7 +29,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>При активации на пустом союзном поле</color>\nСоздаёт карту <nobr><color><u>{cardName}</u></color></nobr> на указанном поле. Тратит все заряды.";
+            return Translator.GetString("trait_explosive_mine_3", cardName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

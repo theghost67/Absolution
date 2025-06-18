@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using UnityEngine;
@@ -76,7 +76,7 @@ namespace Game.Traits
             if (targets.Count == 0)
             {
                 if (_owner.Field != null)
-                    _owner.Drawer?.CreateTextAsSpeech("НЕТ ВОЗМОЖНОСТИ", Color.red);
+                    _owner.Drawer?.CreateTextAsSpeech(Translator.GetString("battle_active_trait_1"), Color.red);
                 return false;
             }
             if (targets.Count == 1)

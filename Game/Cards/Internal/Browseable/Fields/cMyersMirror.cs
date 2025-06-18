@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cMyersMirror : FieldCard
     {
         public cMyersMirror() : base("myers_mirror", "reflection")
         {
-            name = "Зеркало Майерса";
-            desc = "Величайшая реликвия семьи Майерсов - зеркало. Этот предмет источает только чистое зло. Перед тем, как сбежать из дома, Майкл не забыл взять его с собой. " +
-                   "Зеркало не только защищало его от повреждений, но и давало свой дар - видеть каждый следующий шаг своей жертвы.";
+            name = Translator.GetString("card_myers_mirror_1");
+            desc = Translator.GetString("card_myers_mirror_2");
+
 
             rarity = Rarity.Epic;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 1);

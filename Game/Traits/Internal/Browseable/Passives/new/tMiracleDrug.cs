@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tMiracleDrug() : base(ID)
         {
-            name = "Чудодейственный препарат";
-            desc = "Я посоветовал ему чудодейственный вегетерианский салат, который ты, инвалид, схомячил!";
+            name = Translator.GetString("trait_miracle_drug_1");
+            desc = Translator.GetString("trait_miracle_drug_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -27,7 +27,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>После убийства владельца</color>\nНакладывает на убийцу навык <nobr><color><u>{traitName}</u></color></nobr>.";
+            return Translator.GetString("trait_miracle_drug_3", traitName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {
@@ -55,7 +55,7 @@ namespace Game.Traits
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
             BattleFieldCard killer = e.source.AsBattleFieldCard();
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null || killer == null) return;
+            if (trait == null || trait.Owner == null || killer == null) return;
 
             await trait.AnimActivation();
             await killer.Traits.Passives.AdjustStacks(TRAIT_ID, trait.GetStacks(), trait);

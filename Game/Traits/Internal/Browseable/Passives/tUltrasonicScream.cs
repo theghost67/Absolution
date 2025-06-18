@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Linq;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tUltrasonicScream() : base(ID)
         {
-            name = "Ультразвуковой крик";
-            desc = "Что ж, я только посоветую вам прикрыть уши.";
+            name = Translator.GetString("trait_ultrasonic_scream_1");
+            desc = Translator.GetString("trait_ultrasonic_scream_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При смерти любой карты будучи на территории</color>\n" +
-                   $"Инициатива всех вражеских карт рядом с владельцем будет понижена на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_ultrasonic_scream_3", _moxieF.Format(args.stacks, true));
+
         }
 
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)

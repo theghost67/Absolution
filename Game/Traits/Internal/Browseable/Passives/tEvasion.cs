@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System;
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tEvasion() : base(ID)
         {
-            name = "Уклонение";
-            desc = "Что, думал я просто буду стоять?";
+            name = Translator.GetString("trait_evasion_1");
+            desc = Translator.GetString("trait_evasion_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -26,7 +26,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>Перед совершением атаки на владельца</color>\nОтменяет атаку. Тратит один заряд.";
+            return Translator.GetString("trait_evasion_3");
         }
         //public override BattleWeight Weight(IBattleTrait trait)
         //{

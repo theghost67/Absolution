@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using System.Linq;
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tPigeonFright() : base(ID)
         {
-            name = "Голубиный испуг";
-            desc = $"Испугались?.. Курлык.";
+            name = Translator.GetString("trait_pigeon_fright_1");
+            desc = Translator.GetString("trait_pigeon_fright_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(SPAWN_CARD_ID).name;
-            return $"<color>Перед совершением атаки на владельца</color>\nЕсли есть свободное поле слева или справа от владельца, " +
-                   $"тратит один заряд и перемещает владельца на это поле, оставляя на прошлом месте карту <nobr><u>{cardName}</u></nobr>.";
+            return Translator.GetString("trait_pigeon_fright_3", cardName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

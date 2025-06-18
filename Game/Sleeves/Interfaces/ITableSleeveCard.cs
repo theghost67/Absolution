@@ -1,4 +1,4 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using Game.Cards;
 using Game.Effects;
 using Game.Territories;
@@ -169,7 +169,7 @@ namespace Game.Sleeves
                 successFunc = () => card.TryDropOn(new TableSleeveCardDropArgs(field, false)),
                 failFunc = () =>
                 {
-                    card.Drawer.CreateTextAsSpeech("НЕЛЬЗЯ УСТАНОВИТЬ", Color.red);
+                    card.Drawer.CreateTextAsSpeech(Translator.GetString("i_table_sleeve_card_1"), Color.red);
                     card.Sleeve.Add(card);
                 },
                 abortFunc = () => card.Sleeve.Add(card),

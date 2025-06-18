@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 using UnityEngine;
@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tUnpleasantScent() : base(ID)
         {
-            name = "Неприятный аромат";
-            desc = "Ах, какой неповторимый запах помойки.";
+            name = Translator.GetString("trait_unpleasant_scent_1");
+            desc = Translator.GetString("trait_unpleasant_scent_2");
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
@@ -27,7 +27,7 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>После смерти владельца</color>\nУменьшает инициативу атакующего на {_moxieF.Format(args.stacks, true)}.";
+            return Translator.GetString("trait_unpleasant_scent_3", _moxieF.Format(args.stacks, true));
         }
         public override float Points(FieldCard owner, int stacks)
         {

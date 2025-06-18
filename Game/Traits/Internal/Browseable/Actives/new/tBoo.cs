@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tBoo() : base(ID)
         {
-            name = "Бу!";
-            desc = "Испугался?";
+            name = Translator.GetString("trait_boo_1");
+            desc = Translator.GetString("trait_boo_2");
 
             rarity = Rarity.Epic;
             tags = TraitTag.Static;
@@ -27,7 +27,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При активации на любой вражеской карте</color>\nДаёт цели навык <nobr><u>{traitName}</u></nobr>, тратит все заряды.";
+            return Translator.GetString("trait_boo_3", traitName);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

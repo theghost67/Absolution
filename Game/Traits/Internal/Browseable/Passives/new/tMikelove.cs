@@ -15,8 +15,8 @@ namespace Game.Traits
 
         public tMikelove() : base(ID)
         {
-            name = "Майклав";
-            desc = "Вступайте в пирамиду Майкла - это <i>беспроигрышная стратегия!";
+            name = Translator.GetString("trait_mikelove_1");
+            desc = Translator.GetString("trait_mikelove_2");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -27,8 +27,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При установке владельца в качестве пятой карты с навыком {name} на одной стороне</color>\n" +
-                   $"Даёт всем картам +{_statsF.Format(args.stacks)} к здоровью и силе. Тратит все заряды навыка {name} у всех союзных карт.";
+            return Translator.GetString("trait_mikelove_3", name, _statsF.Format(args.stacks), name);
+
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

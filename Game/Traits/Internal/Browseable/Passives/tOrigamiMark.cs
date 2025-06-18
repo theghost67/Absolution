@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -14,8 +14,8 @@ namespace Game.Traits
 
         public tOrigamiMark() : base(ID)
         {
-            name = "Метка Оригами";
-            desc = "Следующая жертва Мастера Оригами не заставит себя долго ждать.";
+            name = Translator.GetString("trait_origami_mark_1");
+            desc = Translator.GetString("trait_origami_mark_2");
 
             rarity = Rarity.None;
             tags = TraitTag.Static;
@@ -29,8 +29,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string cardName = CardBrowser.GetCard(CARD_ID).name;
-            return $"<color>После смерти владельца </color>\n" +
-                   $"Создаст на месте владельца карту <nobr><u>{cardName}</u></nobr>. Не сработает, если владелец уже является данной картой.";
+            return Translator.GetString("trait_origami_mark_3", cardName);
+
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {

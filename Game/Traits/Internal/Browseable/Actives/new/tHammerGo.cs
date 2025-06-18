@@ -19,7 +19,7 @@ namespace Game.Traits
 
         public tHammerGo() : base(ID)
         {
-            name = "Молот пошёл!";
+            name = Translator.GetString("trait_hammer_go_1");
             desc = "For the Crusaders!";
 
             rarity = Rarity.Rare;
@@ -32,8 +32,8 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"<color>При активации на вражеском поле рядом</color>\nНаносит цели урон, равный {_damageF.Format(args.stacks)} от силы владельца, " +
-                    $"и даёт соседним картам <nobr><u>{traitName}</u><nobr>. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_hammer_go_2", _damageF.Format(args.stacks), traitName, CD);
+
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
 
@@ -16,8 +16,8 @@ namespace Game.Traits
 
         public tAlcoHeal() : base(ID)
         {
-            name = "Алкогольная подпитка";
-            desc = "Мне нужно БОЛЬШЕ БУХЛА!";
+            name = Translator.GetString("trait_alco_heal_1");
+            desc = Translator.GetString("trait_alco_heal_2");
 
             rarity = Rarity.None;
             tags = TraitTag.None;
@@ -28,8 +28,8 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return $"<color>При активации на карте рядом</color>\n" +
-                   $"Восстанавливает {_healthIncF.Format(args.stacks)} здоровья цели, уменьшает её инициативу на {_moxieDecF.Format(args.stacks, true)}. Перезарядка: {CD} х.";
+            return Translator.GetString("trait_alco_heal_3", _healthIncF.Format(args.stacks), _moxieDecF.Format(args.stacks, true), CD);
+
         }
         public override float Points(FieldCard owner, int stacks)
         {

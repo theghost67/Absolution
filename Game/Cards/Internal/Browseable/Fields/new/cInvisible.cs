@@ -4,7 +4,7 @@ namespace Game.Cards
     {
         public cInvisible() : base("invisible", "not_here")
         {
-            name = "Невидимка";
+            name = Translator.GetString("card_invisible_1");
             desc = "";
 
             rarity = Rarity.Rare;

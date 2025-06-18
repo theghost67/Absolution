@@ -1,12 +1,12 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cDoof : FieldCard
     {
         public cDoof() : base("doof", "doofinator", "self_destruction")
         {
-            name = "Фуфел";
-            desc = "Множество опытов, экспериментов и изобретений помогли обрести Фуфелшмерцу славу по всему штату. " +
-                   "К сожалению, он прославился тем, что его изобретения всегда проваливались, как бы он ни старался над ними. И ещё этот утконос...";
+            name = Translator.GetString("card_doof_1");
+            desc = Translator.GetString("card_doof_2");
+
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 1);

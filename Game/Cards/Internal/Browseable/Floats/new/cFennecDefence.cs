@@ -13,8 +13,8 @@ namespace Game.Cards
 
         public cFennecDefence() : base(ID)
         {
-            name = "Феннекийская защита";
-            desc = "Защита, которую мы заслужили.";
+            name = Translator.GetString("card_fennec_defence_1");
+            desc = Translator.GetString("card_fennec_defence_2");
 
             rarity = Rarity.Rare;
             price = new CardPrice(CardBrowser.GetCurrency("ether"), 1);
@@ -25,7 +25,7 @@ namespace Game.Cards
         protected override string DescContentsFormat(CardDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return $"Сторона-владелец восстанавливает 33% от максимального здоровья, даёт всем союзным картам навык <nobr><u>{traitName}</u></nobr>.";
+            return Translator.GetString("card_fennec_defence_3", traitName);
         }
         public override DescLinkCollection DescLinks(CardDescriptiveArgs args)
         {

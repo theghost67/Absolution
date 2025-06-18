@@ -15,23 +15,23 @@ namespace Game.Traits
         const string CARD_ID = "incredible";
         static readonly string[] _names = new string[]
         {
-            "Мистер Исключительный",
-            "Мистер Исключающий",
-            "Мистер Искупительный",
-            "Мистер Изумительный",
-            "Мистер Извратительный",
+            Translator.GetString("trait_exceptional_1"),
+            Translator.GetString("trait_exceptional_2"),
+            Translator.GetString("trait_exceptional_3"),
+            Translator.GetString("trait_exceptional_4"),
+            Translator.GetString("trait_exceptional_5"),
 
-            "Мистер Заключительный",
-            "Мистер Выключительный",
-            "Мистер Иссушительный",
-            "Мистер Удушительный",
-            "Мистер Пояснительный",
+            Translator.GetString("trait_exceptional_6"),
+            Translator.GetString("trait_exceptional_7"),
+            Translator.GetString("trait_exceptional_8"),
+            Translator.GetString("trait_exceptional_9"),
+            Translator.GetString("trait_exceptional_10"),
         };
 
         public tExceptional() : base(ID)
         {
-            name = "Мистер Исключительный";
-            desc = "Я Мистер Исключительный! Не Мистер Ни-то ни-сё, Мистер... Исключительный!";
+            name = Translator.GetString("trait_exceptional_11");
+            desc = Translator.GetString("trait_exceptional_12");
 
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
@@ -43,10 +43,10 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             if (args.table == null)
-                 return "Имеет достаточно много имён.";
+                 return Translator.GetString("trait_exceptional_13");
             else if (args.table.Owner.Data.id == CARD_ID)
-                 return $"Имеет достаточно много имён. Так ведь, Мистер...?";
-            else return $"Эй, это не Мистер Исключительный! И как же тебя называть?";
+                 return Translator.GetString("trait_exceptional_14");
+            else return Translator.GetString("trait_exceptional_15");
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

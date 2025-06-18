@@ -1,11 +1,11 @@
-﻿namespace Game.Cards
+namespace Game.Cards
 {
     public class cCrap : FieldCard
     {
         public cCrap() : base("crap")
         {
-            name = "Говняшка";
-            desc = "Психически тяжёлая для обезвреживания ловушка.";
+            name = Translator.GetString("card_crap_1");
+            desc = Translator.GetString("card_crap_2");
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 0);

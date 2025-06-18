@@ -1,4 +1,4 @@
-﻿using GreenOne;
+using GreenOne;
 
 namespace Game.Traits
 {
@@ -41,7 +41,7 @@ namespace Game.Traits
             }
             else
             {
-                string postfix = noDot ? "ед" : "ед.";
+                string postfix = noDot ? Translator.GetString("trait_stat_formula_1") : Translator.GetString("trait_stat_formula_2");
                 if (DoFormatWithColor())
                      return $"<nobr><color>{Value(stacks).Rounded()} {postfix}</color></nobr>";
                 else return $"<nobr>{Value(stacks).Rounded()} {postfix}</nobr>";
@@ -61,10 +61,10 @@ namespace Game.Traits
             else
             {
                 if (valueBase == 0)
-                     return $"X * {valuePerStack} ед";
+                     return Translator.GetString("trait_stat_formula_3", valuePerStack);
                 else if (valuePerStack == 0)
-                     return $"{valueBase} ед";
-                else return $"{valueBase} ед + X * {valuePerStack} ед";
+                     return Translator.GetString("trait_stat_formula_4", valueBase);
+                else return Translator.GetString("trait_stat_formula_5", valueBase, valuePerStack);
             }
         }
         protected virtual bool DoFormatWithColor()

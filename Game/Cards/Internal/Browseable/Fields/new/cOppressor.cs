@@ -4,10 +4,9 @@ namespace Game.Cards
     {
         public cOppressor() : base("oppressor", "opressing")
         {
-            name = "Угнетатель";
-            desc = "Представьте себе такое понятие, как угнетение - подавленное состояние, при котором вам не хочется жить. " +
-                   "Что ж, эта машинка является механическим воплощением данного термина. Не пройдёт и часа, как вы возненавидите эту летающую машину смерти. " +
-                   "Она буквально не даст вам ЖИТЬ.";
+            name = Translator.GetString("card_oppressor_1");
+            desc = Translator.GetString("card_oppressor_2");
+
 
             rarity = Rarity.None;
             price = new CardPrice(CardBrowser.GetCurrency("gold"), 4);

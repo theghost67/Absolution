@@ -1,4 +1,4 @@
-﻿using Game.Cards;
+using Game.Cards;
 using Game.Traits;
 using GreenOne.Console;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ namespace Game.Console
     public class cmdPointsTest : Command
     {
         const string ID = "pointstest";
-        const string DESC = "выполняет тестирование стоимости всех игровых навыков";
+        static readonly string DESC = Translator.GetString("command_points_test_1");
 
         public cmdPointsTest() : base(ID, DESC) { }
 
@@ -33,7 +33,7 @@ namespace Game.Console
 
             stream.Flush();
             stream.Close();
-            TableConsole.Log($"Тест завершён. Результат записан по пути {path}", LogType.Log);
+            TableConsole.Log(Translator.GetString("command_points_test_2", path), LogType.Log);
         }
     }
 }
