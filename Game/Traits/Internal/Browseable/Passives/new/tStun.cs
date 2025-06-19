@@ -19,6 +19,8 @@ namespace Game.Traits
             rarity = Rarity.Rare;
             tags = TraitTag.Static;
             range = BattleRange.none;
+
+            frequency = 0;
         }
         protected tStun(tStun other) : base(other) { }
         public override object Clone() => new tStun(this);

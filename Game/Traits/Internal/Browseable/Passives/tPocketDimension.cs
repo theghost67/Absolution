@@ -20,7 +20,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_pocket_dimension_2");
 
             rarity = Rarity.Epic;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = BattleRange.none;
         }
         protected tPocketDimension(tPocketDimension other) : base(other) { }
@@ -29,11 +29,6 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             return Translator.GetString("trait_pocket_dimension_3");
-
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(8, stacks, 2, 1.25f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -67,7 +62,6 @@ namespace Game.Traits
 
             await trait.AnimActivation();
             await trait.Owner.TryAttachToField(fieldWithMinHp.Opposite, trait);
-            await trait.AdjustStacks(-1, trait);
         }
     }
 }

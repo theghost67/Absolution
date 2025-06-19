@@ -30,13 +30,13 @@ namespace Game.Traits
             return Translator.GetString("trait_triptocainum_3", _strengthF.Format(args.stacks, true), CD);
 
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(20, stacks);
-        }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(result.Entity, 0, 0.1f);
+        }
+        public override float Points(FieldCard owner, int stacks)
+        {
+            return PointsExponential(12, 1, 1, 1.75f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

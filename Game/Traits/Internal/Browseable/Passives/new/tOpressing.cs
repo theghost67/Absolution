@@ -14,7 +14,7 @@ namespace Game.Traits
         const string ID = "opressing";
         static readonly TraitStatFormula _moxieBuffF = new(false, 1, 0);
         static readonly TraitStatFormula _moxieDebuffF = new(false, 1, 0);
-        static readonly TraitStatFormula _strengthBuffF = new(true, 0.20f, 0.05f);
+        static readonly TraitStatFormula _strengthBuffF = new(true, 0.15f, 0.15f);
 
         public tOpressing() : base(ID)
         {
@@ -35,7 +35,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(16, stacks);
+            return PointsExponential(8, stacks, 1, 1.65f);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using System;
 
 namespace Game.Traits
 {
@@ -27,11 +28,6 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             return Translator.GetString("trait_table_manipulations_3", _valueF.Format(args.stacks));
-
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(20, stacks);
         }
         public override BattleWeight Weight(IBattleTrait trait)
         {
@@ -46,9 +42,15 @@ namespace Game.Traits
             IBattleTrait trait = (IBattleTrait)e.trait;
 
             if (trait.WasAdded(e))
+            {
+                trait.Territory.OnStartPhase.Add(trait.GuidStr, OnTerritoryStartPhase);
                 await trait.Territory.ContinuousAttachHandler_Add(trait.GuidStr, ContinuousAttach_Add, trait.Owner);
+            }
             else if (trait.WasRemoved(e))
+            {
+                trait.Territory.OnStartPhase.Remove(trait.GuidStr);
                 await trait.Territory.ContinuousAttachHandler_Remove(trait.GuidStr, ContinuousAttach_Remove);
+            }
         }
 
         async UniTask ContinuousAttach_Add(object sender, TableFieldAttachArgs e)
@@ -79,7 +81,13 @@ namespace Game.Traits
             if (card.Data.price.currency.id == "gold")
                  await trait.Side.Gold.AdjustValue(value, trait);
             else await trait.Side.Ether.AdjustValue(value, trait);
-            await trait.AdjustStacks(-1, trait);
+        }
+        async UniTask OnTerritoryStartPhase(object sender, EventArgs e)
+        {
+            BattleTerritory terr = (BattleTerritory)sender;
+            IBattleTrait trait = (IBattleTrait)TraitFinder.FindInBattle(terr);
+            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
+            await trait.SetStacks(0, trait);
         }
     }
 }

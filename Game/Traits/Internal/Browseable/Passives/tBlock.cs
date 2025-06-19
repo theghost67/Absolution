@@ -18,7 +18,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_block_2");
 
             rarity = Rarity.Rare;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = BattleRange.none;
 
             frequency = 0;
@@ -31,10 +31,6 @@ namespace Game.Traits
             return Translator.GetString("trait_block_3");
 
         }
-        //public override BattleWeight Weight(IBattleTrait trait)
-        //{
-        //    return new(result.Entity, 0, (float)(1 + (Math.E * Math.Log(Math.Pow(trait.GetStacks(), 2) - 1) / 10)));
-        //}
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
             await base.OnStacksChanged(e);

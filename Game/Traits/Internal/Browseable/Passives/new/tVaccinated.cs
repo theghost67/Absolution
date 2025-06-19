@@ -22,6 +22,8 @@ namespace Game.Traits
             rarity = Rarity.Rare;
             tags = TraitTag.None;
             range = BattleRange.none;
+
+            frequency = 0;
         }
         protected tVaccinated(tVaccinated other) : base(other) { }
         public override object Clone() => new tVaccinated(this);

@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using Game.Cards;
 using Game.Territories;
+using System.Runtime.InteropServices;
 
 namespace Game.Traits
 {
@@ -10,6 +11,7 @@ namespace Game.Traits
     public class tAdrenaline : PassiveTrait
     {
         const string ID = "adrenaline";
+        bool _activated;
 
         public tAdrenaline() : base(ID)
         {
@@ -20,7 +22,7 @@ namespace Game.Traits
             tags = TraitTag.Static;
             range = BattleRange.none;
         }
-        protected tAdrenaline(tAdrenaline other) : base(other) { }
+        protected tAdrenaline(tAdrenaline other) : base(other) { _activated = other._activated; }
         public override object Clone() => new tAdrenaline(this);
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
@@ -41,13 +43,14 @@ namespace Game.Traits
                 trait.Owner.OnPreKilled.Remove(trait.GuidStr);
         }
 
-        static async UniTask OnOwnerPreKilled(object sender, BattleKillAttemptArgs e)
+        async UniTask OnOwnerPreKilled(object sender, BattleKillAttemptArgs e)
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
+            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || _activated) return;
 
             await trait.AnimActivation();
+            _activated = true;
             await owner.Health.SetValue(1, trait);
             await trait.SetStacks(0, trait);
         }

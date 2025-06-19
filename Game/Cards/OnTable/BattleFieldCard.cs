@@ -245,9 +245,10 @@ namespace Game.Cards
 
             _isKilled = true;
             await _onPostKilled.Invoke(this, args);
-            await AttachToFieldInternal(new TableFieldAttachArgs(this, null, null));
-            if (source is BattleFieldCard killer && !killer.IsKilled)
+            BattleFieldCard killer = source.AsBattleFieldCard();
+            if (killer != null && !killer.IsKilled)
                 await killer._onKillConfirmed.Invoke(killer, new BattleKillConfirmArgs(this, args));
+            await AttachToFieldInternal(new TableFieldAttachArgs(this, null, null));
 
             DestroyDrawer(false);
             Dispose();
@@ -476,9 +477,15 @@ namespace Game.Cards
         async UniTask SetObserveTargets(bool value)
         {
             await _area.SetObserveTargets(value);
+            if (!value)
+                _area.DestroyTargetsHighlight();
             IEnumerable<IBattleTraitListElement> traits = ((IEnumerable<IBattleTraitListElement>)Traits).ToArray();
             foreach (IBattleTraitListElement element in traits)
+            {
                 await element.Trait.Area.SetObserveTargets(value);
+                if (!value)
+                    element.Trait.Area.DestroyTargetsHighlight();
+            }
         }
         async UniTask OnHealthPostSet(object sender, TableStat.PostSetArgs e)
         {

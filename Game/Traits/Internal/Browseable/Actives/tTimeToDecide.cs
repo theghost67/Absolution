@@ -13,9 +13,9 @@ namespace Game.Traits
     {
         const string ID = "time_to_decide";
         const string TRAIT_ID = "time_to_decide_machine";
-        static readonly TraitStatFormula _moxieF = new(false, 0, 2);
-        static readonly TraitStatFormula _healthIncF = new(true, 0.25f, 0.25f);
-        static readonly TraitStatFormula _strengthIncF = new(true, 0.25f, 0.25f);
+        static readonly TraitStatFormula _moxieF = new(false, 2, 0);
+        static readonly TraitStatFormula _healthIncF = new(true, 1.00f, 0.00f);
+        static readonly TraitStatFormula _strengthIncF = new(true, 1.00f, 0.00f);
 
         public tTimeToDecide() : base(ID)
         {
@@ -23,7 +23,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_time_to_decide_2");
 
             rarity = Rarity.Epic;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = new BattleRange(TerritoryRange.bothSingle);
         }
         protected tTimeToDecide(tTimeToDecide other) : base(other) { }
@@ -39,10 +39,6 @@ namespace Game.Traits
         {
             return new DescLinkCollection()
             { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true } };
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(20, stacks);
         }
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {

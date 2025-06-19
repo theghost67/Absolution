@@ -20,7 +20,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_ari_record_2");
 
             rarity = Rarity.Rare;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = new BattleRange(TerritoryRange.ownerDouble);
         }
         protected tAriRecord(tAriRecord other) : base(other) { }
@@ -36,10 +36,6 @@ namespace Game.Traits
         {
             return new DescLinkCollection()
             { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true, stacks = _traitsF.ValueInt(args.stacks) } };
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(40, stacks);
         }
         public override async UniTask OnTargetStateChanged(BattleTraitTargetStateChangeArgs e)
         {

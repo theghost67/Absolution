@@ -56,7 +56,7 @@ namespace Game.Traits
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
+            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || e.handled) return;
 
             await trait.AnimActivation();
             e.handled = true;

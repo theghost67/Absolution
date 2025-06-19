@@ -55,7 +55,7 @@ namespace Game.Traits
 
             int health = _healthF.ValueInt(stacks);
             int strength = _strengthF.ValueInt(stacks);
-            await owner.Health.AdjustValue(strength, trait);
+            await owner.Health.AdjustValue(-health, trait);
             if (owner.IsKilled) return;
             await owner.Strength.AdjustValue(strength, trait);
         }

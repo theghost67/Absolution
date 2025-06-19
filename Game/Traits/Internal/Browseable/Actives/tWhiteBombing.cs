@@ -22,7 +22,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_white_bombing_2");
 
             rarity = Rarity.Epic;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = new BattleRange(TerritoryRange.bothSingle);
         }
         protected tWhiteBombing(tWhiteBombing other) : base(other) { }
@@ -43,10 +43,6 @@ namespace Game.Traits
                 new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = CardDescriptiveArgs.normalStats, linkTraits = traits },
                 new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true, stacks = traits[0].stacks },
             };
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(12, stacks);
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

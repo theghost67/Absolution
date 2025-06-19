@@ -30,7 +30,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsLinear(6, stacks);
+            return PointsLinear(4, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

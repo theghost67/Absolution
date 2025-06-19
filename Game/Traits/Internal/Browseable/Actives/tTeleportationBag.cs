@@ -11,6 +11,7 @@ namespace Game.Traits
     {
         const string ID = "teleportation_bag";
         const string TRAIT_ID = "teleportation_scroll";
+        const int CD = 1;
 
         public tTeleportationBag() : base(ID)
         {
@@ -18,7 +19,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_teleportation_bag_2");
 
             rarity = Rarity.None;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = new BattleRange(TerritoryRange.ownerAllNotSelf);
         }
         protected tTeleportationBag(tTeleportationBag other) : base(other) { }
@@ -27,7 +28,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return Translator.GetString("trait_teleportation_bag_3", traitName);
+            return Translator.GetString("trait_teleportation_bag_3", traitName, CD);
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {
@@ -37,10 +38,6 @@ namespace Game.Traits
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return BattleWeight.One(result.Entity);
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(18, stacks, 2, 1.8f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

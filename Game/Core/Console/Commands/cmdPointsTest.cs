@@ -26,6 +26,7 @@ namespace Game.Console
 
             foreach (Trait trait in TraitBrowser.All)
             {
+                if (trait.tags.HasFlag(TraitTag.Static)) continue;
                 stream.WriteLine($"-------------------- trait: {trait.id}");
                 for (int i = 1; i < 10; i++)
                     stream.WriteLine($"[stacks = {i}] {trait.Points(card, i)}");

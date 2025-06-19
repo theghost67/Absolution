@@ -40,7 +40,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(12, stacks, 4, 1.25f);
+            return PointsExponential(5, stacks, 1, 1.10f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
@@ -78,8 +78,8 @@ namespace Game.Traits
             {
                 FieldCard newCard = CardBrowser.NewField(CARD_ID);
                 await territory.PlaceFieldCard(newCard, field, trait);
-                await trait.AdjustStacks(-1, trait);
             }
+            await trait.AdjustStacks(-1, trait);
         }
 
         async UniTask OnFieldPostAttached(object sender, TableFieldAttachArgs e)
@@ -97,8 +97,8 @@ namespace Game.Traits
             {
                 FieldCard newCard = CardBrowser.NewField(CARD_ID);
                 await territory.PlaceFieldCard(newCard, field, trait);
-                await trait.AdjustStacks(-1, trait);
             }
+            await trait.AdjustStacks(-1, trait);
         }
     }
 }

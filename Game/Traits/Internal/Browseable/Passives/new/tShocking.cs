@@ -33,10 +33,6 @@ namespace Game.Traits
         {
             return new() { new TraitDescriptiveArgs(TRAIT_ID) { linkFormat = true } };
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(12, stacks);
-        }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

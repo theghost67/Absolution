@@ -33,10 +33,6 @@ namespace Game.Traits
             return Translator.GetString("trait_nine_lives_3", livesStr, name, statsDebuffStr, livesStr);
 
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(12, stacks);
-        }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {
@@ -54,7 +50,7 @@ namespace Game.Traits
         {
             BattleFieldCard owner = (BattleFieldCard)sender;
             IBattleTrait trait = owner.Traits.Any(ID);
-            if (trait == null || trait.Owner == null || trait.Owner.IsKilled || trait.Owner.Field == null) return;
+            if (trait == null || trait.Owner == null) return;
 
             await trait.AnimActivation();
             int stacks = trait.GetStacks();

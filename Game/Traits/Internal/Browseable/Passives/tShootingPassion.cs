@@ -30,10 +30,6 @@ namespace Game.Traits
             return Translator.GetString("trait_shooting_passion_3", _moxieF.Format(args.stacks, true));
 
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(20, stacks);
-        }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 
             await base.OnStacksChanged(e);

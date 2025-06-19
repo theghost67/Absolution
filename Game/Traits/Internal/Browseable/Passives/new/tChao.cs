@@ -27,10 +27,6 @@ namespace Game.Traits
         {
             return Translator.GetString("trait_chao_2");
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(12, stacks);
-        }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

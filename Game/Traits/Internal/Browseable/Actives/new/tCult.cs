@@ -13,7 +13,7 @@ namespace Game.Traits
     {
         const string ID = "cult";
         static readonly TraitStatFormula _moxieF = new(false, 1, 0);
-        static readonly TraitStatFormula _statsF = new(true, 0.00f, 0.25f);
+        static readonly TraitStatFormula _statsF = new(true, 0.15f, 0.15f);
         static readonly TraitStatFormula _damageF = new(true, 0.00f, 1.00f);
 
         public tCult() : base(ID)
@@ -39,7 +39,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(20, stacks);
+            return PointsExponential(10, stacks, 1, 1.65f);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

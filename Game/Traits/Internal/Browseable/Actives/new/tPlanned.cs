@@ -11,7 +11,7 @@ namespace Game.Traits
     {
         const string ID = "planned";
         const int CD = 1;
-        static readonly TraitStatFormula _statsF = new(true, 0.20f, 0.00f);
+        static readonly TraitStatFormula _statsF = new(true, 0.20f, 0.05f);
 
         public tPlanned() : base(ID)
         {
@@ -19,7 +19,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_planned_2");
 
             rarity = Rarity.Rare;
-            tags = TraitTag.Static;
+            tags = TraitTag.None;
             range = new BattleRange(TerritoryRange.ownerAllNotSelf);
         }
         protected tPlanned(tPlanned other) : base(other) { }
@@ -36,7 +36,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(12, stacks);
+            return PointsExponential(8, stacks, 1, 1.5f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

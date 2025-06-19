@@ -3,6 +3,7 @@ using DG.Tweening;
 using Game.Cards;
 using GreenOne;
 using MyBox;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -30,6 +31,9 @@ namespace Game.Sleeves
         }
         public bool IsPulledOut => _isPulledOut;
         public bool IsMovedOut => _isMovedOut;
+
+        public event Action OnPullOut;
+        public event Action OnPullIn;
 
         public readonly new TableSleeve attached;
         static readonly AlignSettings _alignSettings;
@@ -105,6 +109,7 @@ namespace Game.Sleeves
             gameObject.SetActive(true);
             foreach (ITableSleeveCard card in attached)
                 card.OnPullOut(true);
+            OnPullOut?.Invoke();
         }
         public virtual void PullIn()
         {
@@ -115,6 +120,7 @@ namespace Game.Sleeves
             gameObject.SetActive(true);
             foreach (ITableSleeveCard card in attached)
                 card.OnPullIn(true);
+            OnPullIn?.Invoke();
         }
 
         public void MoveIn()

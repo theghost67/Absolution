@@ -11,7 +11,7 @@ namespace Game.Traits
     {
         const string ID = "granny_alliance";
         const string CARD_ID = "granny";
-        static readonly TraitStatFormula _strengthF = new(true, 0.00f, 0.50f);
+        static readonly TraitStatFormula _strengthF = new(true, 0.00f, 0.333f);
 
         public tGrannyAlliance() : base(ID)
         {
@@ -33,7 +33,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(20, stacks);
+            return PointsExponential(10, stacks, 1, 1.8f);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

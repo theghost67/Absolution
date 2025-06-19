@@ -193,14 +193,21 @@ namespace Game
             if (_texts.Length == 0) return;
             if (Input.GetKeyDown(LINKS_KEY))
             {
-                for (int i = 0; i < _texts.Length; i++)
-                    _prefabs[i].Show();
+                if (_prefabs.Count > 0 && _prefabs[0].IsVisible())
+                     Hide();
+                else Show();
             }
-            if (Input.GetKeyUp(LINKS_KEY))
-            {
-                foreach (Prefab prefab in _prefabs)
-                    prefab.Hide();
-            }
+        }
+
+        static void Show()
+        {
+            for (int i = 0; i < _texts.Length; i++)
+                _prefabs[i].Show();
+        }
+        static void Hide()
+        {
+            for (int i = 0; i < _texts.Length; i++)
+                _prefabs[i].Hide();
         }
 
         void Start()

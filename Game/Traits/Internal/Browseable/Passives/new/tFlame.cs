@@ -26,6 +26,8 @@ namespace Game.Traits
             rarity = Rarity.None;
             tags = TraitTag.None;
             range = new BattleRange(TerritoryRange.ownerDouble);
+
+            frequency = 0;
         }
         protected tFlame(tFlame other) : base(other) { }
         public override object Clone() => new tFlame(this);

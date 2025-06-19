@@ -30,7 +30,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(12, stacks);
+            return PointsExponential(12, stacks, 1, 1.65f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

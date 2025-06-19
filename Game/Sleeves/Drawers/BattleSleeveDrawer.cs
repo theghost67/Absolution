@@ -12,7 +12,11 @@ namespace Game.Sleeves
         {
             attached = sleeve;
             if (!attached.isForMe)
+            {
                 MoveOutInstantly();
+                attached.Side.Opposite.Sleeve.Drawer.OnPullOut += TryPullOut;
+                attached.Side.Opposite.Sleeve.Drawer.OnPullIn += TryPullIn;
+            }
         }
 
         public override void PullOut()
@@ -34,7 +38,18 @@ namespace Game.Sleeves
 
         protected override bool UpdateUserInput()
         {
-            return base.UpdateUserInput() && !IsMovedOut;
+            return base.UpdateUserInput() && attached.isForMe && !IsMovedOut;
+        }
+
+        private void TryPullOut()
+        {
+            if (!IsMovedOut)
+                PullOut();
+        }
+        private void TryPullIn()
+        {
+            if (!IsMovedOut)
+                PullIn();
         }
     }
 }

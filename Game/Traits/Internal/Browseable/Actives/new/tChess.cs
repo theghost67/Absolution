@@ -11,7 +11,7 @@ namespace Game.Traits
     {
         const string ID = "chess";
         const int CD = 1;
-        static readonly TraitStatFormula _strengthF = new(true, 0.20f, 0.05f);
+        static readonly TraitStatFormula _strengthF = new(true, 0.15f, 0.15f);
         static readonly TraitStatFormula _moxieF = new(false, 1, 0);
 
         public tChess() : base(ID)
@@ -37,7 +37,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(8, stacks);
+            return PointsExponential(10, stacks, 1, 1.65f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

@@ -33,6 +33,10 @@ namespace Game.Traits
             return Translator.GetString("trait_shift_3", _strengthF.Format(args.stacks, true));
 
         }
+        public override float Points(FieldCard owner, int stacks)
+        {
+            return PointsLinear(6, stacks, 1);
+        }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

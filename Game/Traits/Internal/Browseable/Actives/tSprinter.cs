@@ -33,7 +33,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(12, stacks, 1, 1.8f);
+            return PointsExponential(4, stacks, 1, 1.2f);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -42,8 +42,6 @@ namespace Game.Traits
         }
         protected override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
-            
-
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField target = (BattleField)e.target;
             BattleFieldCard owner = trait.Owner;

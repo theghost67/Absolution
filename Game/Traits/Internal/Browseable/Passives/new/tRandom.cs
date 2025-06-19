@@ -65,10 +65,6 @@ namespace Game.Traits
             return Translator.GetString("trait_random_10", _events[0].probability, _events[0].desc, _events[1].probability, _events[1].desc, _events[2].probability, _events[2].desc, _events[3].probability, _events[3].desc, _events[4].probability, _events[4].desc, _events[5].probability, _events[5].desc, _events[6].probability, _events[6].desc);
 
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(12, stacks);
-        }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

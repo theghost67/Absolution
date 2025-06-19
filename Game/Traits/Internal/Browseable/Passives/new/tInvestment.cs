@@ -21,7 +21,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_investment_2");
 
             rarity = Rarity.None;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = BattleRange.none;
         }
         protected tInvestment(tInvestment other) : base(other) { }
@@ -30,11 +30,6 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             return Translator.GetString("trait_investment_3", _limitF.Format(args.stacks));
-
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(12, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)

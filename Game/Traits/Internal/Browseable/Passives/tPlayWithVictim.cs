@@ -10,7 +10,7 @@ namespace Game.Traits
     public class tPlayWithVictim : PassiveTrait
     {
         const string ID = "play_with_victim";
-        static readonly TraitStatFormula _strengthF = new(true, 0, 0.3333f);
+        static readonly TraitStatFormula _strengthF = new(true, 0, 0.333f);
 
         public tPlayWithVictim() : base(ID)
         {
@@ -31,7 +31,7 @@ namespace Game.Traits
         }
         public override float Points(FieldCard owner, int stacks)
         {
-            return PointsExponential(10, stacks, 1, 1.8f);
+            return PointsExponential(10, stacks, 1, 1.75f);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

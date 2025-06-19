@@ -4,7 +4,6 @@ using Game.Effects;
 using Game.Territories;
 using GreenOne;
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
 
 namespace Game.Traits
 {
@@ -37,15 +36,7 @@ namespace Game.Traits
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
         {
-            TableFieldCard owner = args.table?.Owner;
-            if (owner != null)
-            {
-                int ownerHalfHealth = (int)Mathf.Ceil(owner.Health / 2f);
-                int ownerHalfStrength = (int)Mathf.Ceil(owner.Strength / 2f);
-                int ownerMoxie = owner.Moxie;
-                return new() { new CardDescriptiveArgs(CARD_ID) { linkFormat = true, linkStats = new int[] { 1, ownerMoxie, ownerHalfHealth, ownerHalfStrength } } };
-            }
-            else return new() { new CardDescriptiveArgs(CARD_ID) { linkFormat = true } };
+            return new() { new CardDescriptiveArgs(CARD_ID) };
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {

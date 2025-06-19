@@ -10,7 +10,7 @@ namespace Game.Traits
     public class tBrickyTaste : PassiveTrait
     {
         const string ID = "bricky_taste";
-        static readonly TraitStatFormula _moxieF = new(false, 0, 1);
+        static readonly TraitStatFormula _moxieF = new(false, 1, 0);
 
         public tBrickyTaste() : base(ID)
         {
@@ -18,7 +18,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_bricky_taste_2");
 
             rarity = Rarity.Rare;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = BattleRange.none;
         }
         protected tBrickyTaste(tBrickyTaste other) : base(other) { }
@@ -27,10 +27,6 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             return Translator.GetString("trait_bricky_taste_3", _moxieF.Format(args.stacks, true));
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(24, stacks);
         }
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         { 

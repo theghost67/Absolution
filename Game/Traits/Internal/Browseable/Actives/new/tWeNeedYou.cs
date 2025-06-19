@@ -19,7 +19,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_we_need_you_2");
 
             rarity = Rarity.Rare;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = new BattleRange(TerritoryRange.ownerRadiusSmall);
         }
         protected tWeNeedYou(tWeNeedYou other) : base(other) { }
@@ -43,10 +43,6 @@ namespace Game.Traits
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(result.Entity, 0, 0.16f);
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(16, stacks, 1);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)

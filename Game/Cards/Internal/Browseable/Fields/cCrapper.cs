@@ -2,7 +2,7 @@ namespace Game.Cards
 {
     public class cCrapper : FieldCard
     {
-        public cCrapper() : base("crapper", "smelly_trapper 4")
+        public cCrapper() : base("crapper", "smelly_trapper")
         {
             name = Translator.GetString("card_crapper_1");
             desc = Translator.GetString("card_crapper_2");

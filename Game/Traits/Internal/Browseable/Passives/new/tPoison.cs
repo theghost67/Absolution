@@ -22,6 +22,8 @@ namespace Game.Traits
             rarity = Rarity.None;
             tags = TraitTag.None;
             range = BattleRange.none;
+
+            frequency = 0;
         }
         protected tPoison(tPoison other) : base(other) { }
         public override object Clone() => new tPoison(this);

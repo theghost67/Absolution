@@ -20,7 +20,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_multipaw_2");
 
             rarity = Rarity.Rare;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = BattleRange.none;
         }
         protected tMultipaw(tMultipaw other) : base(other) { }

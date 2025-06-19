@@ -30,10 +30,6 @@ namespace Game.Traits
             return Translator.GetString("trait_grand_thief_3", _priceF.Format(args.stacks));
 
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(12, stacks);
-        }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
         {

@@ -11,6 +11,7 @@ namespace Game.Traits
     {
         const string ID = "hired";
         const string TRAIT_ID = "stun";
+        const int CD = 1;
 
         public tHired() : base(ID)
         {
@@ -27,7 +28,7 @@ namespace Game.Traits
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
             string traitName = TraitBrowser.GetTrait(TRAIT_ID).name;
-            return Translator.GetString("trait_hired_3", traitName);
+            return Translator.GetString("trait_hired_3", traitName, CD);
 
         }
         public override DescLinkCollection DescLinks(TraitDescriptiveArgs args)
@@ -38,10 +39,6 @@ namespace Game.Traits
         {
             return new(result.Entity, 0, 0.125f);
         }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(12, stacks);
-        }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
         {
@@ -49,13 +46,12 @@ namespace Game.Traits
         }
         protected override async UniTask OnUse(TableActiveTraitUseArgs e)
         {
-            
-
             IBattleTrait trait = (IBattleTrait)e.trait;
             BattleField target = (BattleField)e.target;
             BattleFieldCard owner = trait.Owner;
             await trait.Side.Gold.AdjustValue(-target.Card.Price, trait);
             await target.Card.Traits.Passives.AdjustStacks(TRAIT_ID, 1, trait);
+            trait.SetCooldown(CD);
         }
     }
 }

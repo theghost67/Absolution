@@ -12,6 +12,7 @@ namespace Game.Traits
     public class tNerfTime : ActiveTrait
     {
         const string ID = "nerf_time";
+        const int CD = 3;
         static readonly TraitStatFormula _enemyStatsF = new(true, 0.25f, 0.00f);
         static readonly TraitStatFormula _enemyMoxieF = new(false, 1, 0);
         static readonly TraitStatFormula _allyMoxieF = new(false, 1, 0);
@@ -22,7 +23,7 @@ namespace Game.Traits
             desc = Translator.GetString("trait_nerf_time_2");
 
             rarity = Rarity.Rare;
-            tags = TraitTag.None;
+            tags = TraitTag.Static;
             range = new BattleRange(TerritoryRange.oppositeAll);
         }
         protected tNerfTime(tNerfTime other) : base(other) { }
@@ -30,16 +31,12 @@ namespace Game.Traits
 
         protected override string DescContentsFormat(TraitDescriptiveArgs args)
         {
-            return Translator.GetString("trait_nerf_time_3", _enemyMoxieF.Format(args.stacks), _enemyStatsF.Format(args.stacks), _allyMoxieF.Format(args.stacks, true));
+            return Translator.GetString("trait_nerf_time_3", _enemyMoxieF.Format(args.stacks), _enemyStatsF.Format(args.stacks), _allyMoxieF.Format(args.stacks, true), CD);
 
         }
         public override BattleWeight WeightDeltaUseThreshold(BattleWeightResult<BattleActiveTrait> result)
         {
             return new(result.Entity, 0, 0.125f);
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsLinear(16, stacks);
         }
 
         public override bool IsUsable(TableActiveTraitUseArgs e)
@@ -64,7 +61,7 @@ namespace Game.Traits
             int allyMoxie = _allyMoxieF.ValueInt(e.traitStacks);
             foreach (BattleFieldCard card in fields.Select(f => f.Card))
                 await card.Moxie.AdjustValue(-allyMoxie, trait);
-            await trait.AdjustStacks(-1, owner.Side);
+            trait.SetCooldown(CD);
         }
     }
 }

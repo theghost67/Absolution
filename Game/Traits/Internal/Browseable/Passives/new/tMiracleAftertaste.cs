@@ -25,6 +25,8 @@ namespace Game.Traits
             rarity = Rarity.None;
             tags = TraitTag.None;
             range = BattleRange.none;
+
+            frequency = 0;
         }
         protected tMiracleAftertaste(tMiracleAftertaste other) : base(other) { }
         public override object Clone() => new tMiracleAftertaste(this);
@@ -33,10 +35,6 @@ namespace Game.Traits
         {
             return Translator.GetString("trait_miracle_aftertaste_3", _moxieBuffF.Format(args.stacks), _strengthBuffF.Format(args.stacks, true), _moxieDebuffF.Format(args.stacks), _statsDebuffF.Format(args.stacks));
 
-        }
-        public override float Points(FieldCard owner, int stacks)
-        {
-            return PointsExponential(12, stacks);
         }
 
         public override async UniTask OnStacksChanged(TableTraitStacksSetArgs e)
